@@ -1,0 +1,18 @@
+The letters in parentheses (e.g., (H;–), (G;W;–), etc.) in the tile distribution list from Wikicarpedia represent the features of each tile in Carcassonne. They indicate the type of terrain and structures present on the tile. Here's what the letters generally mean:
+
+C = City
+R = Road
+F = Field (Grass)
+M = Monastery
+W = Shield (Coat of Arms in the city)
+H = House or small building (often found in fields)
+G = Garden (specific to some expansions)
+D = Cloister
+P = Pennant (Banner inside a city)
+S = Starting tile
+X = Generic wild terrain or connection
+The semicolons (;) separate different features on a tile. For example:
+
+(H;F;C) means that the tile has a house (H), field (F), and city (C).
+(G;W;–) means the tile contains a garden (G), shield (W), and possibly an empty segment (–).
+This notation is used to describe tile configurations concisely, especially when explaining tile distributions and expansions.
