@@ -56,7 +56,7 @@ class GameSession:
             {"image": "Base_Game_C3_Tile_M.png", "terrain": {"N": "city", "E": "city", "S": "field", "W": "field"}},
             {"image": "Base_Game_C3_Tile_N.png", "terrain": {"N": "city", "E": "city", "S": "field", "W": "field"}},
             {"image": "Base_Game_C3_Tile_O.png", "terrain": {"N": "city", "E": "city", "S": "road", "W": "road"}},
-            {"image": "Base_Game_C3_Tile_P.png", "terrain": {"N": "city", "E": "city", "S": "road", "W": "road"}},
+            {"image": "Base_Game_C3_Tile_P.png", "terrain": {"N": "city", "E": "road", "S": "road", "W": "city"}},
             {"image": "Base_Game_C3_Tile_Q.png", "terrain": {"N": "city", "E": "city", "S": "field", "W": "city"}},
             {"image": "Base_Game_C3_Tile_R.png", "terrain": {"N": "city", "E": "city", "S": "field", "W": "city"}},
             {"image": "Base_Game_C3_Tile_S.png", "terrain": {"N": "city", "E": "city", "S": "road", "W": "city"}},

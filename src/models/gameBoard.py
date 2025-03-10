@@ -75,7 +75,8 @@ class GameBoard:
                 neighbor = self.getCard(nx, ny)
                 if neighbor:
                     if card.terrains[direction] != neighbor.terrains[self.getOppositeDirection(direction)]:
-                        print("Unable to place card, terrains doen't match")
+                        print(f"Testing directions currentCard: {direction} X neighbor: {self.getOppositeDirection(direction)}")
+                        print(f"Unable to place card, terrains don't match, testing currentcard: {card.terrains[direction]} X neighbor: {neighbor.terrains[self.getOppositeDirection(direction)]}")
                         return False  # Terrains do not match, placement is invalid
             
         return True  # Placement is valid
