@@ -15,7 +15,10 @@ class Card:
         """
         original_image = pygame.image.load(image_path)
         self.image = pygame.transform.scale(original_image, (TILE_SIZE, TILE_SIZE))  # Resize to match TILE_SIZE
-        self.terrain = terrain  # Dictionary with terrain info (e.g., {"N": "city", "S": "road"})
+        self.terrains = terrain  # Dictionary with terrain info (e.g., {"N": "city", "S": "road"})
+        self.connections = [] # Currently unused
+        self.occupied = {} # Currently unused
+        self.features = set() # Currently unused
     
     def rotate(self):
         """
@@ -25,9 +28,9 @@ class Card:
         
         # Rotate terrain mapping
         new_terrain = {
-            "N": self.terrain["W"],
-            "E": self.terrain["N"],
-            "S": self.terrain["E"],
-            "W": self.terrain["S"],
+            "N": self.terrains["W"],
+            "E": self.terrains["N"],
+            "S": self.terrains["E"],
+            "W": self.terrains["S"],
         }
-        self.terrain = new_terrain
+        self.terrains = new_terrain

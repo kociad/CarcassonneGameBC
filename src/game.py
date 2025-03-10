@@ -1,6 +1,6 @@
 import pygame
 from settings import WINDOW_WIDTH, WINDOW_HEIGHT, FPS
-from models.game_session import GameSession
+from models.gameSession import GameSession
 from ui.renderer import Renderer
 from ui.events import EventHandler
 
@@ -18,11 +18,11 @@ class Game:
         self.screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
         pygame.display.set_caption("Carcassonne")
         
-        self.game_session = GameSession(player_names)
+        self.gameSession = GameSession(player_names)
         self.renderer = Renderer(self.screen)
-        self.renderer.draw_board(self.game_session.board)
+        self.renderer.draw_board(self.gameSession.gameBoard)
         self.renderer.update_display()
-        self.event_handler = EventHandler()
+        self.eventHandler = EventHandler()
         self.clock = pygame.time.Clock()
         
         self.running = True  # Game loop control
@@ -32,10 +32,10 @@ class Game:
         Runs the main game loop.
         """
         while self.running:
-            self.running = self.event_handler.handle_events(self.game_session, self.renderer)
+            self.running = self.eventHandler.handle_events(self.gameSession, self.renderer)
             
-            self.renderer.draw_board(self.game_session.board)
-            self.renderer.draw_side_panel(self.event_handler.selected_tile)
+            self.renderer.draw_board(self.gameSession.gameBoard)
+            self.renderer.draw_side_panel(self.gameSession.currentCard)
 
             self.renderer.update_display()
             

@@ -11,8 +11,16 @@ class EventHandler:
         """
         Initializes the event handler.
         """
-        self.selected_tile = None  # Currently held tile for placement
-        self.keys_pressed = {pygame.K_w: False, pygame.K_s: False, pygame.K_a: False, pygame.K_d: False}
+        #self.selectedCard = None  # Currently held card for placement
+        self.keysPressed = {pygame.K_w: False,
+                            pygame.K_s: False,
+                            pygame.K_a: False,
+                            pygame.K_d: False,
+                            pygame.K_UP: False,
+                            pygame.K_DOWN: False,
+                            pygame.K_LEFT: False,
+                            pygame.K_RIGHT: False,
+                            pygame.K_SPACE: False}
     
     def handle_events(self, game_session, renderer):
         """
@@ -28,10 +36,12 @@ class EventHandler:
                 self.handle_mouse_click(event, game_session, renderer)
             
             if event.type == pygame.KEYDOWN:
-                self.keys_pressed[event.key] = True
+                self.keysPressed[event.key] = True
+                if event.key == pygame.K_SPACE:
+                    game_session.discardCurrentCard()  # Call discard method on spacebar press
             
             if event.type == pygame.KEYUP:
-                self.keys_pressed[event.key] = False
+                self.keysPressed[event.key] = False
         
         self.handle_key_hold(renderer)
         
@@ -39,33 +49,31 @@ class EventHandler:
     
     def handle_mouse_click(self, event, game_session, renderer):
         """
-        Handles mouse click events to place tiles.
+        Handles mouse click events to place cards.
         :param event: The Pygame event object.
         :param game_session: The GameSession object managing the game state.
         """
         x, y = event.pos
-        grid_x, grid_y = (x + renderer.offset_x) // TILE_SIZE, (y + renderer.offset_y) // TILE_SIZE  # Convert screen position to grid position
+        grid_x, grid_y = (x + renderer.offsetX) // TILE_SIZE, (y + renderer.offsetY) // TILE_SIZE  # Convert screen position to grid position
         
-        if event.button == 1:  # Left-click to place a tile
-            if self.selected_tile is None:
-                self.selected_tile = game_session.draw_tile()  # Draw a new tile if none is selected
-            
-            if self.selected_tile:
-                game_session.place_tile(self.selected_tile, grid_x, grid_y)
-                renderer.draw_side_panel(self.selected_tile)  # Ensure selected tile is drawn in side panel
-                #self.selected_tile = None  # Reset after placement
-                self.selected_tile = game_session.draw_tile()  # Draw a new tile if none is selected
+        print(f"Registered mouse button click {event.button}")
+        
+        if event.button == 1:
+            game_session.playCard(grid_x, grid_y) # Play a card if LMB is pressed
+                
+        if event.button == 3 and game_session.currentCard: # Right-click to rotate a card
+            game_session.currentCard.rotate() 
     
     def handle_key_hold(self, renderer):
         """
         Handles continuous key press for scrolling.
         :param renderer: The Renderer object handling board rendering.
         """
-        if self.keys_pressed.get(pygame.K_w, False) or self.keys_pressed.get(pygame.K_UP, False):
+        if self.keysPressed.get(pygame.K_w) or self.keysPressed.get(pygame.K_UP):
             renderer.scroll("up")
-        if self.keys_pressed.get(pygame.K_s, False) or self.keys_pressed.get(pygame.K_DOWN, False):
+        if self.keysPressed.get(pygame.K_s) or self.keysPressed.get(pygame.K_DOWN):
             renderer.scroll("down")
-        if self.keys_pressed.get(pygame.K_a, False) or self.keys_pressed.get(pygame.K_LEFT, False):
+        if self.keysPressed.get(pygame.K_a) or self.keysPressed.get(pygame.K_LEFT):
             renderer.scroll("left")
-        if self.keys_pressed.get(pygame.K_d, False) or self.keys_pressed.get(pygame.K_RIGHT, False):
+        if self.keysPressed.get(pygame.K_d) or self.keysPressed.get(pygame.K_RIGHT):
             renderer.scroll("right")
