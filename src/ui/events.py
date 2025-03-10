@@ -61,11 +61,11 @@ class EventHandler:
         Handles continuous key press for scrolling.
         :param renderer: The Renderer object handling board rendering.
         """
-        if self.keys_pressed[pygame.K_w]:
+        if self.keys_pressed.get(pygame.K_w, False) or self.keys_pressed.get(pygame.K_UP, False):
             renderer.scroll("up")
-        if self.keys_pressed[pygame.K_s]:
+        if self.keys_pressed.get(pygame.K_s, False) or self.keys_pressed.get(pygame.K_DOWN, False):
             renderer.scroll("down")
-        if self.keys_pressed[pygame.K_a]:
+        if self.keys_pressed.get(pygame.K_a, False) or self.keys_pressed.get(pygame.K_LEFT, False):
             renderer.scroll("left")
-        if self.keys_pressed[pygame.K_d]:
+        if self.keys_pressed.get(pygame.K_d, False) or self.keys_pressed.get(pygame.K_RIGHT, False):
             renderer.scroll("right")
