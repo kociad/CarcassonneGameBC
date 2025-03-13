@@ -22,10 +22,10 @@ class EventHandler:
                             pygame.K_RIGHT: False,
                             pygame.K_SPACE: False}
     
-    def handle_events(self, game_session, renderer):
+    def handleEvents(self, gameSession, renderer):
         """
         Processes Pygame events (mouse clicks, keyboard input).
-        :param game_session: The GameSession object managing the game state.
+        :param gameSession: The GameSession object managing the game state.
         :param renderer: The Renderer object handling board rendering.
         """
         for event in pygame.event.get():
@@ -33,38 +33,40 @@ class EventHandler:
                 return False  # Exit the game
             
             if event.type == pygame.MOUSEBUTTONDOWN:
-                self.handle_mouse_click(event, game_session, renderer)
+                self.handleMouseClick(event, gameSession, renderer)
             
             if event.type == pygame.KEYDOWN:
                 self.keysPressed[event.key] = True
                 if event.key == pygame.K_SPACE:
-                    game_session.discardCurrentCard()  # Call discard method on spacebar press
+                    gameSession.discardCurrentCard()  # Call discard method on spacebar press
             
             if event.type == pygame.KEYUP:
                 self.keysPressed[event.key] = False
         
-        self.handle_key_hold(renderer)
+        self.handleKeyHold(renderer)
         
         return True  # Continue game loop
     
-    def handle_mouse_click(self, event, game_session, renderer):
+    def handleMouseClick(self, event, gameSession, renderer):
         """
         Handles mouse click events to place cards.
         :param event: The Pygame event object.
-        :param game_session: The GameSession object managing the game state.
+        :param gameSession: The GameSession object managing the game state.
         """
         x, y = event.pos
-        grid_x, grid_y = (x + renderer.offsetX) // TILE_SIZE, (y + renderer.offsetY) // TILE_SIZE  # Convert screen position to grid position
+        gridX, gridY = (x + renderer.offsetX) // TILE_SIZE, (y + renderer.offsetY) // TILE_SIZE  # Convert screen position to grid position
         
         print(f"Registered mouse button click {event.button}")
         
         if event.button == 1:
-            game_session.playCard(grid_x, grid_y) # Play a card if LMB is pressed
+            print("playCard triggered")
+            gameSession.playCard(gridX, gridY) # Play a card if LMB is pressed
                 
-        if event.button == 3 and game_session.currentCard: # Right-click to rotate a card
-            game_session.currentCard.rotate() 
+        if event.button == 3 and gameSession.currentCard: # Right-click to rotate a card
+            print("currentCard.rotate triggered")
+            gameSession.currentCard.rotate() 
     
-    def handle_key_hold(self, renderer):
+    def handleKeyHold(self, renderer):
         """
         Handles continuous key press for scrolling.
         :param renderer: The Renderer object handling board rendering.

@@ -10,19 +10,22 @@ class GameSession:
     Manages the overall game state, including players, board, and card placement.
     """
     
-    def __init__(self, player_names):
+    def __init__(self, playerNames):
         """
         Initializes the game session with players, board, and card deck.
         :param player_names: List of player names to create Player instances.
         """
         self.gameBoard = GameBoard()
         self.cardsDeck = None
-        self.players = [Player(name) for name in player_names]
-        self.currentPlayerIndex = 0 # Currently unused
+        self.players = [] # List of players in the game
+        self.currentPlayer = None # Currently playing player
         self.structures = [] # Currently unused
         self.gameMode = None # Currently unused
         self.currentCard = None # Currently selected card
         self.isFirstRound = True # Is this the first (automatic) round?
+        
+        # Create a list of players
+        self.generatePlayerList(playerNames)
         
         # Generate new card deck based on specified definitions and distributions
         self.cardsDeck = self.generateCardsDeck()
@@ -32,7 +35,24 @@ class GameSession:
                 
         # Automatically place the starting card
         self.placeStartingCard()
-    
+        
+    def generatePlayerList(self, playerNames):
+        """
+        Generates a list of indexed players for the game
+        :param playerNames: A list of player names
+        """
+        print(f"Generating a list of players...")
+        if playerNames:
+            index = 0
+            
+            for player in playerNames:
+                self.players.append(Player(player, index))
+                index = index + 1
+            
+            self.currentPlayer=self.players[0]
+        print(f"Player list generated")
+        self.listPlayers()
+        
     def generateCardsDeck(self):
         """
         Generates a deck of cards for the game.
@@ -55,7 +75,7 @@ class GameSession:
             {"image": "Base_Game_C3_Tile_L.png", "terrain": {"N": "city", "E": "road", "S": "road", "W": "road"}},
             {"image": "Base_Game_C3_Tile_M.png", "terrain": {"N": "city", "E": "city", "S": "field", "W": "field"}},
             {"image": "Base_Game_C3_Tile_N.png", "terrain": {"N": "city", "E": "city", "S": "field", "W": "field"}},
-            {"image": "Base_Game_C3_Tile_O.png", "terrain": {"N": "city", "E": "city", "S": "road", "W": "road"}},
+            {"image": "Base_Game_C3_Tile_O.png", "terrain": {"N": "city", "E": "road", "S": "road", "W": "city"}},
             {"image": "Base_Game_C3_Tile_P.png", "terrain": {"N": "city", "E": "road", "S": "road", "W": "city"}},
             {"image": "Base_Game_C3_Tile_Q.png", "terrain": {"N": "city", "E": "city", "S": "field", "W": "city"}},
             {"image": "Base_Game_C3_Tile_R.png", "terrain": {"N": "city", "E": "city", "S": "field", "W": "city"}},
@@ -159,15 +179,31 @@ class GameSession:
         """
         Moves to the next player's turn.
         """
-        self.currentPlayerIndex = (self.currentPlayerIndex + 1) % len(self.players)
+        if not self.isFirstRound:
+            print("Advancing player turn...")
+            currentIndex = self.currentPlayer.index
+            nextIndex = (currentIndex + 1) % len(self.players)
+            print(f"Current player {self.currentPlayer.name} index - {currentIndex} (out of {len(self.players) - 1})")
+            for player in self.players:
+                if player.index == nextIndex:
+                    self.currentPlayer = player
+                    break
+            print(f"New player self {self.currentPlayer.name} index - {self.currentPlayer.index} (out of {len(self.players) - 1})")
         self.currentCard = self.drawCard()
-    
-    def getCurrentPlayer(self):
+
+    def getCurrentPlayer(self): # Also not working
         """
         Retrieves the current player's turn.
         :return: Player object representing the current player.
         """
-        return self.players[self.currentPlayerIndex]
+        return self.players[0]
+        
+    def getCurrentCard(self): # Not working
+        """
+        Retrieves the current card.
+        :return: Card object representing the current card.
+        """
+        return self.cardsDeck[0]
         
     def playCard (self, x, y):
         """
@@ -209,3 +245,14 @@ class GameSession:
         
     def playTurn(self, x, y, player=None):
         pass
+        
+    def listPlayers(self): # Debug purposes only
+        """
+        Print a list of all players in the game with their info
+        """
+        print("Printing player info...")
+        for player in self.players:
+            print(f"Name: {player.name}")
+            print(f"Score: {player.score}")
+            print(f"Index: {player.index}")
+            print(f"Figures: {player.figures}")

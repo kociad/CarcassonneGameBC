@@ -1,6 +1,7 @@
 import pygame
 from settings import WINDOW_WIDTH, WINDOW_HEIGHT, FPS
 from models.gameSession import GameSession
+from models.player import Player
 from ui.renderer import Renderer
 from ui.events import EventHandler
 
@@ -9,19 +10,19 @@ class Game:
     Manages the main game loop and interactions.
     """
     
-    def __init__(self, player_names):
+    def __init__(self, playerNames):
         """
         Initializes the game, setting up Pygame and core components.
-        :param player_names: List of player names participating in the game.
+        :param playerNames: List of player names participating in the game.
         """
         pygame.init()
         self.screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
         pygame.display.set_caption("Carcassonne")
         
-        self.gameSession = GameSession(player_names)
+        self.gameSession = GameSession(playerNames)
         self.renderer = Renderer(self.screen)
-        self.renderer.draw_board(self.gameSession.gameBoard)
-        self.renderer.update_display()
+        self.renderer.drawBoard(self.gameSession.gameBoard)
+        self.renderer.updateDisplay()
         self.eventHandler = EventHandler()
         self.clock = pygame.time.Clock()
         
@@ -32,12 +33,12 @@ class Game:
         Runs the main game loop.
         """
         while self.running:
-            self.running = self.eventHandler.handle_events(self.gameSession, self.renderer)
+            self.running = self.eventHandler.handleEvents(self.gameSession, self.renderer)
             
-            self.renderer.draw_board(self.gameSession.gameBoard)
-            self.renderer.draw_side_panel(self.gameSession.currentCard)
+            self.renderer.drawBoard(self.gameSession.gameBoard)
+            self.renderer.drawSidePanel(self.gameSession.currentCard, len(self.gameSession.cardsDeck) + 1, self.gameSession.currentPlayer)
 
-            self.renderer.update_display()
+            self.renderer.updateDisplay()
             
             self.clock.tick(FPS)
         
@@ -51,6 +52,6 @@ class Game:
         exit()
 
 if __name__ == "__main__":
-    player_names = ["Player 1", "Player 2"]  # Example player names
-    game = Game(player_names)
+    playerNames = ["Player 1", "Player 2"]  # Example player names
+    game = Game(playerNames)
     game.run()
