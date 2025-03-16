@@ -10,7 +10,7 @@ class GameSession:
     Manages the overall game state, including players, board, and card placement.
     """
     
-    def __init__(self, playerNames):
+    def __init__(self, playerNames: list[str]):
         """
         Initializes the game session with players, board, and card deck.
         :param player_names: List of player names to create Player instances.
@@ -36,7 +36,35 @@ class GameSession:
         # Automatically place the starting card
         self.placeStartingCard()
         
-    def generatePlayerList(self, playerNames):
+    def getCurrentCard(self):
+        """
+        Current card getter method
+        :return: Currently drawn card for current game session
+        """
+        return self.currentCard
+        
+    def getGameBoard(self):
+        """
+        Game board getter method
+        :return: Game board used by the curent game session
+        """
+        return self.gameBoard
+        
+    def getCardsDeck(self):
+        """
+        Cards deck getter method
+        :return: Cards deck assigned to current game session
+        """
+        return self.cardsDeck
+        
+    def getCurrentPlayer(self):
+        """
+        Current player getter method
+        :return: Player currently having their turn
+        """
+        return self.currentPlayer
+        
+    def generatePlayerList(self, playerNames: list[str]):
         """
         Generates a list of indexed players for the game
         :param playerNames: A list of player names
@@ -127,7 +155,7 @@ class GameSession:
         print("Deck generated")
         return cards
         
-    def shuffleCardsDeck(self, deck):
+    def shuffleCardsDeck(self, deck: list[Card]):
         """
         Shuffles an existing deck of cards
         :param deck: Existing card deck
@@ -150,7 +178,7 @@ class GameSession:
                 self.isFirstRound = False
                 print("First turn played")
         else:
-            print("Unable to play first , no cardsDeck available")
+            print("Unable to play first round, no cardsDeck available")
     
     def drawCard(self):
         """
@@ -164,7 +192,7 @@ class GameSession:
             
         return None
     
-    def placeCard(self, card, x, y):
+    def placeCard(self, card: Card, x: int, y: int):
         """
         Places a card on the board without validation.
         :param card: The card to be placed.
@@ -172,6 +200,7 @@ class GameSession:
         :param y: Y-coordinate on the board.
         """
         print("Placing card...")
+            
         self.gameBoard.placeCard(card, x, y)
         print("Card placed")
     
@@ -183,29 +212,15 @@ class GameSession:
             print("Advancing player turn...")
             currentIndex = self.currentPlayer.index
             nextIndex = (currentIndex + 1) % len(self.players)
-            print(f"Current player {self.currentPlayer.name} index - {currentIndex} (out of {len(self.players) - 1})")
+            #print(f"Current player {self.currentPlayer.name} index - {currentIndex} (out of {len(self.players) - 1})")
             for player in self.players:
                 if player.index == nextIndex:
                     self.currentPlayer = player
                     break
-            print(f"New player self {self.currentPlayer.name} index - {self.currentPlayer.index} (out of {len(self.players) - 1})")
+            print(f"New player {self.currentPlayer.getName()} index - {self.currentPlayer.getIndex()} (out of {len(self.players) - 1})")
         self.currentCard = self.drawCard()
-
-    def getCurrentPlayer(self): # Also not working
-        """
-        Retrieves the current player's turn.
-        :return: Player object representing the current player.
-        """
-        return self.players[0]
         
-    def getCurrentCard(self): # Not working
-        """
-        Retrieves the current card.
-        :return: Card object representing the current card.
-        """
-        return self.cardsDeck[0]
-        
-    def playCard (self, x, y):
+    def playCard (self, x: int, y: int):
         """
         Plays the card placing part of the turn
         :param x: X-coordinate of the selected space
@@ -243,7 +258,7 @@ class GameSession:
     def playMeeple (self):
         pass
         
-    def playTurn(self, x, y, player=None):
+    def playTurn(self, x: int, y: int, player=None):
         pass
         
     def listPlayers(self): # Debug purposes only
@@ -252,7 +267,7 @@ class GameSession:
         """
         print("Printing player info...")
         for player in self.players:
-            print(f"Name: {player.name}")
-            print(f"Score: {player.score}")
-            print(f"Index: {player.index}")
-            print(f"Figures: {player.figures}")
+            print(f"Name: {player.getName()}")
+            print(f"Score: {player.getScore()}")
+            print(f"Index: {player.getIndex()}")
+            print(f"Figures: {player.getFigures()}")

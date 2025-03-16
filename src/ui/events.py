@@ -1,4 +1,7 @@
 import pygame
+from models.gameSession import GameSession
+from ui.renderer import Renderer
+
 
 from settings import TILE_SIZE
 
@@ -22,7 +25,7 @@ class EventHandler:
                             pygame.K_RIGHT: False,
                             pygame.K_SPACE: False}
     
-    def handleEvents(self, gameSession, renderer):
+    def handleEvents(self, gameSession: GameSession, renderer: Renderer):
         """
         Processes Pygame events (mouse clicks, keyboard input).
         :param gameSession: The GameSession object managing the game state.
@@ -47,14 +50,14 @@ class EventHandler:
         
         return True  # Continue game loop
     
-    def handleMouseClick(self, event, gameSession, renderer):
+    def handleMouseClick(self, event: pygame.event.Event, gameSession: GameSession, renderer: Renderer):
         """
         Handles mouse click events to place cards.
         :param event: The Pygame event object.
         :param gameSession: The GameSession object managing the game state.
         """
         x, y = event.pos
-        gridX, gridY = (x + renderer.offsetX) // TILE_SIZE, (y + renderer.offsetY) // TILE_SIZE  # Convert screen position to grid position
+        gridX, gridY = (x + renderer.getOffsetX()) // TILE_SIZE, (y + renderer.getOffsetY()) // TILE_SIZE  # Convert screen position to grid position
         
         print(f"Registered mouse button click {event.button}")
         
@@ -62,11 +65,11 @@ class EventHandler:
             print("playCard triggered")
             gameSession.playCard(gridX, gridY) # Play a card if LMB is pressed
                 
-        if event.button == 3 and gameSession.currentCard: # Right-click to rotate a card
+        if event.button == 3 and gameSession.getCurrentCard(): # Right-click to rotate a card
             print("currentCard.rotate triggered")
-            gameSession.currentCard.rotate() 
+            gameSession.getCurrentCard().rotate() 
     
-    def handleKeyHold(self, renderer):
+    def handleKeyHold(self, renderer: Renderer):
         """
         Handles continuous key press for scrolling.
         :param renderer: The Renderer object handling board rendering.

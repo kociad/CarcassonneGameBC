@@ -1,4 +1,7 @@
 import pygame
+from models.gameBoard import GameBoard
+from models.card import Card
+from models.player import Player
 from settings import TILE_SIZE, WINDOW_WIDTH, WINDOW_HEIGHT
 
 class Renderer:
@@ -6,7 +9,7 @@ class Renderer:
     Handles rendering of the game board, UI elements, and placed cards.
     """
     
-    def __init__(self, screen):
+    def __init__(self, screen: pygame.Surface):
         """
         Initializes the renderer with a given Pygame screen and scrolling offset.
         :param screen: The Pygame display surface.
@@ -16,29 +19,43 @@ class Renderer:
         self.offsetY = 0
         self.scrollSpeed = 10  # Adjust scrolling speed as needed
         self.font = pygame.font.Font(None, 36)
+        
+    def getOffsetX(self):
+        """
+        Renderer x-axis offset getter method
+        :return: Offset on the x-axis
+        """
+        return self.offsetX
+        
+    def getOffsetY(self):
+        """
+        Renderer y-axis offset getter method
+        :return: Offset on the y-axis
+        """
+        return self.offsetY
     
-    def drawBoard(self, gameBoard):
+    def drawBoard(self, gameBoard: GameBoard):
         """
         Draws the game board, including grid lines and placed cards.
         """
         self.screen.fill((0, 128, 0))  # Green background for the board
         
         # Draw grid lines
-        for x in range(0, (gameBoard.gridSize + 1) * TILE_SIZE, TILE_SIZE):
-            pygame.draw.line(self.screen, (0, 0, 0), (x - self.offsetX, 0 - self.offsetY), (x - self.offsetX, gameBoard.gridSize * TILE_SIZE - self.offsetY))
-        for y in range(0, (gameBoard.gridSize + 1) * TILE_SIZE, TILE_SIZE):
-            pygame.draw.line(self.screen, (0, 0, 0), (0 - self.offsetX, y - self.offsetY), (gameBoard.gridSize * TILE_SIZE - self.offsetX, y - self.offsetY))
+        for x in range(0, (gameBoard.getGridSize() + 1) * TILE_SIZE, TILE_SIZE):
+            pygame.draw.line(self.screen, (0, 0, 0), (x - self.offsetX, 0 - self.offsetY), (x - self.offsetX, gameBoard.getGridSize() * TILE_SIZE - self.offsetY))
+        for y in range(0, (gameBoard.getGridSize() + 1) * TILE_SIZE, TILE_SIZE):
+            pygame.draw.line(self.screen, (0, 0, 0), (0 - self.offsetX, y - self.offsetY), (gameBoard.getGridSize() * TILE_SIZE - self.offsetX, y - self.offsetY))
         
         # Draw placed cards
-        for y in range(gameBoard.gridSize):
-            for x in range(gameBoard.gridSize):
+        for y in range(gameBoard.getGridSize()):
+            for x in range(gameBoard.getGridSize()):
                 card = gameBoard.getCard(x, y)
                 if card:
-                    self.screen.blit(card.image, (x * TILE_SIZE - self.offsetX, y * TILE_SIZE - self.offsetY))
+                    self.screen.blit(card.getImage(), (x * TILE_SIZE - self.offsetX, y * TILE_SIZE - self.offsetY))
     
-    def drawSidePanel(self, selectedCard, remainingCards, currentPlayer):
+    def drawSidePanel(self, selectedCard: Card, remainingCards: int, currentPlayer: Player):
         """
-        Draws a side panel where the currently selected card will be displayed.
+        Draws a side panel where the currently selected card and player info will be displayed.
         :param selectedCard: The card currently selected by the player.
         """
         panelX = WINDOW_WIDTH - 200  # Panel width of 200 pixels
@@ -47,22 +64,22 @@ class Renderer:
         if selectedCard:
             cardX = panelX + 45
             cardY = 50
-            self.screen.blit(selectedCard.image, (cardX, cardY))
+            self.screen.blit(selectedCard.getImage(), (cardX, cardY))
             
         if currentPlayer:
             textY = 180
             spacing = 30
             
             # Display player's name
-            nameSurface = self.font.render(f"{currentPlayer.name}'s Turn", True, (255, 255, 255))
+            nameSurface = self.font.render(f"{currentPlayer.getName()}'s Turn", True, (255, 255, 255))
             self.screen.blit(nameSurface, (panelX + 20, textY))
             
             # Display player's score
-            scoreSurface = self.font.render(f"Score: {currentPlayer.score}", True, (255, 255, 255))
+            scoreSurface = self.font.render(f"Score: {currentPlayer.getScore()}", True, (255, 255, 255))
             self.screen.blit(scoreSurface, (panelX + 20, textY + spacing))
             
             # Display number of meeples remaining
-            meeplesSurface = self.font.render(f"Meeples: {len(currentPlayer.figures)}", True, (255, 255, 255))
+            meeplesSurface = self.font.render(f"Meeples: {len(currentPlayer.getFigures())}", True, (255, 255, 255))
             self.screen.blit(meeplesSurface, (panelX + 20, textY + 2 * spacing))
             
         # Display number of remaining cards in the deck
@@ -77,7 +94,7 @@ class Renderer:
         """
         pygame.display.flip()
     
-    def scroll(self, direction):
+    def scroll(self, direction: str):
         """
         Scrolls the view of the board based on user input.
         :param direction: The direction to scroll ('up', 'down', 'left', 'right').

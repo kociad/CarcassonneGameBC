@@ -10,7 +10,7 @@ class Game:
     Manages the main game loop and interactions.
     """
     
-    def __init__(self, playerNames):
+    def __init__(self, playerNames: list[str]):
         """
         Initializes the game, setting up Pygame and core components.
         :param playerNames: List of player names participating in the game.
@@ -21,7 +21,7 @@ class Game:
         
         self.gameSession = GameSession(playerNames)
         self.renderer = Renderer(self.screen)
-        self.renderer.drawBoard(self.gameSession.gameBoard)
+        self.renderer.drawBoard(self.gameSession.getGameBoard())
         self.renderer.updateDisplay()
         self.eventHandler = EventHandler()
         self.clock = pygame.time.Clock()
@@ -35,8 +35,8 @@ class Game:
         while self.running:
             self.running = self.eventHandler.handleEvents(self.gameSession, self.renderer)
             
-            self.renderer.drawBoard(self.gameSession.gameBoard)
-            self.renderer.drawSidePanel(self.gameSession.currentCard, len(self.gameSession.cardsDeck) + 1, self.gameSession.currentPlayer)
+            self.renderer.drawBoard(self.gameSession.getGameBoard())
+            self.renderer.drawSidePanel(self.gameSession.getCurrentCard(), len(self.gameSession.getCardsDeck()) + 1, self.gameSession.getCurrentPlayer())
 
             self.renderer.updateDisplay()
             
