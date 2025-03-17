@@ -29,7 +29,7 @@ class GameBoard:
         """
         return self.center, self.center
     
-    def placeCard(self, card: Card, x: int, y:int):
+    def placeCard(self, card, x, y):
         """
         Places a card on the board at the given coordinates without validation.
         :param card: The card (Card) to be placed.
@@ -45,7 +45,7 @@ class GameBoard:
         if 0 <= x < self.gridSize and 0 <= y < self.gridSize:
             self.grid[y][x] = card
     
-    def getCard(self, x: int, y: int):
+    def getCard(self, x, y):
         """
         Retrieves a card from the board at the given coordinates.
         :param x: X-coordinate.
@@ -63,7 +63,7 @@ class GameBoard:
             
         return None
 
-    def validateCardPlacement(self, card: Card, x: int, y: int):
+    def validateCardPlacement(self, card, x, y):
         """
         Validates if a card can be placed on given space
         :param card: Card to be placed
@@ -104,7 +104,7 @@ class GameBoard:
             
         return True  # Placement is valid
             
-    def getOppositeDirection(self, direction: str):
+    def getOppositeDirection(self, direction):
         """
         Returns the opposite direction
         :param direction: Direction to which opposite will be returned
@@ -113,7 +113,7 @@ class GameBoard:
         opposites = {"N": "S", "E": "W", "S": "N", "W": "E"}
         return opposites[direction]
         
-    def hasNeighbor(self, x: int, y:int):
+    def hasNeighbor(self, x, y):
         """
         Checks if selected space has an occupied neighbor
         :param x: X-coordinate of selected space

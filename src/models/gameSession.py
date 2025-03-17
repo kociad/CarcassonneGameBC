@@ -10,7 +10,7 @@ class GameSession:
     Manages the overall game state, including players, board, and card placement.
     """
     
-    def __init__(self, playerNames: list[str]):
+    def __init__(self, playerNames):
         """
         Initializes the game session with players, board, and card deck.
         :param player_names: List of player names to create Player instances.
@@ -22,7 +22,9 @@ class GameSession:
         self.structures = [] # Currently unused
         self.gameMode = None # Currently unused
         self.currentCard = None # Currently selected card
+        self.lastPlacedCard = None # Last placed card
         self.isFirstRound = True # Is this the first (automatic) round?
+        self.placedFigures = []
         
         # Create a list of players
         self.generatePlayerList(playerNames)
@@ -64,17 +66,36 @@ class GameSession:
         """
         return self.currentPlayer
         
-    def generatePlayerList(self, playerNames: list[str]):
+    def getPlacedFigures(self):
+        """
+        Placed figures getter method
+        :return: List of figures placed on the board
+        """
+        return self.placedFigures
+        
+    def generatePlayerList(self, playerNames):
         """
         Generates a list of indexed players for the game
         :param playerNames: A list of player names
         """
         print(f"Generating a list of players...")
+        
+        colors = [
+            "blue",
+            "red",
+            "green",
+            "pink",
+            "yellow",
+            "black"
+        ]
+        
+        random.shuffle(colors)
+        
         if playerNames:
             index = 0
             
             for player in playerNames:
-                self.players.append(Player(player, index))
+                self.players.append(Player(player, index, colors.pop()))
                 index = index + 1
             
             self.currentPlayer=self.players[0]
@@ -89,8 +110,8 @@ class GameSession:
         print("Generating deck...")
         
         card_definitions = [
-            {"image": "Base_Game_C3_Tile_A.png", "terrain": {"N": "field", "E": "field", "S": "road", "W": "field"}},
-            {"image": "Base_Game_C3_Tile_B.png", "terrain": {"N": "field", "E": "field", "S": "field", "W": "field"}},
+            {"image": "Base_Game_C3_Tile_A.png", "terrain": {"N": "field", "E": "field", "S": "road", "W": "field", "C": "monastery"}},
+            {"image": "Base_Game_C3_Tile_B.png", "terrain": {"N": "field", "E": "field", "S": "field", "W": "field", "C": "monastery"}},
             {"image": "Base_Game_C3_Tile_C.png", "terrain": {"N": "city", "E": "city", "S": "city", "W": "city"}},
             {"image": "Base_Game_C3_Tile_D.png", "terrain": {"N": "city", "E": "road", "S": "field", "W": "road"}},
             {"image": "Base_Game_C3_Tile_E.png", "terrain": {"N": "city", "E": "field", "S": "field", "W": "field"}},
@@ -155,7 +176,7 @@ class GameSession:
         print("Deck generated")
         return cards
         
-    def shuffleCardsDeck(self, deck: list[Card]):
+    def shuffleCardsDeck(self, deck):
         """
         Shuffles an existing deck of cards
         :param deck: Existing card deck
@@ -192,18 +213,6 @@ class GameSession:
             
         return None
     
-    def placeCard(self, card: Card, x: int, y: int):
-        """
-        Places a card on the board without validation.
-        :param card: The card to be placed.
-        :param x: X-coordinate on the board.
-        :param y: Y-coordinate on the board.
-        """
-        print("Placing card...")
-            
-        self.gameBoard.placeCard(card, x, y)
-        print("Card placed")
-    
     def nextTurn(self):
         """
         Moves to the next player's turn.
@@ -220,7 +229,7 @@ class GameSession:
             print(f"New player {self.currentPlayer.getName()} index - {self.currentPlayer.getIndex()} (out of {len(self.players) - 1})")
         self.currentCard = self.drawCard()
         
-    def playCard (self, x: int, y: int):
+    def playCard (self, x, y):
         """
         Plays the card placing part of the turn
         :param x: X-coordinate of the selected space
@@ -239,12 +248,14 @@ class GameSession:
             print(f"Unable to place card, placement is invalid, validateCardPlacement {self.gameBoard.validateCardPlacement(card, x, y)}, isFirstRound {self.isFirstRound}")
             return False
             
-        self.placeCard(card, x, y)
+        self.gameBoard.placeCard(card, x, y)
+        self.lastPlacedCard = card
         self.currentCard = None
         
-        print ("Card played")
+        print (f"Card played, last played card set to card {card} at {x};{y}")
         
-        self.nextTurn()
+        if self.isFirstRound:
+            self.nextTurn()
         
         return True
         
@@ -255,10 +266,7 @@ class GameSession:
         if self.currentCard:
             self.currentCard = self.drawCard()
         
-    def playMeeple (self):
-        pass
-        
-    def playTurn(self, x: int, y: int, player=None):
+    def playTurn(self, x, y, player=None):
         pass
         
     def listPlayers(self): # Debug purposes only
@@ -271,3 +279,49 @@ class GameSession:
             print(f"Score: {player.getScore()}")
             print(f"Index: {player.getIndex()}")
             print(f"Figures: {player.getFigures()}")
+    
+    def playFigure(self, player, x, y, position):
+        """
+        Places a figure on a valid card position
+        :param player: The player placing the figure
+        :param x: X-coordinate on the board
+        :param y: Y-coordinate on the board
+        :param position: The position on the card (N, W, S, E)
+        :return: True if placement is successful, False otherwise
+        """
+        print("Playing figure...")
+        
+        if self.gameBoard.getCard(x, y) != self.lastPlacedCard:
+            print("Unable to play figure, can only place figures on last played card")
+            return False # Figures can only be placed on the most recently placed card!
+        
+        # Redundand check, figure can be placed only on the most recently played card
+        card = self.gameBoard.getCard(x, y)
+        if not card:
+            print(f"Unable to play figure, no card detected in selected space: {x};{y}")
+            return False  # Can't place a figure on an empty space
+        
+        if player.figures:
+            figure = player.getFigure()  # Remove a figure from the player's available figures
+            if figure.place(card, position):
+                self.placedFigures.append(figure)  # Track only placed figures
+                print(f"{player.getName()} placed a figure at ({x}, {y})")
+
+                self.nextTurn()
+                print("Figure played")
+                return True
+            else:
+                player.addFigure(figure)  # Return the figure if placement fails
+                
+        print("Unable to place figure, player has no figures left.")
+        return False
+        
+    def removeFigure(self, figure):
+        """
+        Removes a figure from the board when scoring is completed.
+        :param figure: The figure to be removed.
+        """
+        if figure in self.placedFigures:
+            figure.remove()
+            self.placedFigures.remove(figure)
+            figure.owner.addFigure(figure)  # Return the figure to the player's available pool

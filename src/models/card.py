@@ -7,7 +7,7 @@ class Card:
     Represents a tile (card) in the game with an image and terrain properties.
     """
     
-    def __init__(self, image_path: str, terrain: dict):
+    def __init__(self, image_path, terrain):
         """
         Initializes a tile with an image and terrain data.
         :param image_path: Path to the tile image.
@@ -48,3 +48,6 @@ class Card:
             "W": self.terrains["S"],
         }
         self.terrains = new_terrain
+
+    def canPlaceFigure(self, figure):
+        return True # To be implemented

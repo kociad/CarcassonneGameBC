@@ -2,14 +2,14 @@ import pygame
 from models.gameBoard import GameBoard
 from models.card import Card
 from models.player import Player
-from settings import TILE_SIZE, WINDOW_WIDTH, WINDOW_HEIGHT
+from settings import TILE_SIZE, WINDOW_WIDTH, WINDOW_HEIGHT, FIGURE_SIZE
 
 class Renderer:
     """
     Handles rendering of the game board, UI elements, and placed cards.
     """
     
-    def __init__(self, screen: pygame.Surface):
+    def __init__(self, screen):
         """
         Initializes the renderer with a given Pygame screen and scrolling offset.
         :param screen: The Pygame display surface.
@@ -34,7 +34,7 @@ class Renderer:
         """
         return self.offsetY
     
-    def drawBoard(self, gameBoard: GameBoard):
+    def drawBoard(self, gameBoard, placedFigures):
         """
         Draws the game board, including grid lines and placed cards.
         """
@@ -46,14 +46,43 @@ class Renderer:
         for y in range(0, (gameBoard.getGridSize() + 1) * TILE_SIZE, TILE_SIZE):
             pygame.draw.line(self.screen, (0, 0, 0), (0 - self.offsetX, y - self.offsetY), (gameBoard.getGridSize() * TILE_SIZE - self.offsetX, y - self.offsetY))
         
-        # Draw placed cards
-        for y in range(gameBoard.getGridSize()):
-            for x in range(gameBoard.getGridSize()):
+        # Draw placed cards and their grid coordinates
+        for y in range(gameBoard.gridSize):
+            for x in range(gameBoard.gridSize):
                 card = gameBoard.getCard(x, y)
                 if card:
-                    self.screen.blit(card.getImage(), (x * TILE_SIZE - self.offsetX, y * TILE_SIZE - self.offsetY))
+                    self.screen.blit(card.image, (x * TILE_SIZE - self.offsetX, y * TILE_SIZE - self.offsetY))
+                # Draw X, Y coordinates at the center of each grid cell
+                textSurface = self.font.render(f"{x},{y}", True, (255, 255, 255))
+                textX = x * TILE_SIZE - self.offsetX + TILE_SIZE // 3
+                textY = y * TILE_SIZE - self.offsetY + TILE_SIZE // 3
+                self.screen.blit(textSurface, (textX, textY))
+                  
+        # Draw placed figures (meeples) at correct positions on the card
+        for figure in placedFigures:
+            if figure.card:
+                cardPosition = [(x, y) for y in range(gameBoard.gridSize) for x in range(gameBoard.gridSize) if gameBoard.getCard(x, y) == figure.card]
+                if cardPosition:
+                    padding = TILE_SIZE * 0.1 # Distance from the border
+                    figureOffset = FIGURE_SIZE / 2 # Compensate for figure size
+                    baseX = cardPosition[0][0] * TILE_SIZE - self.offsetX # + padding + FIGURE_SIZE / 2
+                    baseY = cardPosition[0][1] * TILE_SIZE - self.offsetY # + padding + FIGURE_SIZE / 2
+
+                    # Use precise float values for accurate positioning
+                    if figure.positionOnCard == "N":  # Top
+                        figureX, figureY = baseX + TILE_SIZE / 2, baseY + padding + figureOffset
+                    elif figure.positionOnCard == "S":  # Bottom
+                        figureX, figureY = baseX + TILE_SIZE / 2, baseY + TILE_SIZE - padding - figureOffset
+                    elif figure.positionOnCard == "E":  # Right
+                        figureX, figureY = baseX + TILE_SIZE - padding - figureOffset, baseY + TILE_SIZE / 2
+                    elif figure.positionOnCard == "W":  # Left
+                        figureX, figureY = baseX + padding + figureOffset, baseY + TILE_SIZE / 2
+                    else:  # Default to center if invalid position
+                        figureX, figureY = baseX + TILE_SIZE / 2, baseY + TILE_SIZE / 2
+                    
+                    self.screen.blit(figure.image, (figureX - TILE_SIZE * 0.15, figureY - TILE_SIZE * 0.15))  # Adjust for better centering
     
-    def drawSidePanel(self, selectedCard: Card, remainingCards: int, currentPlayer: Player):
+    def drawSidePanel(self, selectedCard, remainingCards, currentPlayer, placedFigures):
         """
         Draws a side panel where the currently selected card and player info will be displayed.
         :param selectedCard: The card currently selected by the player.
@@ -83,9 +112,12 @@ class Renderer:
             self.screen.blit(meeplesSurface, (panelX + 20, textY + 2 * spacing))
             
         # Display number of remaining cards in the deck
-        textY = 270
         nameSurface = self.font.render(f"Cards: {remainingCards}", True, (255, 255, 255))
-        self.screen.blit(nameSurface, (panelX + 20, textY))
+        self.screen.blit(nameSurface, (panelX + 20, 270))
+        
+        # Display number of meeples palced
+        placedMeeplesSurface = self.font.render(f"Placed: {len(placedFigures)}", True, (255, 255, 255))
+        self.screen.blit(placedMeeplesSurface, (panelX + 20, 300))
             
     
     def updateDisplay(self):
@@ -94,7 +126,7 @@ class Renderer:
         """
         pygame.display.flip()
     
-    def scroll(self, direction: str):
+    def scroll(self, direction):
         """
         Scrolls the view of the board based on user input.
         :param direction: The direction to scroll ('up', 'down', 'left', 'right').
