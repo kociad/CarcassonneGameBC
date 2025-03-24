@@ -44,6 +44,7 @@ class GameBoard:
             
         if 0 <= x < self.gridSize and 0 <= y < self.gridSize:
             self.grid[y][x] = card
+            self.updateNeighbors(x,y)
     
     def getCard(self, x, y):
         """
@@ -140,3 +141,26 @@ class GameBoard:
                     break
 
         return existsNeighbor
+        
+    def updateNeighbors(self, x, y):
+        """
+        Updates the neighbors dictionary for the card at (x, y)
+        and also ensures reciprocal neighbor links are updated
+        """
+        card = self.getCard(x, y)
+        if card is None:
+            return
+
+        directions = {
+            "N": (x, y - 1),
+            "E": (x + 1, y),
+            "S": (x, y + 1),
+            "W": (x - 1, y)
+        }
+
+        for direction, (nx, ny) in directions.items():
+            neighbor = self.getCard(nx, ny)
+            card.neighbors[direction] = neighbor
+            if neighbor:
+                opposite = {"N": "S", "S": "N", "E": "W", "W": "E"}[direction]
+                neighbor.neighbors[opposite] = card

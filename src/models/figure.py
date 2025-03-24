@@ -14,6 +14,13 @@ class Figure:
         self.card = None # Card on which the figure has been placed
         self.positionOnCard = None # Position on the card (e.g., road, city, monastery)
         
+    def getOwner(self):
+        """
+        Figure owner getter method
+        :return: Player owning the figure
+        """
+        return self.owner
+        
     def place(self, card, position):
         """
         Attempts to place the figure on a given card at a given position

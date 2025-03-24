@@ -1,4 +1,5 @@
 import pygame
+import random
 from models.gameBoard import GameBoard
 from models.card import Card
 from models.player import Player
@@ -34,11 +35,20 @@ class Renderer:
         """
         return self.offsetY
     
-    def drawBoard(self, gameBoard, placedFigures):
+    def drawBoard(self, gameBoard, placedFigures, detectedStructures):
         """
         Draws the game board, including grid lines and placed cards.
         """
         self.screen.fill((0, 128, 0))  # Green background for the board
+        
+        # Define structure tints
+        """
+        structureColors = {
+            "City": (200, 100, 100, 100),  # Light red tint
+            "Road": (100, 100, 200, 100),  # Light blue tint
+            "Monastery": (100, 200, 100, 100)  # Light green tint
+        }
+        """
         
         # Draw grid lines
         for x in range(0, (gameBoard.getGridSize() + 1) * TILE_SIZE, TILE_SIZE):
@@ -57,6 +67,39 @@ class Renderer:
                 textX = x * TILE_SIZE - self.offsetX + TILE_SIZE // 3
                 textY = y * TILE_SIZE - self.offsetY + TILE_SIZE // 3
                 self.screen.blit(textSurface, (textX, textY))
+                    
+        # Draw completed detected structures with tint only on relevant directions
+        for structure in detectedStructures:
+            structure.checkCompletion()
+            if structure.getIsCompleted():
+                tintColor = structure.getColor()
+                
+                # Group card sides by card for drawing
+                cardEdgeMap = {}
+                for card, direction in structure.cardSides:
+                    if card not in cardEdgeMap:
+                        cardEdgeMap[card] = []
+                    cardEdgeMap[card].append(direction)
+
+                for card, directions in cardEdgeMap.items():
+                    cardPosition = [(x, y) for y in range(gameBoard.gridSize) for x in range(gameBoard.gridSize) if gameBoard.getCard(x, y) == card]
+                    if cardPosition:
+                        cardX, cardY = cardPosition[0]
+                        rect = pygame.Surface((TILE_SIZE, TILE_SIZE), pygame.SRCALPHA)
+                        rect.fill((0, 0, 0, 0))  # Transparent base
+                        
+                        # Draw only relevant edges for this structure
+                        for direction in directions:
+                            if direction == "N":
+                                pygame.draw.rect(rect, tintColor, (0, 0, TILE_SIZE, TILE_SIZE // 3))
+                            elif direction == "S":
+                                pygame.draw.rect(rect, tintColor, (0, 2 * TILE_SIZE // 3, TILE_SIZE, TILE_SIZE // 3))
+                            elif direction == "E":
+                                pygame.draw.rect(rect, tintColor, (2 * TILE_SIZE // 3, 0, TILE_SIZE // 3, TILE_SIZE))
+                            elif direction == "W":
+                                pygame.draw.rect(rect, tintColor, (0, 0, TILE_SIZE // 3, TILE_SIZE))
+
+                        self.screen.blit(rect, (cardX * TILE_SIZE - self.offsetX, cardY * TILE_SIZE - self.offsetY))
                   
         # Draw placed figures (meeples) at correct positions on the card
         for figure in placedFigures:
@@ -82,7 +125,7 @@ class Renderer:
                     
                     self.screen.blit(figure.image, (figureX - TILE_SIZE * 0.15, figureY - TILE_SIZE * 0.15))  # Adjust for better centering
     
-    def drawSidePanel(self, selectedCard, remainingCards, currentPlayer, placedFigures):
+    def drawSidePanel(self, selectedCard, remainingCards, currentPlayer, placedFigures, detectedStructures):
         """
         Draws a side panel where the currently selected card and player info will be displayed.
         :param selectedCard: The card currently selected by the player.
@@ -118,6 +161,10 @@ class Renderer:
         # Display number of meeples palced
         placedMeeplesSurface = self.font.render(f"Placed: {len(placedFigures)}", True, (255, 255, 255))
         self.screen.blit(placedMeeplesSurface, (panelX + 20, 300))
+        
+        # Display number of detected structures
+        detectedStructuresSurface = self.font.render(f"Structures: {len(detectedStructures)}", True, (255, 255, 255))
+        self.screen.blit(detectedStructuresSurface, (panelX + 20, 330))
             
     
     def updateDisplay(self):

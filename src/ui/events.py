@@ -15,7 +15,7 @@ class EventHandler:
         self.tilePlaced = False  # Track if a tile was placed this turn
         self.keysPressed = {pygame.K_w: False, pygame.K_s: False, pygame.K_a: False, pygame.K_d: False,
                             pygame.K_UP: False, pygame.K_DOWN: False, pygame.K_LEFT: False, pygame.K_RIGHT: False,
-                            pygame.K_SPACE: False}
+                            pygame.K_SPACE: False, pygame.K_RETURN: False}
     
     def handleEvents(self, gameSession, renderer):
         """
@@ -32,6 +32,8 @@ class EventHandler:
             
             if event.type == pygame.KEYDOWN:
                 self.keysPressed[event.key] = True
+                if event.key == pygame.K_RETURN:
+                    gameSession.detectStructures()
                 if event.key == pygame.K_SPACE and self.tilePlaced:
                     print("Skipping meeple placement")
                     self.tilePlaced = False  # Reset for the next turn
@@ -56,6 +58,8 @@ class EventHandler:
         x, y = event.pos
         gridX, gridY = (x + renderer.getOffsetX()) // TILE_SIZE, (y + renderer.getOffsetY()) // TILE_SIZE  # Convert screen position to grid position
         
+        print(f"Registered {event.button}")
+        
         if event.button == 1:  # Left-click
             if not self.tilePlaced:
                 print("Attempting to place card")
@@ -74,6 +78,10 @@ class EventHandler:
         if event.button == 3 and gameSession.getCurrentCard():  # Right-click to rotate a card
             print("currentCard.rotate triggered")
             gameSession.getCurrentCard().rotate() 
+            
+        if event.button ==2:
+            print(f"Printing card info for card {gridX};{gridY}")
+            self.printCardInfo(gameSession.getGameBoard().getCard(gridX, gridY))
     
     def handleKeyHold(self, renderer):
         """
@@ -119,7 +127,10 @@ class EventHandler:
         print(f"Retrieved card {card} at {gridX};{gridY}")
 
         # Check if the card supports "C" (center placement)
-        supportsCenter = "C" in card.terrains  # Assuming card.terrains stores valid placements
+        supportsCenter = False
+        
+        if card.getTerrains()["C"]:
+            supportsCenter = True
         
         print(f"Card supports C direction: {supportsCenter}")
         
@@ -143,3 +154,14 @@ class EventHandler:
         
         print(f"Returning {min(distances, key=distances.get)} direction")
         return min(distances, key=distances.get)  # Assigns the closest direction
+
+    def printCardInfo(self, card):
+        """
+        Debug method to print all available card information in the log
+        :param card: Card of which info is to be printed
+        """
+        if card:
+            print(f"Image: {card.getImage()}")
+            print(f"Terrains: {card.getTerrains()}")
+            print(f"Neighbors: {card.getNeighbors()}")
+            print(f"Connections: {card.getConnections()}")
