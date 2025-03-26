@@ -52,6 +52,6 @@ class Game:
         exit()
 
 if __name__ == "__main__":
-    playerNames = ["Player 1", "Player 2"]  # Example player names
+    playerNames = ["Player 1", "Player 2", "Player 3"]  # Example player names
     game = Game(playerNames)
     game.run()

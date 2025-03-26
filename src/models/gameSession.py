@@ -294,8 +294,7 @@ class GameSession:
             else:
                 print("Card placement failed.")
                 
-            print("Detecting structures...")
-            self.detectStructures()
+            self.detectStructures() # Structure detection needs to be performed after each action
             
             return  # Wait for next player click (figure phase or retry)
 
@@ -309,9 +308,7 @@ class GameSession:
                 print("Figure not placed or skipped.")
                 return # Wait for next player action (retry figure placement or skip)
 
-            # Finalize turn
-            print("Detecting structures...")
-            self.detectStructures()
+            self.detectStructures() # Structure detection needs to be performed after each action
 
             print("Checking completed structures...")
             for structure in self.structures:
@@ -335,7 +332,6 @@ class GameSession:
         elif self.turnPhase == 2:
             print("Skipping figure placement. Finalizing turn...")
 
-            print("Detecting structures...")
             self.detectStructures()
 
             print("Checking completed structures...")
@@ -382,7 +378,7 @@ class GameSession:
         structure = self.structureMap.get((x, y, position))
         if structure:
             if structure.figures:
-                print(f"Structure already claimed by {structure.getFigureOwner().getName()}")
+                print(f"Unable to play figure, structure already claimed by {structure.getFigureOwner().getName()}")
                 return False  # Structure is already claimed
 
         # Attempt to place figure from player
