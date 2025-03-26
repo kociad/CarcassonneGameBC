@@ -281,7 +281,7 @@ class GameSession:
         """
         Plays a single complete game turn in two phases:
         Phase 1 (turnPhase == 1): Attempts to place the current card at (x, y)
-        Phase 2 (turnPhase == 2): Attempts to place a meeple on (x, y), then finishes turn
+        Phase 2 (turnPhase == 2): Attempts to place a figure on (x, y), then finishes turn
         """
         if player is None:
             player = self.currentPlayer
@@ -290,19 +290,24 @@ class GameSession:
         if self.turnPhase == 1:
             print("Turn Phase 1: Attempting to place card...")
             if self.playCard(x, y):
-                self.turnPhase = 2  # Move to meeple placement phase
+                self.turnPhase = 2  # Move to figure placement phase
             else:
                 print("Card placement failed.")
-            return  # Wait for next player click (meeple phase or retry)
+                
+            print("Detecting structures...")
+            self.detectStructures()
+            
+            return  # Wait for next player click (figure phase or retry)
 
-        # Phase 2: Place Meeple
+        # Phase 2: Place Figure
         elif self.turnPhase == 2:
-            print("Turn Phase 2: Attempting to place meeple...")
+            print("Turn Phase 2: Attempting to place figure...")
 
             if self.playFigure(player, x, y, position):  # Defaulting to center — position must be set properly by event handler
-                print("Meeple placed.")
+                print("Figure placed.")
             else:
-                print("Meeple not placed or skipped.")
+                print("Figure not placed or skipped.")
+                return # Wait for next player action (retry figure placement or skip)
 
             # Finalize turn
             print("Detecting structures...")
@@ -359,46 +364,45 @@ class GameSession:
         :param player: The player placing the figure
         :param x: X-coordinate on the board
         :param y: Y-coordinate on the board
-        :param position: The position on the card (N, W, S, E)
+        :param position: The position on the card (N, W, S, E, etc.)
         :return: True if placement is successful, False otherwise
         """
         print("Playing figure...")
-        
-        if self.gameBoard.getCard(x, y) != self.lastPlacedCard:
-            print("Unable to play figure, can only place figures on last played card")
-            return False # Figures can only be placed on the most recently placed card!
-        
-        # Redundand check, figure can be placed only on the most recently played card
+
         card = self.gameBoard.getCard(x, y)
+        if card != self.lastPlacedCard:
+            print("Unable to play figure, can only place figures on last played card")
+            return False
+
         if not card:
             print(f"Unable to play figure, no card detected in selected space: {x};{y}")
-            return False  # Can't place a figure on an empty space
-        
-        if player.figures:
-            figure = player.getFigure()  # Remove a figure from the player's available figures
-            if figure.place(card, position):
-                self.placedFigures.append(figure)  # Track only placed figures
-                print(f"{player.getName()} placed a figure at ({x}, {y})")
+            return False
 
-                #self.detectStructures()
-                #self.nextTurn()
+        # Find structure that this figure would be placed on
+        structure = self.structureMap.get((x, y, position))
+        if structure:
+            if structure.figures:
+                print(f"Structure already claimed by {structure.getFigureOwner().getName()}")
+                return False  # Structure is already claimed
+
+        # Attempt to place figure from player
+        if player.figures:
+            figure = player.getFigure()
+            if figure.place(card, position):
+                self.placedFigures.append(figure)
+                print(f"{player.getName()} placed a figure at ({x}, {y}) on position {position}")
+
+                if structure:
+                    structure.addFigure(figure)
+
                 print("Figure played")
+                self.nextTurn()
                 return True
             else:
-                player.addFigure(figure)  # Return the figure if placement fails
-                
+                player.addFigure(figure)  # Return figure if placement failed
+
         print("Unable to place figure, player has no figures left.")
         return False
-        
-    def removeFigure(self, figure):
-        """
-        Removes a figure from the board when scoring is completed.
-        :param figure: The figure to be removed.
-        """
-        if figure in self.placedFigures:
-            figure.remove()
-            self.placedFigures.remove(figure)
-            figure.owner.addFigure(figure)  # Return the figure to the player's available pool
             
     def detectStructures(self):
         """
