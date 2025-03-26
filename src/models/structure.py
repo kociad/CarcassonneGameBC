@@ -14,12 +14,12 @@ class Structure:
         self.figures = [] # List of figures placed in this structure
         self.isCompleted = False # Tracking whether the structure has been completed
         self.color = (
-            random.randint(80, 200),  # R
-            random.randint(80, 200),  # G
-            random.randint(80, 200),  # B
-            100                       # Alpha for transparency
+            random.randint(0, 255),  # R
+            random.randint(0, 255),  # G
+            random.randint(0, 255),  # B
+            150                      # Alpha for transparency
         )
-        
+
     def getStructureType(self):
         """
         Structure type getter method
@@ -81,12 +81,35 @@ class Structure:
                 return False  # Open edge
 
         return True
-
+        
     def checkRoadCompletion(self):
-        return False
+        """
+        Check if road structure is completed.
+        :return: True if completed, False otherwise
+        """
+        for card, direction in self.cardSides:
+            # Check external neighbor
+            neighborCard = card.getNeighbors().get(direction)
+
+            if not neighborCard:
+                return False  # Open edge
+                
+        return True
         
     def checkMonasteryCompletion(self):
-        return False
+        """
+        Check if monastery structure is completed.
+        :return: True if completed, False otherwise
+        """
+        for card, direction in self.cardSides:
+            neighbors = card.getNeighbors()
+            for direction in neighbors:
+                if not neighbors[direction]:
+                    return False  # No neighbor in NESW direction
+                if direction in ["N","S"] and not (neighbors[direction].getNeighbor("W") and neighbors[direction].getNeighbor("E")):
+                    return False  # No diagonal neighbor
+                    
+        return True
         
     def checkFieldCompletion(self):
         return False

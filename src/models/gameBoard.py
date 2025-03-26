@@ -63,6 +63,13 @@ class GameBoard:
             return self.grid[y][x]
             
         return None
+        
+    def getCardPosition(self, card):
+        for y in range(self.gridSize):
+            for x in range(self.gridSize):
+                if self.getCard(x, y) == card:
+                    return x, y
+        return None, None
 
     def validateCardPlacement(self, card, x, y):
         """

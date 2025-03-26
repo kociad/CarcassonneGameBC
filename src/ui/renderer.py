@@ -70,13 +70,15 @@ class Renderer:
                     
         # Draw completed detected structures with tint only on relevant directions
         for structure in detectedStructures:
-            structure.checkCompletion()
+            #structure.checkCompletion()
             if structure.getIsCompleted():
                 tintColor = structure.getColor()
                 
                 # Group card sides by card for drawing
                 cardEdgeMap = {}
                 for card, direction in structure.cardSides:
+                    if direction is None:
+                        continue  # Skip invalid directions
                     if card not in cardEdgeMap:
                         cardEdgeMap[card] = []
                     cardEdgeMap[card].append(direction)
@@ -98,9 +100,14 @@ class Renderer:
                                 pygame.draw.rect(rect, tintColor, (2 * TILE_SIZE // 3, 0, TILE_SIZE // 3, TILE_SIZE))
                             elif direction == "W":
                                 pygame.draw.rect(rect, tintColor, (0, 0, TILE_SIZE // 3, TILE_SIZE))
+                            elif direction == "C":
+                                centerX = TILE_SIZE // 2
+                                centerY = TILE_SIZE // 2
+                                radius = TILE_SIZE // 6
+                                pygame.draw.circle(rect, tintColor, (centerX, centerY), radius)
 
                         self.screen.blit(rect, (cardX * TILE_SIZE - self.offsetX, cardY * TILE_SIZE - self.offsetY))
-                  
+
         # Draw placed figures (meeples) at correct positions on the card
         for figure in placedFigures:
             if figure.card:
@@ -162,11 +169,10 @@ class Renderer:
         placedMeeplesSurface = self.font.render(f"Placed: {len(placedFigures)}", True, (255, 255, 255))
         self.screen.blit(placedMeeplesSurface, (panelX + 20, 300))
         
-        # Display number of detected structures
+        # Display number of detected structures        
         detectedStructuresSurface = self.font.render(f"Structures: {len(detectedStructures)}", True, (255, 255, 255))
         self.screen.blit(detectedStructuresSurface, (panelX + 20, 330))
-            
-    
+        
     def updateDisplay(self):
         """
         Updates the Pygame display with the latest frame.

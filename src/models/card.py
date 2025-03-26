@@ -37,10 +37,17 @@ class Card:
         
     def getNeighbors(self):
         """
-        Card neighbor getter method
+        Card neighbors getter method
         :return: Neighbors dictationary
         """
         return self.neighbors
+        
+    def getNeighbor(self, direction):
+        """
+        Card neighbor getter method for specific direction
+        :return: Neighbor card or None
+        """
+        return self.neighbors[direction]
         
     def setNeighbor(self, direction, neighbor):
         """

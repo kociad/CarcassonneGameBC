@@ -12,7 +12,7 @@ class EventHandler:
         """
         Initializes the event handler.
         """
-        self.tilePlaced = False  # Track if a tile was placed this turn
+        #self.tilePlaced = False  # Track if a tile was placed this turn
         self.keysPressed = {pygame.K_w: False, pygame.K_s: False, pygame.K_a: False, pygame.K_d: False,
                             pygame.K_UP: False, pygame.K_DOWN: False, pygame.K_LEFT: False, pygame.K_RIGHT: False,
                             pygame.K_SPACE: False, pygame.K_RETURN: False}
@@ -32,15 +32,13 @@ class EventHandler:
             
             if event.type == pygame.KEYDOWN:
                 self.keysPressed[event.key] = True
+                if event.key == pygame.K_SPACE:
+                    gameSession.skipCurrentAction()
+                """
                 if event.key == pygame.K_RETURN:
                     gameSession.detectStructures()
-                if event.key == pygame.K_SPACE and self.tilePlaced:
-                    print("Skipping meeple placement")
-                    self.tilePlaced = False  # Reset for the next turn
-                    gameSession.nextTurn()
-                if event.key == pygame.K_SPACE and not self.tilePlaced:
-                    gameSession.discardCurrentCard()  # Call discard method on spacebar press
-            
+                """
+                
             if event.type == pygame.KEYUP:
                 self.keysPressed[event.key] = False
         
@@ -61,6 +59,10 @@ class EventHandler:
         print(f"Registered {event.button}")
         
         if event.button == 1:  # Left-click
+            print("Playing turn...")
+            gameSession.playTurn(gridX, gridY, self.detectClickDirection(x, y, gridX, gridY, renderer, gameSession))
+            
+            """
             if not self.tilePlaced:
                 print("Attempting to place card")
                 if gameSession.playCard(gridX, gridY):
@@ -74,6 +76,7 @@ class EventHandler:
                         print(f"{currentPlayer.name} placed a figure at ({gridX}, {gridY}) in {direction} direction")
                         self.tilePlaced = False  # Reset for the next turn
                         #gameSession.nextTurn()
+            """
         
         if event.button == 3 and gameSession.getCurrentCard():  # Right-click to rotate a card
             print("currentCard.rotate triggered")

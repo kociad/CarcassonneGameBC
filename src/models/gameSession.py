@@ -20,12 +20,14 @@ class GameSession:
         self.cardsDeck = None
         self.players = [] # List of players in the game
         self.currentPlayer = None # Currently playing player
-        self.structures = [] # Currently unused
+        self.structures = []
         self.gameMode = None # Currently unused
         self.currentCard = None # Currently selected card
         self.lastPlacedCard = None # Last placed card
         self.isFirstRound = True # Is this the first (automatic) round?
-        self.placedFigures = []
+        self.placedFigures = [] # List of figures currently placed
+        self.turnPhase = 1 # Tracking current turn phase
+        self.structureMap = {}
         
         # Create a list of players
         self.generatePlayerList(playerNames)
@@ -275,9 +277,71 @@ class GameSession:
         if self.currentCard:
             self.currentCard = self.drawCard()
         
-    def playTurn(self, x, y, player=None):
-        pass
+    def playTurn(self, x, y, position="C", player=None):
+        """
+        Plays a single complete game turn in two phases:
+        Phase 1 (turnPhase == 1): Attempts to place the current card at (x, y)
+        Phase 2 (turnPhase == 2): Attempts to place a meeple on (x, y), then finishes turn
+        """
+        if player is None:
+            player = self.currentPlayer
+
+        # Phase 1: Place Card
+        if self.turnPhase == 1:
+            print("Turn Phase 1: Attempting to place card...")
+            if self.playCard(x, y):
+                self.turnPhase = 2  # Move to meeple placement phase
+            else:
+                print("Card placement failed.")
+            return  # Wait for next player click (meeple phase or retry)
+
+        # Phase 2: Place Meeple
+        elif self.turnPhase == 2:
+            print("Turn Phase 2: Attempting to place meeple...")
+
+            if self.playFigure(player, x, y, position):  # Defaulting to center — position must be set properly by event handler
+                print("Meeple placed.")
+            else:
+                print("Meeple not placed or skipped.")
+
+            # Finalize turn
+            print("Detecting structures...")
+            self.detectStructures()
+
+            print("Checking completed structures...")
+            for structure in self.structures:
+                if structure.checkCompletion():
+                    print(f"Structure {structure.structureType} is completed!")
+                    # TODO: Award points, remove figures, etc.
+
+            self.nextTurn()
+            self.turnPhase = 1  # Reset for next player
+            
+    def skipCurrentAction(self):
+        """
+        Skips the current phase action:
+        - Phase 1: Discards the current card and draws a new one.
+        - Phase 2: Skips figure placement, finalizes the turn.
+        """
+        if self.turnPhase == 1:
+            print("Skipping card placement. Drawing new card...")
+            self.discardCurrentCard()
         
+        elif self.turnPhase == 2:
+            print("Skipping figure placement. Finalizing turn...")
+
+            print("Detecting structures...")
+            self.detectStructures()
+
+            print("Checking completed structures...")
+            for structure in self.structures:
+                if structure.checkCompletion():
+                    print(f"Structure {structure.structureType} is completed!")
+                    # TODO: Award points, remove figures, etc.
+
+            self.nextTurn()
+            self.turnPhase = 1
+            
     def listPlayers(self): # Debug purposes only
         """
         Print a list of all players in the game with their info
@@ -288,7 +352,7 @@ class GameSession:
             print(f"Score: {player.getScore()}")
             print(f"Index: {player.getIndex()}")
             print(f"Figures: {player.getFigures()}")
-    
+            
     def playFigure(self, player, x, y, position):
         """
         Places a figure on a valid card position
@@ -317,7 +381,7 @@ class GameSession:
                 print(f"{player.getName()} placed a figure at ({x}, {y})")
 
                 #self.detectStructures()
-                self.nextTurn()
+                #self.nextTurn()
                 print("Figure played")
                 return True
             else:
@@ -337,75 +401,67 @@ class GameSession:
             figure.owner.addFigure(figure)  # Return the figure to the player's available pool
             
     def detectStructures(self):
-        print("Detecting structures...")
-        self.structures = []
-        visited = set()
-        structureMap = {}  # (x, y, direction) → structure
+        """
+        Updates structures based only on the last placed card.
 
-        for y in range(self.gameBoard.getGridSize()):
-            for x in range(self.gameBoard.getGridSize()):
-                card = self.gameBoard.getCard(x, y)
-                if card:
-                    for direction, terrainType in card.getTerrains().items():
-                        if terrainType and terrainType != "field" and (x, y, direction) not in visited: #Ignoring fields for now
-                            print(f"Starting detection at ({x}, {y}) {direction} → {terrainType}...")
-                            connectedStructures = self.findConnectedStructures(x, y, direction, terrainType, structureMap)
-                            if connectedStructures:
-                                print(f"Found {len(connectedStructures)} connected structure(s) to merge.")
-                                mainStructure = connectedStructures[0]
-                                for s in connectedStructures[1:]:
-                                    print(f"Merging structure with {len(s.cards)} cards into another...")
-                                    mainStructure.merge(s)
-                                    self.structures.remove(s)
-                            else:
-                                print(f"Creating new structure: {terrainType}...")
-                                mainStructure = Structure(terrainType.capitalize())
-                                self.structures.append(mainStructure)
+        This version does not clear the whole structure list. Instead, it checks 
+        only the newly placed card and updates or merges structures as needed.
+        """
+        print("Updating structures based on the last placed card...")
 
-                            self.floodFill(x, y, direction, terrainType, mainStructure, visited, structureMap)
+        if not self.lastPlacedCard:
+            print("No card was placed. Skipping structure detection.")
+            return
 
-    def floodFill(self, x, y, direction, terrainType, structure, visited, structureMap):
-        stack = [(x, y, direction)]
-        while stack:
-            cx, cy, cdir = stack.pop()
-            if (cx, cy, cdir) in visited:
+        position = self.gameBoard.getCardPosition(self.lastPlacedCard)
+        if not position:
+            print("Last placed card position not found.")
+            return
+
+        x, y = position
+        self.visited = set()  # Reset visited only for the scope of this update
+
+        for direction, terrainType in self.lastPlacedCard.getTerrains().items():
+            key = (x, y, direction)
+
+            if not terrainType or key in self.structureMap:
                 continue
 
-            card = self.gameBoard.getCard(cx, cy)
-            if not card:
-                continue
+            # Step 1: Flood scan to get all connected sides
+            connected_sides = self.scanConnectedSides(x, y, direction, terrainType)
+            connected_structures = {self.structureMap.get(side) for side in connected_sides if self.structureMap.get(side)}
+            connected_structures.discard(None)
 
-            if card.getTerrains().get(cdir) == terrainType:
-                print(f"Added ({cx}, {cy}) {cdir} to structure")
-                structure.addCardSide(card, cdir)
-                visited.add((cx, cy, cdir))
-                structureMap[(cx, cy, cdir)] = structure
+            if connected_structures:
+                # Merge all into one
+                mainStructure = connected_structures.pop()
+                for s in connected_structures:
+                    mainStructure.merge(s)
+                    self.structures.remove(s)
+            else:
+                mainStructure = Structure(terrainType.capitalize())
+                self.structures.append(mainStructure)
 
-                # Explore all same-card connected directions BEFORE neighbors
-                if card.getConnections():
-                    connectedDirs = card.getConnections().get(cdir, [])
-                    for connectedDir in connectedDirs:
-                        if (cx, cy, connectedDir) not in visited:
-                            print(f"Same-card connection: {cdir} → {connectedDir}")
-                            stack.append((cx, cy, connectedDir))
-
-                    # Only check external neighbors for each connected direction
-                    for exploreDir in [cdir] + connectedDirs:
-                        neighbors = {
-                            "N": (cx, cy - 1, "S"),
-                            "S": (cx, cy + 1, "N"),
-                            "E": (cx + 1, cy, "W"),
-                            "W": (cx - 1, cy, "E")
-                        }
-
-                        if exploreDir in neighbors:
-                            nx, ny, ndir = neighbors[exploreDir]
-                            neighborCard = self.gameBoard.getCard(nx, ny)
-                            if neighborCard and neighborCard.getTerrains().get(ndir) == terrainType:
-                                print(f"Neighbor connection: ({cx}, {cy}) {exploreDir} → ({nx}, {ny}) {ndir}")
-                                stack.append((nx, ny, ndir))
-
+            # Step 2: Assign all scanned sides to mainStructure
+            for cx, cy, cdir in connected_sides:
+                self.structureMap[(cx, cy, cdir)] = mainStructure
+                mainStructure.addCardSide(self.gameBoard.getCard(cx, cy), cdir)
+                
     def findConnectedStructures(self, x, y, direction, terrainType, structureMap):
+        """
+        Finds existing structures connected to the given card side
+
+        Looks in the direction specified and checks neighboring tiles for a structure
+        with matching terrain type. Used to determine whether to merge with existing
+        structures or start a new one
+        :param x: X-coordinate of the current card
+        :param y: Y-coordinate of the current card
+        :param direction: Direction being analyzed
+        :param terrainType: The terrain type to match (e.g., 'city')
+        :param structureMap: A dictionary mapping (x, y, direction) to existing structures
+        :return: List of unique connected structures
+        """
+
         neighbors = {
             "N": (x, y - 1, "S"),
             "S": (x, y + 1, "N"),
@@ -421,6 +477,62 @@ class GameSession:
                     print(f"Existing structure detected at ({nx}, {ny}) {ndir}")
                     connected.append(s)
         return list(set(connected))  # Remove duplicates
+        
+    def scanConnectedSides(self, x, y, direction, terrainType):
+        """
+        Performs a pre-merge scan to collect all connected sides forming a continuous structure
 
+        Traverses both internal (same-card) and external (neighboring-card) connections
+        starting from a given card side, and gathers all (x, y, direction) segments
+        that share the same terrain type. This method does not modify structureMap or
+        the structure itself — it only returns all segments that belong together and
+        should be associated with the same structure.
 
+        Used before assigning or merging structures to ensure each segment is processed only once.
+
+        :param x: X-coordinate of the starting card
+        :param y: Y-coordinate of the starting card
+        :param direction: Starting direction to explore from
+        :param terrainType: The terrain type to match (e.g., 'city', 'road')
+        :return: A set of (x, y, direction) tuples representing the entire connected structure
+        """
+        visited = set()
+        stack = [(x, y, direction)]
+
+        while stack:
+            cx, cy, cdir = stack.pop()
+            if (cx, cy, cdir) in visited:
+                continue
+
+            card = self.gameBoard.getCard(cx, cy)
+            if not card:
+                continue
+
+            if card.getTerrains().get(cdir) != terrainType:
+                continue
+
+            visited.add((cx, cy, cdir))
+
+            # Same-card connections
+            connectedDirs = card.getConnections().get(cdir, []) if card.getConnections() else []
+            for dir2 in connectedDirs:
+                if (cx, cy, dir2) not in visited:
+                    stack.append((cx, cy, dir2))
+
+            # Neighbor connections
+            neighbors = {
+                "N": (cx, cy - 1, "S"),
+                "S": (cx, cy + 1, "N"),
+                "E": (cx + 1, cy, "W"),
+                "W": (cx - 1, cy, "E")
+            }
+
+            if cdir in neighbors:
+                nx, ny, ndir = neighbors[cdir]
+                neighbor = self.gameBoard.getCard(nx, ny)
+                if neighbor and neighbor.getTerrains().get(ndir) == terrainType:
+                    stack.append((nx, ny, ndir))
+
+        return visited
+       
 
