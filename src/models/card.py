@@ -7,7 +7,7 @@ class Card:
     Represents a tile (card) in the game with an image and terrain properties.
     """
     
-    def __init__(self, image_path, terrains, connections):
+    def __init__(self, image_path, terrains, connections, features):
         """
         Initializes a tile with an image and terrain data.
         :param image_path: Path to the tile image.
@@ -18,7 +18,7 @@ class Card:
         self.terrains = terrains  # Dictionary with terrain info (e.g., {"N": "city", "S": "road"})
         self.connections = connections
         self.occupied = {} # Currently unused
-        self.features = set() # Currently unused
+        self.features = features
         self.neighbors = {"N": None, "E": None, "S": None, "W": None}
     
     def getImage(self):
@@ -63,6 +63,13 @@ class Card:
         :return: Dict with connections within the card
         """
         return self.connections
+        
+    def getFeatures(self):
+        """
+        Card features getter method
+        :return: List of features on the card
+        """
+        return self.features
     
     def rotate(self):
         """

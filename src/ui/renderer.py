@@ -161,17 +161,24 @@ class Renderer:
             meeplesSurface = self.font.render(f"Meeples: {len(currentPlayer.getFigures())}", True, (255, 255, 255))
             self.screen.blit(meeplesSurface, (panelX + 20, textY + 2 * spacing))
             
-        # Display number of remaining cards in the deck
-        nameSurface = self.font.render(f"Cards: {remainingCards}", True, (255, 255, 255))
-        self.screen.blit(nameSurface, (panelX + 20, 270))
+            # Display number of remaining cards in the deck
+            nameSurface = self.font.render(f"Cards: {remainingCards}", True, (255, 255, 255))
+            self.screen.blit(nameSurface, (panelX + 20, textY + 3 * spacing))
         
-        # Display number of meeples palced
-        placedMeeplesSurface = self.font.render(f"Placed: {len(placedFigures)}", True, (255, 255, 255))
-        self.screen.blit(placedMeeplesSurface, (panelX + 20, 300))
+            # Display number of meeples palced
+            placedMeeplesSurface = self.font.render(f"Placed: {len(placedFigures)}", True, (255, 255, 255))
+            self.screen.blit(placedMeeplesSurface, (panelX + 20, textY + 4 * spacing))
         
-        # Display number of detected structures        
-        detectedStructuresSurface = self.font.render(f"Structures: {len(detectedStructures)}", True, (255, 255, 255))
-        self.screen.blit(detectedStructuresSurface, (panelX + 20, 330))
+            # Display number of detected structures        
+            detectedStructuresSurface = self.font.render(f"Structures: {len(detectedStructures)}", True, (255, 255, 255))
+            self.screen.blit(detectedStructuresSurface, (panelX + 20, textY + 5 * spacing))
+        
+            # Display meeple images
+            figures = currentPlayer.getFigures()
+            for i, figure in enumerate(figures):
+                figX = panelX + 20 + (i % 4) * (FIGURE_SIZE + 5)
+                figY = textY + 6 * spacing + (i // 4) * (FIGURE_SIZE + 5)
+                self.screen.blit(figure.image, (figX, figY))
         
     def updateDisplay(self):
         """

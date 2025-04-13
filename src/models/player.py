@@ -1,3 +1,5 @@
+import pygame
+
 from models.figure import Figure
 
 class Player:
@@ -52,6 +54,11 @@ class Player:
         :return: Color of the player figures
         """
         return self.color
+        
+    def getColorWithAlpha(self, alpha=150):
+        color = pygame.Color(self.color)
+        color.a = alpha
+        return (color)
         
     def getFigure(self):
         """

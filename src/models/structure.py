@@ -9,7 +9,7 @@ class Structure:
         """
         
         self.structureType = structureType
-        #self.cards = [] # List of cards that are part of the structure
+        self.cards = [] # List of cards that are part of the structure
         self.cardSides = set()  # Store (card, direction) tuples here
         self.figures = [] # List of figures placed in this structure
         self.isCompleted = False # Tracking whether the structure has been completed
@@ -41,8 +41,23 @@ class Structure:
         """
         return self.isCompleted
         
+    def getFigures(self):
+        """
+        Structure figure list getter method
+        :return: List of figures assigned to given structure
+        """
+        return self.figures
+        
+    def setColor(self, color):
+        """
+        Structure color setter method
+        :param color: Color to be set
+        """
+        self.color = color
+        
     def addCardSide(self, card, direction):
-        #self.cards.append(card)
+        if not card in self.cards:
+            self.cards.append(card)
         self.cardSides.add((card, direction))
         
     def addFigure(self, figure):
@@ -54,6 +69,14 @@ class Structure:
             self.figures.append(figure)
             return True
         return False # Figure placement denied if structure has already been claimed
+        
+    def removeFigure(self, figure):
+        """
+        Remove figure from the structure and clears its placement on card
+        :param figure: Figure to be removed
+        """
+        self.figures.remove(figure)
+        figure.remove()
         
     def checkCompletion(self):
         """
@@ -113,16 +136,47 @@ class Structure:
         
     def checkFieldCompletion(self):
         return False
-            
-    def getFigureOwner(self):
+        
+    def getMajorityOwners(self):
         """
-        Returns owner of the figure placed in the structure
-        :return: The player who owns the figure
+        Determines player(s) with the most figures in this structure.
+        :return: List of Player instances who hold majority.
         """
-        if self.figures:
-            return self.figures[0].getOwner()
-        return None
+        owner_counts = {}
+        for figure in self.figures:
+            owner = figure.getOwner()
+            owner_counts[owner] = owner_counts.get(owner, 0) + 1
+
+        if not owner_counts:
+            return []
+
+        max_count = max(owner_counts.values())
+        return [owner for owner, count in owner_counts.items() if count == max_count]
         
     def merge(self, otherStructure):
         #self.cards.update(otherStructure.cards)
         self.cardSides.update(otherStructure.cardSides)
+        
+    def getScore(self):
+        """
+        Calculates the score value of this structure.
+        Currently supports only cities.
+        """
+        score = 0
+        
+        if self.structureType == "City":
+            for card in self.cards:
+                if card.getFeatures():
+                    score = score + 2 if "coat" in card.getFeatures() else score
+            score = score + len(self.cards) * 2
+            
+        elif self.structureType == "Road":
+            score = len(self.cards)
+            
+        elif self.structureType == "Monastery":
+            score = 9 if self.isCompleted else 0
+
+        elif self.structureType == "Field":
+            score = 0  # TBD
+            
+        return score
