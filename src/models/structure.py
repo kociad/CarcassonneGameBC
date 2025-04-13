@@ -75,6 +75,7 @@ class Structure:
         Remove figure from the structure and clears its placement on card
         :param figure: Figure to be removed
         """
+        print(f"Removing figure {figure} belonging to {figure.getOwner()}")
         self.figures.remove(figure)
         figure.remove()
         
@@ -142,20 +143,34 @@ class Structure:
         Determines player(s) with the most figures in this structure.
         :return: List of Player instances who hold majority.
         """
+        print("Retrieving structure owners...")
         owner_counts = {}
         for figure in self.figures:
             owner = figure.getOwner()
+            print(f"Found figure with owner - {owner}")
             owner_counts[owner] = owner_counts.get(owner, 0) + 1
 
         if not owner_counts:
             return []
 
         max_count = max(owner_counts.values())
+        print(f"Retrieved owners: {owner_counts}")
         return [owner for owner, count in owner_counts.items() if count == max_count]
         
     def merge(self, otherStructure):
-        #self.cards.update(otherStructure.cards)
+        """
+        Merges another structure into this one by combining cards, card sides, and figures.
+        :param otherStructure: The Structure to merge into this one.
+        """
         self.cardSides.update(otherStructure.cardSides)
+        
+        # Merge figures
+        for figure in otherStructure.figures:
+            self.figures.append(figure)
+            
+        # Merge cards
+        for card in otherStructure.cards:
+            self.cards.append(card)
         
     def getScore(self):
         """

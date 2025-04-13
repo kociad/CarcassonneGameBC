@@ -564,6 +564,7 @@ class GameSession:
         structure.setColor(owners[0].getColorWithAlpha())
         
         # Remove figures after scoring and return them to players
-        for figure in structure.getFigures():
+        print(f"Figures to be removed: {structure.getFigures()}")
+        for figure in structure.getFigures()[:]:
             structure.removeFigure(figure)
             figure.owner.addFigure(figure)
