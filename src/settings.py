@@ -24,7 +24,7 @@ GRID_SIZE = 20   # A x A grid for the board
 #MEEPLE_COLOR_GREEN = (0, 200, 0)
 
 # Asset Paths
-ASSETS_PATH = "assets/"
+ASSETS_PATH = "src/assets/"
 TILE_IMAGES_PATH = ASSETS_PATH + "tiles/"
 MEEPLE_IMAGES_PATH = ASSETS_PATH + "meeples/"
 BACKGROUND_IMAGE_PATH = ASSETS_PATH + "backgrounds/"
