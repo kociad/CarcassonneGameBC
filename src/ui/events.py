@@ -31,15 +31,22 @@ class EventHandler:
             if event.type == pygame.QUIT:
                 return False  # Exit the game
             
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                self.handleMouseClick(event, gameSession, renderer)
-            
-            if event.type == pygame.KEYDOWN:
-                self.keysPressed[event.key] = True
-                if event.key == pygame.K_SPACE:
-                    gameSession.skipCurrentAction()
-                if event.key == pygame.K_RETURN:
-                    gameSession.placeStartingCard()
+            if gameSession.getIsFirstRound():
+                if event.type == pygame.KEYDOWN:
+                    self.keysPressed[event.key] = True
+                    if event.key == pygame.K_RETURN:
+                        gameSession.placeStartingCard()
+                        
+            else:
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    self.handleMouseClick(event, gameSession, renderer)
+                
+                if event.type == pygame.KEYDOWN:
+                    self.keysPressed[event.key] = True
+                    if event.key == pygame.K_SPACE:
+                        gameSession.skipCurrentAction()
+                    if event.key == pygame.K_RETURN:
+                        gameSession.placeStartingCard()
                 
             if event.type == pygame.KEYUP:
                 self.keysPressed[event.key] = False

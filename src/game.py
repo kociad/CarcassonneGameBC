@@ -21,7 +21,7 @@ class Game:
         
         self.gameSession = GameSession(playerNames)
         self.renderer = Renderer(self.screen)
-        self.renderer.drawBoard(self.gameSession.getGameBoard(), self.gameSession.getPlacedFigures(), self.gameSession.getStructures())
+        self.renderer.drawBoard(self.gameSession.getGameBoard(), self.gameSession.getPlacedFigures(), self.gameSession.getStructures(), self.gameSession.getIsFirstRound())
         self.renderer.updateDisplay()
         self.eventHandler = EventHandler()
         self.clock = pygame.time.Clock()
@@ -46,7 +46,8 @@ class Game:
             self.renderer.drawBoard(
                 self.gameSession.getGameBoard(),
                 self.gameSession.getPlacedFigures(),
-                self.gameSession.getStructures()
+                self.gameSession.getStructures(),
+                self.gameSession.getIsFirstRound()
             )
             self.renderer.drawSidePanel(
                 self.gameSession.getCurrentCard(),
@@ -67,6 +68,6 @@ class Game:
         exit()
 
 if __name__ == "__main__":
-    playerNames = ["AI_Player 1", "AI_Player 2"]  # Example player names
+    playerNames = ["AI_Player 1", "Player 2"]  # Example player names
     game = Game(playerNames)
     game.run()

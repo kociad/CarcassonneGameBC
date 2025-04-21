@@ -35,7 +35,7 @@ class Renderer:
         """
         return self.offsetY
     
-    def drawBoard(self, gameBoard, placedFigures, detectedStructures):
+    def drawBoard(self, gameBoard, placedFigures, detectedStructures, isFirstRound):
         """
         Draws the game board, including grid lines and placed cards.
         """
@@ -49,7 +49,14 @@ class Renderer:
             "Monastery": (100, 200, 100, 100)  # Light green tint
         }
         """
-        
+        if isFirstRound:
+            startFont = pygame.font.Font(None, 72)
+            message = "Press 'Enter' to start game"
+            textSurface = startFont.render(message, True, (255, 255, 255))
+            textRect = textSurface.get_rect(center=(WINDOW_WIDTH // 2, WINDOW_HEIGHT // 2))
+            self.screen.blit(textSurface, textRect)
+            return  # Skip board drawing entirely until game starts
+                
         if DEBUG:
             # Draw grid lines
             for x in range(0, (gameBoard.getGridSize() + 1) * TILE_SIZE, TILE_SIZE):
