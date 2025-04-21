@@ -1,6 +1,7 @@
+import logging
+
 from models.card import Card
 from settings import GRID_SIZE, DEBUG
-import logging
 
 logging.basicConfig(level=logging.DEBUG if DEBUG else logging.INFO)
 logger = logging.getLogger(__name__)

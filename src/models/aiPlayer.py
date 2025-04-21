@@ -1,5 +1,6 @@
 import logging
 import random
+
 from settings import DEBUG
 from models.player import Player
 

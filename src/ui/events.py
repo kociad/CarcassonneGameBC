@@ -1,8 +1,9 @@
 import pygame
+import logging
+
 from models.gameSession import GameSession
 from ui.renderer import Renderer
 from settings import TILE_SIZE, DEBUG
-import logging
 
 logging.basicConfig(level=logging.DEBUG if DEBUG else logging.INFO)
 logger = logging.getLogger(__name__)

@@ -1,5 +1,6 @@
 import random
 import logging
+
 from settings import DEBUG
 
 logging.basicConfig(level=logging.DEBUG if DEBUG else logging.INFO)

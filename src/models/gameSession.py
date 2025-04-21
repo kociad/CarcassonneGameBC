@@ -1,11 +1,12 @@
+import random
+import logging
+
 from models.gameBoard import GameBoard
 from models.card import Card
 from models.player import Player
 from models.structure import Structure
 from models.aiPlayer import AIPlayer
 from settings import TILE_IMAGES_PATH, DEBUG
-import random
-import logging
 
 logging.basicConfig(level=logging.DEBUG if DEBUG else logging.INFO)
 logger = logging.getLogger(__name__)

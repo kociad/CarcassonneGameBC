@@ -1,5 +1,6 @@
 import pygame
 import random
+
 from models.gameBoard import GameBoard
 from models.card import Card
 from models.player import Player

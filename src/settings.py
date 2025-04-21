@@ -35,4 +35,4 @@ SOUND_PATH = ASSETS_PATH + "sounds/"
 #INITIAL_TILES = 72  # Number of tiles in the game
 
 # Debug
-DEBUG = True
+DEBUG = False
