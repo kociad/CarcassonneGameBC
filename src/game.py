@@ -22,7 +22,7 @@ class Game:
         
         self.gameSession = GameSession(playerNames)
         self.renderer = Renderer(self.screen)
-        self.renderer.drawBoard(self.gameSession.getGameBoard(), self.gameSession.getPlacedFigures(), self.gameSession.getStructures(), self.gameSession.getIsFirstRound())
+        self.renderer.drawBoard(self.gameSession.getGameBoard(), self.gameSession.getPlacedFigures(), self.gameSession.getStructures(), self.gameSession.getIsFirstRound(), self.gameSession.getGameOver(), self.gameSession.getPlayers())
         self.renderer.updateDisplay()
         self.eventHandler = EventHandler()
         self.clock = pygame.time.Clock()
@@ -48,7 +48,9 @@ class Game:
                 self.gameSession.getGameBoard(),
                 self.gameSession.getPlacedFigures(),
                 self.gameSession.getStructures(),
-                self.gameSession.getIsFirstRound()
+                self.gameSession.getIsFirstRound(),
+                self.gameSession.getGameOver(),
+                self.gameSession.getPlayers()
             )
             self.renderer.drawSidePanel(
                 self.gameSession.getCurrentCard(),

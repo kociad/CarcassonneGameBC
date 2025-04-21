@@ -47,6 +47,13 @@ class GameSession:
         # Automatically place the starting card
         #self.placeStartingCard()
         
+    def getPlayers(self):
+        """
+        Player list getter method
+        :return: List of player objects
+        """
+        return self.players
+        
     def getGameOver(self):
         """
         Game session game over getter method

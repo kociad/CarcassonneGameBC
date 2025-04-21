@@ -36,7 +36,7 @@ class Renderer:
         """
         return self.offsetY
     
-    def drawBoard(self, gameBoard, placedFigures, detectedStructures, isFirstRound):
+    def drawBoard(self, gameBoard, placedFigures, detectedStructures, isFirstRound, isGameOver, players):
         """
         Draws the game board, including grid lines and placed cards.
         """
@@ -57,6 +57,15 @@ class Renderer:
             textRect = textSurface.get_rect(center=(WINDOW_WIDTH // 2, WINDOW_HEIGHT // 2))
             self.screen.blit(textSurface, textRect)
             return  # Skip board drawing entirely until game starts
+            
+        if isGameOver:
+            winner = max(players, key=lambda p: p.getScore())
+            message = f"{winner.getName()} wins with {winner.getScore()} points!"
+            gameOverFont = pygame.font.Font(None, 72)
+            textSurface = gameOverFont.render(message, True, (255, 255, 255))
+            textRect = textSurface.get_rect(center=(WINDOW_WIDTH // 2, WINDOW_HEIGHT // 2))
+            self.screen.blit(textSurface, textRect)
+            return  # Skip rest of rendering
                 
         if DEBUG:
             # Draw grid lines
