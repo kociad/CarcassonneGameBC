@@ -1,8 +1,8 @@
 # settings.py
 
 # General Game Settings
-WINDOW_WIDTH = 1920
-WINDOW_HEIGHT = 1080
+WINDOW_WIDTH = 1024
+WINDOW_HEIGHT = 768
 FPS = 60
 
 # Colors
@@ -13,7 +13,7 @@ FPS = 60
 #BROWN = (139, 69, 19)
 
 # Tile Settings
-TILE_SIZE = 110  # Each tile is X pixels
+TILE_SIZE = 96  # Each tile is X pixels
 FIGURE_SIZE = 25 # Each figure is Y pixels
 GRID_SIZE = 20   # A x A grid for the board
 
