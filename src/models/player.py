@@ -1,10 +1,15 @@
 import pygame
+import logging
 
 from models.figure import Figure
+from settings import DEBUG
+
+logging.basicConfig(level=logging.DEBUG if DEBUG else logging.INFO)
+logger = logging.getLogger(__name__)
 
 class Player:
     
-    def __init__(self, name, index, color):
+    def __init__(self, name, index, color, isAI=False):
         """
         Initializes a player with a name, score, and a placeholder for figures.
         :param name: The name of the player.
@@ -18,8 +23,16 @@ class Player:
         self.score = 0
         self.index = index
         self.figures = [Figure(self) for _ in range(7)]  # Each player starts with 7 figures
-        self.isComputer = False # Currently unused
+        self.isAI = isAI
         
+    def getIsAI(self):
+        """
+        Is player AI getter method
+        :return: True if player is AI controlled, False otherwise
+        """
+        #logger.debug(f"Player {self.name} AI status: {self.isAI}")
+        return self.isAI
+    
     def getName(self):
         """
         Player name getter method
@@ -65,12 +78,12 @@ class Player:
         Gets a figure rom the figures list
         :return: If the list contains any figures then figure, else False
         """
-        print("Retrieving figure...")
+        logger.debug("Retrieving figure...")
         
         if self.figures:
-            print("Figure retrieved")
+            logger.debug("Figure retrieved")
             return self.figures.pop()
-        print("Unable to retrieve figure")
+        logger.debug("Unable to retrieve figure")
         return False
         
     def addFigure(self, figure):

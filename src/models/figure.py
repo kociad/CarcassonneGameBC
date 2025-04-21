@@ -1,5 +1,10 @@
 import pygame
-from settings import MEEPLE_IMAGES_PATH, FIGURE_SIZE
+from settings import MEEPLE_IMAGES_PATH, FIGURE_SIZE, DEBUG
+import logging
+
+logging.basicConfig(level=logging.DEBUG if DEBUG else logging.INFO)
+logger = logging.getLogger(__name__)
+
 
 class Figure:
     
@@ -28,13 +33,13 @@ class Figure:
         :param positiojn: The specific position on the card
         :return: True if placement is successful, False otherwise
         """
-        print(f"Placing figure on card {card} position {position}...")
+        logger.debug(f"Placing figure on card {card} position {position}...")
         if card.canPlaceFigure(position):
             self.card = card
             self.positionOnCard = position
-            print("Figure placed")
+            logger.debug("Figure placed")
             return True
-        print("Unable to place figure, placement invalid")
+        logger.debug("Unable to place figure, placement invalid")
         return False
         
     def remove(self):

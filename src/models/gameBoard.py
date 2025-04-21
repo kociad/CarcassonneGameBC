@@ -1,5 +1,9 @@
 from models.card import Card
-from settings import GRID_SIZE
+from settings import GRID_SIZE, DEBUG
+import logging
+
+logging.basicConfig(level=logging.DEBUG if DEBUG else logging.INFO)
+logger = logging.getLogger(__name__)
 
 class GameBoard:
     """
@@ -54,10 +58,12 @@ class GameBoard:
         :return: The card (Card) at the specified position, or None if empty.
         """
         if not (0 <= x < GRID_SIZE):
-            raise ValueError(f"x must be between 1 and {GRID_SIZE - 1}, got {x}")
+            logger.debug(f"Error getting card: x must be between 1 and {GRID_SIZE - 1}, got {x}")
+            return None
         
         if not (0 <= y < GRID_SIZE):
-            raise ValueError(f"y must be between 1 and {GRID_SIZE - 1}, got {y}")
+            logger.debug(f"Error getting card: y must be between 1 and {GRID_SIZE - 1}, got {y}")
+            return None
             
         if 0 <= x < self.gridSize and 0 <= y < self.gridSize:
             return self.grid[y][x]
@@ -79,18 +85,18 @@ class GameBoard:
         :param y: Y-coordinate of selected space
         :return: True if placement is valid, false otherwise
         """
-        print("Validating card placement...")
+        logger.debug("Validating card placement...")
         
         if not (0 <= x < GRID_SIZE) or not (0 <= y < GRID_SIZE):
-            print(f"Placement invalid, coordinates out of bounds.")
+            logger.debug(f"Placement invalid, coordinates out of bounds.")
             return False
         
         if self.getCard(x,y) is not None:
-            print(f"Placement invalid, expected None in space, got {self.getCard(x,y)}")
+            logger.debug(f"Placement invalid, expected None in space, got {self.getCard(x,y)}")
             return False # Cannot place card where one already exists
             
         if not self.hasNeighbor(x,y):
-            print(f"Placement invalid, no valid neighbor found")
+            logger.debug(f"Placement invalid, no valid neighbor found")
             return False
             
         neighbors = {
@@ -101,15 +107,15 @@ class GameBoard:
         }
         
         for direction, (nx, ny) in neighbors.items():
-            print(f"Testing terrains of neighbor {direction}...")
             if 0 <= nx < self.gridSize and 0 <= ny < self.gridSize: # Validate only neighbors within the grid
                 neighbor = self.getCard(nx, ny)
                 if neighbor:
+                    logger.debug(f"Testing directions currentCard: {direction} - {card.getTerrains()[direction]} neighbor: {self.getOppositeDirection(direction)} - {neighbor.getTerrains()[self.getOppositeDirection(direction)]}")
                     if card.getTerrains()[direction] != neighbor.getTerrains()[self.getOppositeDirection(direction)]:
-                        print(f"Testing directions currentCard: {direction} X neighbor: {self.getOppositeDirection(direction)}")
-                        print(f"Unable to place card, terrains don't match, testing currentcard: {card.getTerrains()[direction]} X neighbor: {neighbor.getTerrains()[self.getOppositeDirection(direction)]}")
+                        logger.debug(f"Terrain mismatch!")
                         return False  # Terrains do not match, placement is invalid
-            
+        
+        logger.debug(f"Placement is valid!")
         return True  # Placement is valid
             
     def getOppositeDirection(self, direction):
@@ -128,7 +134,7 @@ class GameBoard:
         :param y: Y-coordinate of selected space
         :return: True if space has a neighbor, false otherwise
         """
-        print("Checking for neighbors...")
+        logger.debug("Checking for neighbors...")
         
         neighbors = {
             "N": (x, y - 1),
@@ -140,10 +146,11 @@ class GameBoard:
         existsNeighbor = False # By default no neighbor is expected
         
         for direction, (nx, ny) in neighbors.items():
-            print(f"Testing existence of neighbor {direction}...")
             if 0 <= nx < self.gridSize and 0 <= ny < self.gridSize: # Validate only neighbors within the grid
                 neighbor = self.getCard(nx, ny)
+                logger.debug(f"Testing existence of neighbor {direction}...")
                 if neighbor:
+                    logger.debug(f"Neighbor found!")
                     existsNeighbor = True
                     break
 

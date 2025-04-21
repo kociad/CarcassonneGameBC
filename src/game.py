@@ -33,17 +33,32 @@ class Game:
         Runs the main game loop.
         """
         while self.running:
-            self.running = self.eventHandler.handleEvents(self.gameSession, self.renderer)
-            
-            self.renderer.drawBoard(self.gameSession.getGameBoard(), self.gameSession.getPlacedFigures(), self.gameSession.getStructures())
-            self.renderer.drawSidePanel(self.gameSession.getCurrentCard(), len(self.gameSession.getCardsDeck()) + 1, self.gameSession.getCurrentPlayer(), self.gameSession.getPlacedFigures(), self.gameSession.getStructures())
+            currentPlayer = self.gameSession.getCurrentPlayer()
 
+            if self.gameSession.getIsFirstRound() or not currentPlayer.getIsAI() or self.gameSession.getGameOver():
+                # Wait for human input
+                self.running = self.eventHandler.handleEvents(self.gameSession, self.renderer)
+            else:
+                # AI player's turn — no need to wait for input
+                currentPlayer.playTurn(self.gameSession)
+
+            # Always update visuals
+            self.renderer.drawBoard(
+                self.gameSession.getGameBoard(),
+                self.gameSession.getPlacedFigures(),
+                self.gameSession.getStructures()
+            )
+            self.renderer.drawSidePanel(
+                self.gameSession.getCurrentCard(),
+                len(self.gameSession.getCardsDeck()) + 1,
+                self.gameSession.getCurrentPlayer(),
+                self.gameSession.getPlacedFigures(),
+                self.gameSession.getStructures()
+            )
             self.renderer.updateDisplay()
-            
+
             self.clock.tick(FPS)
-        
-        self.quit()
-    
+            
     def quit(self):
         """
         Cleans up resources and exits Pygame.
@@ -52,6 +67,6 @@ class Game:
         exit()
 
 if __name__ == "__main__":
-    playerNames = ["Player 1", "Player 2", "Player 3"]  # Example player names
+    playerNames = ["AI_Player 1", "AI_Player 2"]  # Example player names
     game = Game(playerNames)
     game.run()

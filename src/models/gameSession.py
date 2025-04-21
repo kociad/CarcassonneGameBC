@@ -2,9 +2,13 @@ from models.gameBoard import GameBoard
 from models.card import Card
 from models.player import Player
 from models.structure import Structure
-from settings import TILE_IMAGES_PATH
+from models.aiPlayer import AIPlayer
+from settings import TILE_IMAGES_PATH, DEBUG
 import random
-#from models.structure import Structure
+import logging
+
+logging.basicConfig(level=logging.DEBUG if DEBUG else logging.INFO)
+logger = logging.getLogger(__name__)
 
 class GameSession:
     """
@@ -28,6 +32,7 @@ class GameSession:
         self.placedFigures = [] # List of figures currently placed
         self.turnPhase = 1 # Tracking current turn phase
         self.structureMap = {}
+        self.gameOver = False # Tracking game status
         
         # Create a list of players
         self.generatePlayerList(playerNames)
@@ -39,7 +44,14 @@ class GameSession:
         self.shuffleCardsDeck(self.cardsDeck)
                 
         # Automatically place the starting card
-        self.placeStartingCard()
+        #self.placeStartingCard()
+        
+    def getGameOver(self):
+        """
+        Game session game over getter method
+        :return: True if game is over, False otherwise
+        """
+        return self.gameOver
         
     def getCurrentCard(self):
         """
@@ -83,12 +95,27 @@ class GameSession:
         """
         return self.structures
         
+    def setTurnPhase(self, phase):
+        """
+        Turn phase setter method
+        :param phase: Integer for the number of the phase to be set (1-2)
+        """
+        self.turnPhase=phase
+        
+    def getIsFirstRound(self):
+        """
+        First round status getter method
+        :return: True if is first round False otherwise
+        """
+        #logger.debug("This is the first round")
+        return self.isFirstRound
+        
     def generatePlayerList(self, playerNames):
         """
         Generates a list of indexed players for the game
         :param playerNames: A list of player names
         """
-        print(f"Generating a list of players...")
+        logger.debug("Generating a list of players...")
         
         colors = [
             "blue",
@@ -105,19 +132,25 @@ class GameSession:
             index = 0
             
             for player in playerNames:
-                self.players.append(Player(player, index, colors.pop()))
-                index = index + 1
+                if player.startswith("AI_"):
+                    self.players.append(AIPlayer(player, index, colors.pop()))
+                else:
+                    self.players.append(Player(player, index, colors.pop()))
+                index += 1
             
-            self.currentPlayer=self.players[0]
-        print(f"Player list generated")
-        self.listPlayers()
+            self.currentPlayer=self.players[len(self.players)-1] # Last player is selected so that after playing the first turn, the turn is automatically advanced to the first player
+            
+        logger.debug("Player list generated")
+            
+        if DEBUG:
+            self.listPlayers()
         
     def generateCardsDeck(self):
         """
         Generates a deck of cards for the game.
         :return: A list of Card objects representing the card deck.
         """
-        print("Generating deck...")
+        logger.debug("Generating deck...")
         
         card_definitions = [
             {"image": "Base_Game_C3_Tile_A.png", "terrains": {"N": "field", "E": "field", "S": "road", "W": "field", "C": "monastery"}, "connections":{"N":["E","W"],"E":["W","N"],"W":["N","E"]}, "features": None},
@@ -144,7 +177,6 @@ class GameSession:
             {"image": "Base_Game_C3_Tile_V.png", "terrains": {"N": "field", "E": "field", "S": "road", "W": "road", "C": None}, "connections":{"N":["E"],"E":["N"],"S":["W"],"W":["S"]}, "features": None},
             {"image": "Base_Game_C3_Tile_W.png", "terrains": {"N": "field", "E": "road", "S": "road", "W": "road", "C": None}, "connections": None, "features": None},
             {"image": "Base_Game_C3_Tile_X.png", "terrains": {"N": "road", "E": "road", "S": "road", "W": "road", "C": None}, "connections": None, "features": None}
-            
             # Add more card definitions as needed...
         ]
         
@@ -185,7 +217,7 @@ class GameSession:
             count = card_distributions.get(image, 1)  # Default to 1 if not listed in distributions
             cards.extend([Card(TILE_IMAGES_PATH + image, terrains, connections, features) for card in range(count)])
             
-        print("Deck generated")
+        logger.debug("Deck generated")
         return cards
         
     def shuffleCardsDeck(self, deck):
@@ -194,33 +226,34 @@ class GameSession:
         :param deck: Existing card deck
         :return: Shuffled deck
         """
-        print("Shuffling deck...")
+        logger.debug("Shuffling deck...")
         
         random.shuffle(deck)
         
-        print("Deck shuffled")
+        logger.debug("Deck shuffled")
     
     def placeStartingCard(self):
         """
         Plays the first turn automatically (places first card)
         """
-        print("Playing first turn...")
+        logger.debug("Playing first turn...")
         center_x, center_y = self.gameBoard.getCenterPosition()
         if self.cardsDeck:
             if self.playCard(center_x,center_y):
                 self.isFirstRound = False
-                print("First turn played")
+                logger.debug("First turn played")
+                self.nextTurn()
         else:
-            print("Unable to play first round, no cardsDeck available")
+            logger.debug("Unable to play first round, no cardsDeck available")
     
     def drawCard(self):
         """
         Draws a card from the deck for the current player.
         :return: The drawn card if available, otherwise None.
         """
-        print("Drawing card...")
+        logger.debug("Drawing card...")
         if self.cardsDeck:
-            print("Card drawn")
+            logger.debug("Card drawn")
             return self.cardsDeck.pop(0)
             
         return None
@@ -229,17 +262,24 @@ class GameSession:
         """
         Moves to the next player's turn.
         """
-        if not self.isFirstRound:
-            print("Advancing player turn...")
-            currentIndex = self.currentPlayer.index
+        if self.cardsDeck:
+            logger.debug("Advancing player turn...")
+            
+            currentIndex = self.currentPlayer.getIndex()
             nextIndex = (currentIndex + 1) % len(self.players)
-            #print(f"Current player {self.currentPlayer.name} index - {currentIndex} (out of {len(self.players) - 1})")
+            
             for player in self.players:
-                if player.index == nextIndex:
+                if player.getIndex() == nextIndex:
                     self.currentPlayer = player
                     break
-            print(f"New player {self.currentPlayer.getName()} index - {self.currentPlayer.getIndex()} (out of {len(self.players) - 1})")
-        self.currentCard = self.drawCard()
+                    
+            logger.debug(f"New player {self.currentPlayer.getName()} index - {self.currentPlayer.getIndex()} (out of {len(self.players) - 1})")
+            
+            self.currentCard = self.drawCard()
+            self.turnPhase = 1  # Reset for next player
+            #self.playAITurn()
+        else:
+            self.endGame()
         
     def playCard (self, x, y):
         """
@@ -247,27 +287,31 @@ class GameSession:
         :param x: X-coordinate of the selected space
         :param y: Y-coordinate of the selected space
         """
-        print("Playing card...")
+        logger.debug("Playing card...")
         card = self.currentCard
         
         if not card:
             if not self.cardsDeck:
-                print("Unable to play turn, no card is selected and no cardsDeck is available")
+                logger.debug("Unable to play turn, no card is selected and no cardsDeck is available")
                 return False
             card = self.drawCard()
         
         if not self.gameBoard.validateCardPlacement(card, x, y) and not self.isFirstRound:
-            print(f"Unable to place card, placement is invalid, validateCardPlacement {self.gameBoard.validateCardPlacement(card, x, y)}, isFirstRound {self.isFirstRound}")
+            logger.debug(f"Unable to place card, placement is invalid, validateCardPlacement {self.gameBoard.validateCardPlacement(card, x, y)}, isFirstRound {self.isFirstRound}")
             return False
             
         self.gameBoard.placeCard(card, x, y)
         self.lastPlacedCard = card
         self.currentCard = None
         
-        print (f"Card played, last played card set to card {card} at {x};{y}")
+        logger.debug (f"Card played, last played card set to card {card} at {x};{y}")
         
+        self.detectStructures() # Structuremap needs to be updated after every card placement
+        
+        """
         if self.isFirstRound:
             self.nextTurn()
+        """
         
         return True
         
@@ -277,6 +321,17 @@ class GameSession:
         """
         if self.currentCard:
             self.currentCard = self.drawCard()
+            
+    def playAITurn(self, player=None):
+        """
+        Checks if current player is AI and if so, triggers their turn
+        """
+        if player is None:
+            player = self.currentPlayer
+            
+        if isinstance(player, AIPlayer):
+            player.playTurn(self)
+            return
         
     def playTurn(self, x, y, position="C", player=None):
         """
@@ -289,37 +344,36 @@ class GameSession:
 
         # Phase 1: Place Card
         if self.turnPhase == 1:
-            print("Turn Phase 1: Attempting to place card...")
+            logger.debug("Turn Phase 1: Attempting to place card...")
             if self.playCard(x, y):
                 self.turnPhase = 2  # Move to figure placement phase
             else:
-                print("Card placement failed.")
+                logger.debug("Card placement failed.")
                 
-            self.detectStructures() # Structure detection needs to be performed after each action
+            #self.detectStructures() # Structure detection needs to be performed after each action
             
             return  # Wait for next player click (figure phase or retry)
 
         # Phase 2: Place Figure
         elif self.turnPhase == 2:
-            print("Turn Phase 2: Attempting to place figure...")
+            logger.debug("Turn Phase 2: Attempting to place figure...")
 
             if self.playFigure(player, x, y, position):  # Defaulting to center — position must be set properly by event handler
-                print("Figure placed.")
+                logger.debug("Figure placed.")
             else:
-                print("Figure not placed or skipped.")
+                logger.debug("Figure not placed or skipped.")
                 return # Wait for next player action (retry figure placement or skip)
 
-            self.detectStructures() # Structure detection needs to be performed after each action
+            #self.detectStructures() # Structure detection needs to be performed after each action
 
-            print("Checking completed structures...")
+            logger.debug("Checking completed structures...")
             for structure in self.structures:
                 structure.checkCompletion()
                 if structure.getIsCompleted():
-                    print(f"Structure {structure.structureType} is completed!")
+                    logger.debug(f"Structure {structure.structureType} is completed!")
                     self.scoreStructure(structure)
 
             self.nextTurn()
-            self.turnPhase = 1  # Reset for next player
             
     def skipCurrentAction(self):
         """
@@ -328,19 +382,21 @@ class GameSession:
         - Phase 2: Skips figure placement, finalizes the turn.
         """
         if self.turnPhase == 1:
-            print("Skipping card placement. Drawing new card...")
+            logger.debug("Skipping card placement. Drawing new card...")
             self.discardCurrentCard()
+            if not self.cardsDeck:
+                self.endGame()
         
         elif self.turnPhase == 2:
-            print("Skipping figure placement. Finalizing turn...")
+            logger.debug("Skipping figure placement. Finalizing turn...")
 
-            self.detectStructures()
+            #self.detectStructures()
 
-            print("Checking completed structures...")
+            logger.debug("Checking completed structures...")
             for structure in self.structures:
                 structure.checkCompletion()
                 if structure.getIsCompleted():
-                    print(f"Structure {structure.structureType} is completed!")
+                    logger.debug(f"Structure {structure.structureType} is completed!")
                     self.scoreStructure(structure)
 
             self.nextTurn()
@@ -350,12 +406,13 @@ class GameSession:
         """
         Print a list of all players in the game with their info
         """
-        print("Printing player info...")
+        logger.debug("Printing player info...")
         for player in self.players:
-            print(f"Name: {player.getName()}")
-            print(f"Score: {player.getScore()}")
-            print(f"Index: {player.getIndex()}")
-            print(f"Figures: {player.getFigures()}")
+            logger.debug(f"Name: {player.getName()}")
+            logger.debug(f"Is AI: {player.getIsAI()}")
+            logger.debug(f"Score: {player.getScore()}")
+            logger.debug(f"Index: {player.getIndex()}")
+            logger.debug(f"Figures: {len(player.getFigures())}")
             
     def playFigure(self, player, x, y, position):
         """
@@ -366,22 +423,22 @@ class GameSession:
         :param position: The position on the card (N, W, S, E, etc.)
         :return: True if placement is successful, False otherwise
         """
-        print("Playing figure...")
+        logger.debug("Playing figure...")
 
         card = self.gameBoard.getCard(x, y)
         if card != self.lastPlacedCard:
-            print("Unable to play figure, can only place figures on last played card")
+            logger.debug("Unable to play figure, can only place figures on last played card")
             return False
 
         if not card:
-            print(f"Unable to play figure, no card detected in selected space: {x};{y}")
+            logger.debug(f"Unable to play figure, no card detected in selected space: {x};{y}")
             return False
 
         # Find structure that this figure would be placed on
         structure = self.structureMap.get((x, y, position))
         if structure:
             if structure.figures:
-                print(f"Unable to play figure, structure already claimed.")
+                logger.debug(f"Unable to play figure, structure already claimed.")
                 return False  # Structure is already claimed
 
         # Attempt to place figure from player
@@ -389,18 +446,18 @@ class GameSession:
             figure = player.getFigure()
             if figure.place(card, position):
                 self.placedFigures.append(figure)
-                print(f"{player.getName()} placed a figure at ({x}, {y}) on position {position}")
+                logger.debug(f"{player.getName()} placed a figure at ({x}, {y}) on position {position}")
 
                 if structure:
                     structure.addFigure(figure)
 
-                print("Figure played")
+                logger.debug("Figure played")
                 #self.nextTurn()
                 return True
             else:
                 player.addFigure(figure)  # Return figure if placement failed
 
-        print("Unable to place figure, player has no figures left.")
+        logger.debug("Unable to place figure, player has no figures left.")
         return False
             
     def detectStructures(self):
@@ -410,15 +467,15 @@ class GameSession:
         This version does not clear the whole structure list. Instead, it checks 
         only the newly placed card and updates or merges structures as needed.
         """
-        print("Updating structures based on the last placed card...")
+        logger.debug("Updating structures based on the last placed card...")
 
         if not self.lastPlacedCard:
-            print("No card was placed. Skipping structure detection.")
+            logger.debug("No card was placed. Skipping structure detection.")
             return
 
         position = self.gameBoard.getCardPosition(self.lastPlacedCard)
         if not position:
-            print("Last placed card position not found.")
+            logger.debug("Last placed card position not found.")
             return
 
         x, y = position
@@ -477,7 +534,7 @@ class GameSession:
             if direction == dir:
                 s = structureMap.get((nx, ny, ndir))
                 if s and s.getStructureType().lower() == terrainType:
-                    print(f"Existing structure detected at ({nx}, {ny}) {ndir}")
+                    logger.debug(f"Existing structure detected at ({nx}, {ny}) {ndir}")
                     connected.append(s)
         return list(set(connected))  # Remove duplicates
         
@@ -529,13 +586,29 @@ class GameSession:
                 "E": (cx + 1, cy, "W"),
                 "W": (cx - 1, cy, "E")
             }
+            
+            if terrainType == "field":
+                # Same-edge field adjacency (e.g., two north edges side-by-side)
+                edgeLineAdjacents = {
+                    "N": [((cx - 1, cy), "N"), ((cx + 1, cy), "N")],  # horizontal line
+                    "S": [((cx - 1, cy), "S"), ((cx + 1, cy), "S")],
+                    "E": [((cx, cy - 1), "E"), ((cx, cy + 1), "E")],  # vertical line
+                    "W": [((cx, cy - 1), "W"), ((cx, cy + 1), "W")],
+                }
 
+                if cdir in edgeLineAdjacents:
+                    for (nx, ny), ndir in edgeLineAdjacents[cdir]:
+                        neighbor = self.gameBoard.getCard(nx, ny)
+                        if neighbor and neighbor.getTerrains().get(ndir) == terrainType:
+                            if (nx, ny, ndir) not in visited:
+                                stack.append((nx, ny, ndir))
+                                
             if cdir in neighbors:
                 nx, ny, ndir = neighbors[cdir]
                 neighbor = self.gameBoard.getCard(nx, ny)
                 if neighbor and neighbor.getTerrains().get(ndir) == terrainType:
                     stack.append((nx, ny, ndir))
-
+                            
         return visited
        
     def scoreStructure(self, structure):
@@ -544,27 +617,48 @@ class GameSession:
         Removes their figures afterward (Step 13).
         :param structure: The completed Structure to score.
         """
-        if not structure.getIsCompleted():
-            print("Structure is not completed, skipping scoring.")
+        if not structure.getIsCompleted() and not self.gameOver:
+            logger.debug("Structure is not completed, skipping scoring.")
             return
 
-        score = structure.getScore()
+        score = structure.getScore(gameSession=self)
         owners = structure.getMajorityOwners()
 
         if not owners:
-            print("No figures on structure. No points awarded.")
+            logger.debug("No figures on structure. No points awarded.")
             return
 
-        print(f"Scoring structure: {structure.structureType} for {score} points.")
+        logger.debug(f"Scoring structure: {structure.structureType} for {score} points.")
         for owner in owners:
-            print(f" - {owner.getName()} receives {score} points.")
+            logger.debug(f" - {owner.getName()} receives {score} points.")
             owner.addScore(score)
 
         # Set structure color to owner player
         structure.setColor(owners[0].getColorWithAlpha())
         
         # Remove figures after scoring and return them to players
-        print(f"Figures to be removed: {structure.getFigures()}")
+        logger.debug(f"Figures to be removed: {structure.getFigures()}")
         for figure in structure.getFigures()[:]:
             structure.removeFigure(figure)
             figure.owner.addFigure(figure)
+            
+    def endGame(self):
+        logger.debug("=== END OF GAME TRIGGERED ===")
+        logger.debug("Scoring all remaining incomplete structures...")
+        
+        self.gameOver = True
+
+        for structure in self.structures:
+            if not structure.getIsCompleted():
+                logger.debug(f"- Incomplete {structure.structureType} scored...")
+                self.scoreStructure(structure)
+
+        logger.debug("All structures scored. Returning all figures...")
+        self.placedFigures.clear()  # All figures should already be returned during scoring
+
+        self.showFinalResults()
+        
+    def showFinalResults(self):
+        logger.info("\n=== FINAL SCORES ===")
+        for player in self.players:
+            logger.info(f"{player.getName()}: {player.getScore()} points")

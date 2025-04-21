@@ -1,4 +1,9 @@
 import random
+import logging
+from settings import DEBUG
+
+logging.basicConfig(level=logging.DEBUG if DEBUG else logging.INFO)
+logger = logging.getLogger(__name__)
 
 class Structure:
     
@@ -13,12 +18,7 @@ class Structure:
         self.cardSides = set()  # Store (card, direction) tuples here
         self.figures = [] # List of figures placed in this structure
         self.isCompleted = False # Tracking whether the structure has been completed
-        self.color = (
-            random.randint(0, 255),  # R
-            random.randint(0, 255),  # G
-            random.randint(0, 255),  # B
-            150                      # Alpha for transparency
-        )
+        self.color = (255,255,255,150)
 
     def getStructureType(self):
         """
@@ -75,7 +75,7 @@ class Structure:
         Remove figure from the structure and clears its placement on card
         :param figure: Figure to be removed
         """
-        print(f"Removing figure {figure} belonging to {figure.getOwner()}")
+        logger.debug(f"Removing figure {figure} belonging to {figure.getOwner()}")
         self.figures.remove(figure)
         figure.remove()
         
@@ -143,18 +143,18 @@ class Structure:
         Determines player(s) with the most figures in this structure.
         :return: List of Player instances who hold majority.
         """
-        print("Retrieving structure owners...")
+        logger.debug("Retrieving structure owners...")
         owner_counts = {}
         for figure in self.figures:
             owner = figure.getOwner()
-            print(f"Found figure with owner - {owner}")
+            logger.debug(f"Found figure with owner - {owner}")
             owner_counts[owner] = owner_counts.get(owner, 0) + 1
 
         if not owner_counts:
             return []
 
         max_count = max(owner_counts.values())
-        print(f"Retrieved owners: {owner_counts}")
+        logger.debug(f"Retrieved owners: {owner_counts}")
         return [owner for owner, count in owner_counts.items() if count == max_count]
         
     def merge(self, otherStructure):
@@ -172,26 +172,62 @@ class Structure:
         for card in otherStructure.cards:
             self.cards.append(card)
         
-    def getScore(self):
-        """
-        Calculates the score value of this structure.
-        Currently supports only cities.
-        """
+    def getScore(self, gameSession=None):
         score = 0
-        
+        gameOver = gameSession.getGameOver()
+
         if self.structureType == "City":
-            for card in self.cards:
-                if card.getFeatures():
-                    score = score + 2 if "coat" in card.getFeatures() else score
-            score = score + len(self.cards) * 2
-            
+            if not gameOver:
+                for card in self.cards:
+                    if card.getFeatures():
+                        score += 2 if "coat" in card.getFeatures() else 0
+                score += len(self.cards) * 2
+            else:
+                for card in self.cards:
+                    if card.getFeatures():
+                        score += 1 if "coat" in card.getFeatures() else 0
+                score += len(self.cards)
+
         elif self.structureType == "Road":
             score = len(self.cards)
-            
-        elif self.structureType == "Monastery":
-            score = 9 if self.isCompleted else 0
 
-        elif self.structureType == "Field":
-            score = 0  # TBD
+        elif self.structureType == "Monastery":
+            for card, direction in self.cardSides:
+                score += 1 # Adding 1 score for the monastery itself
+                neighbors = card.getNeighbors()
+                for direction in neighbors:
+                    if neighbors[direction]:
+                        score += 1 # Adding 1 score for each NESW neighbors
+                        if direction in ["N","S"]: # Scoring diagonal neighbors
+                            if neighbors[direction].getNeighbor("W"):
+                                score += 1
+                            if neighbors[direction].getNeighbor("E"):
+                                score += 1
+
+        elif self.structureType == "Field" and gameSession:
+            if DEBUG:
+                self.isCompleted = True
+            
+            scoredCities = set()
+
+            # Get all completed cities
+            completedCities = [
+                s for s in gameSession.structures
+                if s.getStructureType() == "City" and s.getIsCompleted()
+            ]
+
+            for card, _ in self.cardSides:
+                neighbors = card.getNeighbors().values()
+                touchedCards = set([card])  # Include the field's own card
+                touchedCards.update([n for n in neighbors if n])  # Add valid neighbor cards
+
+                # Check if any of these cards are part of completed cities
+                for cityStructure in completedCities:
+                    for cityCard, _ in cityStructure.cardSides:
+                        if cityCard in touchedCards:
+                            scoredCities.add(cityStructure)
+                            break  # No need to scan the rest of this city
+
+            score = len(scoredCities) * 3
             
         return score
