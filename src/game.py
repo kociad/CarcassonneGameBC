@@ -1,6 +1,6 @@
 import pygame
 
-from settings import WINDOW_WIDTH, WINDOW_HEIGHT, FPS
+from settings import WINDOW_WIDTH, WINDOW_HEIGHT, FPS, PLAYERS
 from models.gameSession import GameSession
 from models.player import Player
 from ui.renderer import Renderer
@@ -71,6 +71,6 @@ class Game:
         exit()
 
 if __name__ == "__main__":
-    playerNames = ["AI_Smraďoch", "Klárka"]  # Example player names
+    playerNames = PLAYERS  # Example player names
     game = Game(playerNames)
     game.run()
