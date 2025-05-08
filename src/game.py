@@ -1,4 +1,5 @@
 import pygame
+import logging
 
 from settings import WINDOW_WIDTH, WINDOW_HEIGHT, FPS, PLAYERS
 from models.gameSession import GameSession
@@ -7,6 +8,9 @@ from ui.renderer import Renderer
 from ui.events import EventHandler
 from network.connection import NetworkConnection
 from network.message import encodeMessage
+
+logging.basicConfig(level=logging.DEBUG if DEBUG else logging.INFO)
+logger = logging.getLogger(__name__)
 
 class Game:
     """
