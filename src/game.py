@@ -1,7 +1,7 @@
 import pygame
 import logging
 
-from settings import WINDOW_WIDTH, WINDOW_HEIGHT, FPS, PLAYERS
+from settings import WINDOW_WIDTH, WINDOW_HEIGHT, FPS, PLAYERS, DEBUG
 from models.gameSession import GameSession
 from models.player import Player
 from ui.renderer import Renderer
