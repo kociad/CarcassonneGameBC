@@ -17,6 +17,7 @@ class Card:
         :param image_path: Path to the tile image.
         :param terrain: Dictionary defining terrain types for each side.
         """
+        self.imagePath = image_path
         original_image = pygame.image.load(image_path)
         self.image = pygame.transform.scale(original_image, (TILE_SIZE, TILE_SIZE))  # Resize to match TILE_SIZE
         self.terrains = terrains  # Dictionary with terrain info (e.g., {"N": "city", "S": "road"})
@@ -105,3 +106,20 @@ class Card:
 
     def canPlaceFigure(self, figure):
         return True # To be implemented
+        
+    def serialize(self):
+    return {
+        "image_path": self.imagePath,  # This assumes you'll store the image path
+        "terrains": self.terrains,
+        "connections": self.connections,
+        "features": self.features
+    }
+
+    @staticmethod
+    def deserialize(data):
+        return Card(
+            image_path=data["image_path"],
+            terrains=data["terrains"],
+            connections=data["connections"],
+            features=data["features"]
+        )

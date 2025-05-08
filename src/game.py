@@ -6,6 +6,7 @@ from models.player import Player
 from ui.renderer import Renderer
 from ui.events import EventHandler
 from network.connection import NetworkConnection
+from network.message import encodeMessage
 
 class Game:
     """
@@ -28,6 +29,12 @@ class Game:
         self.eventHandler = EventHandler()
         self.clock = pygame.time.Clock()
         self.network = NetworkConnection()
+        
+        self.network.onInitialGameStateReceived = self.onInitialGameStateReceived
+        
+        if self.network.networkMode == "host":
+            gameState = self.gameSession.serialize()
+            self.network.sendToAll(encodeMessage("init_game_state", gameState))
         
         self.running = True  # Game loop control
     
@@ -73,7 +80,16 @@ class Game:
             self.network.close()
         pygame.quit()
         exit()
+        
+    def onInitialGameStateReceived(self, data):
+        from models.gameSession import GameSession
+        self.gameSession = GameSession.deserialize(data)
+        logger.info("[GAME] Game session replaced with synchronized state from host")
 
+        # Send ACK to host
+        if self.network.networkMode == "client":
+            self.network.sendToHost(encodeMessage("ack_game_state", {"status": "ok"}))
+        
 if __name__ == "__main__":
     playerNames = PLAYERS  # Example player names
     game = Game(playerNames)

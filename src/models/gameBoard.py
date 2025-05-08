@@ -179,3 +179,33 @@ class GameBoard:
             if neighbor:
                 opposite = {"N": "S", "S": "N", "E": "W", "W": "E"}[direction]
                 neighbor.neighbors[opposite] = card
+                
+    def serialize(self):
+        placed = []
+        for y in range(self.gridSize):
+            for x in range(self.gridSize):
+                card = self.grid[y][x]
+                if card:
+                    placed.append({
+                        "x": x,
+                        "y": y,
+                        "card": card.serialize()
+                    })
+        return {
+            "grid_size": self.gridSize,
+            "placed_cards": placed
+        }
+    
+    @staticmethod
+    def deserialize(data):
+        from models.card import Card
+        board = GameBoard(gridSize=data.get("grid_size", GRID_SIZE))
+
+        for item in data["placed_cards"]:
+            x = item["x"]
+            y = item["y"]
+            card_data = item["card"]
+            card = Card.deserialize(card_data)
+            board.placeCard(card, x, y)
+
+        return board

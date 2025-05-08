@@ -27,5 +27,5 @@ PLAYERS = ["Player1","AI_Player2"]
 NETWORK_MODE = "host"  # or "client" or "local"
 
 # If client, where to connect
-HOST_IP = "127.0.0.1"
-HOST_PORT = 65432  # TCP port to use
+HOST_IP = "192.168.88.251"
+HOST_PORT = 222  # TCP port to use

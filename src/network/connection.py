@@ -2,6 +2,8 @@ import socket
 import threading
 import logging
 from settings import DEBUG, NETWORK_MODE, HOST_IP, HOST_PORT
+from network.message import decodeMessage
+from models.gameSession import GameSession
 
 logging.basicConfig(level=logging.DEBUG if DEBUG else logging.INFO)
 logger = logging.getLogger(__name__)
@@ -60,8 +62,20 @@ class NetworkConnection:
                 break
 
     def onMessageReceived(self, message):
-        logger.info(f"[MESSAGE] Received: {message}")  # Override in subclass or caller
+        parsed = decodeMessage(message)
+        if not parsed:
+            return
 
+        action = parsed.get("action")
+        payload = parsed.get("payload")
+
+        if action == "init_game_state":
+            logger.info("[NETWORK] Received initial game state from host")
+            self.onInitialGameStateReceived(payload)
+            
+        elif action == "ack_game_state":
+            logger.info("[NETWORK] Client confirmed receipt of game state: %s", payload)
+            
     def sendToAll(self, message):
         if self.networkMode != "host":
             return

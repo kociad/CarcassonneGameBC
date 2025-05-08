@@ -100,3 +100,26 @@ class Player:
         :param points: The number of points to add.
         """
         self.score += points
+        
+    def serialize(self):
+        return {
+            "name": self.name,
+            "score": self.score,
+            "index": self.index,
+            "color": self.color,
+            "is_ai": self.isAI,
+            "figures_remaining": len(self.figures)
+        }
+    
+    @staticmethod
+    def deserialize(data):
+        from models.figure import Figure
+        player = Player(
+            name=data["name"],
+            index=data["index"],
+            color=data["color"],
+            isAI=data.get("is_ai", False)
+        )
+        player.score = data["score"]
+        player.figures = [Figure(player) for _ in range(data.get("figures_remaining", 7))]
+        return player
