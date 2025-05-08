@@ -1,8 +1,8 @@
 # settings.py
 
 # General Game Settings
-WINDOW_WIDTH = 1024
-WINDOW_HEIGHT = 768
+WINDOW_WIDTH = 1920
+WINDOW_HEIGHT = 1080
 FPS = 60
 
 # Tile Settings
@@ -21,4 +21,11 @@ SOUND_PATH = ASSETS_PATH + "sounds/"
 DEBUG = False
 
 # Player settings
-PLAYERS = ["AI_Player1","AI_Player2"]
+PLAYERS = ["Player1","AI_Player2"]
+
+# Network Mode: "host" or "client" or "local"
+NETWORK_MODE = "host"  # or "client" or "local"
+
+# If client, where to connect
+HOST_IP = "127.0.0.1"
+HOST_PORT = 65432  # TCP port to use

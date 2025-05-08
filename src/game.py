@@ -5,6 +5,7 @@ from models.gameSession import GameSession
 from models.player import Player
 from ui.renderer import Renderer
 from ui.events import EventHandler
+from network.connection import NetworkConnection
 
 class Game:
     """
@@ -26,6 +27,7 @@ class Game:
         self.renderer.updateDisplay()
         self.eventHandler = EventHandler()
         self.clock = pygame.time.Clock()
+        self.network = NetworkConnection()
         
         self.running = True  # Game loop control
     
@@ -67,6 +69,8 @@ class Game:
         """
         Cleans up resources and exits Pygame.
         """
+        if self.network:
+            self.network.close()
         pygame.quit()
         exit()
 
