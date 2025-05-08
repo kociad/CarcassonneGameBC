@@ -108,12 +108,12 @@ class Card:
         return True # To be implemented
         
     def serialize(self):
-    return {
-        "image_path": self.imagePath,  # This assumes you'll store the image path
-        "terrains": self.terrains,
-        "connections": self.connections,
-        "features": self.features
-    }
+        return {
+            "image_path": self.imagePath,  # This assumes you'll store the image path
+            "terrains": self.terrains,
+            "connections": self.connections,
+            "features": self.features
+        }
 
     @staticmethod
     def deserialize(data):
