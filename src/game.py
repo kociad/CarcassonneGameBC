@@ -30,11 +30,12 @@ class Game:
         self.clock = pygame.time.Clock()
         self.network = NetworkConnection()
         
-        self.network.onInitialGameStateReceived = self.onInitialGameStateReceived
-        
         if self.network.networkMode == "host":
-            gameState = self.gameSession.serialize()
-            self.network.sendToAll(encodeMessage("init_game_state", gameState))
+            self.network.onClientConnected = self.onClientConnected
+        elif self.network.networkMode == "client":
+            self.network.onInitialGameStateReceived = self.onInitialGameStateReceived
+        
+        self.network.onInitialGameStateReceived = self.onInitialGameStateReceived
         
         self.running = True  # Game loop control
     
@@ -89,6 +90,16 @@ class Game:
         # Send ACK to host
         if self.network.networkMode == "client":
             self.network.sendToHost(encodeMessage("ack_game_state", {"status": "ok"}))
+            
+    def onClientConnected(self, conn):
+        from network.message import encodeMessage
+        logger.info("[GAME] Sending current game state to new client...")
+        serialized = self.gameSession.serialize()
+        message = encodeMessage("init_game_state", serialized)
+        try:
+            conn.sendall(message.encode())
+        except Exception as e:
+            logger.error(f"[GAME] Failed to send game state to client: {e}")
         
 if __name__ == "__main__":
     playerNames = PLAYERS  # Example player names

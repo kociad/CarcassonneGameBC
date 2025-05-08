@@ -672,6 +672,7 @@ class GameSession:
             logger.info(f"{player.getName()}: {player.getScore()} points")
             
     def serialize(self):
+        logger.info("Serializing game state")
         return {
             "players": [player.serialize() for player in self.players],
             "deck": [card.serialize() for card in self.cardsDeck],

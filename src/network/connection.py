@@ -15,6 +15,7 @@ class NetworkConnection:
         self.networkMode = NETWORK_MODE  # 'host', 'client', or 'local'
         self.running = False
         self.connections = []  # only for host mode
+        self.onClientConnected = None  # externally assigned
 
         if self.networkMode == "local":
             logger.info("[LOCAL] Running in local mode. Networking is disabled.")
@@ -45,6 +46,8 @@ class NetworkConnection:
                 conn, addr = self.socket.accept()
                 self.connections.append(conn)
                 logger.info(f"[HOST] Connection established with {addr}")
+                if self.onClientConnected:
+                    self.onClientConnected(conn)
                 threading.Thread(target=self.receiveLoop, args=(conn,), daemon=True).start()
             except Exception as e:
                 logger.error(f"[HOST] Accept connection failed: {e}")
@@ -77,6 +80,7 @@ class NetworkConnection:
             logger.info("[NETWORK] Client confirmed receipt of game state: %s", payload)
             
     def sendToAll(self, message):
+        logger.info("Sending game state to all clients")
         if self.networkMode != "host":
             return
         logger.debug(f"[SEND-ALL] {message}")
