@@ -119,6 +119,9 @@ class GameSession:
         #logger.debug("This is the first round")
         return self.isFirstRound
         
+    def setOnTurnEnded(self, onTurnEnded):
+        self.onTurnEnded = onTurnEnded
+        
     def generatePlayerList(self, playerNames):
         """
         Generates a list of indexed players for the game

@@ -42,6 +42,7 @@ class Game:
         pygame.display.set_caption("Carcassonne")
 
         self.gameSession = GameSession(playerNames)
+        self.gameSession.setOnTurnEnded(self.onTurnEnded)
         self.renderer = Renderer(self.screen)
         self.renderer.drawBoard(
             self.gameSession.getGameBoard(),
