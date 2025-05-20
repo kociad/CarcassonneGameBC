@@ -4,7 +4,6 @@ import logging
 from models.figure import Figure
 from settings import DEBUG
 
-logging.basicConfig(level=logging.DEBUG if DEBUG else logging.INFO)
 logger = logging.getLogger(__name__)
 
 class Player:

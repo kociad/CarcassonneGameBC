@@ -3,7 +3,6 @@ import logging
 from models.card import Card
 from settings import GRID_SIZE, DEBUG
 
-logging.basicConfig(level=logging.DEBUG if DEBUG else logging.INFO)
 logger = logging.getLogger(__name__)
 
 class GameBoard:

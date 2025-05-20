@@ -5,7 +5,6 @@ from settings import DEBUG, NETWORK_MODE, HOST_IP, HOST_PORT
 from network.message import decodeMessage
 from models.gameSession import GameSession
 
-logging.basicConfig(level=logging.DEBUG if DEBUG else logging.INFO)
 logger = logging.getLogger(__name__)
 
 BUFFER_SIZE = 4096

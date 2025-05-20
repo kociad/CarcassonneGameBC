@@ -3,7 +3,6 @@ import pygame
 from settings import TILE_SIZE, DEBUG
 import logging
 
-logging.basicConfig(level=logging.DEBUG if DEBUG else logging.INFO)
 logger = logging.getLogger(__name__)
 
 class Card:

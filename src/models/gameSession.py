@@ -8,7 +8,6 @@ from models.structure import Structure
 from models.aiPlayer import AIPlayer
 from settings import TILE_IMAGES_PATH, DEBUG
 
-logging.basicConfig(level=logging.DEBUG if DEBUG else logging.INFO)
 logger = logging.getLogger(__name__)
 
 class GameSession:
@@ -149,9 +148,6 @@ class GameSession:
             self.currentPlayer=self.players[len(self.players)-1] # Last player is selected so that after playing the first turn, the turn is automatically advanced to the first player
             
         logger.debug("Player list generated")
-            
-        if DEBUG:
-            self.listPlayers()
         
     def generateCardsDeck(self):
         """
@@ -409,18 +405,6 @@ class GameSession:
 
             self.nextTurn()
             self.turnPhase = 1
-            
-    def listPlayers(self): # Debug purposes only
-        """
-        Print a list of all players in the game with their info
-        """
-        logger.debug("Printing player info...")
-        for player in self.players:
-            logger.debug(f"Name: {player.getName()}")
-            logger.debug(f"Is AI: {player.getIsAI()}")
-            logger.debug(f"Score: {player.getScore()}")
-            logger.debug(f"Index: {player.getIndex()}")
-            logger.debug(f"Figures: {len(player.getFigures())}")
             
     def playFigure(self, player, x, y, position):
         """

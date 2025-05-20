@@ -1,6 +1,8 @@
 import pygame
 import logging
 
+from datetime import datetime
+
 from settings import WINDOW_WIDTH, WINDOW_HEIGHT, FPS, PLAYERS, DEBUG
 from models.gameSession import GameSession
 from models.player import Player
@@ -9,8 +11,26 @@ from ui.events import EventHandler
 from network.connection import NetworkConnection
 from network.message import encodeMessage
 
-logging.basicConfig(level=logging.DEBUG if DEBUG else logging.INFO)
-logger = logging.getLogger(__name__)
+# Create logger
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG if DEBUG else logging.INFO)
+
+# Avoid adding handlers multiple times (especially in interactive/restarts)
+if not logger.hasHandlers():
+    # Generate filename
+    log_filename = datetime.now().strftime("log_%Y-%m-%d_%H-%M-%S.log")
+
+    # File handler
+    file_handler = logging.FileHandler(log_filename, mode='w', encoding='utf-8')
+    file_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+
+    # Console handler
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+
+    # Add both handlers
+    logger.addHandler(file_handler)
+    logger.addHandler(console_handler)
 
 class Game:
     """
@@ -89,7 +109,7 @@ class Game:
     def onInitialGameStateReceived(self, data):
         from models.gameSession import GameSession
         self.gameSession = GameSession.deserialize(data)
-        logger.info("[GAME] Game session replaced with synchronized state from host")
+        logger.debug("Game session replaced with synchronized state from host")
 
         # Send ACK to host
         if self.network.networkMode == "client":
@@ -97,13 +117,13 @@ class Game:
             
     def onClientConnected(self, conn):
         from network.message import encodeMessage
-        logger.info("[GAME] Sending current game state to new client...")
+        logger.debug("Sending current game state to new client...")
         serialized = self.gameSession.serialize()
         message = encodeMessage("init_game_state", serialized)
         try:
             conn.sendall(message.encode())
         except Exception as e:
-            logger.error(f"[GAME] Failed to send game state to client: {e}")
+            logger.debug(f"Failed to send game state to client: {e}")
         
 if __name__ == "__main__":
     playerNames = PLAYERS  # Example player names

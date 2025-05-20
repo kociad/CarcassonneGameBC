@@ -5,7 +5,6 @@ from models.gameSession import GameSession
 from ui.renderer import Renderer
 from settings import TILE_SIZE, DEBUG
 
-logging.basicConfig(level=logging.DEBUG if DEBUG else logging.INFO)
 logger = logging.getLogger(__name__)
 
 class EventHandler:

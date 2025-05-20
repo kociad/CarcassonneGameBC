@@ -3,9 +3,7 @@ import logging
 
 from settings import MEEPLE_IMAGES_PATH, FIGURE_SIZE, DEBUG
 
-logging.basicConfig(level=logging.DEBUG if DEBUG else logging.INFO)
 logger = logging.getLogger(__name__)
-
 
 class Figure:
     

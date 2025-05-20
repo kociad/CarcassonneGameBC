@@ -5,7 +5,6 @@ import logging
 
 from settings import NETWORK_MODE, HOST_IP, HOST_PORT, DEBUG
 
-logging.basicConfig(level=logging.DEBUG if DEBUG else logging.INFO)
 logger = logging.getLogger(__name__)
 
 class NetworkGameMode:

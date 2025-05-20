@@ -2,7 +2,6 @@ import json
 import logging
 from settings import DEBUG
 
-logging.basicConfig(level=logging.DEBUG if DEBUG else logging.INFO)
 logger = logging.getLogger(__name__)
 
 def encodeMessage(actionType, data):

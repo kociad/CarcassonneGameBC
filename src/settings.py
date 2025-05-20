@@ -18,7 +18,7 @@ BACKGROUND_IMAGE_PATH = ASSETS_PATH + "backgrounds/"
 SOUND_PATH = ASSETS_PATH + "sounds/"
 
 # Debug
-DEBUG = False
+DEBUG = True
 
 # Player settings
 PLAYERS = ["Player1","AI_Player2"]

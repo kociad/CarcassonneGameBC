@@ -4,7 +4,6 @@ import random
 from settings import DEBUG
 from models.player import Player
 
-logging.basicConfig(level=logging.DEBUG if DEBUG else logging.INFO)
 logger = logging.getLogger(__name__)
 
 class AIPlayer(Player):
