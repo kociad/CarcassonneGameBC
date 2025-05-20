@@ -18,7 +18,7 @@ class NetworkConnection:
         self.onClientConnected = None  # externally assigned
 
         if self.networkMode == "local":
-            logger.info("[LOCAL] Running in local mode. Networking is disabled.")
+            logger.debug("Running in local mode. Networking is disabled.")
             return
 
         self.running = True
@@ -28,29 +28,29 @@ class NetworkConnection:
             try:
                 self.socket.bind((HOST_IP, HOST_PORT))
                 self.socket.listen()
-                logger.info(f"[HOST] Listening on {HOST_IP}:{HOST_PORT}")
+                logger.debug(f"Host listening on {HOST_IP}:{HOST_PORT}...")
                 threading.Thread(target=self.acceptConnections, daemon=True).start()
             except Exception as e:
-                logger.error(f"[HOST] Failed to bind socket: {e}")
+                logger.debug(f"Failed to bind socket: {e}")
         elif self.networkMode == "client":
             try:
                 self.socket.connect((HOST_IP, HOST_PORT))
-                logger.info(f"[CLIENT] Connected to host at {HOST_IP}:{HOST_PORT}")
+                logger.debug(f"Connected to host at {HOST_IP}:{HOST_PORT}")
                 threading.Thread(target=self.receiveLoop, args=(self.socket,), daemon=True).start()
             except Exception as e:
-                logger.error(f"[CLIENT] Failed to connect to host: {e}")
+                logger.debug(f"Failed to connect to host: {e}")
 
     def acceptConnections(self):
         while self.running:
             try:
                 conn, addr = self.socket.accept()
                 self.connections.append(conn)
-                logger.info(f"[HOST] Connection established with {addr}")
+                logger.debug(f"Connection received and established with {addr}")
                 if self.onClientConnected:
                     self.onClientConnected(conn)
                 threading.Thread(target=self.receiveLoop, args=(conn,), daemon=True).start()
             except Exception as e:
-                logger.error(f"[HOST] Accept connection failed: {e}")
+                logger.debug(f"Failed to accept connection: {e}")
 
     def receiveLoop(self, conn):
         while self.running:
@@ -58,10 +58,10 @@ class NetworkConnection:
                 data = conn.recv(BUFFER_SIZE)
                 if data:
                     message = data.decode()
-                    logger.debug(f"[RECEIVE] Message: {message}")
+                    logger.debug(f"Receiving message: {message}")
                     self.onMessageReceived(message)
             except Exception as e:
-                logger.warning(f"[RECEIVE] Socket error: {e}")
+                logger.debug(f"Socket error: {e}")
                 break
 
     def onMessageReceived(self, message):
@@ -73,39 +73,39 @@ class NetworkConnection:
         payload = parsed.get("payload")
 
         if action == "init_game_state":
-            logger.info("[NETWORK] Received initial game state from host")
+            logger.debug("Received initial game state from host")
             self.onInitialGameStateReceived(payload)
             
         elif action == "ack_game_state":
-            logger.info("[NETWORK] Client confirmed receipt of game state: %s", payload)
+            logger.debug("Client confirmed receiving game state: %s", payload)
             
     def sendToAll(self, message):
-        logger.info("Sending game state to all clients")
+        logger.debug("Sending game state to all clients")
         if self.networkMode != "host":
             return
-        logger.debug(f"[SEND-ALL] {message}")
+        logger.debug(f"Sending message to all: {message}")
         for conn in self.connections:
             try:
                 conn.sendall(message.encode())
             except Exception as e:
-                logger.error(f"[SEND-ALL] Failed: {e}")
+                logger.debug(f"Failed to send message to all: {e}")
 
     def sendToHost(self, message):
         if self.networkMode != "client":
             return
         try:
-            logger.debug(f"[SEND-HOST] {message}")
+            logger.debug(f"Sending message to host: {message}")
             self.socket.sendall(message.encode())
         except Exception as e:
-            logger.error(f"[SEND-HOST] Failed: {e}")
+            logger.debug(f"Failed to send to host: {e}")
 
     def close(self):
         if self.networkMode == "local":
-            logger.info("[LOCAL] No network to close.")
+            logger.debug("No network to close.")
             return
         self.running = False
         try:
             self.socket.close()
-            logger.info("[CLOSE] Socket closed")
+            logger.debug("Socket closed")
         except Exception as e:
-            logger.error(f"[CLOSE] Error while closing socket: {e}")
+            logger.debug(f"Error while closing socket: {e}")

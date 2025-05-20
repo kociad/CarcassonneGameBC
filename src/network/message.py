@@ -18,7 +18,7 @@ def encodeMessage(actionType, data):
             "payload": data
         })
     except (TypeError, ValueError) as e:
-        logger.error(f"[ENCODE] Failed to serialize message: {e}")
+        logger.debug(f"Failed to serialize message: {e}")
         return ""
 
 def decodeMessage(raw):
@@ -30,5 +30,5 @@ def decodeMessage(raw):
     try:
         return json.loads(raw)
     except (json.JSONDecodeError, TypeError) as e:
-        logger.error(f"[DECODE] Failed to parse message: {e}")
+        logger.debug(f"Failed to parse message: {e}")
         return None
