@@ -117,11 +117,16 @@ class Game:
             
     def onClientConnected(self, conn):
         from network.message import encodeMessage
+
         logger.debug("Sending current game state to new client...")
-        serialized = self.gameSession.serialize()
-        message = encodeMessage("init_game_state", serialized)
+        gameState = self.gameSession.serialize()
+        logger.debug(f"Serializing game state with {len(self.gameSession.getPlayers())} players and {len(self.gameSession.getCardsDeck())} cards...")
+
         try:
-            conn.sendall(message.encode())
+            message = encodeMessage("init_game_state", gameState)
+            logger.debug(f"Message length: {len(message)} bytes")
+            conn.sendall((message + "\n").encode())
+            logger.debug("Game state sent successfully.")
         except Exception as e:
             logger.debug(f"Failed to send game state to client: {e}")
         
