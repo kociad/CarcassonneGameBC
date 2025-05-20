@@ -52,13 +52,19 @@ class NetworkConnection:
                 logger.debug(f"Failed to accept connection: {e}")
 
     def receiveLoop(self, conn):
+        buffer = ""
         while self.running:
             try:
-                data = conn.recv(BUFFER_SIZE)
-                if data:
-                    message = data.decode()
-                    logger.debug(f"Receiving message: {message}")
-                    self.onMessageReceived(message)
+                data = conn.recv(BUFFER_SIZE).decode()
+                if not data:
+                    break
+
+                buffer += data
+                while "\n" in buffer:
+                    line, buffer = buffer.split("\n", 1)
+                    if line.strip():
+                        logger.debug(f"Receiving message: {line}")
+                        self.onMessageReceived(line)
             except Exception as e:
                 logger.debug(f"Socket error: {e}")
                 break
@@ -74,18 +80,17 @@ class NetworkConnection:
         if action == "init_game_state":
             logger.debug("Received initial game state from host")
             self.onInitialGameStateReceived(payload)
-            
+
         elif action == "ack_game_state":
             logger.debug("Client confirmed receiving game state: %s", payload)
-            
+
     def sendToAll(self, message):
-        logger.debug("Sending game state to all clients")
         if self.networkMode != "host":
             return
         logger.debug(f"Sending message to all: {message}")
         for conn in self.connections:
             try:
-                conn.sendall(message.encode())
+                conn.sendall((message + "\n").encode())
             except Exception as e:
                 logger.debug(f"Failed to send message to all: {e}")
 
@@ -94,7 +99,7 @@ class NetworkConnection:
             return
         try:
             logger.debug(f"Sending message to host: {message}")
-            self.socket.sendall(message.encode())
+            self.socket.sendall((message + "\n").encode())
         except Exception as e:
             logger.debug(f"Failed to send to host: {e}")
 
