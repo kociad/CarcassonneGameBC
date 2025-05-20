@@ -56,10 +56,12 @@ class Game:
         
         if self.network.networkMode == "host":
             self.network.onClientConnected = self.onClientConnected
+            self.network.onClientSubmittedTurn = self.onClientSubmittedTurn
         elif self.network.networkMode == "client":
             self.network.onInitialGameStateReceived = self.onInitialGameStateReceived
         
         self.network.onInitialGameStateReceived = self.onInitialGameStateReceived
+        self.network.onSyncGameState = self.onSyncGameState
         
         self.running = True  # Game loop control
     
@@ -73,6 +75,13 @@ class Game:
             if self.gameSession.getIsFirstRound() or not currentPlayer.getIsAI() or self.gameSession.getGameOver():
                 # Wait for human input
                 self.running = self.eventHandler.handleEvents(self.gameSession, self.renderer)
+                
+                # If turn finished and we're the client, send updated state to host
+                if not self.gameSession.getIsFirstRound() and self.network.networkMode == "client":
+                    serialized = self.gameSession.serialize()
+                    message = encodeMessage("submit_turn", serialized)
+                    self.network.sendToHost(message)
+                    logger.debug("Client submitted turn to host")
             else:
                 # AI player's turn — no need to wait for input
                 currentPlayer.playTurn(self.gameSession)
@@ -107,7 +116,6 @@ class Game:
         exit()
         
     def onInitialGameStateReceived(self, data):
-        from models.gameSession import GameSession
         self.gameSession = GameSession.deserialize(data)
         logger.debug("Game session replaced with synchronized state from host")
 
@@ -116,8 +124,6 @@ class Game:
             self.network.sendToHost(encodeMessage("ack_game_state", {"status": "ok"}))
             
     def onClientConnected(self, conn):
-        from network.message import encodeMessage
-
         logger.debug("Sending current game state to new client...")
         gameState = self.gameSession.serialize()
         logger.debug(f"Serializing game state with {len(self.gameSession.getPlayers())} players and {len(self.gameSession.getCardsDeck())} cards...")
@@ -129,6 +135,22 @@ class Game:
             logger.debug("Game state sent successfully.")
         except Exception as e:
             logger.debug(f"Failed to send game state to client: {e}")
+            
+    def onClientSubmittedTurn(self, data):
+        self.gameSession = GameSession.deserialize(data)
+        logger.debug("Host applied client-submitted game state")
+        self.broadcastGameState()
+            
+    def broadcastGameState(self):
+        if self.network.networkMode == "host":
+            gameState = self.gameSession.serialize()
+            message = encodeMessage("sync_game_state", gameState)
+            self.network.sendToAll(message)
+            logger.debug("Broadcasted updated game state to all clients.")
+            
+    def onSyncGameState(self, data):
+        self.gameSession = GameSession.deserialize(data)
+        logger.debug("Client game session updated from host sync.")
         
 if __name__ == "__main__":
     playerNames = PLAYERS  # Example player names

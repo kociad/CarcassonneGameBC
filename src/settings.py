@@ -21,7 +21,7 @@ SOUND_PATH = ASSETS_PATH + "sounds/"
 DEBUG = True
 
 # Player settings
-PLAYERS = ["Player1","AI_Player2"]
+PLAYERS = ["Player1","Player2"]
 
 # Network Mode: "host" or "client" or "local"
 NETWORK_MODE = "host"  # or "client" or "local"

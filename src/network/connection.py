@@ -83,6 +83,14 @@ class NetworkConnection:
 
         elif action == "ack_game_state":
             logger.debug("Client confirmed receiving game state: %s", payload)
+            
+        elif action == "submit_turn" and self.networkMode == "host":
+            logger.debug("Received submitted turn from client")
+            self.onClientSubmittedTurn(payload)
+            
+        elif action == "sync_game_state":
+            logger.debug("Received updated game state from host")
+            self.onSyncGameState(payload)
 
     def sendToAll(self, message):
         if self.networkMode != "host":
