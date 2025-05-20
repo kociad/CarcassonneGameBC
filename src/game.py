@@ -76,12 +76,26 @@ class Game:
                 # Wait for human input
                 self.running = self.eventHandler.handleEvents(self.gameSession, self.renderer)
                 
-                # If turn finished and we're the client, send updated state to host
-                if not self.gameSession.getIsFirstRound() and self.network.networkMode == "client":
+                # === SYNC AFTER TURN ===
+                if not self.gameSession.getIsFirstRound():
                     serialized = self.gameSession.serialize()
-                    message = encodeMessage("submit_turn", serialized)
-                    self.network.sendToHost(message)
-                    logger.debug("Client submitted turn to host")
+
+                    if self.network.networkMode == "host":
+                        # Host syncs to everyone
+                        from network.message import encodeMessage
+                        message = encodeMessage("sync_game_state", serialized)
+                        self.network.sendToAll(message)
+                        logger.debug("Host broadcasted updated game state after turn.")
+
+                    """
+                    elif self.network.networkMode == "client":
+                        # Client submits turn to host
+                        from network.message import encodeMessage
+                        message = encodeMessage("submit_turn", serialized)
+                        self.network.sendToHost(message)
+                        logger.debug("Client submitted turn to host.")
+                    """
+
             else:
                 # AI player's turn — no need to wait for input
                 currentPlayer.playTurn(self.gameSession)
