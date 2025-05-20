@@ -150,6 +150,8 @@ class Game:
         logger.debug("Client game session updated from host sync.")
 
     def onTurnEnded(self):
+        logger.debug("Synchronizing game state after turn...")
+        
         if self.gameSession.getIsFirstRound():
             return
 

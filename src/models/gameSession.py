@@ -283,7 +283,9 @@ class GameSession:
             
             self.currentCard = self.drawCard()
             self.turnPhase = 1  # Reset for next player
+            logger.debug("Calling nextTurn()")
             if self.onTurnEnded:
+                logger.debug("Calling onTurnEnded() callback")
                 self.onTurnEnded()
         else:
             self.endGame()
