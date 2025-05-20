@@ -34,6 +34,8 @@ class GameSession:
         self.structureMap = {}
         self.gameOver = False # Tracking game status
         
+        self.onTurnEnded = None  # External callback for sync
+        
         # Create a list of players
         self.generatePlayerList(playerNames)
         
@@ -281,7 +283,8 @@ class GameSession:
             
             self.currentCard = self.drawCard()
             self.turnPhase = 1  # Reset for next player
-            #self.playAITurn()
+            if self.onTurnEnded:
+                self.onTurnEnded()
         else:
             self.endGame()
         
