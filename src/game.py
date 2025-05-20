@@ -42,7 +42,6 @@ class Game:
         pygame.display.set_caption("Carcassonne")
 
         self.gameSession = GameSession(playerNames)
-        self.gameSession.setOnTurnEnded(self.onTurnEnded)
         self.renderer = Renderer(self.screen)
         self.renderer.drawBoard(
             self.gameSession.getGameBoard(),
@@ -116,6 +115,7 @@ class Game:
 
     def onInitialGameStateReceived(self, data):
         self.gameSession = GameSession.deserialize(data)
+        self.gameSession.onTurnEnded = self.onTurnEnded
         logger.debug("Game session replaced with synchronized state from host")
 
         if self.network.networkMode == "client":
@@ -136,6 +136,7 @@ class Game:
 
     def onClientSubmittedTurn(self, data):
         self.gameSession = GameSession.deserialize(data)
+        self.gameSession.onTurnEnded = self.onTurnEnded
         logger.debug("Host applied client-submitted game state")
         self.broadcastGameState()
 
@@ -148,6 +149,7 @@ class Game:
 
     def onSyncGameState(self, data):
         self.gameSession = GameSession.deserialize(data)
+        self.gameSession.onTurnEnded = self.onTurnEnded
         logger.debug("Client game session updated from host sync.")
 
     def onTurnEnded(self):
