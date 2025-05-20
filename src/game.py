@@ -156,11 +156,13 @@ class Game:
         serialized = self.gameSession.serialize()
 
         if self.network.networkMode == "host":
+            logger.debug("Broadcasting turn to all players...")
             message = encodeMessage("sync_game_state", serialized)
             self.network.sendToAll(message)
             logger.debug("Host broadcasted updated game state after turn.")
 
         elif self.network.networkMode == "client":
+            logger.debug("Submitting turn to host...")
             message = encodeMessage("submit_turn", serialized)
             self.network.sendToHost(message)
             logger.debug("Client submitted turn to host.")
