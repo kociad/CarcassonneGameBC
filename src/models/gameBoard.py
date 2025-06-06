@@ -196,7 +196,8 @@ class GameBoard:
     @staticmethod
     def deserialize(data):
         from models.card import Card
-        board = GameBoard(gridSize=data.get("grid_size", GRID_SIZE))
+        grid_size = int(data.get("grid_size", GRID_SIZE))
+        board = GameBoard(gridSize=grid_size)
         board.center = data.get("center", board.gridSize // 2)  # fallback to default if missing
 
         for item in data["placed_cards"]:
