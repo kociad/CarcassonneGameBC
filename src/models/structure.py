@@ -236,15 +236,15 @@ class Structure:
         return {
             "structure_type": self.structureType,
             "card_sides": [
-                {"x": cardPosition[0], "y": cardPosition[1], "direction": direction}
+                {"x": cardPosition["X"], "y": cardPosition["Y"], "direction": direction}
                 for (card, direction) in self.cardSides
-                if (cardPosition := card.getBoardPosition())
+                if (cardPosition := card.getPosition())
             ],
             "figures": [
                 {
                     "owner_index": f.getOwner().getIndex(),
                     "position_on_card": f.positionOnCard,
-                    "card_position": f.card.getBoardPosition() if f.card else None
+                    "card_position": f.card.getPosition() if f.card else None
                 } for f in self.figures
             ],
             "is_completed": self.isCompleted,
