@@ -24,6 +24,22 @@ class Card:
         self.occupied = {} # Currently unused
         self.features = features
         self.neighbors = {"N": None, "E": None, "S": None, "W": None}
+        self.position = {"X": None, "Y": None}
+    
+    def getPosition(self):
+        """
+        Card position getter method
+        :return: Card position
+        """
+        return self.position
+        
+    def setPosition(self, x, y):
+        """
+        Card position setter method
+        :param x: X coordinate of the card
+        :param y: Y coordinate of the card
+        """
+        self.position = {"X": x, "Y": y}
     
     def getImage(self):
         """
@@ -116,9 +132,10 @@ class Card:
             "neighbors": {
                 dir: None if neighbor is None else neighbor.imagePath
                 for dir, neighbor in self.neighbors.items()
-            }
+            },
+            "position": self.position
         }
-        
+
     @staticmethod
     def deserialize(data):
         card = Card(
@@ -128,8 +145,6 @@ class Card:
             features=data["features"]
         )
         card.occupied = data.get("occupied", {})
-
-        # Neighbor info is not resolved during deserialization due to dependency
         card.neighbors = {dir: None for dir in ["N", "E", "S", "W"]}
-
+        card.position = data.get("position", {"X": None, "Y": None})
         return card

@@ -47,6 +47,7 @@ class GameBoard:
             raise ValueError(f"y must be between 1 and {GRID_SIZE - 1}, got {y}")
             
         if 0 <= x < self.gridSize and 0 <= y < self.gridSize:
+            card.setPosition(x,y)
             self.grid[y][x] = card
             self.updateNeighbors(x,y)
     
@@ -71,11 +72,7 @@ class GameBoard:
         return None
         
     def getCardPosition(self, card):
-        for y in range(self.gridSize):
-            for x in range(self.gridSize):
-                if self.getCard(x, y) == card:
-                    return x, y
-        return None, None
+        return card.getPosition()
 
     def validateCardPlacement(self, card, x, y):
         """

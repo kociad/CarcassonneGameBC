@@ -1,6 +1,8 @@
 import pygame
 import logging
 
+from models.gameBoard import GameBoard
+
 from settings import MEEPLE_IMAGES_PATH, FIGURE_SIZE, DEBUG
 
 logger = logging.getLogger(__name__)
@@ -51,9 +53,7 @@ class Figure:
     def serialize(self):
         position = None
         if self.card:
-            from models.gameBoard import GameBoard
-            position = self.card.owner.getGameBoard().getCardPosition(self.card)
-
+            position = self.card.getPosition() if self.card else None
         return {
             "owner_index": self.owner.getIndex(),
             "position_on_card": self.positionOnCard,
