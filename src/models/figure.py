@@ -67,6 +67,7 @@ class Figure:
 
         if data.get("card_position") is not None:
             x, y = data["card_position"]
+            x, y = int(x), int(y)
             card = gameBoard.getCard(x, y)
             figure.card = card
 

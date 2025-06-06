@@ -703,16 +703,16 @@ class GameSession:
 
         session = cls([p.getName() for p in players])
         session.players = players
-        session.currentPlayer = players[data["current_player_index"]]
+        session.currentPlayer = players[int(data["current_player_index"])]
 
         session.cardsDeck = [Card.deserialize(c) for c in data["deck"]]
         session.currentCard = Card.deserialize(data["current_card"]) if data["current_card"] else None
         session.lastPlacedCard = Card.deserialize(data["last_placed_card"]) if data["last_placed_card"] else None
         session.gameBoard = GameBoard.deserialize(data["board"])
 
-        session.isFirstRound = data["is_first_round"]
-        session.turnPhase = data["turn_phase"]
-        session.gameOver = data["game_over"]
+        session.isFirstRound = bool(data["is_first_round"])
+        session.turnPhase = int(data["turn_phase"])
+        session.gameOver = bool(data["game_over"])
         session.gameMode = data.get("game_mode", None)
 
         # Deserialize placed figures
@@ -722,13 +722,14 @@ class GameSession:
             for fdata in data.get("placed_figures", [])
         ]
 
-        # Deserialize structures (optional, if your Structure class supports it)
-        session.structures = []
-        for s in data.get("structures", []):
-            session.structures.append(Structure.deserialize(s))
+        # Deserialize structures
+        session.structures = [
+            Structure.deserialize(s) for s in data.get("structures", [])
+        ]
 
-        # structureMap keys restored as empty mapping (optional)
-        session.structureMap = {tuple(k): None for k in data.get("structure_map", [])}
+        # Restore structureMap keys as int tuples
+        session.structureMap = {
+            (int(k[0]), int(k[1]), k[2]): None for k in data.get("structure_map", [])
+        }
 
         return session
-

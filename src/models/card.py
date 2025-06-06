@@ -146,5 +146,6 @@ class Card:
         )
         card.occupied = data.get("occupied", {})
         card.neighbors = {dir: None for dir in ["N", "E", "S", "W"]}
-        card.position = data.get("position", {"X": None, "Y": None})
+        pos = data.get("position", {"X": None, "Y": None})
+        card.position = {"X": int(pos["X"]), "Y": int(pos["Y"])} if pos["X"] is not None and pos["Y"] is not None else {"X": None, "Y": None}
         return card
