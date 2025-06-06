@@ -49,23 +49,26 @@ class Figure:
         self.positionOnCard = None
         
     def serialize(self):
+        position = None
+        if self.card:
+            from models.gameBoard import GameBoard
+            position = self.card.owner.getGameBoard().getCardPosition(self.card)
+
         return {
             "owner_index": self.owner.getIndex(),
             "position_on_card": self.positionOnCard,
-            # card position must be filled manually by the GameSession serializer
+            "card_position": position  # needed to re-link during deserialization
         }
         
     @staticmethod
     def deserialize(data, playerMap, gameBoard):
-        from models.figure import Figure
-
         owner = playerMap[data["owner_index"]]
         figure = Figure(owner)
 
-        if data["card_position"]:
+        if data.get("card_position") is not None:
             x, y = data["card_position"]
             card = gameBoard.getCard(x, y)
             figure.card = card
-            figure.positionOnCard = data["position_on_card"]
 
+        figure.positionOnCard = data.get("position_on_card")
         return figure

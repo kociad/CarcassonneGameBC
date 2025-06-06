@@ -231,3 +231,50 @@ class Structure:
             score = len(scoredCities) * 3
             
         return score
+        
+    def serialize(self):
+        return {
+            "structure_type": self.structureType,
+            "card_sides": [
+                {"x": cardPosition[0], "y": cardPosition[1], "direction": direction}
+                for (card, direction) in self.cardSides
+                if (cardPosition := card.getBoardPosition())
+            ],
+            "figures": [
+                {
+                    "owner_index": f.getOwner().getIndex(),
+                    "position_on_card": f.positionOnCard,
+                    "card_position": f.card.getBoardPosition() if f.card else None
+                } for f in self.figures
+            ],
+            "is_completed": self.isCompleted,
+            "color": self.color
+        }
+
+    @staticmethod
+    def deserialize(data, gameBoard, playerMap):
+        from models.structure import Structure
+        from models.figure import Figure
+
+        s = Structure(data["structure_type"])
+        s.isCompleted = data["is_completed"]
+        s.color = tuple(data["color"])
+
+        # Rebuild cardSides
+        for side in data["card_sides"]:
+            card = gameBoard.getCard(side["x"], side["y"])
+            if card:
+                s.cardSides.add((card, side["direction"]))
+                if card not in s.cards:
+                    s.cards.append(card)
+
+        # Rebuild figures
+        for f in data["figures"]:
+            owner = playerMap[f["owner_index"]]
+            card = gameBoard.getCard(*f["card_position"]) if f["card_position"] else None
+            figure = Figure(owner)
+            figure.card = card
+            figure.positionOnCard = f["position_on_card"]
+            s.figures.append(figure)
+
+        return s

@@ -108,17 +108,28 @@ class Card:
         
     def serialize(self):
         return {
-            "image_path": self.imagePath,  # This assumes you'll store the image path
+            "image_path": self.imagePath,
             "terrains": self.terrains,
             "connections": self.connections,
-            "features": self.features
+            "features": self.features,
+            "occupied": self.occupied,
+            "neighbors": {
+                dir: None if neighbor is None else neighbor.imagePath
+                for dir, neighbor in self.neighbors.items()
+            }
         }
-
+        
     @staticmethod
     def deserialize(data):
-        return Card(
+        card = Card(
             image_path=data["image_path"],
             terrains=data["terrains"],
             connections=data["connections"],
             features=data["features"]
         )
+        card.occupied = data.get("occupied", {})
+
+        # Neighbor info is not resolved during deserialization due to dependency
+        card.neighbors = {dir: None for dir in ["N", "E", "S", "W"]}
+
+        return card

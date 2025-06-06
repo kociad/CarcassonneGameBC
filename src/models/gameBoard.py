@@ -192,6 +192,7 @@ class GameBoard:
                     })
         return {
             "grid_size": self.gridSize,
+            "center": self.center,
             "placed_cards": placed
         }
     
@@ -199,6 +200,7 @@ class GameBoard:
     def deserialize(data):
         from models.card import Card
         board = GameBoard(gridSize=data.get("grid_size", GRID_SIZE))
+        board.center = data.get("center", board.gridSize // 2)  # fallback to default if missing
 
         for item in data["placed_cards"]:
             x = item["x"]
@@ -208,3 +210,4 @@ class GameBoard:
             board.placeCard(card, x, y)
 
         return board
+

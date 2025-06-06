@@ -670,6 +670,8 @@ class GameSession:
             "last_placed_card": self.lastPlacedCard.serialize() if self.lastPlacedCard else None,
             "is_first_round": self.isFirstRound,
             "turn_phase": self.turnPhase,
+            "game_over": self.gameOver,
+            "current_player_index": self.currentPlayer.getIndex(),
             "placed_figures": [
                 {
                     **figure.serialize(),
@@ -677,8 +679,9 @@ class GameSession:
                 }
                 for figure in self.placedFigures if figure.card
             ],
-            "current_player_index": self.currentPlayer.getIndex(),
-            "game_over": self.gameOver
+            "structure_map": list(self.structureMap.keys()),  # keys only; optional
+            "structures": [s.serialize() for s in self.structures if hasattr(s, 'serialize')],
+            "game_mode": self.gameMode
         }
         
     @classmethod
@@ -687,8 +690,8 @@ class GameSession:
         from models.aiPlayer import AIPlayer
         from models.card import Card
         from models.gameBoard import GameBoard
-        from models.figure import Figure  # Assuming figures are serializable
-        from models.structure import Structure  # Optional, for post-sync structure recovery
+        from models.figure import Figure
+        from models.structure import Structure
 
         # Rebuild player list
         players = []
@@ -698,36 +701,34 @@ class GameSession:
             else:
                 players.append(Player.deserialize(p))
 
-        # Initialize with player names only
         session = cls([p.getName() for p in players])
         session.players = players
-
-        # Restore current player
         session.currentPlayer = players[data["current_player_index"]]
 
-        # Rebuild deck
         session.cardsDeck = [Card.deserialize(c) for c in data["deck"]]
-
-        # Rebuild current/last cards
         session.currentCard = Card.deserialize(data["current_card"]) if data["current_card"] else None
         session.lastPlacedCard = Card.deserialize(data["last_placed_card"]) if data["last_placed_card"] else None
-
-        # Board
         session.gameBoard = GameBoard.deserialize(data["board"])
 
-        # Game flags
         session.isFirstRound = data["is_first_round"]
         session.turnPhase = data["turn_phase"]
         session.gameOver = data["game_over"]
+        session.gameMode = data.get("game_mode", None)
 
-        # Placed figures (if needed)
-        # Build player map for figure deserialization
+        # Deserialize placed figures
         playerMap = {p.getIndex(): p for p in session.players}
-
-        # Restore placed figures
         session.placedFigures = [
             Figure.deserialize(fdata, playerMap, session.gameBoard)
             for fdata in data.get("placed_figures", [])
         ]
-        
+
+        # Deserialize structures (optional, if your Structure class supports it)
+        session.structures = []
+        for s in data.get("structures", []):
+            session.structures.append(Structure.deserialize(s))
+
+        # structureMap keys restored as empty mapping (optional)
+        session.structureMap = {tuple(k): None for k in data.get("structure_map", [])}
+
         return session
+
