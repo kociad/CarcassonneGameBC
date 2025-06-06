@@ -72,7 +72,18 @@ class GameBoard:
         return None
         
     def getCardPosition(self, card):
-        return card.getPosition()
+        """
+        Retrieves the (x, y) position of a card based on its internal position attribute.
+        :param card: The card object.
+        :return: Tuple (x, y) if set, otherwise (None, None)
+        """
+        pos = card.getPosition()
+        try:
+            x = int(pos["X"]) if pos["X"] is not None else None
+            y = int(pos["Y"]) if pos["Y"] is not None else None
+        except (KeyError, ValueError, TypeError):
+            x, y = None, None
+        return x, y
 
     def validateCardPlacement(self, card, x, y):
         """
