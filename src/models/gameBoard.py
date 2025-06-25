@@ -10,7 +10,7 @@ class GameBoard:
     Represents the game board where cards are placed.
     """
     
-    def __init__(self, gridSize=GRID_SIZE):
+    def __init__(self, gridSize=int(GRID_SIZE)):
         """
         Initializes the game board with an empty grid.
         :param gridSize: The size of the board grid (default: 20x20).
@@ -40,11 +40,11 @@ class GameBoard:
         :param x: X-coordinate on the board.
         :param y: Y-coordinate on the board.
         """
-        if not (0 <= x < GRID_SIZE):
-            raise ValueError(f"x must be between 1 and {GRID_SIZE - 1}, got {x}")
+        if not (0 <= x < self.gridSize):
+            raise ValueError(f"x must be between 1 and {self.gridSize - 1}, got {x}")
         
-        if not (0 <= y < GRID_SIZE):
-            raise ValueError(f"y must be between 1 and {GRID_SIZE - 1}, got {y}")
+        if not (0 <= y < self.gridSize):
+            raise ValueError(f"y must be between 1 and {self.gridSize - 1}, got {y}")
             
         if 0 <= x < self.gridSize and 0 <= y < self.gridSize:
             card.setPosition(x,y)
@@ -58,12 +58,12 @@ class GameBoard:
         :param y: Y-coordinate.
         :return: The card (Card) at the specified position, or None if empty.
         """
-        if not (0 <= x < GRID_SIZE):
-            logger.debug(f"Error getting card: x must be between 1 and {GRID_SIZE - 1}, got {x}")
+        if not (0 <= x < self.gridSize):
+            logger.debug(f"Error getting card: x must be between 1 and {self.gridSize - 1}, got {x}")
             return None
         
-        if not (0 <= y < GRID_SIZE):
-            logger.debug(f"Error getting card: y must be between 1 and {GRID_SIZE - 1}, got {y}")
+        if not (0 <= y < self.gridSize):
+            logger.debug(f"Error getting card: y must be between 1 and {self.gridSize - 1}, got {y}")
             return None
             
         if 0 <= x < self.gridSize and 0 <= y < self.gridSize:
@@ -95,7 +95,7 @@ class GameBoard:
         """
         logger.debug("Validating card placement...")
         
-        if not (0 <= x < GRID_SIZE) or not (0 <= y < GRID_SIZE):
+        if not (0 <= x < self.gridSize) or not (0 <= y < self.gridSize):
             logger.debug(f"Placement invalid, coordinates out of bounds.")
             return False
         
