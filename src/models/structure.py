@@ -1,9 +1,8 @@
 import random
 import logging
 
-from models.structure import Structure
 from models.figure import Figure
-        
+
 from settings import DEBUG
 
 logger = logging.getLogger(__name__)
@@ -256,6 +255,7 @@ class Structure:
 
     @staticmethod
     def deserialize(data, gameBoard, playerMap):
+
         s = Structure(data["structure_type"])
         s.isCompleted = data["is_completed"]
         s.color = tuple(data["color"])
