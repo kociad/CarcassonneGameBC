@@ -135,7 +135,7 @@ class Card:
                 dir: None if neighbor is None else neighbor.imagePath
                 for dir, neighbor in self.neighbors.items()
             },
-            "position": self.position
+            "position": self.position,
             "rotation": self.rotation
         }
 
