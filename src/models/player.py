@@ -112,13 +112,20 @@ class Player:
     
     @staticmethod
     def deserialize(data):
-        from models.figure import Figure
-        player = Player(
-            name=data["name"],
-            index=data["index"],
-            color=data["color"],
-            isAI=data.get("is_ai", False)
-        )
-        player.score = data["score"]
-        player.figures = [Figure(player) for _ in range(data.get("figures_remaining", 7))]
-        return player
+        try:
+            name = str(data["name"])
+            index = int(data["index"])
+            color = str(data["color"])
+            is_ai = bool(data.get("is_ai", False))
+            score = int(data.get("score", 0))
+            figures_remaining = int(data.get("figures_remaining", 7))
+
+            player = Player(name=name, index=index, color=color, isAI=is_ai)
+            player.score = score
+            player.figures = [Figure(player) for _ in range(figures_remaining)]
+
+            return player
+
+        except (KeyError, ValueError, TypeError) as e:
+            logger.error(f"Failed to deserialize Player object: {e}\nData: {data}")
+            return None

@@ -206,17 +206,34 @@ class GameBoard:
     
     @staticmethod
     def deserialize(data):
-        from models.card import Card
-        grid_size = int(data.get("grid_size", GRID_SIZE))
-        board = GameBoard(gridSize=grid_size)
-        board.center = data.get("center", board.gridSize // 2)  # fallback to default if missing
+        try:
+            grid_size = int(data.get("grid_size", GRID_SIZE))
+        except (ValueError, TypeError) as e:
+            logger.error(f"Invalid grid_size in GameBoard data: {data.get('grid_size')} - {e}")
+            grid_size = int(GRID_SIZE)
 
-        for item in data["placed_cards"]:
-            x = item["x"]
-            y = item["y"]
-            card_data = item["card"]
-            card = Card.deserialize(card_data)
-            board.placeCard(card, x, y)
+        board = GameBoard(gridSize=grid_size)
+
+        try:
+            board.center = int(data.get("center", board.gridSize // 2))
+        except (ValueError, TypeError) as e:
+            logger.warning(f"Invalid center value, defaulting to center of grid - {e}")
+            board.center = board.gridSize // 2
+
+        for item in data.get("placed_cards", []):
+            try:
+                x = int(item["x"])
+                y = int(item["y"])
+                card_data = item["card"]
+                if not isinstance(card_data, dict):
+                    raise TypeError("card field must be a dictionary")
+
+                card = Card.deserialize(card_data)
+                board.placeCard(card, x, y)
+
+            except (KeyError, ValueError, TypeError) as e:
+                logger.warning(f"Failed to place card at {item}: {e}")
+            except Exception as e:
+                logger.error(f"Unexpected error while placing card at {item}: {e}")
 
         return board
-

@@ -62,14 +62,45 @@ class Figure:
         
     @staticmethod
     def deserialize(data, playerMap, gameBoard):
-        owner = playerMap[data["owner_index"]]
-        figure = Figure(owner)
+        try:
+            owner_index = int(data["owner_index"])
+            owner = playerMap[owner_index]
+        except (KeyError, ValueError, TypeError) as e:
+            logger.error(f"Failed to resolve owner for figure: {data} - {e}")
+            return None
 
-        if data.get("card_position") is not None:
-            x, y = data["card_position"]
-            x, y = int(x), int(y)
-            card = gameBoard.getCard(x, y)
-            figure.card = card
+        try:
+            figure = Figure(owner)
+        except Exception as e:
+            logger.error(f"Failed to initialize Figure for owner {owner.getName()} - {e}")
+            return None
 
-        figure.positionOnCard = data.get("position_on_card")
+        # Set card if card_position is valid
+        try:
+            pos_data = data.get("card_position")
+            if pos_data is not None:
+                if isinstance(pos_data, (list, tuple)):
+                    x, y = int(pos_data[0]), int(pos_data[1])
+                elif isinstance(pos_data, dict):
+                    x, y = int(pos_data["X"]), int(pos_data["Y"])
+                else:
+                    raise TypeError("card_position must be dict or list/tuple")
+
+                card = gameBoard.getCard(x, y)
+                figure.card = card
+        except Exception as e:
+            logger.warning(f"Failed to set card position for figure: {data} - {e}")
+            figure.card = None
+
+        # Set position on card
+        try:
+            position = data.get("position_on_card")
+            if position is not None:
+                figure.positionOnCard = str(position)
+            else:
+                figure.positionOnCard = None
+        except Exception as e:
+            logger.warning(f"Failed to set figure position_on_card: {data} - {e}")
+            figure.positionOnCard = None
+
         return figure

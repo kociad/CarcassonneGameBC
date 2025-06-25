@@ -138,14 +138,53 @@ class Card:
 
     @staticmethod
     def deserialize(data):
-        card = Card(
-            image_path=data["image_path"],
-            terrains=data["terrains"],
-            connections=data["connections"],
-            features=data["features"]
-        )
-        card.occupied = data.get("occupied", {})
-        card.neighbors = {dir: None for dir in ["N", "E", "S", "W"]}
-        pos = data.get("position", {"X": None, "Y": None})
-        card.position = {"X": int(pos["X"]), "Y": int(pos["Y"])} if pos["X"] is not None and pos["Y"] is not None else {"X": None, "Y": None}
+        try:
+            image_path = str(data["image_path"])
+            terrains = dict(data["terrains"])
+            connections = data.get("connections", None)
+            if connections is not None and not isinstance(connections, dict):
+                raise TypeError("connections must be a dict or None")
+            features = data.get("features", None)
+            if features is not None and not isinstance(features, list):
+                raise TypeError("features must be a list or None")
+        except (KeyError, ValueError, TypeError) as e:
+            logger.error(f"Failed to parse required card fields: {data} - {e}")
+            raise
+
+        try:
+            card = Card(
+                image_path=image_path,
+                terrains=terrains,
+                connections=connections,
+                features=features
+            )
+        except Exception as e:
+            logger.error(f"Failed to initialize Card from data: {data} - {e}")
+            raise
+
+        try:
+            card.occupied = data.get("occupied", {})
+            if not isinstance(card.occupied, dict):
+                logger.warning(f"Invalid 'occupied' field type, resetting to empty dict: {card.occupied}")
+                card.occupied = {}
+
+            card.neighbors = {dir: None for dir in ["N", "E", "S", "W"]}  # Reset neighbors
+
+            pos = data.get("position", {"X": None, "Y": None})
+            if isinstance(pos, dict):
+                x = pos.get("X", None)
+                y = pos.get("Y", None)
+                card.position = {
+                    "X": int(x) if x is not None else None,
+                    "Y": int(y) if y is not None else None
+                }
+            else:
+                logger.warning(f"Invalid 'position' format: {pos}, defaulting to None")
+                card.position = {"X": None, "Y": None}
+
+        except Exception as e:
+            logger.error(f"Failed to parse optional card fields: {data} - {e}")
+            raise
+
         return card
+

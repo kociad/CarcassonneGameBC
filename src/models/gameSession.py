@@ -6,6 +6,8 @@ from models.card import Card
 from models.player import Player
 from models.structure import Structure
 from models.aiPlayer import AIPlayer
+from models.figure import Figure
+
 from settings import TILE_IMAGES_PATH, DEBUG
 
 logger = logging.getLogger(__name__)
@@ -686,51 +688,91 @@ class GameSession:
         
     @classmethod
     def deserialize(cls, data):
-        from models.player import Player
-        from models.aiPlayer import AIPlayer
-        from models.card import Card
-        from models.gameBoard import GameBoard
-        from models.figure import Figure
-        from models.structure import Structure
-
         # Rebuild player list
         players = []
-        for p in data["players"]:
-            if p["name"].startswith("AI_"):
-                players.append(AIPlayer.deserialize(p))
-            else:
-                players.append(Player.deserialize(p))
+        for p in data.get("players", []):
+            try:
+                if p["name"].startswith("AI_"):
+                    players.append(AIPlayer.deserialize(p))
+                else:
+                    players.append(Player.deserialize(p))
+            except Exception as e:
+                logger.warning(f"Skipping malformed player entry: {p} - {e}")
 
         session = cls([p.getName() for p in players])
         session.players = players
-        session.currentPlayer = players[int(data["current_player_index"])]
 
-        session.cardsDeck = [Card.deserialize(c) for c in data["deck"]]
-        session.currentCard = Card.deserialize(data["current_card"]) if data["current_card"] else None
-        session.lastPlacedCard = Card.deserialize(data["last_placed_card"]) if data["last_placed_card"] else None
-        session.gameBoard = GameBoard.deserialize(data["board"])
+        try:
+            session.currentPlayer = players[int(data.get("current_player_index", 0))]
+        except (IndexError, ValueError, TypeError) as e:
+            logger.warning(f"Invalid current_player_index, defaulting to first: {e}")
+            session.currentPlayer = players[0] if players else None
 
-        session.isFirstRound = bool(data["is_first_round"])
-        session.turnPhase = int(data["turn_phase"])
-        session.gameOver = bool(data["game_over"])
+        session.cardsDeck = []
+        for c in data.get("deck", []):
+            try:
+                session.cardsDeck.append(Card.deserialize(c))
+            except Exception as e:
+                logger.warning(f"Skipping malformed card in deck: {c} - {e}")
+
+        try:
+            session.currentCard = Card.deserialize(data["current_card"]) if data.get("current_card") else None
+        except Exception as e:
+            logger.warning(f"Failed to deserialize current_card - {e}")
+            session.currentCard = None
+
+        try:
+            session.lastPlacedCard = Card.deserialize(data["last_placed_card"]) if data.get("last_placed_card") else None
+        except Exception as e:
+            logger.warning(f"Failed to deserialize last_placed_card - {e}")
+            session.lastPlacedCard = None
+
+        try:
+            session.gameBoard = GameBoard.deserialize(data.get("board", {}))
+        except Exception as e:
+            logger.warning(f"Failed to deserialize gameBoard - {e}")
+            session.gameBoard = GameBoard()
+
+        try:
+            session.isFirstRound = bool(data.get("is_first_round", True))
+            session.turnPhase = int(data.get("turn_phase", 1))
+            session.gameOver = bool(data.get("game_over", False))
+        except Exception as e:
+            logger.warning(f"Failed to parse basic session attributes - {e}")
+
         session.gameMode = data.get("game_mode", None)
 
-        # Deserialize placed figures
+        # Placed Figures
         playerMap = {p.getIndex(): p for p in session.players}
-        session.placedFigures = [
-            Figure.deserialize(fdata, playerMap, session.gameBoard)
-            for fdata in data.get("placed_figures", [])
-        ]
+        session.placedFigures = []
+        for fdata in data.get("placed_figures", []):
+            try:
+                figure = Figure.deserialize(fdata, playerMap, session.gameBoard)
+                if figure:
+                    session.placedFigures.append(figure)
+            except Exception as e:
+                logger.warning(f"Skipping malformed figure: {fdata} - {e}")
 
-        # Deserialize structures
-        session.structures = [
-            Structure.deserialize(s, session.gameBoard, playerMap)
-            for s in data.get("structures", [])
-        ]
+        # Structures
+        session.structures = []
+        for s in data.get("structures", []):
+            try:
+                structure = Structure.deserialize(s, session.gameBoard, playerMap)
+                if structure:
+                    session.structures.append(structure)
+            except Exception as e:
+                logger.warning(f"Skipping malformed structure: {s} - {e}")
 
-        # Restore structureMap keys as int tuples
-        session.structureMap = {
-            (int(k[0]), int(k[1]), k[2]): None for k in data.get("structure_map", [])
-        }
+        # StructureMap
+        raw_map = data.get("structure_map", [])
+        session.structureMap = {}
+        for k in raw_map:
+            try:
+                x = int(k[0])
+                y = int(k[1])
+                direction = str(k[2])
+                session.structureMap[(x, y, direction)] = None
+            except (IndexError, ValueError, TypeError) as e:
+                logger.warning(f"Skipping malformed structureMap key: {k} - {e}")
 
         return session

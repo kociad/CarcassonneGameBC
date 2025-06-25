@@ -255,26 +255,53 @@ class Structure:
 
     @staticmethod
     def deserialize(data, gameBoard, playerMap):
-
         s = Structure(data["structure_type"])
-        s.isCompleted = data["is_completed"]
-        s.color = tuple(data["color"])
+        s.isCompleted = bool(data.get("is_completed", False))
+
+        # Ensure color is a tuple of ints
+        raw_color = data.get("color", (255, 255, 255, 150))
+        try:
+            s.color = tuple(int(c) for c in raw_color)
+        except Exception as e:
+            logger.warning(f"Failed to parse color: {raw_color} - {e}")
+            s.color = (255, 255, 255, 150)
 
         # Rebuild cardSides
-        for side in data["card_sides"]:
-            card = gameBoard.getCard(side["x"], side["y"])
-            if card:
-                s.cardSides.add((card, side["direction"]))
-                if card not in s.cards:
-                    s.cards.append(card)
+        for side in data.get("card_sides", []):
+            try:
+                x = int(side["x"])
+                y = int(side["y"])
+                direction = str(side["direction"])
+                card = gameBoard.getCard(x, y)
+                if card:
+                    s.cardSides.add((card, direction))
+                    if card not in s.cards:
+                        s.cards.append(card)
+            except (KeyError, ValueError, TypeError) as e:
+                logger.warning(f"Skipping malformed card_side: {side} - {e}")
 
         # Rebuild figures
-        for f in data["figures"]:
-            owner = playerMap[f["owner_index"]]
-            card = gameBoard.getCard(*f["card_position"]) if f["card_position"] else None
-            figure = Figure(owner)
-            figure.card = card
-            figure.positionOnCard = f["position_on_card"]
-            s.figures.append(figure)
+        for f in data.get("figures", []):
+            try:
+                owner_index = int(f["owner_index"])
+                position = str(f["position_on_card"])
+                pos_data = f.get("card_position")
+                card = None
+                if pos_data and isinstance(pos_data, dict):
+                    x = int(pos_data["X"])
+                    y = int(pos_data["Y"])
+                    card = gameBoard.getCard(x, y)
+
+                owner = playerMap.get(owner_index)
+                if not owner:
+                    raise ValueError(f"Owner with index {owner_index} not found")
+
+                figure = Figure(owner)
+                figure.card = card
+                figure.positionOnCard = position
+                s.figures.append(figure)
+            except (KeyError, ValueError, TypeError) as e:
+                logger.warning(f"Skipping malformed figure: {f} - {e}")
 
         return s
+
