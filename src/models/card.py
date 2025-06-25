@@ -25,6 +25,7 @@ class Card:
         self.features = features
         self.neighbors = {"N": None, "E": None, "S": None, "W": None}
         self.position = {"X": None, "Y": None}
+        self.rotation = 0  # Card rotation (0, 90, 180, 270)
     
     def getPosition(self):
         """
@@ -95,6 +96,7 @@ class Card:
         """
         Rotates the card 90 degrees clockwise.
         """
+        self.rotation = (self.rotation + 90) % 360
         self.image = pygame.transform.rotate(self.image, -90)
 
         # Rotate terrain mapping
@@ -134,6 +136,7 @@ class Card:
                 for dir, neighbor in self.neighbors.items()
             },
             "position": self.position
+            "rotation": self.rotation
         }
 
     @staticmethod
@@ -168,7 +171,7 @@ class Card:
                 logger.warning(f"Invalid 'occupied' field type, resetting to empty dict: {card.occupied}")
                 card.occupied = {}
 
-            card.neighbors = {dir: None for dir in ["N", "E", "S", "W"]}  # Reset neighbors
+            card.neighbors = {dir: None for dir in ["N", "E", "S", "W"]}
 
             pos = data.get("position", {"X": None, "Y": None})
             if isinstance(pos, dict):
@@ -182,9 +185,21 @@ class Card:
                 logger.warning(f"Invalid 'position' format: {pos}, defaulting to None")
                 card.position = {"X": None, "Y": None}
 
+            # Handle rotation (optional field)
+            raw_rotation = data.get("rotation", 0)
+            try:
+                rotation = int(raw_rotation)
+                if rotation not in [0, 90, 180, 270]:
+                    raise ValueError("rotation must be one of 0, 90, 180, 270")
+                for _ in range(rotation // 90):
+                    card.rotate()
+                card.rotation = rotation  # Store it explicitly
+            except Exception as e:
+                logger.warning(f"Invalid rotation value: {raw_rotation}, skipping rotation - {e}")
+                card.rotation = 0
+
         except Exception as e:
             logger.error(f"Failed to parse optional card fields: {data} - {e}")
             raise
 
         return card
-
