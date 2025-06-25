@@ -724,7 +724,8 @@ class GameSession:
 
         # Deserialize structures
         session.structures = [
-            Structure.deserialize(s) for s in data.get("structures", [])
+            Structure.deserialize(s, session.gameBoard, playerMap)
+            for s in data.get("structures", [])
         ]
 
         # Restore structureMap keys as int tuples
