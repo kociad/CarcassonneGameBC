@@ -30,14 +30,14 @@ class NetworkConnection:
                 logger.debug(f"Host listening on {HOST_IP}:{HOST_PORT}...")
                 threading.Thread(target=self.acceptConnections, daemon=True).start()
             except Exception as e:
-                logger.debug(f"Failed to bind socket: {e}")
+                logger.exception(f"Failed to bind socket: {e}")
         elif self.networkMode == "client":
             try:
                 self.socket.connect((HOST_IP, HOST_PORT))
                 logger.debug(f"Connected to host at {HOST_IP}:{HOST_PORT}")
                 threading.Thread(target=self.receiveLoop, args=(self.socket,), daemon=True).start()
             except Exception as e:
-                logger.debug(f"Failed to connect to host: {e}")
+                logger.exception(f"Failed to connect to host: {e}")
 
     def acceptConnections(self):
         while self.running:
@@ -49,7 +49,7 @@ class NetworkConnection:
                     self.onClientConnected(conn)
                 threading.Thread(target=self.receiveLoop, args=(conn,), daemon=True).start()
             except Exception as e:
-                logger.debug(f"Failed to accept connection: {e}")
+                logger.exception(f"Failed to accept connection: {e}")
 
     def receiveLoop(self, conn):
         buffer = ""
@@ -66,7 +66,7 @@ class NetworkConnection:
                         logger.debug(f"Receiving message: {line}")
                         self.onMessageReceived(line)
             except Exception as e:
-                logger.debug(f"Socket error: {e}")
+                logger.exception(f"Socket error: {e}")
                 break
 
     def onMessageReceived(self, message):
@@ -100,7 +100,7 @@ class NetworkConnection:
             try:
                 conn.sendall((message + "\n").encode())
             except Exception as e:
-                logger.debug(f"Failed to send message to all: {e}")
+                logger.exception(f"Failed to send message to all: {e}")
 
     def sendToHost(self, message):
         if self.networkMode != "client":
@@ -109,7 +109,7 @@ class NetworkConnection:
             logger.debug(f"Sending message to host: {message}")
             self.socket.sendall((message + "\n").encode())
         except Exception as e:
-            logger.debug(f"Failed to send to host: {e}")
+            logger.exception(f"Failed to send to host: {e}")
 
     def close(self):
         if self.networkMode == "local":
@@ -120,4 +120,4 @@ class NetworkConnection:
             self.socket.close()
             logger.debug("Socket closed")
         except Exception as e:
-            logger.debug(f"Error while closing socket: {e}")
+            logger.exception(f"Error while closing socket: {e}")

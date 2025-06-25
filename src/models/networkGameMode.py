@@ -43,7 +43,7 @@ class NetworkGameMode:
                 action = pickle.loads(data)
                 self.handleNetworkAction(action)
             except Exception as e:
-                logger.debug(f"[ERROR] Network thread exception: {e}")
+                logger.exception(f"Network thread exception: {e}")
                 self.running = False
 
     def handleNetworkAction(self, action):
@@ -65,14 +65,14 @@ class NetworkGameMode:
         elif actionType == "skip":
             self.gameSession.skipCurrentAction()
         else:
-            logger.debug(f"[WARNING] Unknown network action type: {actionType}")
+            logger.warning(f"Unknown network action type: {actionType}")
 
     def sendAction(self, actionDict):
         try:
             data = pickle.dumps(actionDict)
             self.conn.sendall(data)
         except Exception as e:
-            logger.debug(f"[ERROR] Failed to send network action: {e}")
+            logger.exception(f"Failed to send network action: {e}")
 
     def stop(self):
         self.running = False
