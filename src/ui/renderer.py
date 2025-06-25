@@ -1,5 +1,6 @@
 import pygame
 import random
+import logging
 
 from models.gameBoard import GameBoard
 from models.card import Card
