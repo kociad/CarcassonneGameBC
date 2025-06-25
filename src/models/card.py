@@ -97,7 +97,7 @@ class Card:
         Rotates the card 90 degrees clockwise.
         """
         self.rotation = (self.rotation + 90) % 360
-        self.image = pygame.transform.rotate(self.image, -90)
+        #self.image = pygame.transform.rotate(self.image, -90)
 
         # Rotate terrain mapping
         directionMap = {
@@ -185,17 +185,12 @@ class Card:
                 logger.warning(f"Invalid 'position' format: {pos}, defaulting to None")
                 card.position = {"X": None, "Y": None}
 
-            # Handle rotation (optional field)
+            # Store rotation for future use but don't apply rotate()
             raw_rotation = data.get("rotation", 0)
             try:
-                rotation = int(raw_rotation)
-                if rotation not in [0, 90, 180, 270]:
-                    raise ValueError("rotation must be one of 0, 90, 180, 270")
-                for _ in range(rotation // 90):
-                    card.rotate()
-                card.rotation = rotation  # Store it explicitly
+                card.rotation = int(raw_rotation)
             except Exception as e:
-                logger.warning(f"Invalid rotation value: {raw_rotation}, skipping rotation - {e}")
+                logger.warning(f"Invalid rotation value: {raw_rotation}, defaulting to 0 - {e}")
                 card.rotation = 0
 
         except Exception as e:

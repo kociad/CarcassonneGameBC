@@ -6,6 +6,8 @@ from models.card import Card
 from models.player import Player
 from settings import TILE_SIZE, WINDOW_WIDTH, WINDOW_HEIGHT, FIGURE_SIZE, DEBUG
 
+logger = logging.getLogger(__name__)
+
 class Renderer:
     """
     Handles rendering of the game board, UI elements, and placed cards.
@@ -79,7 +81,15 @@ class Renderer:
             for x in range(gameBoard.gridSize):
                 card = gameBoard.getCard(x, y)
                 if card:
-                    self.screen.blit(card.image, (x * TILE_SIZE - self.offsetX, y * TILE_SIZE - self.offsetY))
+                    imageToDraw = card.image
+                    if hasattr(card, "rotation") and card.rotation:
+                        try:
+                            imageToDraw = pygame.transform.rotate(card.image, -90 * (card.rotation % 4))
+                        except Exception as e:
+                            # Log and fall back to default image if anything fails
+                            logger.error(f"Rotation failed for card: {e}")
+                            imageToDraw = card.image
+                    self.screen.blit(imageToDraw, (x * TILE_SIZE - self.offsetX, y * TILE_SIZE - self.offsetY))
                 if DEBUG:
                     # Draw X, Y coordinates at the center of each grid cell
                     textSurface = self.font.render(f"{x},{y}", True, (255, 255, 255))
