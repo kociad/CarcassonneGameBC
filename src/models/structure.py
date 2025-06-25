@@ -298,8 +298,8 @@ class Structure:
 
                 figure = Figure(owner)
                 figure.card = card
-                figure.positionOnCard = position
-                s.figures.append(figure)
+                figure.positionOnCard = f["position_on_card"]
+                s.addFigure(figure)  # Enforce ownership logic
             except (KeyError, ValueError, TypeError) as e:
                 logger.warning(f"Skipping malformed figure: {f} - {e}")
 
