@@ -85,9 +85,8 @@ class Renderer:
                     imageToDraw = card.image
                     if hasattr(card, "rotation") and card.rotation:
                         try:
-                            imageToDraw = pygame.transform.rotate(card.image, -90 * (card.rotation % 4))
+                            imageToDraw = pygame.transform.rotate(card.image, -card.rotation)
                         except Exception as e:
-                            # Log and fall back to default image if anything fails
                             logger.error(f"Rotation failed for card: {e}")
                             imageToDraw = card.image
                     self.screen.blit(imageToDraw, (x * TILE_SIZE - self.offsetX, y * TILE_SIZE - self.offsetY))
@@ -174,7 +173,14 @@ class Renderer:
         if selectedCard:
             cardX = panelX + 45
             cardY = 50
-            self.screen.blit(selectedCard.getImage(), (cardX, cardY))
+            imageToDraw = selectedCard.getImage()
+            if hasattr(selectedCard, "rotation") and selectedCard.rotation:
+                try:
+                    imageToDraw = pygame.transform.rotate(imageToDraw, -selectedCard.rotation)
+                except Exception as e:
+                    logger.error(f"Rotation failed in side panel for selected card: {e}")
+                    imageToDraw = selectedCard.getImage()
+            self.screen.blit(imageToDraw, (cardX, cardY))
             
         if currentPlayer:
             textY = 180

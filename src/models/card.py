@@ -98,6 +98,8 @@ class Card:
         """
         self.rotation = (self.rotation + 90) % 360
         #self.image = pygame.transform.rotate(self.image, -90)
+        
+        logger.debug(f"Card rotation - {self.rotation}")
 
         # Rotate terrain mapping
         directionMap = {
