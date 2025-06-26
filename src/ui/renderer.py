@@ -5,7 +5,7 @@ import logging
 from models.gameBoard import GameBoard
 from models.card import Card
 from models.player import Player
-from settings import TILE_SIZE, WINDOW_WIDTH, WINDOW_HEIGHT, FIGURE_SIZE, DEBUG, PLAYER_INDEX
+from settings import TILE_SIZE, WINDOW_WIDTH, WINDOW_HEIGHT, FIGURE_SIZE, DEBUG, PLAYER_INDEX, NETWORK_MODE, FULLSCREEN
 
 logger = logging.getLogger(__name__)
 
@@ -15,14 +15,10 @@ class Renderer:
     """
     
     def __init__(self, screen):
-        """
-        Initializes the renderer with a given Pygame screen and scrolling offset.
-        :param screen: The Pygame display surface.
-        """
         self.screen = screen
         self.offsetX = 0
         self.offsetY = 0
-        self.scrollSpeed = 10  # Adjust scrolling speed as needed
+        self.scrollSpeed = 10
         self.font = pygame.font.Font(None, 36)
         
     def getOffsetX(self):
@@ -183,9 +179,14 @@ class Renderer:
             spacing = 30
 
             # Turn ownership status
-            isMyTurn = currentPlayer.getIndex() == PLAYER_INDEX
-            statusText = "Your Turn" if isMyTurn else "Waiting..."
-            statusColor = (0, 255, 0) if isMyTurn else (200, 0, 0)
+            if NETWORK_MODE == "local":
+                statusText = "Local mode"
+                statusColor = (100, 100, 255)
+            else:
+                isMyTurn = currentPlayer.getIndex() == PLAYER_INDEX
+                statusText = "Your Turn" if isMyTurn else "Waiting..."
+                statusColor = (0, 255, 0) if isMyTurn else (200, 0, 0)
+
             statusSurface = self.font.render(statusText, True, statusColor)
             self.screen.blit(statusSurface, (panelX + 20, textY))
 

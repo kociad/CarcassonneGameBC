@@ -3,12 +3,25 @@
 # General Game Settings
 WINDOW_WIDTH = 1920
 WINDOW_HEIGHT = 1080
+FULLSCREEN = True
 FPS = 60
+
+# Apply dynamic fullscreen resolution override if needed
+if FULLSCREEN:
+    try:
+        import pygame
+        pygame.display.init()
+        info = pygame.display.Info()
+        WINDOW_WIDTH = info.current_w
+        WINDOW_HEIGHT = info.current_h
+        pygame.display.quit()
+    except Exception as e:
+        print(f"Failed to detect fullscreen resolution: {e}")
 
 # Tile Settings
 TILE_SIZE = 96  # Each tile is X pixels
-FIGURE_SIZE = 25 # Each figure is Y pixels
-GRID_SIZE = 20   # A x A grid for the board
+FIGURE_SIZE = 25  # Each figure is Y pixels
+GRID_SIZE = 20  # A x A grid for the board
 
 # Asset Paths
 ASSETS_PATH = "src/assets/"
@@ -21,10 +34,10 @@ SOUND_PATH = ASSETS_PATH + "sounds/"
 DEBUG = True
 
 # Player settings
-PLAYERS = ["Player1","Player2"]
+PLAYERS = ["Player1", "AI_Player2"]
 
 # Network Mode: "host" or "client" or "local"
-NETWORK_MODE = "host"  # or "client" or "local"
+NETWORK_MODE = "local"
 
 # If client, where to connect
 HOST_IP = "192.168.88.251"
@@ -32,3 +45,5 @@ HOST_PORT = 222  # TCP port to use
 
 # Player index to detect player turn correctly
 PLAYER_INDEX = 0
+
+

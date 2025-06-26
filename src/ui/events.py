@@ -3,8 +3,7 @@ import logging
 
 from models.gameSession import GameSession
 from ui.renderer import Renderer
-from settings import TILE_SIZE, DEBUG, PLAYER_INDEX
-
+from settings import TILE_SIZE, DEBUG, PLAYER_INDEX, NETWORK_MODE
 logger = logging.getLogger(__name__)
 
 class EventHandler:
@@ -20,9 +19,7 @@ class EventHandler:
         self.keysPressed = {pygame.K_w: False, pygame.K_s: False, pygame.K_a: False, pygame.K_d: False,
                             pygame.K_UP: False, pygame.K_DOWN: False, pygame.K_LEFT: False, pygame.K_RIGHT: False,
                             pygame.K_SPACE: False, pygame.K_RETURN: False}
-    
-    from settings import PLAYER_INDEX
-
+                            
     def handleEvents(self, gameSession, renderer):
         """
         Processes Pygame events (mouse clicks, keyboard input).
@@ -41,10 +38,11 @@ class EventHandler:
                         gameSession.placeStartingCard()
                 continue
 
-            # Block input if it's not this player's turn
-            currentPlayer = gameSession.getCurrentPlayer()
-            if not currentPlayer or currentPlayer.getIndex() != PLAYER_INDEX:
-                continue
+            # In network mode (host/client), block input if it's not this player's turn
+            if NETWORK_MODE in ("host", "client"):
+                currentPlayer = gameSession.getCurrentPlayer()
+                if not currentPlayer or currentPlayer.getIndex() != PLAYER_INDEX:
+                    continue
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 self.handleMouseClick(event, gameSession, renderer)
