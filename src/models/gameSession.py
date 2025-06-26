@@ -764,16 +764,17 @@ class GameSession:
             except Exception as e:
                 logger.warning(f"Skipping malformed structure: {s} - {e}")
 
-        # StructureMap
-        raw_map = data.get("structure_map", [])
+        # Rebuild structureMap from structures to avoid overlap/duplication
         session.structureMap = {}
-        for k in raw_map:
-            try:
-                x = int(k[0])
-                y = int(k[1])
-                direction = str(k[2])
-                session.structureMap[(x, y, direction)] = None
-            except (IndexError, ValueError, TypeError) as e:
-                logger.warning(f"Skipping malformed structureMap key: {k} - {e}")
+        seen_keys = set()
+        for structure in session.structures:
+            for card, direction in structure.cardSides:
+                pos = card.getPosition()
+                if pos and pos["X"] is not None and pos["Y"] is not None:
+                    key = (pos["X"], pos["Y"], direction)
+                    if key in seen_keys:
+                        logger.warning(f"Duplicate structure mapping detected during rebuild: {key}")
+                    session.structureMap[key] = structure
+                    seen_keys.add(key)
 
         return session
