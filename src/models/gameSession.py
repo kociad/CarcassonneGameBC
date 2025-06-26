@@ -17,7 +17,7 @@ class GameSession:
     Manages the overall game state, including players, board, and card placement.
     """
     
-    def __init__(self, playerNames):
+    def __init__(self, playerNames, noInit=False):
         """
         Initializes the game session with players, board, and card deck.
         :param player_names: List of player names to create Player instances.
@@ -38,18 +38,19 @@ class GameSession:
         
         self.onTurnEnded = None  # External callback for sync
         
-        # Create a list of players
-        self.generatePlayerList(playerNames)
-        
-        # Generate new card deck based on specified definitions and distributions
-        self.cardsDeck = self.generateCardsDeck()
-        
-        # Shuffle the new deck
-        self.shuffleCardsDeck(self.cardsDeck)
-                
-        # Automatically place the starting card
-        #self.placeStartingCard()
-        
+        if not noInit:
+            # Create a list of players
+            self.generatePlayerList(playerNames)
+            
+            # Generate new card deck based on specified definitions and distributions
+            self.cardsDeck = self.generateCardsDeck()
+            
+            # Shuffle the new deck
+            self.shuffleCardsDeck(self.cardsDeck)
+                    
+            # Automatically place the starting card
+            #self.placeStartingCard()
+            
     def getPlayers(self):
         """
         Player list getter method
@@ -699,7 +700,7 @@ class GameSession:
             except Exception as e:
                 logger.warning(f"Skipping malformed player entry: {p} - {e}")
 
-        session = cls([p.getName() for p in players])
+        session = cls([p.getName() for p in players], noInit=True)
         session.players = players
 
         try:
