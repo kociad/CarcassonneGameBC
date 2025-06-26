@@ -101,8 +101,7 @@ class Renderer:
             # Draw completed detected structures with tint only on relevant directions
             for structure in detectedStructures:
                 #structure.checkCompletion()
-                #if structure.getIsCompleted():
-                if True:
+                if structure.getIsCompleted():
                     tintColor = structure.getColor()
                     
                     # Group card sides by card for drawing
