@@ -5,7 +5,7 @@ import logging
 from models.gameBoard import GameBoard
 from models.card import Card
 from models.player import Player
-from settings import TILE_SIZE, WINDOW_WIDTH, WINDOW_HEIGHT, FIGURE_SIZE, DEBUG
+from settings import TILE_SIZE, WINDOW_WIDTH, WINDOW_HEIGHT, FIGURE_SIZE, DEBUG, PLAYER_INDEX
 
 logger = logging.getLogger(__name__)
 
@@ -161,15 +161,11 @@ class Renderer:
                         figureX, figureY = baseX + TILE_SIZE / 2, baseY + TILE_SIZE / 2
                     
                     self.screen.blit(figure.image, (figureX - TILE_SIZE * 0.15, figureY - TILE_SIZE * 0.15))  # Adjust for better centering
-    
+                    
     def drawSidePanel(self, selectedCard, remainingCards, currentPlayer, placedFigures, detectedStructures):
-        """
-        Draws a side panel where the currently selected card and player info will be displayed.
-        :param selectedCard: The card currently selected by the player.
-        """
         panelX = WINDOW_WIDTH - 200  # Panel width of 200 pixels
         pygame.draw.rect(self.screen, (50, 50, 50), (panelX, 0, 200, WINDOW_HEIGHT))  # Dark grey background
-        
+
         if selectedCard:
             cardX = panelX + 45
             cardY = 50
@@ -181,47 +177,42 @@ class Renderer:
                     logger.error(f"Rotation failed in side panel for selected card: {e}")
                     imageToDraw = selectedCard.getImage()
             self.screen.blit(imageToDraw, (cardX, cardY))
-            
+
         if currentPlayer:
             textY = 180
             spacing = 30
-            
-            # Display player's name
-            nameSurface = self.font.render(f"{currentPlayer.getName()}'s Turn", True, (255, 255, 255))
-            self.screen.blit(nameSurface, (panelX + 20, textY))
-            
-            # Display player's score
+
+            # Turn ownership status
+            isMyTurn = currentPlayer.getIndex() == PLAYER_INDEX
+            statusText = "Your Turn" if isMyTurn else "Waiting..."
+            statusColor = (0, 255, 0) if isMyTurn else (200, 0, 0)
+            statusSurface = self.font.render(statusText, True, statusColor)
+            self.screen.blit(statusSurface, (panelX + 20, textY))
+
+            # Player name
+            nameSurface = self.font.render(f"{currentPlayer.getName()}", True, (255, 255, 255))
+            self.screen.blit(nameSurface, (panelX + 20, textY + spacing))
+
+            # Score
             scoreSurface = self.font.render(f"Score: {currentPlayer.getScore()}", True, (255, 255, 255))
-            self.screen.blit(scoreSurface, (panelX + 20, textY + spacing))
-            
-            """
-            # Display number of meeples remaining
-            meeplesSurface = self.font.render(f"Meeples: {len(currentPlayer.getFigures())}", True, (255, 255, 255))
-            self.screen.blit(meeplesSurface, (panelX + 20, textY + 2 * spacing))
-            ¨"""
-            
-            # Display number of remaining cards in the deck
-            nameSurface = self.font.render(f"Cards: {remainingCards}", True, (255, 255, 255))
-            self.screen.blit(nameSurface, (panelX + 20, textY + 2 * spacing))
-        
-            """
-            # Display number of meeples palced
-            placedMeeplesSurface = self.font.render(f"Placed: {len(placedFigures)}", True, (255, 255, 255))
-            self.screen.blit(placedMeeplesSurface, (panelX + 20, textY + 3 * spacing))
-            """
-        
-            # Display meeple images
+            self.screen.blit(scoreSurface, (panelX + 20, textY + 2 * spacing))
+
+            # Cards remaining
+            cardsSurface = self.font.render(f"Cards: {remainingCards}", True, (255, 255, 255))
+            self.screen.blit(cardsSurface, (panelX + 20, textY + 3 * spacing))
+
+            # Meeple images
             figures = currentPlayer.getFigures()
             for i, figure in enumerate(figures):
                 figX = panelX + 20 + (i % 4) * (FIGURE_SIZE + 5)
-                figY = textY + 3 * spacing + (i // 4) * (FIGURE_SIZE + 5)
+                figY = textY + 4 * spacing + (i // 4) * (FIGURE_SIZE + 5)
                 self.screen.blit(figure.image, (figX, figY))
-                
+
             if DEBUG:
-                # Display number of detected structures        
-                detectedStructuresSurface = self.font.render(f"Structures: {len(detectedStructures)}", True, (255, 255, 255))
-                self.screen.blit(detectedStructuresSurface, (panelX + 20, textY + 5 * spacing))
-        
+                # Structure count
+                structureSurface = self.font.render(f"Structures: {len(detectedStructures)}", True, (255, 255, 255))
+                self.screen.blit(structureSurface, (panelX + 20, textY + 6 * spacing))
+                
     def updateDisplay(self):
         """
         Updates the Pygame display with the latest frame.

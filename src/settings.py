@@ -29,3 +29,6 @@ NETWORK_MODE = "host"  # or "client" or "local"
 # If client, where to connect
 HOST_IP = "192.168.88.251"
 HOST_PORT = 222  # TCP port to use
+
+# Player index to detect player turn correctly
+PLAYER_INDEX = 0

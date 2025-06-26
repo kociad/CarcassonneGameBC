@@ -3,7 +3,7 @@ import logging
 
 from models.gameSession import GameSession
 from ui.renderer import Renderer
-from settings import TILE_SIZE, DEBUG
+from settings import TILE_SIZE, DEBUG, PLAYER_INDEX
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +21,8 @@ class EventHandler:
                             pygame.K_UP: False, pygame.K_DOWN: False, pygame.K_LEFT: False, pygame.K_RIGHT: False,
                             pygame.K_SPACE: False, pygame.K_RETURN: False}
     
+    from settings import PLAYER_INDEX
+
     def handleEvents(self, gameSession, renderer):
         """
         Processes Pygame events (mouse clicks, keyboard input).
@@ -30,29 +32,34 @@ class EventHandler:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return False  # Exit the game
-            
+
+            # Always allow input during first round
             if gameSession.getIsFirstRound():
                 if event.type == pygame.KEYDOWN:
                     self.keysPressed[event.key] = True
                     if event.key == pygame.K_RETURN:
                         gameSession.placeStartingCard()
-                        
-            else:
-                if event.type == pygame.MOUSEBUTTONDOWN:
-                    self.handleMouseClick(event, gameSession, renderer)
-                
-                if event.type == pygame.KEYDOWN:
-                    self.keysPressed[event.key] = True
-                    if event.key == pygame.K_SPACE:
-                        gameSession.skipCurrentAction()
-                    if event.key == pygame.K_RETURN:
-                        gameSession.placeStartingCard()
-                
+                continue
+
+            # Block input if it's not this player's turn
+            currentPlayer = gameSession.getCurrentPlayer()
+            if not currentPlayer or currentPlayer.getIndex() != PLAYER_INDEX:
+                continue
+
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                self.handleMouseClick(event, gameSession, renderer)
+
+            if event.type == pygame.KEYDOWN:
+                self.keysPressed[event.key] = True
+                if event.key == pygame.K_SPACE:
+                    gameSession.skipCurrentAction()
+                if event.key == pygame.K_RETURN:
+                    gameSession.placeStartingCard()
+
             if event.type == pygame.KEYUP:
                 self.keysPressed[event.key] = False
-        
+
         self.handleKeyHold(renderer)
-        
         return True  # Continue game loop
     
     def handleMouseClick(self, event, gameSession, renderer):
