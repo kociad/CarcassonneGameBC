@@ -129,12 +129,12 @@ class GameSession:
         logger.debug("Generating a list of players...")
         
         colors = [
-            (0, 0, 255),       # blue
-            (255, 0, 0),       # red
-            (0, 128, 0),       # green
-            (255, 192, 203),   # pink
-            (255, 255, 0),     # yellow
-            (0, 0, 0)          # black
+            "blue",
+            "red",
+            "green",
+            "pink",
+            "yellow",
+            "black"
         ]
         
         random.shuffle(colors)

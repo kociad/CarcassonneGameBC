@@ -250,9 +250,9 @@ class Structure:
                 } for f in self.figures
             ],
             "is_completed": self.isCompleted,
-            "color": self.color
+            "color": tuple(self.color) if hasattr(self.color, "__iter__") else (255, 255, 255, 150)
         }
-
+        
     @staticmethod
     def deserialize(data, gameBoard, playerMap):
         s = Structure(data["structure_type"])
