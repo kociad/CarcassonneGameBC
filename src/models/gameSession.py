@@ -645,7 +645,7 @@ class GameSession:
     def endGame(self):
         logger.debug("=== END OF GAME TRIGGERED ===")
         logger.debug("Scoring all remaining incomplete structures...")
-        
+
         self.gameOver = True
 
         for structure in self.structures:
@@ -657,6 +657,11 @@ class GameSession:
         self.placedFigures.clear()  # All figures should already be returned during scoring
 
         self.showFinalResults()
+
+        # Trigger game state broadcast
+        if self.onTurnEnded:
+            logger.debug("Triggering onTurnEnded() at end of game")
+            self.onTurnEnded()
         
     def showFinalResults(self):
         logger.info("\n=== FINAL SCORES ===")
