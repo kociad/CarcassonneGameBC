@@ -105,11 +105,11 @@ class Player:
             "name": self.name,
             "score": self.score,
             "index": self.index,
-            "color": self.color,
+            "color": tuple(self.color) if hasattr(self.color, "__iter__") else (255, 255, 255),
             "is_ai": self.isAI,
             "figures_remaining": len(self.figures)
         }
-    
+        
     @staticmethod
     def deserialize(data):
         try:
