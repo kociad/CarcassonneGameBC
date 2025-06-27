@@ -299,7 +299,7 @@ class Structure:
                 figure = Figure(owner)
                 figure.card = card
                 figure.positionOnCard = f["position_on_card"]
-                s.addFigure(figure)
+                s.figures.append(figure)
             except (KeyError, ValueError, TypeError) as e:
                 logger.warning(f"Skipping malformed figure: {f} - {e}")
 
