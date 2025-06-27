@@ -36,26 +36,30 @@ class EventHandler:
                     self.keysPressed[event.key] = True
                     if event.key == pygame.K_RETURN:
                         gameSession.placeStartingCard()
+                if event.type == pygame.KEYUP:
+                    self.keysPressed[event.key] = False
                 continue
 
-            # In network mode (host/client), block input if it's not this player's turn
+            # Allow scrolling input for everyone
+            if event.type in (pygame.KEYDOWN, pygame.KEYUP):
+                self.keysPressed[event.key] = (event.type == pygame.KEYDOWN)
+
+            # Block game actions if it's not this player's turn in network mode
+            allowAction = True
             if NETWORK_MODE in ("host", "client"):
                 currentPlayer = gameSession.getCurrentPlayer()
                 if not currentPlayer or currentPlayer.getIndex() != PLAYER_INDEX:
-                    continue
+                    allowAction = False
 
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                self.handleMouseClick(event, gameSession, renderer)
+            if allowAction:
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    self.handleMouseClick(event, gameSession, renderer)
 
-            if event.type == pygame.KEYDOWN:
-                self.keysPressed[event.key] = True
-                if event.key == pygame.K_SPACE:
-                    gameSession.skipCurrentAction()
-                if event.key == pygame.K_RETURN:
-                    gameSession.placeStartingCard()
-
-            if event.type == pygame.KEYUP:
-                self.keysPressed[event.key] = False
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_SPACE:
+                        gameSession.skipCurrentAction()
+                    if event.key == pygame.K_RETURN:
+                        gameSession.placeStartingCard()
 
         self.handleKeyHold(renderer)
         return True  # Continue game loop
