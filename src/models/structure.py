@@ -254,11 +254,11 @@ class Structure:
         }
         
     @staticmethod
-    def deserialize(data, gameBoard, playerMap):
+    def deserialize(data, gameBoard, playerMap, placedFigures):
         s = Structure(data["structure_type"])
         s.isCompleted = bool(data.get("is_completed", False))
 
-        # Ensure color is a tuple of ints
+        # Parse color safely
         raw_color = data.get("color", (255, 255, 255, 150))
         try:
             s.color = tuple(int(c) for c in raw_color)
@@ -280,13 +280,14 @@ class Structure:
             except (KeyError, ValueError, TypeError) as e:
                 logger.warning(f"Skipping malformed card_side: {side} - {e}")
 
-        # Rebuild figures
+        # Rebuild figures (use existing instances if possible)
         for f in data.get("figures", []):
             try:
                 owner_index = int(f["owner_index"])
                 position = str(f["position_on_card"])
                 pos_data = f.get("card_position")
                 card = None
+
                 if pos_data and isinstance(pos_data, dict):
                     x = int(pos_data["X"])
                     y = int(pos_data["Y"])
@@ -296,12 +297,19 @@ class Structure:
                 if not owner:
                     raise ValueError(f"Owner with index {owner_index} not found")
 
-                figure = Figure(owner)
-                figure.card = card
-                figure.positionOnCard = f["position_on_card"]
-                s.figures.append(figure)
+                # Try to find existing figure
+                matched = next(
+                    (fig for fig in placedFigures
+                     if fig.owner == owner and fig.card == card and fig.positionOnCard == position),
+                    None
+                )
+
+                if matched:
+                    s.figures.append(matched)
+                else:
+                    logger.warning(f"No matching figure found in placedFigures for: {f}")
+
             except (KeyError, ValueError, TypeError) as e:
                 logger.warning(f"Skipping malformed figure: {f} - {e}")
 
         return s
-

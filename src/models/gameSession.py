@@ -758,17 +758,17 @@ class GameSession:
                     session.placedFigures.append(figure)
             except Exception as e:
                 logger.warning(f"Skipping malformed figure: {fdata} - {e}")
-
+                
         # Structures
         session.structures = []
         for s in data.get("structures", []):
             try:
-                structure = Structure.deserialize(s, session.gameBoard, playerMap)
+                structure = Structure.deserialize(s, session.gameBoard, playerMap, session.placedFigures)
                 if structure:
                     session.structures.append(structure)
             except Exception as e:
                 logger.warning(f"Skipping malformed structure: {s} - {e}")
-
+                
         # Rebuild structureMap from structures to avoid overlap/duplication
         session.structureMap = {}
         seen_keys = set()
@@ -781,5 +781,17 @@ class GameSession:
                         logger.warning(f"Duplicate structure mapping detected during rebuild: {key}")
                     session.structureMap[key] = structure
                     seen_keys.add(key)
+
+        # Re-link structure figures to placedFigures instances
+        fig_lookup = {
+            (f.card, f.positionOnCard): f
+            for f in session.placedFigures
+        }
+        for structure in session.structures:
+            updated_figures = []
+            for fig in structure.getFigures():
+                key = (fig.card, fig.positionOnCard)
+                updated_figures.append(fig_lookup.get(key, fig))
+            structure.setFigures(updated_figures)
 
         return session
