@@ -1,0 +1,5 @@
+WASD or ARROW KEYS - Move around the game board
+LMB - Place card
+RMB - Rotate card
+ESC - Close game
+SPACEBAR - Discard current card (phase 1) or skip meeple placement (phase 2)

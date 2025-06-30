@@ -3,7 +3,7 @@
 # General Game Settings
 WINDOW_WIDTH = 1920
 WINDOW_HEIGHT = 1080
-FULLSCREEN = True
+FULLSCREEN = False
 FPS = 60
 
 # Apply dynamic fullscreen resolution override if needed
