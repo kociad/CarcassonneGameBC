@@ -40,7 +40,7 @@ PLAYERS = ["Pat", "Mat"]
 NETWORK_MODE = "host"
 
 # If client, where to connect, if host, where to listen
-HOST_IP = "192.168.0.248"
+HOST_IP = "192.168.88.251"
 HOST_PORT = 222  # TCP port to use
 
 # Player index to detect player turn correctly

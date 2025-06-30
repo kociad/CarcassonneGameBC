@@ -56,6 +56,13 @@ class Structure:
         :param color: Color to be set
         """
         self.color = color
+       
+    def setFigures(self, figures):
+        """
+        Figures setter method
+        :param figures: List of figure objects to be used
+        """
+        self.figures = figures
         
     def addCardSide(self, card, direction):
         if not card in self.cards:
