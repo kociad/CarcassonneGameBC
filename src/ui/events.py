@@ -60,6 +60,8 @@ class EventHandler:
                         gameSession.skipCurrentAction()
                     if event.key == pygame.K_RETURN:
                         gameSession.placeStartingCard()
+                    if event.key == pygame.K_ESCAPE:
+                        return False # Manually quit game
 
         self.handleKeyHold(renderer)
         return True  # Continue game loop
