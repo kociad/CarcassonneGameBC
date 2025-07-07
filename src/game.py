@@ -48,9 +48,9 @@ class Game:
             self.network.onClientConnected = self.onClientConnected
             self.network.onClientSubmittedTurn = self.onClientSubmittedTurn
         elif self.network.networkMode == "client":
-            self.network.onInitialGameStateReceived = self.onInitialGameStateReceived
+            self.network.onGameStateReceived = self.onGameStateReceived
 
-        self.network.onInitialGameStateReceived = self.onInitialGameStateReceived
+        self.network.onGameStateReceived = self.onGameStateReceived
         self.network.onSyncGameState = self.onSyncGameState
 
         self.gameSession.onTurnEnded = self.onTurnEnded
@@ -72,7 +72,7 @@ class Game:
         pygame.quit()
         exit()
 
-    def onInitialGameStateReceived(self, data):
+    def onGameStateReceived(self, data):
         self.gameSession = GameSession.deserialize(data)
         self.gameSession.onTurnEnded = self.onTurnEnded
         logger.debug("Game session replaced with synchronized state from host")
@@ -108,7 +108,11 @@ class Game:
         logger.debug("Client game session updated from host sync.")
 
     def onTurnEnded(self):
+        if self.network.networkMode == "local":
+            return
+    
         logger.debug("Synchronizing game state after turn...")
+        
         if self.gameSession.getIsFirstRound():
             return
 
