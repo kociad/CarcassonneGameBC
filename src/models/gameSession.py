@@ -49,7 +49,7 @@ class GameSession:
             self.shuffleCardsDeck(self.cardsDeck)
                     
             # Automatically place the starting card
-            #self.placeStartingCard()
+            self.placeStartingCard()
             
     def getPlayers(self):
         """

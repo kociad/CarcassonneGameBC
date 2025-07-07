@@ -49,6 +49,8 @@ class Renderer:
             "Monastery": (100, 200, 100, 100)  # Light green tint
         }
         """
+        
+        """
         if isFirstRound:
             startFont = pygame.font.Font(None, 72)
             message = "Press 'Enter' to start game"
@@ -56,6 +58,7 @@ class Renderer:
             textRect = textSurface.get_rect(center=(WINDOW_WIDTH // 2, WINDOW_HEIGHT // 2))
             self.screen.blit(textSurface, textRect)
             return  # Skip board drawing entirely until game starts
+        """
             
         if isGameOver:
             winner = max(players, key=lambda p: p.getScore())
@@ -233,3 +236,25 @@ class Renderer:
             self.offsetX -= self.scrollSpeed
         elif direction == "right":
             self.offsetX += self.scrollSpeed
+            
+    def drawMainMenu(self):
+        """
+        Draws the main menu screen with a title and start button.
+        """
+        self.screen.fill((30, 30, 30))  # Dark background
+
+        # Title text
+        titleFont = pygame.font.Font(None, 100)
+        titleText = titleFont.render("Carcassonne", True, (255, 255, 255))
+        titleRect = titleText.get_rect(center=(WINDOW_WIDTH // 2, WINDOW_HEIGHT // 3))
+        self.screen.blit(titleText, titleRect)
+
+        # Button
+        buttonFont = pygame.font.Font(None, 48)
+        self.buttonText = buttonFont.render("Start Game", True, (0, 0, 0))
+        self.buttonRect = pygame.Rect(WINDOW_WIDTH // 2 - 100, WINDOW_HEIGHT // 2, 200, 60)
+
+        # Draw button background
+        pygame.draw.rect(self.screen, (200, 200, 200), self.buttonRect)
+        textRect = self.buttonText.get_rect(center=self.buttonRect.center)
+        self.screen.blit(self.buttonText, textRect)

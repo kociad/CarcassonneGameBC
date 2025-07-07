@@ -1,8 +1,8 @@
 # settings.py
 
 # General Game Settings
-WINDOW_WIDTH = 1920
-WINDOW_HEIGHT = 1080
+WINDOW_WIDTH = 1027
+WINDOW_HEIGHT = 768
 FULLSCREEN = False
 FPS = 60
 
@@ -34,10 +34,10 @@ SOUND_PATH = ASSETS_PATH + "sounds/"
 DEBUG = True
 
 # Player settings (valid for host only)
-PLAYERS = ["Pat", "Mat"]
+PLAYERS = ["Pat", "AI_Mat"]
 
 # Network Mode: "host" or "client" or "local"
-NETWORK_MODE = "host"
+NETWORK_MODE = "local"
 
 # If client, where to connect, if host, where to listen
 HOST_IP = "192.168.88.251"

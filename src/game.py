@@ -6,9 +6,12 @@ from settings import WINDOW_WIDTH, WINDOW_HEIGHT, FPS, PLAYERS, DEBUG, FULLSCREE
 from models.gameSession import GameSession
 from models.player import Player
 from ui.renderer import Renderer
-from ui.events import EventHandler
+from ui.mainMenuScene import MainMenuScene
+from ui.scene import Scene
+from ui.gameScene import GameScene
 from network.connection import NetworkConnection
 from network.message import encodeMessage
+from gameState import GameState
 
 # Create logger
 logger = logging.getLogger()
@@ -37,17 +40,7 @@ class Game:
 
         self.gameSession = GameSession(playerNames)
         self.renderer = Renderer(self.screen)
-        self.renderer.drawBoard(
-            self.gameSession.getGameBoard(),
-            self.gameSession.getPlacedFigures(),
-            self.gameSession.getStructures(),
-            self.gameSession.getIsFirstRound(),
-            self.gameSession.getGameOver(),
-            self.gameSession.getPlayers()
-        )
-        self.renderer.updateDisplay()
 
-        self.eventHandler = EventHandler()
         self.clock = pygame.time.Clock()
         self.network = NetworkConnection()
 
@@ -62,34 +55,17 @@ class Game:
 
         self.gameSession.onTurnEnded = self.onTurnEnded
         self.running = True
-
+        
+        self.currentScene = None
+        self.initScene(GameState.MENU)
+        
     def run(self):
         while self.running:
-            currentPlayer = self.gameSession.getCurrentPlayer()
-
-            if self.gameSession.getIsFirstRound() or not currentPlayer.getIsAI() or self.gameSession.getGameOver():
-                self.running = self.eventHandler.handleEvents(self.gameSession, self.renderer)
-            else:
-                currentPlayer.playTurn(self.gameSession)
-
-            self.renderer.drawBoard(
-                self.gameSession.getGameBoard(),
-                self.gameSession.getPlacedFigures(),
-                self.gameSession.getStructures(),
-                self.gameSession.getIsFirstRound(),
-                self.gameSession.getGameOver(),
-                self.gameSession.getPlayers()
-            )
-            self.renderer.drawSidePanel(
-                self.gameSession.getCurrentCard(),
-                len(self.gameSession.getCardsDeck()) + 1,
-                self.gameSession.getCurrentPlayer(),
-                self.gameSession.getPlacedFigures(),
-                self.gameSession.getStructures()
-            )
-            self.renderer.updateDisplay()
-            self.clock.tick(FPS)
-
+            events = pygame.event.get()
+            self.currentScene.handleEvents(events)
+            self.currentScene.update()
+            self.currentScene.draw()
+            
     def quit(self):
         if self.network:
             self.network.close()
@@ -147,7 +123,16 @@ class Game:
             message = encodeMessage("submit_turn", serialized)
             self.network.sendToHost(message)
             logger.debug("Client submitted turn to host.")
-
+            
+    def initScene(self, state):
+        if state == GameState.MENU:
+            self.currentScene = MainMenuScene(self.screen, self.initScene)
+        elif state == GameState.GAME:
+            self.currentScene = GameScene(
+                self.screen, self.initScene, self.gameSession,
+                self.renderer, self.clock, self.network
+            )
+            
 if __name__ == "__main__":
     playerNames = PLAYERS
     game = Game(playerNames)
