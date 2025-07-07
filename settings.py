@@ -1,8 +1,8 @@
 # settings.py
 
 # General Game Settings
-WINDOW_WIDTH = 1920
-WINDOW_HEIGHT = 1080
+WINDOW_WIDTH = 2560
+WINDOW_HEIGHT = 1440
 FULLSCREEN = False
 FPS = 60
 

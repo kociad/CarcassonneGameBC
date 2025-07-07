@@ -7,6 +7,7 @@ from models.gameSession import GameSession
 from models.player import Player
 from ui.renderer import Renderer
 from ui.mainMenuScene import MainMenuScene
+from ui.settingsScene import SettingsScene
 from ui.scene import Scene
 from ui.gameScene import GameScene
 from network.connection import NetworkConnection
@@ -15,16 +16,19 @@ from gameState import GameState
 
 # Create logger
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG if DEBUG else logging.INFO)
 
-if not logger.hasHandlers():
-    log_filename = datetime.now().strftime("log_%Y-%m-%d_%H-%M-%S.log")
-    file_handler = logging.FileHandler(log_filename, mode='w', encoding='utf-8')
-    file_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
-    console_handler = logging.StreamHandler()
-    console_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
-    logger.addHandler(file_handler)
-    logger.addHandler(console_handler)
+if DEBUG:
+    logger.setLevel(logging.DEBUG)
+    if not logger.hasHandlers():
+        log_filename = datetime.now().strftime("log_%Y-%m-%d_%H-%M-%S.log")
+        file_handler = logging.FileHandler(log_filename, mode='w', encoding='utf-8')
+        file_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+        console_handler = logging.StreamHandler()
+        console_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+        logger.addHandler(file_handler)
+        logger.addHandler(console_handler)
+else:
+    logger.addHandler(logging.NullHandler())
 
 class Game:
     def __init__(self, playerNames):
@@ -136,6 +140,8 @@ class Game:
                 self.screen, self.initScene, self.gameSession,
                 self.renderer, self.clock, self.network
             )
+        elif state == GameState.SETTINGS:
+            self.currentScene = SettingsScene(self.screen, self.initScene)
             
 if __name__ == "__main__":
     playerNames = PLAYERS

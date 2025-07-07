@@ -39,8 +39,7 @@ class MainMenuScene(Scene):
                 if self.startButton.isClicked(event.pos):
                     self.switchScene(GameState.GAME)
                 if self.settingsButton.isClicked(event.pos):
-                    #self.switchScene(GameState.SETTINGS)
-                    continue
+                    self.switchScene(GameState.SETTINGS)
                 if self.quitButton.isClicked(event.pos):
                     pygame.quit()
                     exit()
