@@ -31,7 +31,7 @@ BACKGROUND_IMAGE_PATH = ASSETS_PATH + "backgrounds/"
 SOUND_PATH = ASSETS_PATH + "sounds/"
 
 # Debug
-DEBUG = True
+DEBUG = False
 
 # Player settings (valid for host only)
 PLAYERS = ["Pat", "AI_Mat"]
