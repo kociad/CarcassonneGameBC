@@ -22,7 +22,6 @@ class GameScene(Scene):
         }
 
     def handleEvents(self, events):
-    
         for event in events:
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -30,26 +29,26 @@ class GameScene(Scene):
 
             if event.type in (pygame.KEYDOWN, pygame.KEYUP):
                 self.keysPressed[event.key] = (event.type == pygame.KEYDOWN)
+                
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    self.switchScene(GameState.MENU)
 
             # Block game actions if it's not this player's turn in network mode
             allowAction = True
             if NETWORK_MODE in ("host", "client"):
                 currentPlayer = self.session.getCurrentPlayer()
-                if not currentPlayer or currentPlayer.getIndex() != PLAYER_INDEX:
+                if not currentPlayer or currentPlayer.getIndex() != PLAYER_INDEX or self.session.getGameOver():
                     allowAction = False
 
             if allowAction:
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     self.handleMouseClick(event)
-
+                    
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_SPACE:
                         self.session.skipCurrentAction()
-                    if event.key == pygame.K_RETURN:
-                        self.session.placeStartingCard()
-                    if event.key == pygame.K_ESCAPE:
-                        self.switchScene(GameState.MENU)
-
+                        
         self.handleKeyHold()
 
     def handleMouseClick(self, event):
