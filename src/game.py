@@ -2,17 +2,16 @@ import pygame
 import logging
 from datetime import datetime
 
-from models.gameSession import GameSession
-from models.player import Player
 from ui.renderer import Renderer
 from ui.mainMenuScene import MainMenuScene
 from ui.settingsScene import SettingsScene
 from ui.scene import Scene
 from ui.gameScene import GameScene
-from network.connection import NetworkConnection
-from network.message import encodeMessage
 from gameState import GameState
 from utils.loggingConfig import configureLogging
+from models.gameSession import GameSession
+from network.connection import NetworkConnection
+from network.message import encodeMessage
 
 import settings
 
@@ -20,23 +19,9 @@ import settings
 configureLogging()
 logger = logging.getLogger()
 
-"""
-if settings.DEBUG:
-    logger.setLevel(logging.DEBUG)
-    if not logger.hasHandlers():
-        log_filename = datetime.now().strftime("log_%Y-%m-%d_%H-%M-%S.log")
-        file_handler = logging.FileHandler(log_filename, mode='w', encoding='utf-8')
-        file_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
-        console_handler = logging.StreamHandler()
-        console_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
-        logger.addHandler(file_handler)
-        logger.addHandler(console_handler)
-else:
-    logger.addHandler(logging.NullHandler())
-"""
 
 class Game:
-    def __init__(self, playerNames):
+    def __init__(self):
         pygame.init()
 
         if settings.FULLSCREEN:
@@ -47,39 +32,57 @@ class Game:
 
         pygame.display.set_caption("Carcassonne")
 
-        self.gameSession = GameSession(playerNames)
         self.renderer = Renderer(self.screen)
-
         self.clock = pygame.time.Clock()
-        self.network = NetworkConnection()
-
-        if self.network.networkMode == "host":
-            self.network.onClientConnected = self.onClientConnected
-            self.network.onClientSubmittedTurn = self.onClientSubmittedTurn
-        elif self.network.networkMode == "client":
-            self.network.onGameStateReceived = self.onGameStateReceived
-
-        self.network.onGameStateReceived = self.onGameStateReceived
-        self.network.onSyncGameState = self.onSyncGameState
-
-        self.gameSession.onTurnEnded = self.onTurnEnded
         self.running = True
-        
+
+        # Game-related attributes (deferred until game starts)
+        self.gameSession = None
+        self.network = None
+
         self.currentScene = None
         self.initScene(GameState.MENU)
-        
+
     def run(self):
         while self.running:
             events = pygame.event.get()
             self.currentScene.handleEvents(events)
             self.currentScene.update()
             self.currentScene.draw()
-            
+
     def quit(self):
         if self.network:
             self.network.close()
         pygame.quit()
         exit()
+
+    def initScene(self, state):
+        if state == GameState.MENU:
+            self.currentScene = MainMenuScene(self.screen, self.initScene, self.startGame)
+        elif state == GameState.GAME:
+            self.currentScene = GameScene(
+                self.screen, self.initScene, self.gameSession,
+                self.renderer, self.clock, self.network
+            )
+        elif state == GameState.SETTINGS:
+            self.currentScene = SettingsScene(self.screen, self.initScene)
+
+    def startGame(self, playerNames):
+        logger.debug("Initializing new game session...")
+
+        self.gameSession = GameSession(playerNames)
+        self.network = NetworkConnection()
+
+        self.network.onGameStateReceived = self.onGameStateReceived
+        self.network.onSyncGameState = self.onSyncGameState
+
+        if self.network.networkMode == "host":
+            self.network.onClientConnected = self.onClientConnected
+            self.network.onClientSubmittedTurn = self.onClientSubmittedTurn
+
+        self.gameSession.onTurnEnded = self.onTurnEnded
+
+        self.initScene(GameState.GAME)
 
     def onGameStateReceived(self, data):
         self.gameSession = GameSession.deserialize(data)
@@ -119,9 +122,9 @@ class Game:
     def onTurnEnded(self):
         if self.network.networkMode == "local":
             return
-    
+
         logger.debug("Synchronizing game state after turn...")
-        
+
         if self.gameSession.getIsFirstRound():
             return
 
@@ -136,19 +139,8 @@ class Game:
             message = encodeMessage("submit_turn", serialized)
             self.network.sendToHost(message)
             logger.debug("Client submitted turn to host.")
-            
-    def initScene(self, state):
-        if state == GameState.MENU:
-            self.currentScene = MainMenuScene(self.screen, self.initScene)
-        elif state == GameState.GAME:
-            self.currentScene = GameScene(
-                self.screen, self.initScene, self.gameSession,
-                self.renderer, self.clock, self.network
-            )
-        elif state == GameState.SETTINGS:
-            self.currentScene = SettingsScene(self.screen, self.initScene)
-            
+
+
 if __name__ == "__main__":
-    playerNames = settings.PLAYERS
-    game = Game(playerNames)
+    game = Game()
     game.run()

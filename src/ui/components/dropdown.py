@@ -9,13 +9,17 @@ class Dropdown:
         self.selectedIndex = defaultIndex
         self.expanded = False
         self.onSelect = onSelect
+        self.disabled = False
 
         self.textColor = textColor
         self.bgColor = bgColor
         self.borderColor = borderColor
         self.highlightColor = highlightColor
-
+        
     def handleEvent(self, event):
+        if self.disabled:
+            return False
+
         if event.type == pygame.MOUSEBUTTONDOWN:
             if self.rect.collidepoint(event.pos):
                 self.expanded = not self.expanded
@@ -36,28 +40,43 @@ class Dropdown:
                         return True
                 self.expanded = False
         return False
-
+        
     def draw(self, surface):
-        # Draw main box
-        pygame.draw.rect(surface, self.bgColor, self.rect)
-        pygame.draw.rect(surface, self.borderColor, self.rect, 2)
+        fullHeight = self.rect.height + (len(self.options) * self.rect.height if self.expanded else 0)
+        drawSurface = pygame.Surface((self.rect.width, fullHeight), pygame.SRCALPHA)
 
-        selectedText = self.font.render(self.options[self.selectedIndex], True, self.textColor)
-        surface.blit(selectedText, (self.rect.x + 5, self.rect.y + (self.rect.height - selectedText.get_height()) // 2))
+        alpha = 150 if self.disabled else 255
+        bg = (*self.bgColor, alpha)
+        border = (*self.borderColor, alpha)
+        textCol = (*((150, 150, 150) if self.disabled else self.textColor), alpha)
+        highlight = (*self.highlightColor, alpha)
 
-        # Draw dropdown
+        localRect = pygame.Rect(0, 0, self.rect.width, self.rect.height)
+
+        pygame.draw.rect(drawSurface, bg, localRect)
+        pygame.draw.rect(drawSurface, border, localRect, 2)
+
+        selectedText = self.font.render(self.options[self.selectedIndex], True, textCol)
+        drawSurface.blit(selectedText, (5, (self.rect.height - selectedText.get_height()) // 2))
+
         if self.expanded:
             for i, option in enumerate(self.options):
-                optionRect = pygame.Rect(self.rect.x, self.rect.y + (i + 1) * self.rect.height, self.rect.width, self.rect.height)
-                pygame.draw.rect(surface, self.highlightColor if i == self.selectedIndex else self.bgColor, optionRect)
-                pygame.draw.rect(surface, self.borderColor, optionRect, 1)
+                optionRect = pygame.Rect(0, (i + 1) * self.rect.height, self.rect.width, self.rect.height)
+                pygame.draw.rect(drawSurface, highlight if i == self.selectedIndex else bg, optionRect)
+                pygame.draw.rect(drawSurface, border, optionRect, 1)
 
-                optionText = self.font.render(option, True, self.textColor)
-                surface.blit(optionText, (optionRect.x + 5, optionRect.y + (optionRect.height - optionText.get_height()) // 2))
+                optionText = self.font.render(option, True, textCol)
+                drawSurface.blit(optionText, (5, optionRect.y + (self.rect.height - optionText.get_height()) // 2))
 
+        surface.blit(drawSurface, self.rect.topleft)
+        
     def getSelected(self):
         return self.options[self.selectedIndex]
-
+        
     def setSelected(self, index):
         if 0 <= index < len(self.options):
             self.selectedIndex = index
+            
+    def setDisabled(self, value: bool):
+        self.disabled = value
+        return self
