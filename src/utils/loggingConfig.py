@@ -4,13 +4,12 @@ import settings
 
 def configureLogging():
     root = logging.getLogger()
-    # first, clear out any existing handlers
+    
     for h in root.handlers[:]:
         root.removeHandler(h)
 
     if settings.DEBUG:
         root.setLevel(logging.DEBUG)
-        # file + console as before
         log_filename = datetime.now().strftime("log_%Y-%m-%d_%H-%M-%S.log")
         fh = logging.FileHandler(log_filename, mode='w', encoding='utf-8')
         fh.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))

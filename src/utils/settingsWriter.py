@@ -1,5 +1,4 @@
 import logging
-import importlib
 import settings
 
 from utils.loggingConfig import configureLogging
@@ -51,7 +50,7 @@ def updateDebug(enabled):
                 else:
                     f.write(line)
                     
-        importlib.reload(settings)
+        settings.DEBUG = enabled
         
         configureLogging()
         logging.getLogger(__name__).debug(f"DEBUG={settings.DEBUG}")
