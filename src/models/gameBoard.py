@@ -1,7 +1,8 @@
 import logging
 
 from models.card import Card
-from settings import GRID_SIZE, DEBUG
+
+import settings
 
 logger = logging.getLogger(__name__)
 
@@ -10,7 +11,7 @@ class GameBoard:
     Represents the game board where cards are placed.
     """
     
-    def __init__(self, gridSize=int(GRID_SIZE)):
+    def __init__(self, gridSize=int(settings.GRID_SIZE)):
         """
         Initializes the game board with an empty grid.
         :param gridSize: The size of the board grid (default: 20x20).
@@ -207,10 +208,10 @@ class GameBoard:
     @staticmethod
     def deserialize(data):
         try:
-            grid_size = int(data.get("grid_size", GRID_SIZE))
+            grid_size = int(data.get("grid_size", settings.GRID_SIZE))
         except (ValueError, TypeError) as e:
             logger.error(f"Invalid grid_size in GameBoard data: {data.get('grid_size')} - {e}")
-            grid_size = int(GRID_SIZE)
+            grid_size = int(settings.GRID_SIZE)
 
         board = GameBoard(gridSize=grid_size)
 

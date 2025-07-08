@@ -1,7 +1,8 @@
 import pygame
 
-from settings import TILE_SIZE, DEBUG
 import logging
+
+import settings
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +19,7 @@ class Card:
         """
         self.imagePath = image_path
         original_image = pygame.image.load(image_path)
-        self.image = pygame.transform.scale(original_image, (TILE_SIZE, TILE_SIZE))  # Resize to match TILE_SIZE
+        self.image = pygame.transform.scale(original_image, (settings.TILE_SIZE, settings.TILE_SIZE))  # Resize to match settings.TILE_SIZE
         self.terrains = terrains  # Dictionary with terrain info (e.g., {"N": "city", "S": "road"})
         self.connections = connections
         self.occupied = {} # Currently unused

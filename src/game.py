@@ -2,7 +2,6 @@ import pygame
 import logging
 from datetime import datetime
 
-from settings import WINDOW_WIDTH, WINDOW_HEIGHT, FPS, PLAYERS, DEBUG, FULLSCREEN
 from models.gameSession import GameSession
 from models.player import Player
 from ui.renderer import Renderer
@@ -13,11 +12,16 @@ from ui.gameScene import GameScene
 from network.connection import NetworkConnection
 from network.message import encodeMessage
 from gameState import GameState
+from utils.loggingConfig import configureLogging
 
-# Create logger
+import settings
+
+# Configure logging
+configureLogging()
 logger = logging.getLogger()
 
-if DEBUG:
+"""
+if settings.DEBUG:
     logger.setLevel(logging.DEBUG)
     if not logger.hasHandlers():
         log_filename = datetime.now().strftime("log_%Y-%m-%d_%H-%M-%S.log")
@@ -29,16 +33,17 @@ if DEBUG:
         logger.addHandler(console_handler)
 else:
     logger.addHandler(logging.NullHandler())
+"""
 
 class Game:
     def __init__(self, playerNames):
         pygame.init()
 
-        if FULLSCREEN:
+        if settings.FULLSCREEN:
             info = pygame.display.Info()
-            self.screen = pygame.display.set_mode((info.current_w, info.current_h), pygame.FULLSCREEN)
+            self.screen = pygame.display.set_mode((info.current_w, info.current_h), pygame.settings.FULLSCREEN)
         else:
-            self.screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
+            self.screen = pygame.display.set_mode((settings.WINDOW_WIDTH, settings.WINDOW_HEIGHT))
 
         pygame.display.set_caption("Carcassonne")
 
@@ -144,6 +149,6 @@ class Game:
             self.currentScene = SettingsScene(self.screen, self.initScene)
             
 if __name__ == "__main__":
-    playerNames = PLAYERS
+    playerNames = settings.PLAYERS
     game = Game(playerNames)
     game.run()

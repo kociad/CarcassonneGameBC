@@ -8,7 +8,7 @@ from models.structure import Structure
 from models.aiPlayer import AIPlayer
 from models.figure import Figure
 
-from settings import TILE_IMAGES_PATH, DEBUG
+import settings
 
 logger = logging.getLogger(__name__)
 
@@ -224,7 +224,7 @@ class GameSession:
             connections = card["connections"]
             features = card["features"]
             count = card_distributions.get(image, 1)  # Default to 1 if not listed in distributions
-            cards.extend([Card(TILE_IMAGES_PATH + image, terrains, connections, features) for card in range(count)])
+            cards.extend([Card(settings.TILE_IMAGES_PATH + image, terrains, connections, features) for card in range(count)])
             
         logger.debug("Deck generated")
         return cards

@@ -3,20 +3,20 @@ import logging
 
 from models.gameBoard import GameBoard
 
-from settings import MEEPLE_IMAGES_PATH, FIGURE_SIZE, DEBUG
+import settings
 
 logger = logging.getLogger(__name__)
 
 class Figure:
     
-    def __init__(self, owner, image_path = MEEPLE_IMAGES_PATH):
+    def __init__(self, owner, image_path = settings.MEEPLE_IMAGES_PATH):
         """
         Init a figure belonging to a specific player
         :param owner: Player owner of the figure
         """
         self.owner = owner
         original_image = pygame.image.load(image_path + f"{owner.getColor()}.png")
-        self.image = pygame.transform.scale(original_image, (FIGURE_SIZE, FIGURE_SIZE))  # Resize to match TILE_SIZE
+        self.image = pygame.transform.scale(original_image, (settings.FIGURE_SIZE, settings.FIGURE_SIZE))  # Resize to match TILE_SIZE
         self.card = None # Card on which the figure has been placed
         self.positionOnCard = None # Position on the card (e.g., road, city, monastery)
         

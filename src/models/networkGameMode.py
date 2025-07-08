@@ -3,7 +3,7 @@ import threading
 import pickle
 import logging
 
-from settings import NETWORK_MODE, HOST_IP, HOST_PORT, DEBUG
+import settings
 
 logger = logging.getLogger(__name__)
 
@@ -13,24 +13,24 @@ class NetworkGameMode:
         self.running = True
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-        if NETWORK_MODE == "host":
+        if settings.NETWORK_MODE == "host":
             self.initHost()
-        elif NETWORK_MODE == "client":
+        elif settings.NETWORK_MODE == "client":
             self.initClient()
         else:
-            raise ValueError("Invalid NETWORK_MODE in settings.py (must be 'host' or 'client')")
+            raise ValueError("Invalid settings.NETWORK_MODE in settings.py (must be 'host' or 'client')")
 
     def initHost(self):
-        self.sock.bind((HOST_IP, HOST_PORT))
+        self.sock.bind((settings.HOST_IP, settings.HOST_PORT))
         self.sock.listen(1)
-        logger.debug(f"[HOST] Waiting for connection on {HOST_IP}:{HOST_PORT}...")
+        logger.debug(f"[HOST] Waiting for connection on {settings.HOST_IP}:{settings.HOST_PORT}...")
         self.conn, addr = self.sock.accept()
         logger.debug(f"[HOST] Connected by {addr}")
         threading.Thread(target=self.listenThread, daemon=True).start()
 
     def initClient(self):
-        self.sock.connect((HOST_IP, HOST_PORT))
-        logger.debug(f"[CLIENT] Connected to host at {HOST_IP}:{HOST_PORT}")
+        self.sock.connect((settings.HOST_IP, settings.HOST_PORT))
+        logger.debug(f"[CLIENT] Connected to host at {settings.HOST_IP}:{settings.HOST_PORT}")
         self.conn = self.sock
         threading.Thread(target=self.listenThread, daemon=True).start()
 

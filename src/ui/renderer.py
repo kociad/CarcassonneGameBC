@@ -5,7 +5,8 @@ import logging
 from models.gameBoard import GameBoard
 from models.card import Card
 from models.player import Player
-from settings import TILE_SIZE, WINDOW_WIDTH, WINDOW_HEIGHT, FIGURE_SIZE, DEBUG, PLAYER_INDEX, NETWORK_MODE, FULLSCREEN
+
+import settings
 
 logger = logging.getLogger(__name__)
 
@@ -55,7 +56,7 @@ class Renderer:
             startFont = pygame.font.Font(None, 72)
             message = "Press 'Enter' to start game"
             textSurface = startFont.render(message, True, (255, 255, 255))
-            textRect = textSurface.get_rect(center=(WINDOW_WIDTH // 2, WINDOW_HEIGHT // 2))
+            textRect = textSurface.get_rect(center=(settings.WINDOW_WIDTH // 2, settings.WINDOW_HEIGHT // 2))
             self.screen.blit(textSurface, textRect)
             return  # Skip board drawing entirely until game starts
         """
@@ -65,16 +66,16 @@ class Renderer:
             message = f"{winner.getName()} wins with {winner.getScore()} points!"
             gameOverFont = pygame.font.Font(None, 72)
             textSurface = gameOverFont.render(message, True, (255, 255, 255))
-            textRect = textSurface.get_rect(center=(WINDOW_WIDTH // 2, WINDOW_HEIGHT // 2))
+            textRect = textSurface.get_rect(center=(settings.WINDOW_WIDTH // 2, settings.WINDOW_HEIGHT // 2))
             self.screen.blit(textSurface, textRect)
             return  # Skip rest of rendering
                 
-        if DEBUG:
+        if settings.DEBUG:
             # Draw grid lines
-            for x in range(0, (gameBoard.getGridSize() + 1) * TILE_SIZE, TILE_SIZE):
-                pygame.draw.line(self.screen, (0, 0, 0), (x - self.offsetX, 0 - self.offsetY), (x - self.offsetX, gameBoard.getGridSize() * TILE_SIZE - self.offsetY))
-            for y in range(0, (gameBoard.getGridSize() + 1) * TILE_SIZE, TILE_SIZE):
-                pygame.draw.line(self.screen, (0, 0, 0), (0 - self.offsetX, y - self.offsetY), (gameBoard.getGridSize() * TILE_SIZE - self.offsetX, y - self.offsetY))
+            for x in range(0, (gameBoard.getGridSize() + 1) * settings.TILE_SIZE, settings.TILE_SIZE):
+                pygame.draw.line(self.screen, (0, 0, 0), (x - self.offsetX, 0 - self.offsetY), (x - self.offsetX, gameBoard.getGridSize() * settings.TILE_SIZE - self.offsetY))
+            for y in range(0, (gameBoard.getGridSize() + 1) * settings.TILE_SIZE, settings.TILE_SIZE):
+                pygame.draw.line(self.screen, (0, 0, 0), (0 - self.offsetX, y - self.offsetY), (gameBoard.getGridSize() * settings.TILE_SIZE - self.offsetX, y - self.offsetY))
         
         # Draw placed cards and their grid coordinates
         for y in range(gameBoard.gridSize):
@@ -88,15 +89,15 @@ class Renderer:
                         except Exception as e:
                             logger.error(f"Rotation failed for card: {e}")
                             imageToDraw = card.image
-                    self.screen.blit(imageToDraw, (x * TILE_SIZE - self.offsetX, y * TILE_SIZE - self.offsetY))
-                if DEBUG:
+                    self.screen.blit(imageToDraw, (x * settings.TILE_SIZE - self.offsetX, y * settings.TILE_SIZE - self.offsetY))
+                if settings.DEBUG:
                     # Draw X, Y coordinates at the center of each grid cell
                     textSurface = self.font.render(f"{x},{y}", True, (255, 255, 255))
-                    textX = x * TILE_SIZE - self.offsetX + TILE_SIZE // 3
-                    textY = y * TILE_SIZE - self.offsetY + TILE_SIZE // 3
+                    textX = x * settings.TILE_SIZE - self.offsetX + settings.TILE_SIZE // 3
+                    textY = y * settings.TILE_SIZE - self.offsetY + settings.TILE_SIZE // 3
                     self.screen.blit(textSurface, (textX, textY))
                 
-        if DEBUG:            
+        if settings.DEBUG:            
             # Draw completed detected structures with tint only on relevant directions
             for structure in detectedStructures:
                 #structure.checkCompletion()
@@ -116,54 +117,54 @@ class Renderer:
                         cardPosition = [(x, y) for y in range(gameBoard.gridSize) for x in range(gameBoard.gridSize) if gameBoard.getCard(x, y) == card]
                         if cardPosition:
                             cardX, cardY = cardPosition[0]
-                            rect = pygame.Surface((TILE_SIZE, TILE_SIZE), pygame.SRCALPHA)
+                            rect = pygame.Surface((settings.TILE_SIZE, settings.TILE_SIZE), pygame.SRCALPHA)
                             rect.fill((0, 0, 0, 0))  # Transparent base
                             
                             # Draw only relevant edges for this structure
                             for direction in directions:
                                 if direction == "N":
-                                    pygame.draw.rect(rect, tintColor, (0, 0, TILE_SIZE, TILE_SIZE // 3))
+                                    pygame.draw.rect(rect, tintColor, (0, 0, settings.TILE_SIZE, settings.TILE_SIZE // 3))
                                 elif direction == "S":
-                                    pygame.draw.rect(rect, tintColor, (0, 2 * TILE_SIZE // 3, TILE_SIZE, TILE_SIZE // 3))
+                                    pygame.draw.rect(rect, tintColor, (0, 2 * settings.TILE_SIZE // 3, settings.TILE_SIZE, settings.TILE_SIZE // 3))
                                 elif direction == "E":
-                                    pygame.draw.rect(rect, tintColor, (2 * TILE_SIZE // 3, 0, TILE_SIZE // 3, TILE_SIZE))
+                                    pygame.draw.rect(rect, tintColor, (2 * settings.TILE_SIZE // 3, 0, settings.TILE_SIZE // 3, settings.TILE_SIZE))
                                 elif direction == "W":
-                                    pygame.draw.rect(rect, tintColor, (0, 0, TILE_SIZE // 3, TILE_SIZE))
+                                    pygame.draw.rect(rect, tintColor, (0, 0, settings.TILE_SIZE // 3, settings.TILE_SIZE))
                                 elif direction == "C":
-                                    centerX = TILE_SIZE // 2
-                                    centerY = TILE_SIZE // 2
-                                    radius = TILE_SIZE // 6
+                                    centerX = settings.TILE_SIZE // 2
+                                    centerY = settings.TILE_SIZE // 2
+                                    radius = settings.TILE_SIZE // 6
                                     pygame.draw.circle(rect, tintColor, (centerX, centerY), radius)
 
-                            self.screen.blit(rect, (cardX * TILE_SIZE - self.offsetX, cardY * TILE_SIZE - self.offsetY))
+                            self.screen.blit(rect, (cardX * settings.TILE_SIZE - self.offsetX, cardY * settings.TILE_SIZE - self.offsetY))
 
         # Draw placed figures (meeples) at correct positions on the card
         for figure in placedFigures:
             if figure.card:
                 cardPosition = [(x, y) for y in range(gameBoard.gridSize) for x in range(gameBoard.gridSize) if gameBoard.getCard(x, y) == figure.card]
                 if cardPosition:
-                    padding = TILE_SIZE * 0.1 # Distance from the border
-                    figureOffset = FIGURE_SIZE / 2 # Compensate for figure size
-                    baseX = cardPosition[0][0] * TILE_SIZE - self.offsetX # + padding + FIGURE_SIZE / 2
-                    baseY = cardPosition[0][1] * TILE_SIZE - self.offsetY # + padding + FIGURE_SIZE / 2
+                    padding = settings.TILE_SIZE * 0.1 # Distance from the border
+                    figureOffset = settings.FIGURE_SIZE / 2 # Compensate for figure size
+                    baseX = cardPosition[0][0] * settings.TILE_SIZE - self.offsetX # + padding + settings.FIGURE_SIZE / 2
+                    baseY = cardPosition[0][1] * settings.TILE_SIZE - self.offsetY # + padding + settings.FIGURE_SIZE / 2
 
                     # Use precise float values for accurate positioning
                     if figure.positionOnCard == "N":  # Top
-                        figureX, figureY = baseX + TILE_SIZE / 2, baseY + padding + figureOffset
+                        figureX, figureY = baseX + settings.TILE_SIZE / 2, baseY + padding + figureOffset
                     elif figure.positionOnCard == "S":  # Bottom
-                        figureX, figureY = baseX + TILE_SIZE / 2, baseY + TILE_SIZE - padding - figureOffset
+                        figureX, figureY = baseX + settings.TILE_SIZE / 2, baseY + settings.TILE_SIZE - padding - figureOffset
                     elif figure.positionOnCard == "E":  # Right
-                        figureX, figureY = baseX + TILE_SIZE - padding - figureOffset, baseY + TILE_SIZE / 2
+                        figureX, figureY = baseX + settings.TILE_SIZE - padding - figureOffset, baseY + settings.TILE_SIZE / 2
                     elif figure.positionOnCard == "W":  # Left
-                        figureX, figureY = baseX + padding + figureOffset, baseY + TILE_SIZE / 2
+                        figureX, figureY = baseX + padding + figureOffset, baseY + settings.TILE_SIZE / 2
                     else:  # Default to center if invalid position
-                        figureX, figureY = baseX + TILE_SIZE / 2, baseY + TILE_SIZE / 2
+                        figureX, figureY = baseX + settings.TILE_SIZE / 2, baseY + settings.TILE_SIZE / 2
                     
-                    self.screen.blit(figure.image, (figureX - TILE_SIZE * 0.15, figureY - TILE_SIZE * 0.15))  # Adjust for better centering
+                    self.screen.blit(figure.image, (figureX - settings.TILE_SIZE * 0.15, figureY - settings.TILE_SIZE * 0.15))  # Adjust for better centering
                     
     def drawSidePanel(self, selectedCard, remainingCards, currentPlayer, placedFigures, detectedStructures):
-        panelX = WINDOW_WIDTH - 200  # Panel width of 200 pixels
-        pygame.draw.rect(self.screen, (50, 50, 50), (panelX, 0, 200, WINDOW_HEIGHT))  # Dark grey background
+        panelX = settings.WINDOW_WIDTH - 200  # Panel width of 200 pixels
+        pygame.draw.rect(self.screen, (50, 50, 50), (panelX, 0, 200, settings.WINDOW_HEIGHT))  # Dark grey background
 
         if selectedCard:
             cardX = panelX + 45
@@ -182,11 +183,11 @@ class Renderer:
             spacing = 30
 
             # Turn ownership status
-            if NETWORK_MODE == "local":
+            if settings.NETWORK_MODE == "local":
                 statusText = "Local mode"
                 statusColor = (100, 100, 255)
             else:
-                isMyTurn = currentPlayer.getIndex() == PLAYER_INDEX
+                isMyTurn = currentPlayer.getIndex() == settings.PLAYER_INDEX
                 statusText = "Your Turn" if isMyTurn else "Waiting..."
                 statusColor = (0, 255, 0) if isMyTurn else (200, 0, 0)
 
@@ -208,11 +209,11 @@ class Renderer:
             # Meeple images
             figures = currentPlayer.getFigures()
             for i, figure in enumerate(figures):
-                figX = panelX + 20 + (i % 4) * (FIGURE_SIZE + 5)
-                figY = textY + 4 * spacing + (i // 4) * (FIGURE_SIZE + 5)
+                figX = panelX + 20 + (i % 4) * (settings.FIGURE_SIZE + 5)
+                figY = textY + 4 * spacing + (i // 4) * (settings.FIGURE_SIZE + 5)
                 self.screen.blit(figure.image, (figX, figY))
 
-            if DEBUG:
+            if settings.DEBUG:
                 # Structure count
                 structureSurface = self.font.render(f"Structures: {len(detectedStructures)}", True, (255, 255, 255))
                 self.screen.blit(structureSurface, (panelX + 20, textY + 6 * spacing))
@@ -246,13 +247,13 @@ class Renderer:
         # Title text
         titleFont = pygame.font.Font(None, 100)
         titleText = titleFont.render("Carcassonne", True, (255, 255, 255))
-        titleRect = titleText.get_rect(center=(WINDOW_WIDTH // 2, WINDOW_HEIGHT // 3))
+        titleRect = titleText.get_rect(center=(settings.WINDOW_WIDTH // 2, settings.WINDOW_HEIGHT // 3))
         self.screen.blit(titleText, titleRect)
 
         # Button
         buttonFont = pygame.font.Font(None, 48)
         self.buttonText = buttonFont.render("Start Game", True, (0, 0, 0))
-        self.buttonRect = pygame.Rect(WINDOW_WIDTH // 2 - 100, WINDOW_HEIGHT // 2, 200, 60)
+        self.buttonRect = pygame.Rect(settings.WINDOW_WIDTH // 2 - 100, settings.WINDOW_HEIGHT // 2, 200, 60)
 
         # Draw button background
         pygame.draw.rect(self.screen, (200, 200, 200), self.buttonRect)

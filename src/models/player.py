@@ -2,7 +2,8 @@ import pygame
 import logging
 
 from models.figure import Figure
-from settings import DEBUG
+
+import settings
 
 logger = logging.getLogger(__name__)
 

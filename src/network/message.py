@@ -1,6 +1,7 @@
 import json
 import logging
-from settings import DEBUG
+
+import settings
 
 logger = logging.getLogger(__name__)
 

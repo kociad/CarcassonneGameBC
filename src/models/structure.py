@@ -3,7 +3,7 @@ import logging
 
 from models.figure import Figure
 
-from settings import DEBUG
+import settings
 
 logger = logging.getLogger(__name__)
 
@@ -214,7 +214,7 @@ class Structure:
                                 score += 1
 
         elif self.structureType == "Field" and gameSession:
-            if DEBUG:
+            if settings.DEBUG:
                 self.isCompleted = True
             
             scoredCities = set()

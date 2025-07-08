@@ -4,7 +4,7 @@ import logging
 from ui.scene import Scene
 from gameState import GameState
 
-from settings import TILE_SIZE, PLAYER_INDEX, NETWORK_MODE, FPS
+import settings
 
 logger = logging.getLogger(__name__)
 
@@ -36,9 +36,9 @@ class GameScene(Scene):
 
             # Block game actions if it's not this player's turn in network mode
             allowAction = True
-            if NETWORK_MODE in ("host", "client"):
+            if settings.NETWORK_MODE in ("host", "client"):
                 currentPlayer = self.session.getCurrentPlayer()
-                if not currentPlayer or currentPlayer.getIndex() != PLAYER_INDEX or self.session.getGameOver():
+                if not currentPlayer or currentPlayer.getIndex() != settings.PLAYER_INDEX or self.session.getGameOver():
                     allowAction = False
 
             if allowAction:
@@ -53,7 +53,7 @@ class GameScene(Scene):
 
     def handleMouseClick(self, event):
         x, y = event.pos
-        gridX, gridY = (x + self.renderer.getOffsetX()) // TILE_SIZE, (y + self.renderer.getOffsetY()) // TILE_SIZE
+        gridX, gridY = (x + self.renderer.getOffsetX()) // settings.TILE_SIZE, (y + self.renderer.getOffsetY()) // settings.TILE_SIZE
 
         logger.debug(f"Registered {event.button}")
 
@@ -83,8 +83,8 @@ class GameScene(Scene):
             self.renderer.scroll("right")
             
     def detectClickDirection(self, mouseX, mouseY, gridX, gridY):
-        tileScreenX = gridX * TILE_SIZE - self.renderer.getOffsetX()
-        tileScreenY = gridY * TILE_SIZE - self.renderer.getOffsetY()
+        tileScreenX = gridX * settings.TILE_SIZE - self.renderer.getOffsetX()
+        tileScreenY = gridY * settings.TILE_SIZE - self.renderer.getOffsetY()
 
         relativeX = mouseX - tileScreenX
         relativeY = mouseY - tileScreenY
@@ -97,8 +97,8 @@ class GameScene(Scene):
 
         supportsCenter = card.getTerrains().get("C") is not None
 
-        thirdSize = TILE_SIZE // 3
-        twoThirdSize = 2 * TILE_SIZE // 3
+        thirdSize = settings.TILE_SIZE // 3
+        twoThirdSize = 2 * settings.TILE_SIZE // 3
 
         if thirdSize < relativeX < twoThirdSize and thirdSize < relativeY < twoThirdSize:
             if supportsCenter:
@@ -106,9 +106,9 @@ class GameScene(Scene):
 
         distances = {
             "N": relativeY,
-            "S": TILE_SIZE - relativeY,
+            "S": settings.TILE_SIZE - relativeY,
             "W": relativeX,
-            "E": TILE_SIZE - relativeX
+            "E": settings.TILE_SIZE - relativeX
         }
 
         return min(distances, key=distances.get)
@@ -145,15 +145,15 @@ class GameScene(Scene):
         
     def update(self):
         if self.session.getGameOver():
-            self.clock.tick(FPS)
+            self.clock.tick(settings.FPS)
             return
 
         currentPlayer = self.session.getCurrentPlayer()
 
         if self.session.getIsFirstRound() or not currentPlayer.getIsAI():
-            self.clock.tick(FPS)
+            self.clock.tick(settings.FPS)
             return
 
         # AI turn
         currentPlayer.playTurn(self.session)
-        self.clock.tick(FPS)
+        self.clock.tick(settings.FPS)
