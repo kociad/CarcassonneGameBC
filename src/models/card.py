@@ -124,10 +124,8 @@ class Card:
 
             self.connections = newConnections
 
-    """
     def canPlaceFigure(self, figure):
         return True # To be implemented
-    """
         
     def serialize(self):
         return {
