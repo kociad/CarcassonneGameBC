@@ -9,15 +9,13 @@ SOUND_PATH = ASSETS_PATH + "sounds/"
 
 #Session defaults
 #Player settings (valid for host only)
-PLAYER = "Player 1"
-
-PLAYERS = ["Player 1", "AI_Player 2"]
+PLAYERS = ["Adam", "Benedict", "Cecil", "David", "Ernest", "Francis"]
 
 # Network Mode: "host" or "client" or "local"
 NETWORK_MODE = "local"
 
 # If client, where to connect, if host, where to listen
-HOST_IP = "127.0.0.1"
+HOST_IP = "0.0.0.0"
 HOST_PORT = 222  # TCP port to use
 
 # Player index to detect player turn correctly

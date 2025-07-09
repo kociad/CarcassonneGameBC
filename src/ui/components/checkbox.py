@@ -28,14 +28,14 @@ class Checkbox:
         return False
 
     def draw(self, surface):
-        pygame.draw.rect(surface, self.borderColor, self.rect, 2)
-
-        fillColor = self.disabledColor if self.disabled else self.checkColor
+        borderColor = self.disabledColor if self.disabled else self.borderColor
+        pygame.draw.rect(surface, borderColor, self.rect, 2)
 
         if self.checked:
+            fillColor = self.disabledColor if self.disabled else self.checkColor
             inner = self.rect.inflate(-6, -6)
             pygame.draw.rect(surface, fillColor, inner)
-
+            
     def isChecked(self):
         return self.checked
 

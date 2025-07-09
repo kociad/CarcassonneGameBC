@@ -59,7 +59,7 @@ class Game:
 
     def initScene(self, state):
         if state == GameState.MENU:
-            self.currentScene = MainMenuScene(self.screen, self.initScene, self.startGame)
+            self.currentScene = MainMenuScene(self.screen, self.initScene, self.getGameSession)
         elif state == GameState.GAME:
             self.currentScene = GameScene(
                 self.screen, self.initScene, self.gameSession,
@@ -68,7 +68,7 @@ class Game:
         elif state == GameState.SETTINGS:
             self.currentScene = SettingsScene(self.screen, self.initScene)
         elif state == GameState.PREPARE:
-            self.currentScene = GamePrepareScene(self.screen, self.initScene)
+            self.currentScene = GamePrepareScene(self.screen, self.initScene, self.startGame)
             
     def startGame(self, playerNames):
         logger.debug("Initializing new game session...")
@@ -142,8 +142,10 @@ class Game:
             message = encodeMessage("submit_turn", serialized)
             self.network.sendToHost(message)
             logger.debug("Client submitted turn to host.")
-
-
+            
+    def getGameSession(self):
+        return self.gameSession
+        
 if __name__ == "__main__":
     game = Game()
     game.run()
