@@ -4,3 +4,4 @@ class GameState(Enum):
     MENU = auto()
     GAME = auto()
     SETTINGS = auto()
+    PREPARE = auto()

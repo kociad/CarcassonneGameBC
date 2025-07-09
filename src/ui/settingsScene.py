@@ -157,7 +157,7 @@ class SettingsScene(Scene):
         pass
         
     def draw(self):
-        self.screen.fill((20, 20, 20))
+        self.screen.fill((30, 30, 30))
 
         #Title
         titleText = self.font.render("Settings", True, (255, 255, 255))

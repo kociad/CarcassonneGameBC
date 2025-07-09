@@ -5,6 +5,7 @@ from datetime import datetime
 from ui.renderer import Renderer
 from ui.mainMenuScene import MainMenuScene
 from ui.settingsScene import SettingsScene
+from ui.gamePrepareScene import GamePrepareScene
 from ui.scene import Scene
 from ui.gameScene import GameScene
 from gameState import GameState
@@ -66,7 +67,9 @@ class Game:
             )
         elif state == GameState.SETTINGS:
             self.currentScene = SettingsScene(self.screen, self.initScene)
-
+        elif state == GameState.PREPARE:
+            self.currentScene = GamePrepareScene(self.screen, self.initScene)
+            
     def startGame(self, playerNames):
         logger.debug("Initializing new game session...")
 

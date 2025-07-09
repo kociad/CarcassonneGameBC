@@ -42,7 +42,7 @@ class MainMenuScene(Scene):
                 exit()
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if self.startButton.isClicked(event.pos):
-                    self.startGameCallback(readSetting("PLAYERS"))
+                    self.switchScene(GameState.PREPARE)
                 elif self.settingsButton.isClicked(event.pos):
                     self.switchScene(GameState.SETTINGS)
                 elif self.quitButton.isClicked(event.pos):

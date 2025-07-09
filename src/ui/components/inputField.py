@@ -1,17 +1,21 @@
 import pygame
 
 class InputField:
-    def __init__(self, rect, font, placeholder="", textColor=(0, 0, 0), bgColor=(255, 255, 255), borderColor=(0, 0, 0)):
+    def __init__(self, rect, font, placeholder="", text="", textColor=(0, 0, 0), bgColor=(255, 255, 255), borderColor=(0, 0, 0)):
         self.rect = pygame.Rect(rect)
         self.font = font
         self.placeholder = placeholder
-        self.text = ""
+        self.text = text
         self.active = False
+        self.disabled = False
         self.textColor = textColor
         self.bgColor = bgColor
         self.borderColor = borderColor
 
     def handleEvent(self, event):
+        if self.disabled:
+            return
+
         if event.type == pygame.MOUSEBUTTONDOWN:
             self.active = self.rect.collidepoint(event.pos)
 
@@ -22,19 +26,26 @@ class InputField:
                 self.active = False
             else:
                 self.text += event.unicode
-
+                
     def draw(self, surface):
-        pygame.draw.rect(surface, self.bgColor, self.rect)
-        pygame.draw.rect(surface, self.borderColor, self.rect, 2)
+        bgColor = (200, 200, 200) if self.disabled else self.bgColor
+        borderColor = (100, 100, 100) if self.disabled else self.borderColor
+        textColor = (150, 150, 150) if self.disabled else (self.textColor if self.text or self.active else (150, 150, 150))
+
+        pygame.draw.rect(surface, bgColor, self.rect)
+        pygame.draw.rect(surface, borderColor, self.rect, 2)
 
         displayText = self.text if self.text or self.active else self.placeholder
-        color = self.textColor if self.text or self.active else (150, 150, 150)
-
-        textSurface = self.font.render(displayText, True, color)
+        textSurface = self.font.render(displayText, True, textColor)
         surface.blit(textSurface, (self.rect.x + 5, self.rect.y + (self.rect.height - textSurface.get_height()) // 2))
-
+        
     def getText(self):
         return self.text
 
     def setText(self, value):
         self.text = value
+        
+    def setDisabled(self, value: bool):
+        self.disabled = value
+        if value:
+            self.active = False
