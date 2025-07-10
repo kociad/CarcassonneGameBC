@@ -2,7 +2,8 @@ import pygame
 
 class Dropdown:
     def __init__(self, rect, font, options, onSelect=None, defaultIndex=0,
-                 textColor=(0, 0, 0), bgColor=(255, 255, 255), borderColor=(0, 0, 0), highlightColor=(200, 200, 200)):
+                 textColor=(0, 0, 0), bgColor=(255, 255, 255),
+                 borderColor=(0, 0, 0), highlightColor=(200, 200, 200)):
         self.rect = pygame.Rect(rect)
         self.font = font
         self.options = options
@@ -15,20 +16,22 @@ class Dropdown:
         self.bgColor = bgColor
         self.borderColor = borderColor
         self.highlightColor = highlightColor
-        
-    def handleEvent(self, event):
+
+    def handleEvent(self, event, yOffset=0):
         if self.disabled:
             return False
 
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            if self.rect.collidepoint(event.pos):
+        shiftedRect = self.rect.move(0, yOffset)
+
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            if shiftedRect.collidepoint(event.pos):
                 self.expanded = not self.expanded
                 return True
             elif self.expanded:
                 for i, option in enumerate(self.options):
                     optionRect = pygame.Rect(
-                        self.rect.x,
-                        self.rect.y + (i + 1) * self.rect.height,
+                        shiftedRect.x,
+                        shiftedRect.y + (i + 1) * self.rect.height,
                         self.rect.width,
                         self.rect.height
                     )
@@ -40,8 +43,9 @@ class Dropdown:
                         return True
                 self.expanded = False
         return False
-        
-    def draw(self, surface):
+
+    def draw(self, surface, yOffset=0):
+        drawRect = self.rect.move(0, yOffset)
         fullHeight = self.rect.height + (len(self.options) * self.rect.height if self.expanded else 0)
         drawSurface = pygame.Surface((self.rect.width, fullHeight), pygame.SRCALPHA)
 
@@ -52,7 +56,6 @@ class Dropdown:
         highlight = (*self.highlightColor, alpha)
 
         localRect = pygame.Rect(0, 0, self.rect.width, self.rect.height)
-
         pygame.draw.rect(drawSurface, bg, localRect)
         pygame.draw.rect(drawSurface, border, localRect, 2)
 
@@ -68,15 +71,15 @@ class Dropdown:
                 optionText = self.font.render(option, True, textCol)
                 drawSurface.blit(optionText, (5, optionRect.y + (self.rect.height - optionText.get_height()) // 2))
 
-        surface.blit(drawSurface, self.rect.topleft)
-        
+        surface.blit(drawSurface, drawRect.topleft)
+
     def getSelected(self):
         return self.options[self.selectedIndex]
-        
+
     def setSelected(self, index):
         if 0 <= index < len(self.options):
             self.selectedIndex = index
-            
+
     def setDisabled(self, value: bool):
         self.disabled = value
         return self

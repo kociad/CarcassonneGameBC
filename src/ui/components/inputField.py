@@ -21,12 +21,14 @@ class InputField:
         
         self.onTextChange = onTextChange
 
-    def handleEvent(self, event):
+    def handleEvent(self, event, yOffset=0):
         if self.disabled or self.readOnly:
             return
 
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            self.active = self.rect.collidepoint(event.pos)
+        shiftedRect = self.rect.move(0, yOffset)
+
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            self.active = shiftedRect.collidepoint(event.pos)
 
         if self.active and event.type == pygame.KEYDOWN:
             oldText = self.text
@@ -38,11 +40,9 @@ class InputField:
             else:
                 self.text += event.unicode
 
-            # Notify change
             if self.onTextChange and self.text != oldText:
                 self.onTextChange(self.text)
 
-            # Adjust scroll if needed
             textWidth = self.font.size(self.text)[0]
             visibleWidth = self.rect.width - 10
 
@@ -50,32 +50,37 @@ class InputField:
                 self.scrollOffset = textWidth - visibleWidth
             else:
                 self.scrollOffset = 0
-                
-    def draw(self, surface):
+
+    def draw(self, surface, yOffset=0):
         now = time.time()
         if now - self.lastBlink > self.blinkInterval:
             self.cursorVisible = not self.cursorVisible
             self.lastBlink = now
 
+        drawRect = self.rect.move(0, yOffset)
+
         bgColor = (200, 200, 200) if self.disabled else self.bgColor
         borderColor = (100, 100, 100) if self.disabled else self.borderColor
         textColor = (150, 150, 150) if self.disabled else (self.textColor if self.text or self.active else (150, 150, 150))
 
-        pygame.draw.rect(surface, bgColor, self.rect)
-        pygame.draw.rect(surface, borderColor, self.rect, 2)
+        pygame.draw.rect(surface, bgColor, drawRect)
+        pygame.draw.rect(surface, borderColor, drawRect, 2)
 
         displayText = self.text if self.text or self.active else self.placeholder
         textSurface = self.font.render(displayText, True, textColor)
-        textWidth = textSurface.get_width()
 
         clampedWidth = max(0, min(self.rect.width - 10, textSurface.get_width() - self.scrollOffset))
         visibleRect = pygame.Rect(self.scrollOffset, 0, clampedWidth, textSurface.get_height())
-        surface.blit(textSurface.subsurface(visibleRect), (self.rect.x + 5, self.rect.y + (self.rect.height - textSurface.get_height()) // 2))
-        
+
+        surface.blit(
+            textSurface.subsurface(visibleRect),
+            (drawRect.x + 5, drawRect.y + (drawRect.height - textSurface.get_height()) // 2)
+        )
+
         if self.active and not self.disabled and self.cursorVisible:
-            cursorX = self.rect.x + 5 + self.font.size(self.text)[0] - self.scrollOffset
-            cursorY = self.rect.y + 5
-            cursorHeight = self.rect.height - 10
+            cursorX = drawRect.x + 5 + self.font.size(self.text)[0] - self.scrollOffset
+            cursorY = drawRect.y + 5
+            cursorHeight = drawRect.height - 10
             pygame.draw.line(surface, textColor, (cursorX, cursorY), (cursorX, cursorY + cursorHeight), 2)
 
     def getText(self):

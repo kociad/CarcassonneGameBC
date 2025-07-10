@@ -15,27 +15,29 @@ class Checkbox:
 
         self.disabled = False
 
-    def handleEvent(self, event):
+    def handleEvent(self, event, yOffset=0):
         if self.disabled:
             return False
 
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-            if self.rect.collidepoint(event.pos):
+            shiftedRect = self.rect.move(0, yOffset)
+            if shiftedRect.collidepoint(event.pos):
                 self.checked = not self.checked
                 if self.onToggle:
                     self.onToggle(self.checked)
                 return True
         return False
 
-    def draw(self, surface):
+    def draw(self, surface, yOffset=0):
+        shiftedRect = self.rect.move(0, yOffset)
         borderColor = self.disabledColor if self.disabled else self.borderColor
-        pygame.draw.rect(surface, borderColor, self.rect, 2)
+        pygame.draw.rect(surface, borderColor, shiftedRect, 2)
 
         if self.checked:
             fillColor = self.disabledColor if self.disabled else self.checkColor
-            inner = self.rect.inflate(-6, -6)
+            inner = shiftedRect.inflate(-6, -6)
             pygame.draw.rect(surface, fillColor, inner)
-            
+
     def isChecked(self):
         return self.checked
 

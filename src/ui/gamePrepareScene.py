@@ -20,6 +20,9 @@ class GamePrepareScene(Scene):
         self.dropdownFont = pygame.font.Font(None, 36)
         self.toastQueue = []
         self.activeToast = None
+        self.scrollOffset = 0
+        self.maxScroll = 0
+        self.scrollSpeed = 30
 
         # Fetch settings (session default)
         #playerName = settings.PLAYER
@@ -112,127 +115,102 @@ class GamePrepareScene(Scene):
         self.handleNetworkModeChange(networkMode)
         
     def handleEvents(self, events):
+        self.applyScroll(events)
+
         for event in events:
             if event.type == pygame.QUIT:
                 pygame.quit()
                 exit()
 
-            """
-            self.playerNameField.handleEvent(event)
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    self.switchScene(GameState.MENU)
 
-            if self.playerFields:
-                self.playerFields[0][0].setText(self.playerNameField.getText())
-                self.players[0] = (self.playerNameField.getText(), self.players[0][1])
-            """
-                
-            if self.networkModeDropdown.handleEvent(event):
+            if self.networkModeDropdown.handleEvent(event, yOffset=self.scrollOffset):
                 continue
-            self.hostIPField.handleEvent(event)
-            self.portField.handleEvent(event)
+
+            self.hostIPField.handleEvent(event, yOffset=self.scrollOffset)
+            self.portField.handleEvent(event, yOffset=self.scrollOffset)
 
             for nameField, aiCheckbox in self.playerFields:
-                nameField.handleEvent(event)
+                nameField.handleEvent(event, yOffset=self.scrollOffset)
                 if aiCheckbox:
-                    aiCheckbox.handleEvent(event)
-            
-            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                if self.backButton.isClicked(event.pos):
-                    self.switchScene(GameState.MENU)
-                elif self.startButton.isClicked(event.pos):
-                    self.applySettingsAndStart()
-                elif self.addPlayerButton.isClicked(event.pos):
-                    self.addPlayerField()
-                elif self.removePlayerButton.isClicked(event.pos):
-                    self.removePlayerField()
+                    aiCheckbox.handleEvent(event, yOffset=self.scrollOffset)
 
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                if self.backButton.isClicked(event.pos, yOffset=self.scrollOffset):
+                    self.switchScene(GameState.MENU)
+                elif self.startButton.isClicked(event.pos, yOffset=self.scrollOffset):
+                    self.applySettingsAndStart()
+                elif self.addPlayerButton.isClicked(event.pos, yOffset=self.scrollOffset):
+                    self.addPlayerField()
+                elif self.removePlayerButton.isClicked(event.pos, yOffset=self.scrollOffset):
+                    self.removePlayerField()
+                    
     def draw(self):
         self.screen.fill((30, 30, 30))
+        offsetY = self.scrollOffset
 
-        # Title
         titleText = self.font.render("Game Setup", True, (255, 255, 255))
-        titleRect = titleText.get_rect(center=(self.screen.get_width() // 2, self.titleY))
+        titleRect = titleText.get_rect(center=(self.screen.get_width() // 2, self.titleY + offsetY))
         self.screen.blit(titleText, titleRect)
 
         labelFont = self.dropdownFont
 
-        # Labels
-        labelFont = self.dropdownFont
-
-        # Your Name label
-        """
-        nameLabel = labelFont.render("Your name:", True, (255, 255, 255))
-        nameLabelRect = nameLabel.get_rect(
-            right=self.playerNameField.rect.left - 10,
-            centery=self.playerNameField.rect.centery
-        )
-        self.screen.blit(nameLabel, nameLabelRect)
-        """
-
-        # Network Mode label
         netLabel = labelFont.render("Network mode:", True, (255, 255, 255))
         netLabelRect = netLabel.get_rect(
             right=self.networkModeDropdown.rect.left - 10,
-            centery=self.networkModeDropdown.rect.centery
+            centery=self.networkModeDropdown.rect.centery + offsetY
         )
         self.screen.blit(netLabel, netLabelRect)
 
-        # Host IP label
         ipLabel = labelFont.render("Host IP:", True, (255, 255, 255))
         ipLabelRect = ipLabel.get_rect(
             right=self.hostIPField.rect.left - 10,
-            centery=self.hostIPField.rect.centery
+            centery=self.hostIPField.rect.centery + offsetY
         )
         self.screen.blit(ipLabel, ipLabelRect)
 
-        # Port label
         portLabel = labelFont.render("Port:", True, (255, 255, 255))
         portLabelRect = portLabel.get_rect(
             right=self.portField.rect.left - 10,
-            centery=self.portField.rect.centery
+            centery=self.portField.rect.centery + offsetY
         )
         self.screen.blit(portLabel, portLabelRect)
 
-        # Dynamically draw players
-        btnY = None
         for i, (nameField, aiCheckbox) in enumerate(self.playerFields):
             labelText = "Your name:" if i == 0 else f"Player {i + 1}:"
             pLabel = labelFont.render(labelText, True, (255, 255, 255))
             pLabelRect = pLabel.get_rect(
                 right=nameField.rect.left - 10,
-                centery=nameField.rect.centery
+                centery=nameField.rect.centery + offsetY
             )
             self.screen.blit(pLabel, pLabelRect)
 
-            nameField.draw(self.screen)
-            
+            nameField.draw(self.screen, yOffset=offsetY)
             if aiCheckbox:
-                aiCheckbox.draw(self.screen)
+                aiCheckbox.draw(self.screen, yOffset=offsetY)
                 aiLabel = labelFont.render("AI", True, (255, 255, 255))
                 aiLabelRect = aiLabel.get_rect(
-                    midleft=(aiCheckbox.rect.right + 8, aiCheckbox.rect.centery)
+                    midleft=(aiCheckbox.rect.right + 8, aiCheckbox.rect.centery + offsetY)
                 )
                 self.screen.blit(aiLabel, aiLabelRect)
-            
-        # Components
-        #self.playerNameField.draw(self.screen)
-        self.hostIPField.draw(self.screen)
-        self.portField.draw(self.screen)
-        self.addPlayerButton.draw(self.screen)
-        self.removePlayerButton.draw(self.screen)
-        self.backButton.draw(self.screen)
-        self.startButton.draw(self.screen)
-        self.networkModeDropdown.draw(self.screen)
 
-        # Toast queue
+        self.hostIPField.draw(self.screen, yOffset=offsetY)
+        self.portField.draw(self.screen, yOffset=offsetY)
+        self.addPlayerButton.draw(self.screen, yOffset=offsetY)
+        self.removePlayerButton.draw(self.screen, yOffset=offsetY)
+        self.backButton.draw(self.screen, yOffset=offsetY)
+        self.startButton.draw(self.screen, yOffset=offsetY)
+        self.networkModeDropdown.draw(self.screen, yOffset=offsetY)
+
         if not self.activeToast and self.toastQueue:
             self.activeToast = self.toastQueue.pop(0)
             self.activeToast.start()
-
         if self.activeToast:
             self.activeToast.draw(self.screen)
-            if self.activeToast.isExpired():
-                self.activeToast = None
 
+        self.maxScroll = max(self.screen.get_height(), self.backButton.rect.bottom + 80)
         pygame.display.flip()
         
     def rebuildPlayerFields(self):

@@ -22,8 +22,8 @@ HOST_PORT = 222  # TCP port to use
 PLAYER_INDEX = 0
 
 # General Game Settings
-WINDOW_WIDTH = 1920
-WINDOW_HEIGHT = 1080
+WINDOW_WIDTH = 800
+WINDOW_HEIGHT = 600
 FULLSCREEN = False
 
 # Apply dynamic fullscreen resolution override if needed
