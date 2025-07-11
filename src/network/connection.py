@@ -15,7 +15,14 @@ class NetworkConnection:
         self.networkMode = settings.NETWORK_MODE  # 'host', 'client', or 'local'
         self.running = False
         self.connections = []  # only for host mode
-        self.onClientConnected = None  # externally assigned
+
+        # Handlers assigned externally
+        self.onClientConnected = None
+        self.onClientSubmittedTurn = None
+        self.onInitialGameStateReceived = None
+        self.onSyncGameState = None
+        self.onJoinFailed = None           # new for host
+        self.onJoinRejected = None         # new for client
 
         if self.networkMode == "local":
             logger.debug("Running in local mode. Networking is disabled.")
@@ -65,12 +72,12 @@ class NetworkConnection:
                     line, buffer = buffer.split("\n", 1)
                     if line.strip():
                         logger.debug(f"Receiving message: {line}")
-                        self.onMessageReceived(line)
+                        self.onMessageReceived(line, conn)
             except Exception as e:
                 logger.exception(f"Socket error: {e}")
                 break
 
-    def onMessageReceived(self, message):
+    def onMessageReceived(self, message, conn=None):
         parsed = decodeMessage(message)
         if not parsed:
             return
@@ -80,18 +87,31 @@ class NetworkConnection:
 
         if action == "init_game_state":
             logger.debug("Received initial game state from host")
-            self.onInitialGameStateReceived(payload)
+            if self.onInitialGameStateReceived:
+                self.onInitialGameStateReceived(payload)
 
         elif action == "ack_game_state":
             logger.debug("Client confirmed receiving game state: %s", payload)
-            
+
         elif action == "submit_turn" and self.networkMode == "host":
             logger.debug("Received submitted turn from client")
-            self.onClientSubmittedTurn(payload)
-            
+            if self.onClientSubmittedTurn:
+                self.onClientSubmittedTurn(payload)
+
         elif action == "sync_game_state":
             logger.debug("Received updated game state from host")
-            self.onSyncGameState(payload)
+            if self.onSyncGameState:
+                self.onSyncGameState(payload)
+
+        elif action == "join_failed" and self.networkMode == "host":
+            logger.debug("Received join_failed from client")
+            if self.onJoinFailed:
+                self.onJoinFailed(payload, conn)
+
+        elif action == "join_rejected" and self.networkMode == "client":
+            logger.debug("Received join_rejected from host")
+            if self.onJoinRejected:
+                self.onJoinRejected(payload)
 
     def sendToAll(self, message):
         if self.networkMode != "host":

@@ -182,7 +182,6 @@ class SettingsScene(Scene):
         # gszLabel = labelFont.render("Grid size:", True, ...)
         # self.screen.blit(gszLabel, ...)
 
-        self.resolutionDropdown.draw(self.screen, yOffset=offsetY)
         self.fullscreenCheckbox.draw(self.screen, yOffset=offsetY)
         self.debugCheckbox.draw(self.screen, yOffset=offsetY)
         self.tileSizeSlider.draw(self.screen, yOffset=offsetY)
@@ -190,6 +189,7 @@ class SettingsScene(Scene):
         # self.gridSizeSlider.draw(self.screen, yOffset=offsetY)
         self.applyButton.draw(self.screen, yOffset=offsetY)
         self.backButton.draw(self.screen, yOffset=offsetY)
+        self.resolutionDropdown.draw(self.screen, yOffset=offsetY)
 
         if not self.activeToast and self.toastQueue:
             self.activeToast = self.toastQueue.pop(0)

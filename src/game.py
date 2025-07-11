@@ -69,19 +69,28 @@ class Game:
             self.currentScene = SettingsScene(self.screen, self.initScene)
         elif state == GameState.PREPARE:
             self.currentScene = GamePrepareScene(self.screen, self.initScene, self.startGame)
-            
+
     def startGame(self, playerNames):
         logger.debug("Initializing new game session...")
 
         self.gameSession = GameSession(playerNames)
+
+        # Assign host as human player
+        hostPlayer = self.gameSession.players[settings.PLAYER_INDEX]
+        hostPlayer.setIsHuman(True)
+        logger.debug(f"Player with index {hostPlayer.getIndex()} marked as human.")
+        logger.debug(f"Player name set to '{hostPlayer.getName()}' from host settings.")
+
         self.network = NetworkConnection()
 
         self.network.onGameStateReceived = self.onGameStateReceived
         self.network.onSyncGameState = self.onSyncGameState
+        self.network.onJoinRejected = self.onJoinRejected  # Handle rejection sent back to client
 
         if self.network.networkMode == "host":
             self.network.onClientConnected = self.onClientConnected
             self.network.onClientSubmittedTurn = self.onClientSubmittedTurn
+            self.network.onJoinFailed = self.onJoinFailed  # Handle join_failed message from client
 
         self.gameSession.onTurnEnded = self.onTurnEnded
 
@@ -91,8 +100,25 @@ class Game:
         self.gameSession = GameSession.deserialize(data)
         self.gameSession.onTurnEnded = self.onTurnEnded
         logger.debug("Game session replaced with synchronized state from host")
+
         if self.network.networkMode == "client":
-            self.network.sendToHost(encodeMessage("ack_game_state", {"status": "ok"}))
+            assigned = False
+            for player in self.gameSession.getPlayers():
+                if not player.getIsAI() and not player.isHuman:
+                    player.isHuman = True
+                    logger.debug(f"Player with index {player.getIndex()} marked as human.")
+                    player.name = settings.PLAYERS[0]
+                    logger.debug(f"Player name set to '{player.name}' from client settings.")
+                    settings.PLAYER_INDEX = player.getIndex()
+                    logger.debug(f"Client assigned to player index {player.getIndex()}")
+                    assigned = True
+                    break
+
+            if assigned:
+                self.network.sendToHost(encodeMessage("ack_game_state", {"status": "ok"}))
+            else:
+                logger.debug("No available player slots for client")
+                self.network.sendToHost(encodeMessage("join_failed", {"reason": "no_slots"}))
 
     def onClientConnected(self, conn):
         logger.debug("Sending current game state to new client...")
@@ -142,10 +168,32 @@ class Game:
             message = encodeMessage("submit_turn", serialized)
             self.network.sendToHost(message)
             logger.debug("Client submitted turn to host.")
-            
+
+    def onJoinFailed(self, data, conn):
+        reason = data.get("reason", "unspecified")
+        logger.debug(f"Client join failed: {reason}")
+        response = encodeMessage("join_rejected", {"reason": reason})
+        try:
+            conn.sendall((response + "\n").encode())
+            logger.debug("Sent join_rejected response to client.")
+        except Exception as e:
+            logger.debug(f"Failed to send rejection to client: {e}")
+
+    def onJoinRejected(self, data):
+        reason = data.get("reason", "unknown")
+        logger.debug(f"Join rejected by host. Reason: {reason}")
+        self.handleJoinRejected(reason)
+
+    def handleJoinRejected(self, reason):
+        logger.debug(f"Handling join rejection (reason: {reason})")
+        print(f"Join rejected: {reason}")
+        pygame.time.delay(3000)
+        self.quit()
+
     def getGameSession(self):
         return self.gameSession
-        
+
+
 if __name__ == "__main__":
     game = Game()
     game.run()

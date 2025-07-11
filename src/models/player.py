@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 class Player:
     
-    def __init__(self, name, index, color, isAI=False):
+    def __init__(self, name, index, color, isAI=False, isHuman=False):
         """
         Initializes a player with a name, score, and a placeholder for figures.
         :param name: The name of the player.
@@ -24,6 +24,7 @@ class Player:
         self.index = index
         self.figures = [Figure(self) for _ in range(7)]  # Each player starts with 7 figures
         self.isAI = isAI
+        self.isHuman = isHuman
         
     def getIsAI(self):
         """
@@ -101,6 +102,9 @@ class Player:
         """
         self.score += points
         
+    def setIsHuman(self, isHuman):
+        self.isHuman = isHuman
+        
     def serialize(self):
         return {
             "name": self.name,
@@ -108,7 +112,8 @@ class Player:
             "index": self.index,
             "color": self.color,
             "is_ai": self.isAI,
-            "figures_remaining": len(self.figures)
+            "figures_remaining": len(self.figures),
+            "is_human": self.isHuman
         }
     
     @staticmethod
@@ -120,8 +125,9 @@ class Player:
             is_ai = bool(data.get("is_ai", False))
             score = int(data.get("score", 0))
             figures_remaining = int(data.get("figures_remaining", 7))
+            is_human = bool(data.get("is_human", False))
 
-            player = Player(name=name, index=index, color=color, isAI=is_ai)
+            player = Player(name=name, index=index, color=color, isAI=is_ai, isHuman=is_human)
             player.score = score
             player.figures = [Figure(player) for _ in range(figures_remaining)]
 
