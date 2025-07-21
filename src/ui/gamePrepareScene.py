@@ -41,6 +41,10 @@ class PlayerConfiguration:
 class GamePrepareScene(Scene):
     def __init__(self, screen, switchSceneCallback, startGameCallback):
         super().__init__(screen, switchSceneCallback)
+        
+        # Reload settings from file to get clean state (clear runtime overrides from previous game)
+        settings_manager.reloadFromFile()
+        
         self.startGameCallback = startGameCallback
         
         self.font = pygame.font.Font(None, 80)
@@ -191,6 +195,12 @@ class GamePrepareScene(Scene):
         """Handle network mode change"""
         self.networkMode = mode
         isLocal = mode == "local"
+
+        # Clear AI settings for non-local modes (network players are human)
+        if not isLocal:
+            for i, player in enumerate(self.players):
+                if i > 0:  # Skip first player (always human)
+                    player.setAI(False)
 
         if mode == "host":
             hostValue = self.localIP
