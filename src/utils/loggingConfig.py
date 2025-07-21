@@ -1,3 +1,4 @@
+import importlib
 import logging
 import sys
 import traceback
@@ -10,7 +11,10 @@ def configureLogging():
     Also sets up global exception handling.
     """
     
-    # Create logs directory if it doesn't exist
+    # Import settings_manager to check DEBUG setting
+    from utils.settingsManager import settings_manager
+    
+    # Always configure logging infrastructure
     logsDir = Path("logs")
     logsDir.mkdir(exist_ok=True)
     
@@ -18,23 +22,42 @@ def configureLogging():
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     logFilename = logsDir / f"carcassonne_{timestamp}.log"
     
-    # Configure root logger
+    # Configure root logger with both file and console
     logging.basicConfig(
         level=logging.DEBUG,
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
         handlers=[
-            # File handler - logs everything
             logging.FileHandler(logFilename, encoding='utf-8'),
-            # Console handler - also logs everything (DEBUG level)
             logging.StreamHandler(sys.stdout)
         ]
     )
+    
+    # Set initial logging state based on DEBUG setting
+    updateLoggingLevel()
     
     # Set up global exception handling
     setupExceptionLogging()
     
     logger = logging.getLogger(__name__)
     logger.info(f"Logging configured. Log file: {logFilename}")
+
+def updateLoggingLevel():
+    """
+    Update logging level based on current DEBUG setting.
+    Call this when DEBUG setting changes at runtime.
+    """
+    from utils.settingsManager import settings_manager
+    
+    debugEnabled = settings_manager.get("DEBUG", True)
+    
+    if debugEnabled:
+        # Enable logging
+        logging.disable(logging.NOTSET)
+        logger = logging.getLogger(__name__)
+        logger.info("Debug logging enabled")
+    else:
+        # Disable all logging
+        logging.disable(logging.CRITICAL)
 
 def setupExceptionLogging():
     """
@@ -68,12 +91,6 @@ def setupExceptionLogging():
 def logError(message, exception=None):
     """
     Quick function to log an error with optional exception details.
-    
-    Usage:
-    try:
-        riskyCode()
-    except Exception as e:
-        logError("Failed to load settings", e)
     """
     logger = logging.getLogger("ERROR_HANDLER")
     logger.error(message)

@@ -25,6 +25,9 @@ class SettingsScene(Scene):
 
         # Subscribe to settings changes for automatic UI updates
         settings_manager.subscribe("FULLSCREEN", self.onFullscreenChanged)
+        
+        # Subscribe to DEBUG changes to update logging level
+        settings_manager.subscribe("DEBUG", self.onDebugChanged)
 
         # Get current values from SettingsManager
         currentResolution = f"{settings_manager.get('WINDOW_WIDTH')}x{settings_manager.get('WINDOW_HEIGHT')}"
@@ -261,3 +264,8 @@ class SettingsScene(Scene):
         if any(t.message == toast.message for t in self.toastQueue):
             return
         self.toastQueue.append(toast)
+        
+    def onDebugChanged(self, key, old_value, new_value):
+        """Callback for when DEBUG setting changes"""
+        from utils.loggingConfig import updateLoggingLevel
+        updateLoggingLevel()
