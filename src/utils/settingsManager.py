@@ -58,7 +58,8 @@ class SettingsManager:
                 "NETWORK_MODE": "local",
                 "HOST_IP": "0.0.0.0",
                 "HOST_PORT": 222,
-                "PLAYERS": ["Player 1", "Player 2"]
+                "PLAYERS": ["Player 1", "Player 2"],
+                "SIDEBAR_WIDTH": 200
             }
     
     def get(self, key: str, fallback: Any = None) -> Any:

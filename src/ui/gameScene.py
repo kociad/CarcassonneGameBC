@@ -15,10 +15,26 @@ class GameScene(Scene):
         self.network = network
 
         # Renderer properties moved from renderer.py
-        self.offsetX = 0
-        self.offsetY = 0
         self.scrollSpeed = 10
         self.font = pygame.font.Font(None, 36)
+
+        # Calculate initial offset to center the game board (accounting for sidebar)
+        tileSize = settings_manager.get("TILE_SIZE", 96)
+        gridSize = settings_manager.get("GRID_SIZE", 20)
+        windowWidth = settings_manager.get("WINDOW_WIDTH", 1920)
+        windowHeight = settings_manager.get("WINDOW_HEIGHT", 1080)
+        sidebarWidth = settings_manager.get("SIDEBAR_WIDTH", 200)
+        
+        # Available game area (excluding sidebar)
+        gameAreaWidth = windowWidth - sidebarWidth
+        
+        # Center of the game board in pixels
+        boardCenterX = (gridSize * tileSize) // 2
+        boardCenterY = (gridSize * tileSize) // 2
+        
+        # Calculate offset to center board in available game area
+        self.offsetX = boardCenterX - gameAreaWidth // 2
+        self.offsetY = boardCenterY - windowHeight // 2
 
         self.keysPressed = {
             pygame.K_w: False, pygame.K_s: False, pygame.K_a: False, pygame.K_d: False,
@@ -152,10 +168,12 @@ class GameScene(Scene):
                     self.screen.blit(figure.image, (figureX - tile_size * 0.15, figureY - tile_size * 0.15))  # Adjust for better centering
                     
     def drawSidePanel(self, selectedCard, remainingCards, currentPlayer, placedFigures, detectedStructures):
-        window_width = settings_manager.get("WINDOW_WIDTH", 1920)
-        window_height = settings_manager.get("WINDOW_HEIGHT", 1080)
-        panelX = window_width - 200  # Panel width of 200 pixels
-        pygame.draw.rect(self.screen, (50, 50, 50), (panelX, 0, 200, window_height))  # Dark grey background
+        windowWidth = settings_manager.get("WINDOW_WIDTH", 1920)
+        windowHeight = settings_manager.get("WINDOW_HEIGHT", 1080)
+        sidebarWidth = settings_manager.get("SIDEBAR_WIDTH", 200)
+        
+        panelX = windowWidth - sidebarWidth
+        pygame.draw.rect(self.screen, (50, 50, 50), (panelX, 0, sidebarWidth, windowHeight))
 
         if selectedCard:
             cardX = panelX + 45

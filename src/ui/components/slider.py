@@ -79,3 +79,14 @@ class Slider:
     def setValue(self, val):
         self.value = max(self.minValue, min(self.maxValue, val))
         self.lastReportedValue = self.value
+        
+    def setMinValue(self, newMinValue):
+        """Update minimum value of slider"""
+        self.minValue = newMinValue
+        # Ensure current value is still valid
+        if self.value < self.minValue:
+            self.value = self.minValue
+
+    def setValue(self, newValue):
+        """Set slider value"""
+        self.value = max(self.minValue, min(self.maxValue, newValue))

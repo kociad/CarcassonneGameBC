@@ -70,7 +70,7 @@ class SettingsScene(Scene):
             font=self.dropdownFont,
             minValue=50, maxValue=150,
             value=settings_manager.get("TILE_SIZE"),
-            onChange=lambda value: self.addToast(Toast("Start new game to apply tile size changes", type="warning"))
+            onChange=self.onTileSizeChanged  # Changed to use linked callback
         )
         currentY += 60
 
@@ -81,12 +81,43 @@ class SettingsScene(Scene):
             value=settings_manager.get("FIGURE_SIZE"),
             onChange=lambda value: self.addToast(Toast("Start new game to apply figure size changes", type="warning"))
         )
+        currentY += 60
+
+        # Sidebar width slider with dynamic minimum based on tile size
+        currentTileSize = settings_manager.get("TILE_SIZE", 96)
+        currentSidebarWidth = settings_manager.get("SIDEBAR_WIDTH", 200)
+        minSidebarWidth = currentTileSize + 20
+
+        self.sidebarWidthSlider = Slider(
+            rect=(xCenter, currentY, 200, 20),
+            font=self.dropdownFont,
+            minValue=minSidebarWidth,
+            maxValue=400,
+            value=max(currentSidebarWidth, minSidebarWidth),  # Ensure value >= minimum
+            onChange=lambda value: self.addToast(Toast("Start new game to apply sidebar width changes", type="warning"))
+        )
         currentY += 40
 
         self.applyButton = Button("Apply", (xCenter, currentY, 200, 60), self.buttonFont)
         currentY += 80
 
         self.backButton = Button("Back", (xCenter, currentY, 200, 60), self.buttonFont)
+
+    def onTileSizeChanged(self, newTileSize):
+        """Handle tile size change - update sidebar width slider minimum"""
+        newMinSidebarWidth = newTileSize + 20
+        
+        # Update sidebar slider minimum
+        self.sidebarWidthSlider.setMinValue(newMinSidebarWidth)
+        
+        # If current sidebar width is too small, adjust it
+        currentSidebarWidth = self.sidebarWidthSlider.getValue()
+        if currentSidebarWidth < newMinSidebarWidth:
+            self.sidebarWidthSlider.setValue(newMinSidebarWidth)
+            self.addToast(Toast(f"Sidebar width adjusted to minimum ({newMinSidebarWidth}px)", type="info"))
+        
+        # Show tile size change toast
+        self.addToast(Toast("Start new game to apply tile size changes", type="warning"))
 
     def onFullscreenChanged(self, key, old_value, new_value):
         """Callback for when fullscreen setting changes"""
@@ -110,6 +141,7 @@ class SettingsScene(Scene):
             self.debugCheckbox.handleEvent(event, yOffset=self.scrollOffset)
             self.tileSizeSlider.handleEvent(event, yOffset=self.scrollOffset)
             self.figureSizeSlider.handleEvent(event, yOffset=self.scrollOffset)
+            self.sidebarWidthSlider.handleEvent(event, yOffset=self.scrollOffset)
 
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if self.backButton.isClicked(event.pos, yOffset=self.scrollOffset):
@@ -133,6 +165,7 @@ class SettingsScene(Scene):
         changes["DEBUG"] = self.debugCheckbox.isChecked()
         changes["TILE_SIZE"] = self.tileSizeSlider.getValue()
         changes["FIGURE_SIZE"] = self.figureSizeSlider.getValue()
+        changes["SIDEBAR_WIDTH"] = self.sidebarWidthSlider.getValue()
 
         # Apply all changes at once
         success = True
@@ -193,11 +226,19 @@ class SettingsScene(Scene):
             centery=self.figureSizeSlider.rect.centery + offsetY
         )
         self.screen.blit(fszLabel, fszLabelRect)
+        
+        sbwLabel = labelFont.render("Sidebar width:", True, (255, 255, 255))
+        sbwLabelRect = sbwLabel.get_rect(
+            right=self.sidebarWidthSlider.rect.left - 10,
+            centery=self.sidebarWidthSlider.rect.centery + offsetY
+        )
+        self.screen.blit(sbwLabel, sbwLabelRect)
 
         self.fullscreenCheckbox.draw(self.screen, yOffset=offsetY)
         self.debugCheckbox.draw(self.screen, yOffset=offsetY)
         self.tileSizeSlider.draw(self.screen, yOffset=offsetY)
         self.figureSizeSlider.draw(self.screen, yOffset=offsetY)
+        self.sidebarWidthSlider.draw(self.screen, yOffset=offsetY)
         self.applyButton.draw(self.screen, yOffset=offsetY)
         self.backButton.draw(self.screen, yOffset=offsetY)
         self.resolutionDropdown.draw(self.screen, yOffset=offsetY)
