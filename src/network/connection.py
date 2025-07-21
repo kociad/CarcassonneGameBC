@@ -3,8 +3,7 @@ import threading
 import logging
 from network.message import decodeMessage
 from models.gameSession import GameSession
-
-import settings
+from utils.settingsManager import settings_manager
 
 logger = logging.getLogger(__name__)
 
@@ -12,7 +11,7 @@ BUFFER_SIZE = 4096
 
 class NetworkConnection:
     def __init__(self):
-        self.networkMode = settings.NETWORK_MODE  # 'host', 'client', or 'local'
+        self.networkMode = settings_manager.get("NETWORK_MODE", "local")  # 'host', 'client', or 'local'
         self.running = False
         self.connections = []  # only for host mode
 
@@ -33,16 +32,20 @@ class NetworkConnection:
 
         if self.networkMode == "host":
             try:
-                self.socket.bind((settings.HOST_IP, settings.HOST_PORT))
+                host_ip = settings_manager.get("HOST_IP", "0.0.0.0")
+                host_port = settings_manager.get("HOST_PORT", 222)
+                self.socket.bind((host_ip, host_port))
                 self.socket.listen()
-                logger.debug(f"Host listening on {settings.HOST_IP}:{settings.HOST_PORT}...")
+                logger.debug(f"Host listening on {host_ip}:{host_port}...")
                 threading.Thread(target=self.acceptConnections, daemon=True).start()
             except Exception as e:
                 logger.exception(f"Failed to bind socket: {e}")
         elif self.networkMode == "client":
             try:
-                self.socket.connect((settings.HOST_IP, settings.HOST_PORT))
-                logger.debug(f"Connected to host at {settings.HOST_IP}:{settings.HOST_PORT}")
+                host_ip = settings_manager.get("HOST_IP", "0.0.0.0")
+                host_port = settings_manager.get("HOST_PORT", 222)
+                self.socket.connect((host_ip, host_port))
+                logger.debug(f"Connected to host at {host_ip}:{host_port}")
                 threading.Thread(target=self.receiveLoop, args=(self.socket,), daemon=True).start()
             except Exception as e:
                 logger.exception(f"Failed to connect to host: {e}")

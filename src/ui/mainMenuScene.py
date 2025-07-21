@@ -3,7 +3,6 @@ import webbrowser
 from ui.scene import Scene
 from ui.components.button import Button
 from gameState import GameState
-from utils.settingsReader import readSetting
 
 import settings
 

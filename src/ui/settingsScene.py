@@ -7,10 +7,7 @@ from ui.components.dropdown import Dropdown
 from ui.components.toast import Toast
 from ui.components.checkbox import Checkbox
 from ui.components.slider import Slider
-from utils.settingsWriter import updateResolution, updateFullscreen, updateDebug, updateTileSize, updateFigureSize, updateGridSize
-from utils.settingsReader import readSetting
-
-import settings
+from utils.settingsManager import settings_manager
 
 class SettingsScene(Scene):
     def __init__(self, screen, switchSceneCallback):
@@ -26,15 +23,11 @@ class SettingsScene(Scene):
         self.maxScroll = 0
         self.scrollSpeed = 30
 
-        # Fetch settings
-        w = readSetting("WINDOW_WIDTH")
-        h = readSetting("WINDOW_HEIGHT")
-        currentResolution = f"{w}x{h}"
-        fsDefault = readSetting("FULLSCREEN")
-        dbgDefault = readSetting("DEBUG")
-        tszDefault = readSetting("TILE_SIZE")
-        fszDefault = readSetting("FIGURE_SIZE")
-        #gszDefault = readSetting("GRID_SIZE")
+        # Subscribe to settings changes for automatic UI updates
+        settings_manager.subscribe("FULLSCREEN", self.onFullscreenChanged)
+
+        # Get current values from SettingsManager
+        currentResolution = f"{settings_manager.get('WINDOW_WIDTH')}x{settings_manager.get('WINDOW_HEIGHT')}"
 
         xCenter = screen.get_width() // 2 - 100
         currentY = 60
@@ -55,19 +48,19 @@ class SettingsScene(Scene):
             defaultIndex=defaultIndex,
             onSelect=lambda value: self.addToast(Toast("Restart the game to apply resolution changes", type="warning")),
         )
-        self.resolutionDropdown.setDisabled(fsDefault)
+        self.resolutionDropdown.setDisabled(settings_manager.get("FULLSCREEN"))
         currentY += 60
 
         self.fullscreenCheckbox = Checkbox(
             rect=(xCenter, currentY, 20, 20),
-            checked=fsDefault,
+            checked=settings_manager.get("FULLSCREEN"),
             onToggle=self.handleFullscreenToggle
         )
         currentY += 40
 
         self.debugCheckbox = Checkbox(
             rect=(xCenter, currentY, 20, 20),
-            checked=dbgDefault,
+            checked=settings_manager.get("DEBUG"),
             onToggle=None
         )
         currentY += 60
@@ -76,7 +69,7 @@ class SettingsScene(Scene):
             rect=(xCenter, currentY, 200, 20),
             font=self.dropdownFont,
             minValue=50, maxValue=150,
-            value=tszDefault,
+            value=settings_manager.get("TILE_SIZE"),
             onChange=lambda value: self.addToast(Toast("Start new game to apply tile size changes", type="warning"))
         )
         currentY += 60
@@ -85,18 +78,19 @@ class SettingsScene(Scene):
             rect=(xCenter, currentY, 200, 20),
             font=self.dropdownFont,
             minValue=10, maxValue=50,
-            value=fszDefault,
+            value=settings_manager.get("FIGURE_SIZE"),
             onChange=lambda value: self.addToast(Toast("Start new game to apply figure size changes", type="warning"))
         )
         currentY += 40
-
-        # self.gridSizeSlider = Slider(...)
-        # currentY += 60
 
         self.applyButton = Button("Apply", (xCenter, currentY, 200, 60), self.buttonFont)
         currentY += 80
 
         self.backButton = Button("Back", (xCenter, currentY, 200, 60), self.buttonFont)
+
+    def onFullscreenChanged(self, key, old_value, new_value):
+        """Callback for when fullscreen setting changes"""
+        self.resolutionDropdown.setDisabled(new_value)
 
     def handleEvents(self, events):
         self.applyScroll(events)
@@ -116,24 +110,45 @@ class SettingsScene(Scene):
             self.debugCheckbox.handleEvent(event, yOffset=self.scrollOffset)
             self.tileSizeSlider.handleEvent(event, yOffset=self.scrollOffset)
             self.figureSizeSlider.handleEvent(event, yOffset=self.scrollOffset)
-            # self.gridSizeSlider.handleEvent(event, yOffset=self.scrollOffset)
 
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if self.backButton.isClicked(event.pos, yOffset=self.scrollOffset):
                     self.switchScene(GameState.MENU)
                 elif self.applyButton.isClicked(event.pos, yOffset=self.scrollOffset):
-                    selected_resolution = self.resolutionDropdown.getSelected()
-                    if selected_resolution:
-                        width, height = map(int, selected_resolution.split("x"))
-                        updateResolution(width, height)
+                    self.applySettings()
 
-                    updateFullscreen(self.fullscreenCheckbox.isChecked())
-                    updateDebug(self.debugCheckbox.isChecked())
-                    updateTileSize(self.tileSizeSlider.getValue())
-                    updateFigureSize(self.figureSizeSlider.getValue())
-                    # updateGridSize(self.gridSizeSlider.getValue())
+    def applySettings(self):
+        """Apply all settings using SettingsManager"""
+        changes = {}
+        
+        # Resolution
+        selected_resolution = self.resolutionDropdown.getSelected()
+        if selected_resolution:
+            width, height = map(int, selected_resolution.split("x"))
+            changes["WINDOW_WIDTH"] = width
+            changes["WINDOW_HEIGHT"] = height
 
-                    self.addToast(Toast("Settings successfully saved", type="success"))
+        # Other settings
+        changes["FULLSCREEN"] = self.fullscreenCheckbox.isChecked()
+        changes["DEBUG"] = self.debugCheckbox.isChecked()
+        changes["TILE_SIZE"] = self.tileSizeSlider.getValue()
+        changes["FIGURE_SIZE"] = self.figureSizeSlider.getValue()
+
+        # Apply all changes at once
+        success = True
+        for key, value in changes.items():
+            if not settings_manager.set(key, value, temporary=False):  # Make permanent
+                success = False
+
+        if success:
+            self.addToast(Toast("Settings successfully saved", type="success"))
+        else:
+            self.addToast(Toast("Failed to save some settings", type="error"))
+
+    def handleFullscreenToggle(self, value):
+        # This will trigger the observer callback automatically
+        settings_manager.set("FULLSCREEN", value, temporary=True)  # Don't save yet, wait for Apply
+        self.addToast(Toast("Restart the game to apply fullscreen changes", type="warning"))
 
     def draw(self):
         self.screen.fill((30, 30, 30))
@@ -179,14 +194,10 @@ class SettingsScene(Scene):
         )
         self.screen.blit(fszLabel, fszLabelRect)
 
-        # gszLabel = labelFont.render("Grid size:", True, ...)
-        # self.screen.blit(gszLabel, ...)
-
         self.fullscreenCheckbox.draw(self.screen, yOffset=offsetY)
         self.debugCheckbox.draw(self.screen, yOffset=offsetY)
         self.tileSizeSlider.draw(self.screen, yOffset=offsetY)
         self.figureSizeSlider.draw(self.screen, yOffset=offsetY)
-        # self.gridSizeSlider.draw(self.screen, yOffset=offsetY)
         self.applyButton.draw(self.screen, yOffset=offsetY)
         self.backButton.draw(self.screen, yOffset=offsetY)
         self.resolutionDropdown.draw(self.screen, yOffset=offsetY)
@@ -209,8 +220,3 @@ class SettingsScene(Scene):
         if any(t.message == toast.message for t in self.toastQueue):
             return
         self.toastQueue.append(toast)
-
-    def handleFullscreenToggle(self, value):
-        self.showResolutionDropdown = not value
-        self.resolutionDropdown.setDisabled(value)
-        self.addToast(Toast("Restart the game to apply fullscreen changes", type="warning"))
