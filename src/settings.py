@@ -16,7 +16,7 @@ NETWORK_MODE = "local"
 
 # If client, where to connect, if host, where to listen
 HOST_IP = "0.0.0.0"
-HOST_PORT = 222  # TCP port to use
+HOST_PORT = 2222  # TCP port to use
 
 # Player index to detect player turn correctly
 PLAYER_INDEX = 0
@@ -42,9 +42,9 @@ if FULLSCREEN:
 TILE_SIZE = 96
 FIGURE_SIZE = 25
 GRID_SIZE = 20
-SIDEBAR_WIDTH = 200
+SIDEBAR_WIDTH = 250
 
 # Debug
-DEBUG = False
+DEBUG = True
 
 

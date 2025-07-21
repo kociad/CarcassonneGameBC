@@ -18,16 +18,16 @@ class GameScene(Scene):
         self.scrollSpeed = 10
         self.font = pygame.font.Font(None, 36)
 
-        # Sidebar scrolling
+        # Sidebar scrolling (podobně jako v settings)
         self.sidebarScrollOffset = 0
-        self.sidebarScrollSpeed = 20
+        self.sidebarScrollSpeed = 30
 
         # Calculate initial offset to center the game board (accounting for sidebar)
-        tileSize = settings_manager.get("TILE_SIZE")  # Odstraněn fallback
-        gridSize = settings_manager.get("GRID_SIZE")  # Odstraněn fallback
-        windowWidth = settings_manager.get("WINDOW_WIDTH")  # Odstraněn fallback
-        windowHeight = settings_manager.get("WINDOW_HEIGHT")  # Odstraněn fallback
-        sidebarWidth = settings_manager.get("SIDEBAR_WIDTH")  # Odstraněn fallback
+        tileSize = settings_manager.get("TILE_SIZE")
+        gridSize = settings_manager.get("GRID_SIZE")
+        windowWidth = settings_manager.get("WINDOW_WIDTH")
+        windowHeight = settings_manager.get("WINDOW_HEIGHT")
+        sidebarWidth = settings_manager.get("SIDEBAR_WIDTH")
         
         # Available game area (excluding sidebar)
         gameAreaWidth = windowWidth - sidebarWidth
@@ -44,6 +44,21 @@ class GameScene(Scene):
             pygame.K_w: False, pygame.K_s: False, pygame.K_a: False, pygame.K_d: False,
             pygame.K_UP: False, pygame.K_DOWN: False, pygame.K_LEFT: False, pygame.K_RIGHT: False
         }
+
+    def applySidebarScroll(self, events):
+        """Handle sidebar scrolling events (podobně jako applyScroll v settings)"""
+        for event in events:
+            if event.type == pygame.MOUSEWHEEL:
+                mouseX, mouseY = pygame.mouse.get_pos()
+                windowWidth = settings_manager.get("WINDOW_WIDTH")
+                sidebarWidth = settings_manager.get("SIDEBAR_WIDTH")
+                panelX = windowWidth - sidebarWidth
+                
+                # Pouze pokud je myš nad sidebarem
+                if mouseX >= panelX:
+                    self.sidebarScrollOffset -= event.y * self.sidebarScrollSpeed
+                    # Omez scrolling (bude se dopočítá v drawSidePanel)
+                    self.sidebarScrollOffset = max(0, self.sidebarScrollOffset)
 
     def getOffsetX(self):
         """
@@ -70,14 +85,14 @@ class GameScene(Scene):
             message = f"{winner.getName()} wins with {winner.getScore()} points!"
             gameOverFont = pygame.font.Font(None, 72)
             textSurface = gameOverFont.render(message, True, (255, 255, 255))
-            window_width = settings_manager.get("WINDOW_WIDTH")  # Odstraněn fallback
-            window_height = settings_manager.get("WINDOW_HEIGHT")  # Odstraněn fallback
+            window_width = settings_manager.get("WINDOW_WIDTH")
+            window_height = settings_manager.get("WINDOW_HEIGHT")
             textRect = textSurface.get_rect(center=(window_width // 2, window_height // 2))
             self.screen.blit(textSurface, textRect)
             return  # Skip rest of rendering
                 
-        if settings_manager.get("DEBUG"):  # Odstraněn fallback
-            tile_size = settings_manager.get("TILE_SIZE")  # Odstraněn fallback
+        if settings_manager.get("DEBUG"):
+            tile_size = settings_manager.get("TILE_SIZE")
             # Draw grid lines
             for x in range(0, (gameBoard.getGridSize() + 1) * tile_size, tile_size):
                 pygame.draw.line(self.screen, (0, 0, 0), (x - self.offsetX, 0 - self.offsetY), (x - self.offsetX, gameBoard.getGridSize() * tile_size - self.offsetY))
@@ -85,7 +100,7 @@ class GameScene(Scene):
                 pygame.draw.line(self.screen, (0, 0, 0), (0 - self.offsetX, y - self.offsetY), (gameBoard.getGridSize() * tile_size - self.offsetX, y - self.offsetY))
         
         # Draw placed cards and their grid coordinates
-        tile_size = settings_manager.get("TILE_SIZE")  # Odstraněn fallback
+        tile_size = settings_manager.get("TILE_SIZE")
         for y in range(gameBoard.gridSize):
             for x in range(gameBoard.gridSize):
                 card = gameBoard.getCard(x, y)
@@ -98,14 +113,14 @@ class GameScene(Scene):
                             logger.error(f"Rotation failed for card: {e}")
                             imageToDraw = card.image
                     self.screen.blit(imageToDraw, (x * tile_size - self.offsetX, y * tile_size - self.offsetY))
-                if settings_manager.get("DEBUG"):  # Odstraněn fallback
+                if settings_manager.get("DEBUG"):
                     # Draw X, Y coordinates at the center of each grid cell
                     textSurface = self.font.render(f"{x},{y}", True, (255, 255, 255))
                     textX = x * tile_size - self.offsetX + tile_size // 3
                     textY = y * tile_size - self.offsetY + tile_size // 3
                     self.screen.blit(textSurface, (textX, textY))
                 
-        if settings_manager.get("DEBUG"):  # Odstraněn fallback
+        if settings_manager.get("DEBUG"):
             # Draw completed detected structures with tint only on relevant directions
             for structure in detectedStructures:
                 if structure.getIsCompleted():
@@ -146,8 +161,8 @@ class GameScene(Scene):
                             self.screen.blit(rect, (cardX * tile_size - self.offsetX, cardY * tile_size - self.offsetY))
 
         # Draw placed figures (meeples) at correct positions on the card
-        tile_size = settings_manager.get("TILE_SIZE")  # Odstraněn fallback
-        figure_size = settings_manager.get("FIGURE_SIZE")  # Odstraněn fallback
+        tile_size = settings_manager.get("TILE_SIZE")
+        figure_size = settings_manager.get("FIGURE_SIZE")
         for figure in placedFigures:
             if figure.card:
                 cardPosition = [(x, y) for y in range(gameBoard.gridSize) for x in range(gameBoard.gridSize) if gameBoard.getCard(x, y) == figure.card]
@@ -183,7 +198,7 @@ class GameScene(Scene):
 
         currentY = 50
         sectionSpacing = 25
-        fixedContentHeight = 0
+        scrollableContentStartY = currentY
 
         # FIXED CONTENT - Current card (neposunuje se)
         if selectedCard:
@@ -200,16 +215,10 @@ class GameScene(Scene):
             cardRect.y = currentY
             self.screen.blit(imageToDraw, cardRect)
             currentY += cardRect.height + sectionSpacing
-            fixedContentHeight = currentY
+            scrollableContentStartY = currentY
 
-        # SCROLLABLE CONTENT - zbytek obsahu
-        scrollableStartY = currentY
-        scrollableHeight = windowHeight - fixedContentHeight
-        clipSurface = pygame.Surface((sidebarWidth, scrollableHeight))
-        clipSurface.fill((50, 50, 50))
-        
-        # Draw scrollable content on clip surface
-        clipY = 0
+        # SCROLLABLE CONTENT - s offsetem jako v settings
+        offsetY = self.sidebarScrollOffset
 
         # Turn status
         networkMode = settings_manager.get("NETWORK_MODE")
@@ -224,24 +233,28 @@ class GameScene(Scene):
 
         statusSurface = self.font.render(statusText, True, statusColor)
         statusRect = statusSurface.get_rect()
-        statusRect.centerx = sidebarWidth // 2
-        statusRect.y = clipY
-        clipSurface.blit(statusSurface, statusRect)
-        clipY += statusRect.height + sectionSpacing
+        statusRect.centerx = sidebarCenterX
+        statusRect.y = currentY - offsetY
+        if statusRect.bottom > scrollableContentStartY and statusRect.top < windowHeight:  # Pouze pokud je viditelné
+            self.screen.blit(statusSurface, statusRect)
+        currentY += statusRect.height + sectionSpacing
 
         # Cards remaining
         cardsSurface = self.font.render(f"Cards: {remainingCards}", True, (255, 255, 255))
         cardsRect = cardsSurface.get_rect()
-        cardsRect.centerx = sidebarWidth // 2
-        cardsRect.y = clipY
-        clipSurface.blit(cardsSurface, cardsRect)
-        clipY += cardsRect.height + sectionSpacing
+        cardsRect.centerx = sidebarCenterX
+        cardsRect.y = currentY - offsetY
+        if cardsRect.bottom > scrollableContentStartY and cardsRect.top < windowHeight:
+            self.screen.blit(cardsSurface, cardsRect)
+        currentY += cardsRect.height + sectionSpacing
 
         # Get all players from game session
         allPlayers = self.session.getPlayers()
         
         # Display each player's info
         for i, player in enumerate(allPlayers):
+            playerStartY = currentY
+            
             # Get player's color and convert string to RGB
             try:
                 colorString = player.getColor() if hasattr(player, 'getColor') else player.color
@@ -268,18 +281,20 @@ class GameScene(Scene):
             # Player name in their color
             nameSurface = self.font.render(f"{player.getName()}", True, playerColor)
             nameRect = nameSurface.get_rect()
-            nameRect.centerx = sidebarWidth // 2
-            nameRect.y = clipY
-            clipSurface.blit(nameSurface, nameRect)
-            clipY += nameRect.height + 5
+            nameRect.centerx = sidebarCenterX
+            nameRect.y = currentY - offsetY
+            if nameRect.bottom > scrollableContentStartY and nameRect.top < windowHeight:
+                self.screen.blit(nameSurface, nameRect)
+            currentY += nameRect.height + 5
 
             # Player score
             scoreSurface = self.font.render(f"Score: {player.getScore()}", True, (200, 200, 200))
             scoreRect = scoreSurface.get_rect()
-            scoreRect.centerx = sidebarWidth // 2
-            scoreRect.y = clipY
-            clipSurface.blit(scoreSurface, scoreRect)
-            clipY += scoreRect.height + 10
+            scoreRect.centerx = sidebarCenterX
+            scoreRect.y = currentY - offsetY
+            if scoreRect.bottom > scrollableContentStartY and scoreRect.top < windowHeight:
+                self.screen.blit(scoreSurface, scoreRect)
+            currentY += scoreRect.height + 10
 
             # Player's meeples
             figures = player.getFigures()
@@ -293,41 +308,43 @@ class GameScene(Scene):
                 totalRows = (len(figures) + figuresPerRow - 1) // figuresPerRow
                 actualGridWidth = figuresPerRow * figureSize + (figuresPerRow - 1) * 5
                 
-                gridStartX = (sidebarWidth - actualGridWidth) // 2
-                gridStartY = clipY
+                gridStartX = sidebarCenterX - actualGridWidth // 2
+                gridStartY = currentY - offsetY
                 
-                for j, figure in enumerate(figures):
-                    row = j // figuresPerRow
-                    col = j % figuresPerRow
-                    
-                    figX = gridStartX + col * (figureSize + 5)
-                    figY = gridStartY + row * (figureSize + 5)
-                    clipSurface.blit(figure.image, (figX, figY))
+                # Pouze vykresli meeples pokud jsou viditelné
+                if gridStartY + totalRows * (figureSize + 5) > scrollableContentStartY and gridStartY < windowHeight:
+                    for j, figure in enumerate(figures):
+                        row = j // figuresPerRow
+                        col = j % figuresPerRow
+                        
+                        figX = gridStartX + col * (figureSize + 5)
+                        figY = gridStartY + row * (figureSize + 5)
+                        
+                        # Pouze vykresli pokud je meeple viditelný
+                        if figY + figureSize > scrollableContentStartY and figY < windowHeight:
+                            self.screen.blit(figure.image, (figX, figY))
                 
-                # Update clipY based on meeple grid height
                 gridHeight = totalRows * figureSize + (totalRows - 1) * 5
-                clipY += gridHeight
+                currentY += gridHeight
 
             # Add consistent spacing between players (except after last player)
             if i < len(allPlayers) - 1:
-                clipY += sectionSpacing
+                currentY += sectionSpacing
 
         # Debug info at the very end (after all players)
         if settings_manager.get("DEBUG"):
-            clipY += sectionSpacing  # Same spacing as other sections
+            currentY += sectionSpacing
             structureSurface = self.font.render(f"Structures: {len(detectedStructures)}", True, (255, 255, 255))
             structureRect = structureSurface.get_rect()
-            structureRect.centerx = sidebarWidth // 2
-            structureRect.y = clipY
-            clipSurface.blit(structureSurface, structureRect)
-            clipY += structureRect.height
+            structureRect.centerx = sidebarCenterX
+            structureRect.y = currentY - offsetY
+            if structureRect.bottom > scrollableContentStartY and structureRect.top < windowHeight:
+                self.screen.blit(structureSurface, structureRect)
+            currentY += structureRect.height
 
-        # Limit scroll based on content height
-        maxScroll = max(0, clipY - scrollableHeight)
+        # Omez scrolling podle obsahu
+        maxScroll = max(0, currentY - windowHeight + 50)  # 50px buffer
         self.sidebarScrollOffset = min(self.sidebarScrollOffset, maxScroll)
-
-        # Blit the scrollable content to main screen
-        self.screen.blit(clipSurface, (panelX, scrollableStartY))
 
     def scroll(self, direction):
         """
@@ -344,22 +361,13 @@ class GameScene(Scene):
             self.offsetX += self.scrollSpeed
 
     def handleEvents(self, events):
+        # Nejprve zpracuj sidebar scrolling
+        self.applySidebarScroll(events)
+        
         for event in events:
             if event.type == pygame.QUIT:
                 pygame.quit()
                 exit()
-
-            # Sidebar scrolling - pouze pokud je myš nad sidebarem
-            if event.type == pygame.MOUSEWHEEL:
-                mouseX, mouseY = pygame.mouse.get_pos()
-                windowWidth = settings_manager.get("WINDOW_WIDTH")
-                sidebarWidth = settings_manager.get("SIDEBAR_WIDTH")
-                panelX = windowWidth - sidebarWidth
-                
-                if mouseX >= panelX:  # Myš je nad sidebarem
-                    self.sidebarScrollOffset += event.y * self.sidebarScrollSpeed
-                    self.sidebarScrollOffset = max(0, self.sidebarScrollOffset)  # Nemůže být záporný
-                    continue  # Nepokračuj s dalším zpracováním
 
             if event.type in (pygame.KEYDOWN, pygame.KEYUP):
                 self.keysPressed[event.key] = (event.type == pygame.KEYDOWN)
@@ -370,10 +378,10 @@ class GameScene(Scene):
 
             # Block game actions if it's not this player's turn in network mode
             allowAction = True
-            network_mode = settings_manager.get("NETWORK_MODE")  # Odstraněn fallback
+            network_mode = settings_manager.get("NETWORK_MODE")
             if network_mode in ("host", "client"):
                 currentPlayer = self.session.getCurrentPlayer()
-                player_index = settings_manager.get("PLAYER_INDEX")  # Odstraněn fallback
+                player_index = settings_manager.get("PLAYER_INDEX")
                 if not currentPlayer or currentPlayer.getIndex() != player_index or self.session.getGameOver():
                     allowAction = False
 
@@ -389,7 +397,7 @@ class GameScene(Scene):
 
     def handleMouseClick(self, event):
         x, y = event.pos
-        tile_size = settings_manager.get("TILE_SIZE")  # Odstraněn fallback
+        tile_size = settings_manager.get("TILE_SIZE")
         gridX, gridY = (x + self.getOffsetX()) // tile_size, (y + self.getOffsetY()) // tile_size
 
         logger.debug(f"Registered {event.button}")
@@ -414,7 +422,7 @@ class GameScene(Scene):
             self.scroll("right")
             
     def detectClickDirection(self, mouseX, mouseY, gridX, gridY):
-        tile_size = settings_manager.get("TILE_SIZE")  # Odstraněn fallback
+        tile_size = settings_manager.get("TILE_SIZE")
         tileScreenX = gridX * tile_size - self.getOffsetX()
         tileScreenY = gridY * tile_size - self.getOffsetY()
 
@@ -446,7 +454,7 @@ class GameScene(Scene):
         return min(distances, key=distances.get)
     
     def update(self):
-        fps = settings_manager.get("FPS")  # Odstraněn fallback
+        fps = settings_manager.get("FPS")
         if self.session.getGameOver():
             self.clock.tick(fps)
             return
