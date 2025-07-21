@@ -45,6 +45,6 @@ GRID_SIZE = 20
 SIDEBAR_WIDTH = 250
 
 # Debug
-DEBUG = True
+DEBUG = False
 
 

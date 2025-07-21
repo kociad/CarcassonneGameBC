@@ -257,7 +257,7 @@ class GameScene(Scene):
             
             # Get player's color and convert string to RGB
             try:
-                colorString = player.getColor() if hasattr(player, 'getColor') else player.color
+                colorString = player.getColor()
                 
                 # Convert color name to RGB tuple
                 colorMap = {
@@ -268,6 +268,7 @@ class GameScene(Scene):
                     "pink": (255, 100, 255),
                     "black": (200, 200, 200),  # Light gray for visibility
                 }
+                
                 playerColor = colorMap.get(colorString, (255, 255, 255))
                 
             except Exception as e:
