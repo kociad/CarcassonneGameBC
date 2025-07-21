@@ -25,8 +25,6 @@ class SettingsScene(Scene):
 
         # Subscribe to settings changes for automatic UI updates
         settings_manager.subscribe("FULLSCREEN", self.onFullscreenChanged)
-        
-        # Subscribe to DEBUG changes to update logging level
         settings_manager.subscribe("DEBUG", self.onDebugChanged)
 
         # Get current values from SettingsManager
@@ -36,7 +34,7 @@ class SettingsScene(Scene):
         currentY = 60
 
         self.titleY = currentY
-        currentY += 80
+        currentY += 60
 
         resolutionOptions = [
             "800x600", "1024x768", "1280x720", "1366x768",
@@ -69,37 +67,40 @@ class SettingsScene(Scene):
         currentY += 60
 
         self.tileSizeSlider = Slider(
-            rect=(xCenter, currentY, 200, 20),
+            rect=(xCenter, currentY, 180, 20),  # Zmenšeno z 200 na 180
             font=self.dropdownFont,
             minValue=50, maxValue=150,
             value=settings_manager.get("TILE_SIZE"),
-            onChange=self.onTileSizeChanged  # Changed to use linked callback
+            onChange=self.onTileSizeChanged
         )
-        currentY += 60
+        currentY += 40
 
         self.figureSizeSlider = Slider(
-            rect=(xCenter, currentY, 200, 20),
+            rect=(xCenter, currentY, 180, 20),  # Zmenšeno z 200 na 180
             font=self.dropdownFont,
             minValue=10, maxValue=50,
             value=settings_manager.get("FIGURE_SIZE"),
             onChange=lambda value: self.addToast(Toast("Start new game to apply figure size changes", type="warning"))
         )
-        currentY += 60
+        currentY += 40
 
-        # Sidebar width slider with dynamic minimum based on tile size
-        currentTileSize = settings_manager.get("TILE_SIZE", 96)
-        currentSidebarWidth = settings_manager.get("SIDEBAR_WIDTH", 200)
+        # Sidebar width slider - vždy vytvořit, nastavit disabled podle DEBUG
+        currentTileSize = settings_manager.get("TILE_SIZE")
+        currentSidebarWidth = settings_manager.get("SIDEBAR_WIDTH")
         minSidebarWidth = currentTileSize + 20
 
         self.sidebarWidthSlider = Slider(
-            rect=(xCenter, currentY, 200, 20),
+            rect=(xCenter, currentY, 180, 20),  # Zmenšeno z 200 na 180
             font=self.dropdownFont,
             minValue=minSidebarWidth,
             maxValue=400,
-            value=max(currentSidebarWidth, minSidebarWidth),  # Ensure value >= minimum
+            value=max(currentSidebarWidth, minSidebarWidth),
             onChange=lambda value: self.addToast(Toast("Start new game to apply sidebar width changes", type="warning"))
         )
-        currentY += 40
+        
+        # Nastav disabled podle DEBUG stavu
+        self.sidebarWidthSlider.setDisabled(not settings_manager.get("DEBUG"))
+        currentY += 60
 
         self.applyButton = Button("Apply", (xCenter, currentY, 200, 60), self.buttonFont)
         currentY += 80
@@ -109,22 +110,26 @@ class SettingsScene(Scene):
     def onTileSizeChanged(self, newTileSize):
         """Handle tile size change - update sidebar width slider minimum"""
         newMinSidebarWidth = newTileSize + 20
-        
-        # Update sidebar slider minimum
         self.sidebarWidthSlider.setMinValue(newMinSidebarWidth)
         
-        # If current sidebar width is too small, adjust it
         currentSidebarWidth = self.sidebarWidthSlider.getValue()
         if currentSidebarWidth < newMinSidebarWidth:
             self.sidebarWidthSlider.setValue(newMinSidebarWidth)
             self.addToast(Toast(f"Sidebar width adjusted to minimum ({newMinSidebarWidth}px)", type="info"))
         
-        # Show tile size change toast
         self.addToast(Toast("Start new game to apply tile size changes", type="warning"))
 
     def onFullscreenChanged(self, key, old_value, new_value):
         """Callback for when fullscreen setting changes"""
         self.resolutionDropdown.setDisabled(new_value)
+
+    def onDebugChanged(self, key, old_value, new_value):
+        """Callback for when DEBUG setting changes"""
+        from utils.loggingConfig import updateLoggingLevel
+        updateLoggingLevel()
+        
+        # Nastav disabled stav sidebar width slideru
+        self.sidebarWidthSlider.setDisabled(not new_value)
 
     def handleEvents(self, events):
         self.applyScroll(events)
@@ -144,7 +149,7 @@ class SettingsScene(Scene):
             self.debugCheckbox.handleEvent(event, yOffset=self.scrollOffset)
             self.tileSizeSlider.handleEvent(event, yOffset=self.scrollOffset)
             self.figureSizeSlider.handleEvent(event, yOffset=self.scrollOffset)
-            self.sidebarWidthSlider.handleEvent(event, yOffset=self.scrollOffset)
+            self.sidebarWidthSlider.handleEvent(event, yOffset=self.scrollOffset)  # Vždy zpracovat, disabled logika je uvnitř
 
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if self.backButton.isClicked(event.pos, yOffset=self.scrollOffset):
@@ -168,12 +173,15 @@ class SettingsScene(Scene):
         changes["DEBUG"] = self.debugCheckbox.isChecked()
         changes["TILE_SIZE"] = self.tileSizeSlider.getValue()
         changes["FIGURE_SIZE"] = self.figureSizeSlider.getValue()
-        changes["SIDEBAR_WIDTH"] = self.sidebarWidthSlider.getValue()
+        
+        # Sidebar width jen pokud není disabled
+        if not self.sidebarWidthSlider.isDisabled():
+            changes["SIDEBAR_WIDTH"] = self.sidebarWidthSlider.getValue()
 
         # Apply all changes at once
         success = True
         for key, value in changes.items():
-            if not settings_manager.set(key, value, temporary=False):  # Make permanent
+            if not settings_manager.set(key, value, temporary=False):
                 success = False
 
         if success:
@@ -182,8 +190,7 @@ class SettingsScene(Scene):
             self.addToast(Toast("Failed to save some settings", type="error"))
 
     def handleFullscreenToggle(self, value):
-        # This will trigger the observer callback automatically
-        settings_manager.set("FULLSCREEN", value, temporary=True)  # Don't save yet, wait for Apply
+        settings_manager.set("FULLSCREEN", value, temporary=True)
         self.addToast(Toast("Restart the game to apply fullscreen changes", type="warning"))
 
     def draw(self):
@@ -229,8 +236,10 @@ class SettingsScene(Scene):
             centery=self.figureSizeSlider.rect.centery + offsetY
         )
         self.screen.blit(fszLabel, fszLabelRect)
-        
-        sbwLabel = labelFont.render("Sidebar width:", True, (255, 255, 255))
+
+        # Sidebar width label - změň barvu když je disabled
+        labelColor = (120, 120, 120) if self.sidebarWidthSlider.isDisabled() else (255, 255, 255)
+        sbwLabel = labelFont.render("Sidebar width:", True, labelColor)
         sbwLabelRect = sbwLabel.get_rect(
             right=self.sidebarWidthSlider.rect.left - 10,
             centery=self.sidebarWidthSlider.rect.centery + offsetY
@@ -241,7 +250,7 @@ class SettingsScene(Scene):
         self.debugCheckbox.draw(self.screen, yOffset=offsetY)
         self.tileSizeSlider.draw(self.screen, yOffset=offsetY)
         self.figureSizeSlider.draw(self.screen, yOffset=offsetY)
-        self.sidebarWidthSlider.draw(self.screen, yOffset=offsetY)
+        self.sidebarWidthSlider.draw(self.screen, yOffset=offsetY)  # Vždy vykreslit
         self.applyButton.draw(self.screen, yOffset=offsetY)
         self.backButton.draw(self.screen, yOffset=offsetY)
         self.resolutionDropdown.draw(self.screen, yOffset=offsetY)
@@ -264,8 +273,3 @@ class SettingsScene(Scene):
         if any(t.message == toast.message for t in self.toastQueue):
             return
         self.toastQueue.append(toast)
-        
-    def onDebugChanged(self, key, old_value, new_value):
-        """Callback for when DEBUG setting changes"""
-        from utils.loggingConfig import updateLoggingLevel
-        updateLoggingLevel()

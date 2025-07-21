@@ -2,50 +2,64 @@ import pygame
 import time
 
 class InputField:
-    def __init__(self, rect, font, placeholder="", text="", textColor=(0, 0, 0), bgColor=(255, 255, 255), borderColor=(0, 0, 0), onTextChange=None):
+    def __init__(self, rect, font, placeholder="", text="", initialText="", textColor=(0, 0, 0), bgColor=(255, 255, 255), borderColor=(0, 0, 0), onTextChange=None, numeric=False, minValue=None, maxValue=None):
         self.rect = pygame.Rect(rect)
         self.font = font
         self.placeholder = placeholder
-        self.text = text
+        
+        # Support both 'text' and 'initialText' parameters
+        self.text = initialText if initialText else text
+        
         self.active = False
         self.disabled = False
         self.readOnly = False
         self.textColor = textColor
         self.bgColor = bgColor
         self.borderColor = borderColor
-
         self.scrollOffset = 0
         self.cursorVisible = True
         self.lastBlink = time.time()
         self.blinkInterval = 0.5
+        
+        # Numeric validation
+        self.numeric = numeric
+        self.minValue = minValue
+        self.maxValue = maxValue
         
         self.onTextChange = onTextChange
 
     def handleEvent(self, event, yOffset=0):
         if self.disabled or self.readOnly:
             return
-
         shiftedRect = self.rect.move(0, yOffset)
-
+        
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             self.active = shiftedRect.collidepoint(event.pos)
-
+            
         if self.active and event.type == pygame.KEYDOWN:
             oldText = self.text
-
+            
             if event.key == pygame.K_BACKSPACE:
                 self.text = self.text[:-1]
             elif event.key == pygame.K_RETURN:
                 self.active = False
             else:
-                self.text += event.unicode
-
+                # Handle character input
+                if self.numeric:
+                    # Allow digits, minus sign at beginning, and temporary empty state
+                    if event.unicode.isdigit() or (event.unicode == '-' and len(self.text) == 0):
+                        self.text += event.unicode
+                else:
+                    # Non-numeric mode - allow all printable characters
+                    if event.unicode and event.unicode.isprintable():
+                        self.text += event.unicode
+            
+            # Always call onTextChange, let the slider handle validation
             if self.onTextChange and self.text != oldText:
                 self.onTextChange(self.text)
-
+                
             textWidth = self.font.size(self.text)[0]
             visibleWidth = self.rect.width - 10
-
             if textWidth > visibleWidth:
                 self.scrollOffset = textWidth - visibleWidth
             else:
@@ -58,7 +72,6 @@ class InputField:
             self.lastBlink = now
 
         drawRect = self.rect.move(0, yOffset)
-
         bgColor = (200, 200, 200) if self.disabled else self.bgColor
         borderColor = (100, 100, 100) if self.disabled else self.borderColor
         textColor = (150, 150, 150) if self.disabled else (self.textColor if self.text or self.active else (150, 150, 150))
@@ -68,7 +81,6 @@ class InputField:
 
         displayText = self.text if self.text or self.active else self.placeholder
         textSurface = self.font.render(displayText, True, textColor)
-
         clampedWidth = max(0, min(self.rect.width - 10, textSurface.get_width() - self.scrollOffset))
         visibleRect = pygame.Rect(self.scrollOffset, 0, clampedWidth, textSurface.get_height())
 
@@ -87,7 +99,7 @@ class InputField:
         return self.text
 
     def setText(self, value):
-        self.text = value
+        self.text = str(value)
         self.scrollOffset = 0
 
     def setDisabled(self, value: bool):
@@ -97,3 +109,6 @@ class InputField:
             
     def setReadOnly(self, value: bool):
         self.readOnly = value
+
+    def isDisabled(self):
+        return self.disabled
