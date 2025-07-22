@@ -5,3 +5,4 @@ class GameState(Enum):
     GAME = auto()
     SETTINGS = auto()
     PREPARE = auto()
+    HELP = auto()

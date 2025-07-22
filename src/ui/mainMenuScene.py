@@ -82,7 +82,7 @@ class MainMenuScene(Scene):
                     pygame.quit()
                     exit()
                 elif self.howToPlayButton.isClicked(event.pos, yOffset=self.scrollOffset):
-                    webbrowser.open("https://wikicarpedia.com/car/Base_game")
+                    self.switchScene(GameState.HELP)
 
     def draw(self):
         self.screen.fill((30, 30, 30))

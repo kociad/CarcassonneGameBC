@@ -7,6 +7,7 @@ from ui.settingsScene import SettingsScene
 from ui.gamePrepareScene import GamePrepareScene
 from ui.scene import Scene
 from ui.gameScene import GameScene
+from ui.helpScene import HelpScene
 from gameState import GameState
 from utils.loggingConfig import configureLogging, logError
 from models.gameSession import GameSession
@@ -110,6 +111,8 @@ class Game:
                 self.currentScene = SettingsScene(self.screen, self.initScene)
             elif state == GameState.PREPARE:
                 self.currentScene = GamePrepareScene(self.screen, self.initScene, self.startGame)
+            elif state == GameState.HELP:
+                self.currentScene = HelpScene(self.screen, self.initScene)
             
             logger.debug(f"Scene initialized: {state}")
             
