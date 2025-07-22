@@ -14,6 +14,7 @@ class NetworkConnection:
         self.networkMode = settings_manager.get("NETWORK_MODE", "local")  # 'host', 'client', or 'local'
         self.running = False
         self.connections = []  # only for host mode
+        self.socket = None
 
         # Handlers assigned externally
         self.onClientConnected = None
@@ -60,7 +61,9 @@ class NetworkConnection:
                     self.onClientConnected(conn)
                 threading.Thread(target=self.receiveLoop, args=(conn,), daemon=True).start()
             except Exception as e:
-                logger.exception(f"Failed to accept connection: {e}")
+                if self.running:  # Only log if we're still supposed to be running
+                    logger.exception(f"Failed to accept connection: {e}")
+                break
 
     def receiveLoop(self, conn):
         buffer = ""
@@ -77,7 +80,8 @@ class NetworkConnection:
                         logger.debug(f"Receiving message: {line}")
                         self.onMessageReceived(line, conn)
             except Exception as e:
-                logger.exception(f"Socket error: {e}")
+                if self.running:  # Only log if we're still supposed to be running
+                    logger.exception(f"Socket error: {e}")
                 break
 
     def onMessageReceived(self, message, conn=None):
@@ -120,11 +124,17 @@ class NetworkConnection:
         if self.networkMode != "host":
             return
         logger.debug(f"Sending message to all: {message}")
-        for conn in self.connections:
+        for conn in self.connections[:]:  # Kopie seznamu pro bezpečnost
             try:
                 conn.sendall((message + "\n").encode())
             except Exception as e:
-                logger.exception(f"Failed to send message to all: {e}")
+                logger.exception(f"Failed to send message to client, removing connection: {e}")
+                try:
+                    conn.close()
+                except:
+                    pass
+                if conn in self.connections:
+                    self.connections.remove(conn)
 
     def sendToHost(self, message):
         if self.networkMode != "client":
@@ -139,9 +149,35 @@ class NetworkConnection:
         if self.networkMode == "local":
             logger.debug("No network to close.")
             return
+        
+        logger.debug("Closing network connection...")
         self.running = False
+        
         try:
-            self.socket.close()
-            logger.debug("Socket closed")
+            if hasattr(self, 'connections') and self.connections:
+                for conn in self.connections[:]:
+                    try:
+                        conn.close()
+                    except Exception as e:
+                        logger.warning(f"Error closing client connection: {e}")
+                self.connections.clear()
+            
+            if self.socket:
+                try:
+                    self.socket.close()
+                except Exception as e:
+                    logger.warning(f"Error closing main socket: {e}")
+                    
+            logger.debug("Network connection closed successfully")
+            
         except Exception as e:
-            logger.exception(f"Error while closing socket: {e}")
+            logger.exception(f"Error while closing network connection: {e}")
+        
+        finally:
+            self.onClientConnected = None
+            self.onClientSubmittedTurn = None
+            self.onInitialGameStateReceived = None
+            self.onSyncGameState = None
+            self.onJoinFailed = None
+            self.onJoinRejected = None
+            self.socket = None

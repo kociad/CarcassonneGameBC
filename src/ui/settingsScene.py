@@ -67,30 +67,33 @@ class SettingsScene(Scene):
         currentY += 60
 
         self.tileSizeSlider = Slider(
-            rect=(xCenter, currentY, 180, 20),  # Zmenšeno z 200 na 180
+            rect=(xCenter, currentY, 180, 20),
             font=self.dropdownFont,
             minValue=50, maxValue=150,
             value=settings_manager.get("TILE_SIZE"),
             onChange=self.onTileSizeChanged
         )
+        
+        self.tileSizeSlider.setDisabled(not settings_manager.get("DEBUG"))
         currentY += 40
 
         self.figureSizeSlider = Slider(
-            rect=(xCenter, currentY, 180, 20),  # Zmenšeno z 200 na 180
+            rect=(xCenter, currentY, 180, 20),
             font=self.dropdownFont,
             minValue=10, maxValue=50,
             value=settings_manager.get("FIGURE_SIZE"),
             onChange=lambda value: self.addToast(Toast("Start new game to apply figure size changes", type="warning"))
         )
+        
+        self.figureSizeSlider.setDisabled(not settings_manager.get("DEBUG"))
         currentY += 40
 
-        # Sidebar width slider - vždy vytvořit, nastavit disabled podle DEBUG
         currentTileSize = settings_manager.get("TILE_SIZE")
         currentSidebarWidth = settings_manager.get("SIDEBAR_WIDTH")
         minSidebarWidth = currentTileSize + 20
 
         self.sidebarWidthSlider = Slider(
-            rect=(xCenter, currentY, 180, 20),  # Zmenšeno z 200 na 180
+            rect=(xCenter, currentY, 180, 20),
             font=self.dropdownFont,
             minValue=minSidebarWidth,
             maxValue=400,
@@ -98,7 +101,7 @@ class SettingsScene(Scene):
             onChange=lambda value: self.addToast(Toast("Start new game to apply sidebar width changes", type="warning"))
         )
         
-        # Nastav disabled podle DEBUG stavu
+        
         self.sidebarWidthSlider.setDisabled(not settings_manager.get("DEBUG"))
         currentY += 60
 
@@ -128,8 +131,9 @@ class SettingsScene(Scene):
         from utils.loggingConfig import updateLoggingLevel
         updateLoggingLevel()
         
-        # Nastav disabled stav sidebar width slideru
         self.sidebarWidthSlider.setDisabled(not new_value)
+        self.tileSizeSlider.setDisabled(not new_value)
+        self.figureSizeSlider.setDisabled(not new_value)
 
     def handleEvents(self, events):
         self.applyScroll(events)
@@ -149,7 +153,7 @@ class SettingsScene(Scene):
             self.debugCheckbox.handleEvent(event, yOffset=self.scrollOffset)
             self.tileSizeSlider.handleEvent(event, yOffset=self.scrollOffset)
             self.figureSizeSlider.handleEvent(event, yOffset=self.scrollOffset)
-            self.sidebarWidthSlider.handleEvent(event, yOffset=self.scrollOffset)  # Vždy zpracovat, disabled logika je uvnitř
+            self.sidebarWidthSlider.handleEvent(event, yOffset=self.scrollOffset)
 
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if self.backButton.isClicked(event.pos, yOffset=self.scrollOffset):
@@ -171,8 +175,13 @@ class SettingsScene(Scene):
         # Other settings
         changes["FULLSCREEN"] = self.fullscreenCheckbox.isChecked()
         changes["DEBUG"] = self.debugCheckbox.isChecked()
-        changes["TILE_SIZE"] = self.tileSizeSlider.getValue()
-        changes["FIGURE_SIZE"] = self.figureSizeSlider.getValue()
+        
+        # Tile size a figure size jen pokud nejsou disabled
+        if not self.tileSizeSlider.isDisabled():
+            changes["TILE_SIZE"] = self.tileSizeSlider.getValue()
+        
+        if not self.figureSizeSlider.isDisabled():
+            changes["FIGURE_SIZE"] = self.figureSizeSlider.getValue()
         
         # Sidebar width jen pokud není disabled
         if not self.sidebarWidthSlider.isDisabled():
@@ -223,21 +232,22 @@ class SettingsScene(Scene):
         )
         self.screen.blit(dbLabel, dbLabelRect)
 
-        tszLabel = labelFont.render("Tile size:", True, (255, 255, 255))
+        labelColor = (120, 120, 120) if self.tileSizeSlider.isDisabled() else (255, 255, 255)
+        tszLabel = labelFont.render("Tile size:", True, labelColor)
         tszLabelRect = tszLabel.get_rect(
             right=self.tileSizeSlider.rect.left - 10,
             centery=self.tileSizeSlider.rect.centery + offsetY
         )
         self.screen.blit(tszLabel, tszLabelRect)
 
-        fszLabel = labelFont.render("Figure size:", True, (255, 255, 255))
+        labelColor = (120, 120, 120) if self.figureSizeSlider.isDisabled() else (255, 255, 255)
+        fszLabel = labelFont.render("Figure size:", True, labelColor)
         fszLabelRect = fszLabel.get_rect(
             right=self.figureSizeSlider.rect.left - 10,
             centery=self.figureSizeSlider.rect.centery + offsetY
         )
         self.screen.blit(fszLabel, fszLabelRect)
 
-        # Sidebar width label - změň barvu když je disabled
         labelColor = (120, 120, 120) if self.sidebarWidthSlider.isDisabled() else (255, 255, 255)
         sbwLabel = labelFont.render("Sidebar width:", True, labelColor)
         sbwLabelRect = sbwLabel.get_rect(
@@ -248,8 +258,8 @@ class SettingsScene(Scene):
 
         self.fullscreenCheckbox.draw(self.screen, yOffset=offsetY)
         self.debugCheckbox.draw(self.screen, yOffset=offsetY)
-        self.tileSizeSlider.draw(self.screen, yOffset=offsetY)
-        self.figureSizeSlider.draw(self.screen, yOffset=offsetY)
+        self.tileSizeSlider.draw(self.screen, yOffset=offsetY)  # Vždy vykreslit
+        self.figureSizeSlider.draw(self.screen, yOffset=offsetY)  # Vždy vykreslit
         self.sidebarWidthSlider.draw(self.screen, yOffset=offsetY)  # Vždy vykreslit
         self.applyButton.draw(self.screen, yOffset=offsetY)
         self.backButton.draw(self.screen, yOffset=offsetY)

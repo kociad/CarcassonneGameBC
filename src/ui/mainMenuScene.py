@@ -3,8 +3,10 @@ import webbrowser
 from ui.scene import Scene
 from ui.components.button import Button
 from gameState import GameState
+from utils.settingsManager import settings_manager
 
-import settings
+import logging
+logger = logging.getLogger(__name__)
 
 class MainMenuScene(Scene):
     def __init__(self, screen, switchSceneCallback, getGameSession):
@@ -65,10 +67,14 @@ class MainMenuScene(Scene):
             if event.type == pygame.QUIT:
                 pygame.quit()
                 exit()
+
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if self.continueButton.isClicked(event.pos, yOffset=self.scrollOffset) and not self.continueButton.disabled:
                     self.switchScene(GameState.GAME)
                 elif self.startButton.isClicked(event.pos, yOffset=self.scrollOffset):
+                    # Upozornění pokud existuje aktivní hra
+                    if self.getGameSession():
+                        logger.debug("Starting new game - previous game session will be terminated")
                     self.switchScene(GameState.PREPARE)
                 elif self.settingsButton.isClicked(event.pos, yOffset=self.scrollOffset):
                     self.switchScene(GameState.SETTINGS)

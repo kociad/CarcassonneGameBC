@@ -66,14 +66,36 @@ class Game:
 
     def quit(self):
         try:
-            if self.network:
-                self.network.close()
+            self.cleanupPreviousGame()
             pygame.quit()
             logger.info("Game quit successfully")
             exit()
         except Exception as e:
             logError("Error during game quit", e)
             exit()
+
+    def cleanupPreviousGame(self):
+        """Clean up resources from previous game session"""
+        try:
+            logger.debug("Cleaning up previous game resources...")
+            
+            if self.network:
+                logger.debug("Closing network connection...")
+                self.network.close()
+                self.network = None
+            
+            if self.gameSession:
+                logger.debug("Clearing game session...")
+                self.gameSession.onTurnEnded = None
+                self.gameSession = None
+            
+            logger.debug("Clearing temporary settings...")
+            settings_manager.reloadFromFile()
+            
+            logger.debug("Previous game cleanup completed")
+            
+        except Exception as e:
+            logError("Error during previous game cleanup", e)
 
     def initScene(self, state):
         try:
@@ -98,6 +120,10 @@ class Game:
     def startGame(self, playerNames):
         try:
             logger.debug("Initializing new game session...")
+            
+            if self.gameSession or self.network:
+                logger.debug("Cleaning up previous game session...")
+                self.cleanupPreviousGame()
 
             self.gameSession = GameSession(playerNames)
 
