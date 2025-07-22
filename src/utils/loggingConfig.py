@@ -44,20 +44,30 @@ def configureLogging():
 def updateLoggingLevel():
     """
     Update logging level based on current DEBUG setting.
-    Call this when DEBUG setting changes at runtime.
+    INFO and above are always visible, DEBUG only when DEBUG=True
     """
     from utils.settingsManager import settings_manager
     
     debugEnabled = settings_manager.get("DEBUG", True)
     
     if debugEnabled:
-        # Enable logging
+        # Enable all logging (including DEBUG)
         logging.disable(logging.NOTSET)
+        # Set console handler to DEBUG level
+        for handler in logging.getLogger().handlers:
+            if isinstance(handler, logging.StreamHandler) and handler.stream == sys.stdout:
+                handler.setLevel(logging.DEBUG)
         logger = logging.getLogger(__name__)
-        logger.info("Debug logging enabled")
+        logger.info("Debug logging enabled - all messages visible")
     else:
-        # Disable all logging
-        logging.disable(logging.CRITICAL)
+        # Disable only DEBUG level, keep INFO and above
+        logging.disable(logging.NOTSET)  # First enable all
+        # Set console handler to INFO level (hide DEBUG messages)
+        for handler in logging.getLogger().handlers:
+            if isinstance(handler, logging.StreamHandler) and handler.stream == sys.stdout:
+                handler.setLevel(logging.INFO)
+        logger = logging.getLogger(__name__)
+        logger.info("Debug logging disabled - INFO and above messages visible")
 
 def setupExceptionLogging():
     """

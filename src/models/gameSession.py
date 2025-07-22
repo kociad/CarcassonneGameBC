@@ -282,22 +282,22 @@ class GameSession:
                     self.currentPlayer = player
                     break
                     
-            logger.debug(f"New player {self.currentPlayer.getName()} index - {self.currentPlayer.getIndex()} (out of {len(self.players) - 1})")
+            logger.info(f"{self.currentPlayer.getName()}'s turn (Player {self.currentPlayer.getIndex() + 1})")
+            logger.debug(f"New player {self.currentPlayer.getName()} index - {self.currentPlayer.getIndex()}")
             
             self.currentCard = self.drawCard()
-            self.turnPhase = 1  # Reset for next player
-            logger.debug("Calling nextTurn()")
+            if self.currentCard:
+                logger.info(f"New card drawn - {len(self.cardsDeck)} cards remaining")
+            
+            self.turnPhase = 1
             if self.onTurnEnded:
-                logger.debug("Calling onTurnEnded() callback")
                 self.onTurnEnded()
         else:
             self.endGame()
         
-    def playCard (self, x, y):
+    def playCard(self, x, y):
         """
         Plays the card placing part of the turn
-        :param x: X-coordinate of the selected space
-        :param y: Y-coordinate of the selected space
         """
         logger.debug("Playing card...")
         card = self.currentCard
@@ -309,22 +309,18 @@ class GameSession:
             card = self.drawCard()
         
         if not self.gameBoard.validateCardPlacement(card, x, y) and not self.isFirstRound:
-            logger.debug(f"Unable to place card, placement is invalid, validateCardPlacement {self.gameBoard.validateCardPlacement(card, x, y)}, isFirstRound {self.isFirstRound}")
+            logger.info(f"Cannot place card at ({x}, {y}) - terrain doesn't match adjacent cards")
+            logger.debug(f"Unable to place card, placement is invalid")
             return False
             
         self.gameBoard.placeCard(card, x, y)
         self.lastPlacedCard = card
         self.currentCard = None
         
-        logger.debug (f"Card played, last played card set to card {card} at {x};{y}")
+        logger.info(f"Card placed successfully at ({x}, {y})")
+        logger.debug(f"Card played, last played card set to card {card} at {x};{y}")
         
-        self.detectStructures() # Structuremap needs to be updated after every card placement
-        
-        """
-        if self.isFirstRound:
-            self.nextTurn()
-        """
-        
+        self.detectStructures()
         return True
         
     def discardCurrentCard (self):
@@ -389,33 +385,29 @@ class GameSession:
             
     def skipCurrentAction(self):
         """
-        Skips the current phase action:
-        - Phase 1: Discards the current card only if it cannot be placed anywhere
-        - Phase 2: Skips figure placement, finalizes the turn.
+        Skips the current phase action with official rules validation
         """
         if self.turnPhase == 1:
             logger.debug("Attempting to skip card placement...")
             
-            # Kontrola podle oficiálních pravidel
             if self.canPlaceCardAnywhere(self.currentCard):
+                logger.info("Cannot discard card - it can be placed somewhere on the board")
                 logger.debug("Cannot skip card placement - card can be placed somewhere on the board")
-                # Zde by měl být způsob jak poslat toast zprávu
-                # Protože GameSession nemá přímý přístup k UI, použijeme callback nebo exception
                 raise ValueError("CANNOT_DISCARD_PLAYABLE_CARD")
             else:
+                logger.info("Card discarded - no valid placement found")
                 logger.debug("Card cannot be placed anywhere - discarding according to official rules...")
                 self.discardCurrentCard()
                 if not self.cardsDeck:
                     self.endGame()
         
         elif self.turnPhase == 2:
+            logger.info("Meeple placement skipped")
             logger.debug("Skipping figure placement. Finalizing turn...")
 
-            logger.debug("Checking completed structures...")
             for structure in self.structures:
                 structure.checkCompletion()
                 if structure.getIsCompleted():
-                    logger.debug(f"Structure {structure.structureType} is completed!")
                     self.scoreStructure(structure)
 
             self.nextTurn()
@@ -424,20 +416,17 @@ class GameSession:
     def playFigure(self, player, x, y, position):
         """
         Places a figure on a valid card position
-        :param player: The player placing the figure
-        :param x: X-coordinate on the board
-        :param y: Y-coordinate on the board
-        :param position: The position on the card (N, W, S, E, etc.)
-        :return: True if placement is successful, False otherwise
         """
         logger.debug("Playing figure...")
 
         card = self.gameBoard.getCard(x, y)
         if card != self.lastPlacedCard:
+            logger.info(f"{player.getName()}: Cannot place meeple here - only on the card you just placed")
             logger.debug("Unable to play figure, can only place figures on last played card")
             return False
 
         if not card:
+            logger.info(f"{player.getName()}: No card found at ({x}, {y})")
             logger.debug(f"Unable to play figure, no card detected in selected space: {x};{y}")
             return False
 
@@ -445,25 +434,27 @@ class GameSession:
         structure = self.structureMap.get((x, y, position))
         if structure:
             if structure.figures:
+                logger.info(f"{player.getName()}: Cannot place meeple - this structure is already occupied")
                 logger.debug(f"Unable to play figure, structure already claimed.")
-                return False  # Structure is already claimed
+                return False
 
         # Attempt to place figure from player
         if player.figures:
             figure = player.getFigure()
             if figure.place(card, position):
                 self.placedFigures.append(figure)
+                logger.info(f"{player.getName()} placed a meeple on {position} position at ({x}, {y})")
                 logger.debug(f"{player.getName()} placed a figure at ({x}, {y}) on position {position}")
 
                 if structure:
                     structure.addFigure(figure)
 
                 logger.debug("Figure played")
-                #self.nextTurn()
                 return True
             else:
-                player.addFigure(figure)  # Return figure if placement failed
+                player.addFigure(figure)
 
+        logger.info(f"{player.getName()}: No meeples left to place")
         logger.debug("Unable to place figure, player has no figures left.")
         return False
             
@@ -621,8 +612,6 @@ class GameSession:
     def scoreStructure(self, structure):
         """
         Scores a completed structure by awarding points to the majority owner(s).
-        Removes their figures afterward (Step 13).
-        :param structure: The completed Structure to score.
         """
         if not structure.getIsCompleted() and not self.gameOver:
             logger.debug("Structure is not completed, skipping scoring.")
@@ -632,48 +621,54 @@ class GameSession:
         owners = structure.getMajorityOwners()
 
         if not owners:
+            logger.info(f"{structure.structureType} completed but no meeples to score")
             logger.debug("No figures on structure. No points awarded.")
             return
 
+        logger.info(f"{structure.structureType} completed!")
         logger.debug(f"Scoring structure: {structure.structureType} for {score} points.")
+        
         for owner in owners:
+            logger.info(f"{owner.getName()} scores {score} points from {structure.structureType}")
             logger.debug(f" - {owner.getName()} receives {score} points.")
             owner.addScore(score)
 
-        # Set structure color to owner player
         structure.setColor(owners[0].getColorWithAlpha())
         
-        # Remove figures after scoring and return them to players
-        logger.debug(f"Figures to be removed: {structure.getFigures()}")
         for figure in structure.getFigures()[:]:
             structure.removeFigure(figure)
             figure.owner.addFigure(figure)
+            logger.info(f"{figure.owner.getName()}'s meeple returned")
             
     def endGame(self):
+        logger.info("GAME OVER - No more cards in deck!")
+        logger.info("Scoring remaining incomplete structures...")
         logger.debug("=== END OF GAME TRIGGERED ===")
-        logger.debug("Scoring all remaining incomplete structures...")
 
         self.gameOver = True
 
         for structure in self.structures:
             if not structure.getIsCompleted():
-                logger.debug(f"- Incomplete {structure.structureType} scored...")
+                logger.info(f"Scoring incomplete {structure.structureType}...")
                 self.scoreStructure(structure)
 
-        logger.debug("All structures scored. Returning all figures...")
-        self.placedFigures.clear()  # All figures should already be returned during scoring
-
+        logger.info("All meeples returned to players")
+        self.placedFigures.clear()
         self.showFinalResults()
 
-        # Trigger game state broadcast
         if self.onTurnEnded:
-            logger.debug("Triggering onTurnEnded() at end of game")
             self.onTurnEnded()
         
     def showFinalResults(self):
-        logger.info("\n=== FINAL SCORES ===")
-        for player in self.players:
-            logger.info(f"{player.getName()}: {player.getScore()} points")
+        logger.info("=== FINAL SCORES ===")
+        
+        sortedPlayers = sorted(self.players, key=lambda p: p.getScore(), reverse=True)
+        
+        for i, player in enumerate(sortedPlayers):
+            if i == 0:
+                logger.info(f"WINNER: {player.getName()}: {player.getScore()} points")
+            else:
+                logger.info(f"{player.getName()}: {player.getScore()} points")
             
     def getCandidatePositions(self):
         """

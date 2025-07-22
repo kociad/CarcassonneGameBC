@@ -89,23 +89,19 @@ class GameBoard:
     def validateCardPlacement(self, card, x, y):
         """
         Validates if a card can be placed on given space
-        :param card: Card to be placed
-        :param x: X-coordinate of selected space
-        :param y: Y-coordinate of selected space
-        :return: True if placement is valid, false otherwise
         """
         logger.debug("Validating card placement...")
         
         if not (0 <= x < self.gridSize) or not (0 <= y < self.gridSize):
-            logger.debug(f"Placement invalid, coordinates out of bounds.")
+            logger.info(f"Cannot place card at ({x}, {y}) - position out of bounds")
             return False
         
-        if self.getCard(x,y) is not None:
-            logger.debug(f"Placement invalid, expected None in space, got {self.getCard(x,y)}")
-            return False # Cannot place card where one already exists
+        if self.getCard(x, y) is not None:
+            logger.info(f"Cannot place card at ({x}, {y}) - position already occupied")
+            return False
             
-        if not self.hasNeighbor(x,y):
-            logger.debug(f"Placement invalid, no valid neighbor found")
+        if not self.hasNeighbor(x, y):
+            logger.info(f"Cannot place card at ({x}, {y}) - no adjacent cards found")
             return False
             
         neighbors = {
@@ -116,16 +112,16 @@ class GameBoard:
         }
         
         for direction, (nx, ny) in neighbors.items():
-            if 0 <= nx < self.gridSize and 0 <= ny < self.gridSize: # Validate only neighbors within the grid
+            if 0 <= nx < self.gridSize and 0 <= ny < self.gridSize:
                 neighbor = self.getCard(nx, ny)
                 if neighbor:
-                    logger.debug(f"Testing directions currentCard: {direction} - {card.getTerrains()[direction]} neighbor: {self.getOppositeDirection(direction)} - {neighbor.getTerrains()[self.getOppositeDirection(direction)]}")
-                    if card.getTerrains()[direction] != neighbor.getTerrains()[self.getOppositeDirection(direction)]:
-                        logger.debug(f"Terrain mismatch!")
-                        return False  # Terrains do not match, placement is invalid
+                    cardTerrain = card.getTerrains()[direction]
+                    neighborTerrain = neighbor.getTerrains()[self.getOppositeDirection(direction)]
+                    if cardTerrain != neighborTerrain:
+                        logger.info(f"Cannot place card at ({x}, {y}) - {cardTerrain} doesn't match neighbor's {neighborTerrain}")
+                        return False
         
-        logger.debug(f"Placement is valid!")
-        return True  # Placement is valid
+        return True
             
     def getOppositeDirection(self, direction):
         """
