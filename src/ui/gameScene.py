@@ -14,33 +14,26 @@ class GameScene(Scene):
         self.clock = clock
         self.network = network
 
-        # Renderer properties moved from renderer.py
         self.scrollSpeed = 10
         self.font = pygame.font.Font(None, 36)
 
-        # Toast support pro error zprávy
         self.toastQueue = []
         self.activeToast = None
 
-        # Sidebar scrolling (podobně jako v settings)
         self.sidebarScrollOffset = 0
         self.sidebarScrollSpeed = 30
 
-        # Calculate initial offset to center the game board (accounting for sidebar)
         tileSize = settings_manager.get("TILE_SIZE")
         gridSize = settings_manager.get("GRID_SIZE")
         windowWidth = settings_manager.get("WINDOW_WIDTH")
         windowHeight = settings_manager.get("WINDOW_HEIGHT")
         sidebarWidth = settings_manager.get("SIDEBAR_WIDTH")
         
-        # Available game area (excluding sidebar)
         gameAreaWidth = windowWidth - sidebarWidth
         
-        # Center of the game board in pixels
         boardCenterX = (gridSize * tileSize) // 2
         boardCenterY = (gridSize * tileSize) // 2
         
-        # Calculate offset to center board in available game area
         self.offsetX = boardCenterX - gameAreaWidth // 2
         self.offsetY = boardCenterY - windowHeight // 2
 
@@ -50,7 +43,7 @@ class GameScene(Scene):
         }
 
     def applySidebarScroll(self, events):
-        """Handle sidebar scrolling events (podobně jako applyScroll v settings)"""
+        """Handle sidebar scrolling events"""
         for event in events:
             if event.type == pygame.MOUSEWHEEL:
                 mouseX, mouseY = pygame.mouse.get_pos()
@@ -58,10 +51,8 @@ class GameScene(Scene):
                 sidebarWidth = settings_manager.get("SIDEBAR_WIDTH")
                 panelX = windowWidth - sidebarWidth
                 
-                # Pouze pokud je myš nad sidebarem
                 if mouseX >= panelX:
                     self.sidebarScrollOffset -= event.y * self.sidebarScrollSpeed
-                    # Omez scrolling (bude se dopočítá v drawSidePanel)
                     self.sidebarScrollOffset = max(0, self.sidebarScrollOffset)
 
     def getOffsetX(self):
@@ -199,12 +190,11 @@ class GameScene(Scene):
         sidebarCenterX = panelX + sidebarWidth // 2
         
         pygame.draw.rect(self.screen, (50, 50, 50), (panelX, 0, sidebarWidth, windowHeight))
-
         currentY = 50
         sectionSpacing = 25
         scrollableContentStartY = currentY
 
-        # FIXED CONTENT - Current card (neposunuje se)
+        # FIXED CONTENT - Current card
         if selectedCard:
             imageToDraw = selectedCard.getImage()
             if hasattr(selectedCard, "rotation") and selectedCard.rotation:
@@ -221,30 +211,31 @@ class GameScene(Scene):
             currentY += cardRect.height + sectionSpacing
             scrollableContentStartY = currentY
 
-        # SCROLLABLE CONTENT - s offsetem jako v settings
+        # SCROLLABLE CONTENT
         offsetY = self.sidebarScrollOffset
 
-        # Turn status
-        networkMode = settings_manager.get("NETWORK_MODE")
-        if networkMode == "local":
-            statusText = "Local mode"
-            statusColor = (100, 100, 255)
-        else:
-            playerIndex = settings_manager.get("PLAYER_INDEX")
-            isMyTurn = currentPlayer.getIndex() == playerIndex
-            statusText = "Your Turn" if isMyTurn else "Waiting..."
-            statusColor = (0, 255, 0) if isMyTurn else (200, 0, 0)
-
-        statusSurface = self.font.render(statusText, True, statusColor)
-        statusRect = statusSurface.get_rect()
-        statusRect.centerx = sidebarCenterX
-        statusRect.y = currentY - offsetY
-        if statusRect.bottom > scrollableContentStartY and statusRect.top < windowHeight:  # Pouze pokud je viditelné
-            self.screen.blit(statusSurface, statusRect)
-        currentY += statusRect.height + sectionSpacing
+        # Turn status - only show when DEBUG is enabled
+        if settings_manager.get("DEBUG", False):
+            networkMode = settings_manager.get("NETWORK_MODE")
+            if networkMode == "local":
+                statusText = "Local mode"
+                statusColor = (100, 100, 255)
+            else:
+                playerIndex = settings_manager.get("PLAYER_INDEX")
+                isMyTurn = currentPlayer.getIndex() == playerIndex
+                statusText = "Your Turn" if isMyTurn else "Waiting..."
+                statusColor = (0, 255, 0) if isMyTurn else (200, 0, 0)
+            
+            statusSurface = self.font.render(statusText, True, statusColor)
+            statusRect = statusSurface.get_rect()
+            statusRect.centerx = sidebarCenterX
+            statusRect.y = currentY - offsetY
+            if statusRect.bottom > scrollableContentStartY and statusRect.top < windowHeight:
+                self.screen.blit(statusSurface, statusRect)
+            currentY += statusRect.height + sectionSpacing
 
         # Cards remaining
-        cardsSurface = self.font.render(f"Cards: {remainingCards}", True, (255, 255, 255))
+        cardsSurface = self.font.render(f"Cards left: {remainingCards}", True, (255, 255, 255))
         cardsRect = cardsSurface.get_rect()
         cardsRect.centerx = sidebarCenterX
         cardsRect.y = currentY - offsetY
@@ -258,6 +249,25 @@ class GameScene(Scene):
         # Display each player's info
         for i, player in enumerate(allPlayers):
             playerStartY = currentY
+            isCurrentPlayer = (player == currentPlayer)
+            
+            # Calculate player section height for background (taller rectangle)
+            playerSectionHeight = 80  # Increased from 60 to make it taller
+            figures = player.getFigures()
+            if figures:
+                figureSize = settings_manager.get("FIGURE_SIZE")
+                figuresPerRow = max(1, (sidebarWidth - 20) // (figureSize + 5))
+                figuresPerRow = min(figuresPerRow, len(figures))
+                totalRows = (len(figures) + figuresPerRow - 1) // figuresPerRow
+                playerSectionHeight += totalRows * figureSize + (totalRows - 1) * 5
+            
+            # Draw background and border for current player
+            if isCurrentPlayer:
+                playerBgRect = pygame.Rect(panelX + 5, currentY - offsetY - 10, sidebarWidth - 10, playerSectionHeight)
+                # Only draw if visible
+                if playerBgRect.bottom > scrollableContentStartY and playerBgRect.top < windowHeight:
+                    pygame.draw.rect(self.screen, (60, 80, 120), playerBgRect)  # Blue background
+                    pygame.draw.rect(self.screen, (100, 150, 255), playerBgRect, 2)  # Blue border
             
             # Get player's color and convert string to RGB
             try:
@@ -279,12 +289,13 @@ class GameScene(Scene):
                 logger.error(f"Failed to get player color: {e}")
                 playerColor = (255, 255, 255)
 
-            # Highlight current player with brighter color
-            if player == currentPlayer:
-                playerColor = tuple(min(255, int(c) + 50) for c in playerColor)
-
-            # Player name in their color
-            nameSurface = self.font.render(f"{player.getName()}", True, playerColor)
+            # Enhanced highlighting for current player
+            if isCurrentPlayer:
+                playerColor = (255, 255, 100)  # Bright yellow for current player
+            
+            # Player name with current turn indicator
+            nameText = f">>> {player.getName()} <<<" if isCurrentPlayer else player.getName()
+            nameSurface = self.font.render(nameText, True, playerColor)
             nameRect = nameSurface.get_rect()
             nameRect.centerx = sidebarCenterX
             nameRect.y = currentY - offsetY
@@ -292,17 +303,17 @@ class GameScene(Scene):
                 self.screen.blit(nameSurface, nameRect)
             currentY += nameRect.height + 5
 
-            # Player score
-            scoreSurface = self.font.render(f"Score: {player.getScore()}", True, (200, 200, 200))
+            # Player score with current player highlighting
+            scoreColor = (255, 255, 100) if isCurrentPlayer else (200, 200, 200)
+            scoreSurface = self.font.render(f"Score: {player.getScore()}", True, scoreColor)
             scoreRect = scoreSurface.get_rect()
             scoreRect.centerx = sidebarCenterX
             scoreRect.y = currentY - offsetY
             if scoreRect.bottom > scrollableContentStartY and scoreRect.top < windowHeight:
                 self.screen.blit(scoreSurface, scoreRect)
-            currentY += scoreRect.height + 10
+            currentY += scoreRect.height + 10  # Extra spacing after score
 
             # Player's meeples
-            figures = player.getFigures()
             if figures:
                 figureSize = settings_manager.get("FIGURE_SIZE")
                 padding = 10
@@ -316,7 +327,7 @@ class GameScene(Scene):
                 gridStartX = sidebarCenterX - actualGridWidth // 2
                 gridStartY = currentY - offsetY
                 
-                # Pouze vykresli meeples pokud jsou viditelné
+                # Only draw meeples if they're visible
                 if gridStartY + totalRows * (figureSize + 5) > scrollableContentStartY and gridStartY < windowHeight:
                     for j, figure in enumerate(figures):
                         row = j // figuresPerRow
@@ -325,7 +336,7 @@ class GameScene(Scene):
                         figX = gridStartX + col * (figureSize + 5)
                         figY = gridStartY + row * (figureSize + 5)
                         
-                        # Pouze vykresli pokud je meeple viditelný
+                        # Only draw if meeple is visible
                         if figY + figureSize > scrollableContentStartY and figY < windowHeight:
                             self.screen.blit(figure.image, (figX, figY))
                 
@@ -347,7 +358,6 @@ class GameScene(Scene):
                 self.screen.blit(structureSurface, structureRect)
             currentY += structureRect.height
 
-        # Omez scrolling podle obsahu
         maxScroll = max(0, currentY - windowHeight + 50)  # 50px buffer
         self.sidebarScrollOffset = min(self.sidebarScrollOffset, maxScroll)
 
@@ -507,13 +517,12 @@ class GameScene(Scene):
         )
         self.drawSidePanel(
             self.session.getCurrentCard(),
-            len(self.session.getCardsDeck()) + 1,
+            len(self.session.getCardsDeck()),
             self.session.getCurrentPlayer(),
             self.session.getPlacedFigures(),
             self.session.getStructures()
         )
         
-        # Toast handling (přidáno)
         if hasattr(self, 'toastQueue'):
             if not self.activeToast and self.toastQueue:
                 self.activeToast = self.toastQueue.pop(0)

@@ -101,7 +101,7 @@ class Game:
     def initScene(self, state):
         try:
             if state == GameState.MENU:
-                self.currentScene = MainMenuScene(self.screen, self.initScene, self.getGameSession)
+                self.currentScene = MainMenuScene(self.screen, self.initScene, self.getGameSession, self.cleanupPreviousGame)
             elif state == GameState.GAME:
                 self.currentScene = GameScene(
                     self.screen, self.initScene, self.gameSession,
@@ -123,10 +123,6 @@ class Game:
     def startGame(self, playerNames):
         try:
             logger.debug("Initializing new game session...")
-            
-            if self.gameSession or self.network:
-                logger.debug("Cleaning up previous game session...")
-                self.cleanupPreviousGame()
 
             self.gameSession = GameSession(playerNames)
 

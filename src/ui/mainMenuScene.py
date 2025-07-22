@@ -9,13 +9,14 @@ import logging
 logger = logging.getLogger(__name__)
 
 class MainMenuScene(Scene):
-    def __init__(self, screen, switchSceneCallback, getGameSession):
+    def __init__(self, screen, switchSceneCallback, getGameSession, cleanupCallback=None):
         super().__init__(screen, switchSceneCallback)
 
         self.font = pygame.font.Font(None, 100)
         self.buttonFont = pygame.font.Font(None, 48)
 
         self.getGameSession = getGameSession
+        self.cleanupCallback = cleanupCallback
 
         self.scrollOffset = 0
         self.maxScroll = 0
@@ -59,6 +60,21 @@ class MainMenuScene(Scene):
             (centerX, centerY + 240, 200, 60),
             self.buttonFont
         )
+        
+    def cleanupPreviousGame(self):
+        """Clean up resources from previous game session"""
+        try:
+            logger.debug("Cleaning up previous game resources...")
+            
+            # Získej reference na game objekt přes callback
+            # Potřebujeme přístup k game.gameSession a game.network
+            # Předáme cleanup callback do konstruktoru
+            if hasattr(self, 'cleanupCallback') and self.cleanupCallback:
+                self.cleanupCallback()
+            
+        except Exception as e:
+            from utils.loggingConfig import logError
+            logError("Error during previous game cleanup from menu", e)
 
     def handleEvents(self, events):
         self.applyScroll(events)
@@ -72,9 +88,11 @@ class MainMenuScene(Scene):
                 if self.continueButton.isClicked(event.pos, yOffset=self.scrollOffset) and not self.continueButton.disabled:
                     self.switchScene(GameState.GAME)
                 elif self.startButton.isClicked(event.pos, yOffset=self.scrollOffset):
-                    # Upozornění pokud existuje aktivní hra
                     if self.getGameSession():
-                        logger.debug("Starting new game - previous game session will be terminated")
+                        logger.info("Starting new game - cleaning up previous session")
+                        self.cleanupPreviousGame()
+                    else:
+                        logger.info("Starting new game")
                     self.switchScene(GameState.PREPARE)
                 elif self.settingsButton.isClicked(event.pos, yOffset=self.scrollOffset):
                     self.switchScene(GameState.SETTINGS)
