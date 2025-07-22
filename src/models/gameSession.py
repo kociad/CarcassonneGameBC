@@ -390,19 +390,26 @@ class GameSession:
     def skipCurrentAction(self):
         """
         Skips the current phase action:
-        - Phase 1: Discards the current card and draws a new one.
+        - Phase 1: Discards the current card only if it cannot be placed anywhere
         - Phase 2: Skips figure placement, finalizes the turn.
         """
         if self.turnPhase == 1:
-            logger.debug("Skipping card placement. Drawing new card...")
-            self.discardCurrentCard()
-            if not self.cardsDeck:
-                self.endGame()
+            logger.debug("Attempting to skip card placement...")
+            
+            # Kontrola podle oficiálních pravidel
+            if self.canPlaceCardAnywhere(self.currentCard):
+                logger.debug("Cannot skip card placement - card can be placed somewhere on the board")
+                # Zde by měl být způsob jak poslat toast zprávu
+                # Protože GameSession nemá přímý přístup k UI, použijeme callback nebo exception
+                raise ValueError("CANNOT_DISCARD_PLAYABLE_CARD")
+            else:
+                logger.debug("Card cannot be placed anywhere - discarding according to official rules...")
+                self.discardCurrentCard()
+                if not self.cardsDeck:
+                    self.endGame()
         
         elif self.turnPhase == 2:
             logger.debug("Skipping figure placement. Finalizing turn...")
-
-            #self.detectStructures()
 
             logger.debug("Checking completed structures...")
             for structure in self.structures:
@@ -667,6 +674,73 @@ class GameSession:
         logger.info("\n=== FINAL SCORES ===")
         for player in self.players:
             logger.info(f"{player.getName()}: {player.getScore()} points")
+            
+    def getCandidatePositions(self):
+        """
+        Get all candidate positions where a card could potentially be placed
+        (empty positions adjacent to existing cards)
+        :return: Set of (x, y) tuples representing candidate positions
+        """
+        candidatePositions = set()
+        gridSize = self.gameBoard.getGridSize()
+        
+        for y in range(gridSize):
+            for x in range(gridSize):
+                if self.gameBoard.getCard(x, y):
+                    neighbors = [
+                        (x + 1, y),
+                        (x - 1, y),
+                        (x, y + 1),
+                        (x, y - 1)
+                    ]
+                    for nx, ny in neighbors:
+                        if 0 <= nx < gridSize and 0 <= ny < gridSize:
+                            if not self.gameBoard.getCard(nx, ny):  # Prázdné místo
+                                candidatePositions.add((nx, ny))
+        
+        return candidatePositions
+
+    def canPlaceCardAnywhere(self, card):
+        """
+        Check if card can be placed anywhere on the board using efficient candidate position search
+        :param card: Card to check for placement
+        :return: True if card can be placed somewhere, False otherwise
+        """
+        if not card:
+            return False
+            
+        logger.debug("Checking if card can be placed anywhere on the board...")
+        
+        if self.isFirstRound:
+            logger.debug("First round - card can always be placed")
+            return True
+        
+        candidatePositions = self.getCandidatePositions()
+        logger.debug(f"Found {len(candidatePositions)} candidate positions to check")
+        
+        if not candidatePositions:
+            logger.debug("No candidate positions found")
+            return False
+        
+        originalRotation = card.rotation
+        
+        try:
+            for x, y in candidatePositions:
+                while card.rotation != originalRotation:
+                    card.rotate()
+                    
+                for rotation in range(4):
+                    if self.gameBoard.validateCardPlacement(card, x, y):
+                        logger.debug(f"Card can be placed at ({x}, {y}) with rotation {card.rotation}°")
+                        return True
+                    card.rotate()
+            
+            logger.debug("Card cannot be placed at any candidate position")
+            return False
+            
+        finally:
+            while card.rotation != originalRotation:
+                card.rotate()
             
     def serialize(self):
         logger.debug("Serializing game state")

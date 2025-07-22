@@ -18,6 +18,10 @@ class GameScene(Scene):
         self.scrollSpeed = 10
         self.font = pygame.font.Font(None, 36)
 
+        # Toast support pro error zprávy
+        self.toastQueue = []
+        self.activeToast = None
+
         # Sidebar scrolling (podobně jako v settings)
         self.sidebarScrollOffset = 0
         self.sidebarScrollSpeed = 30
@@ -362,7 +366,6 @@ class GameScene(Scene):
             self.offsetX += self.scrollSpeed
 
     def handleEvents(self, events):
-        # Nejprve zpracuj sidebar scrolling
         self.applySidebarScroll(events)
         
         for event in events:
@@ -392,7 +395,14 @@ class GameScene(Scene):
                     
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_SPACE:
-                        self.session.skipCurrentAction()
+                        try:
+                            self.session.skipCurrentAction()
+                        except ValueError as e:
+                            if str(e) == "CANNOT_DISCARD_PLAYABLE_CARD":
+                                from ui.components.toast import Toast
+                                self.showDiscardError()
+                            else:
+                                raise
                         
         self.handleKeyHold()
 
@@ -453,6 +463,22 @@ class GameScene(Scene):
         }
 
         return min(distances, key=distances.get)
+        
+    def showDiscardError(self):
+        """Show error message when trying to discard a playable card"""
+        if not hasattr(self, 'toastQueue'):
+            self.toastQueue = []
+            self.activeToast = None
+        
+        from ui.components.toast import Toast
+        errorToast = Toast("Cannot discard card - it can be placed on the board!", type="warning", duration=3)
+        
+        if self.activeToast and self.activeToast.message == errorToast.message:
+            return
+        if any(t.message == errorToast.message for t in self.toastQueue):
+            return
+            
+        self.toastQueue.append(errorToast)
     
     def update(self):
         fps = settings_manager.get("FPS")
@@ -486,4 +512,16 @@ class GameScene(Scene):
             self.session.getPlacedFigures(),
             self.session.getStructures()
         )
+        
+        # Toast handling (přidáno)
+        if hasattr(self, 'toastQueue'):
+            if not self.activeToast and self.toastQueue:
+                self.activeToast = self.toastQueue.pop(0)
+                self.activeToast.start()
+            
+            if self.activeToast:
+                self.activeToast.draw(self.screen)
+                if self.activeToast.isExpired():
+                    self.activeToast = None
+        
         pygame.display.flip()

@@ -16,28 +16,14 @@ class AIPlayer(Player):
 
         board = gameSession.getGameBoard()
         currentCard = gameSession.getCurrentCard()
-        gridSize = board.getGridSize()
         triedPositions = set()
         cardPlaced = False
         targetX, targetY = -1, -1
-        rotationUsed = 0
 
-        # 1. Find empty neighbor positions around all existing structures
-        candidatePositions = set()
-
-        for (x, y, _) in gameSession.structureMap.keys():
-            neighbors = [
-                (x + 1, y),
-                (x - 1, y),
-                (x, y + 1),
-                (x, y - 1)
-            ]
-            for nx, ny in neighbors:
-                if 0 <= nx < gridSize and 0 <= ny < gridSize:
-                    if not board.getCard(nx, ny):  # Empty spot
-                        candidatePositions.add((nx, ny))
-                        
-        #logger.debug(f"Found {len(candidatePositions)} possible placements")
+        # Použij sdílenou metodu pro získání kandidátských pozic
+        candidatePositions = list(gameSession.getCandidatePositions())
+        random.shuffle(candidatePositions)
+        logger.debug(f"AI found {len(candidatePositions)} candidate positions")
         
         # Shuffle positions for randomness
         candidatePositions = list(candidatePositions)
