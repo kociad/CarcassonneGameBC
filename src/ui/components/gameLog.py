@@ -27,6 +27,7 @@ class GameLog:
         self.levelColors = {
             "INFO": (240, 240, 240),      # Light gray
             "DEBUG": (150, 200, 255),     # Light blue
+            "SCORING": (255, 255, 0),     # Bright yellow
             "WARNING": (255, 220, 100),   # Gold/yellow
             "ERROR": (255, 120, 120),     # Light red
         }
@@ -35,6 +36,7 @@ class GameLog:
         self.levelBackgrounds = {
             "INFO": (0, 0, 0, 0),         # No background
             "DEBUG": (0, 50, 100, 30),    # Dark blue tint
+            "SCORING": (80, 80, 0, 40),   # Dark yellow tint
             "WARNING": (100, 80, 0, 40),  # Dark yellow tint
             "ERROR": (100, 0, 0, 50),     # Dark red tint
         }

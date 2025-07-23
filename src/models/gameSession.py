@@ -37,6 +37,7 @@ class GameSession:
         self.gameOver = False # Tracking game status
         
         self.onTurnEnded = None  # External callback for sync
+        self.onShowNotification = None  # Callback for UI notifications
         
         if not noInit:
             # Create a list of players
@@ -283,7 +284,7 @@ class GameSession:
                     break
                     
             logger.info(f"{self.currentPlayer.getName()}'s turn (Player {self.currentPlayer.getIndex() + 1})")
-            logger.debug(f"New player {self.currentPlayer.getName()} index - {self.currentPlayer.getIndex()}")
+            #logger.debug(f"New player {self.currentPlayer.getName()} index - {self.currentPlayer.getIndex()}")
             
             self.currentCard = self.drawCard()
             if self.currentCard:
@@ -309,16 +310,21 @@ class GameSession:
             card = self.drawCard()
         
         if not self.gameBoard.validateCardPlacement(card, x, y) and not self.isFirstRound:
-            logger.info(f"Cannot place card at ({x}, {y}) - terrain doesn't match adjacent cards")
-            logger.debug(f"Unable to place card, placement is invalid")
+            logger.debug(f"Player {self.currentPlayer.getName()} was unable to place card, placement is invalid")
+            
+            if self.onShowNotification and not self.currentPlayer.getIsAI():
+                self.onShowNotification("error", "Cannot place card here - terrain doesn't match adjacent cards!")
+        
             return False
             
         self.gameBoard.placeCard(card, x, y)
         self.lastPlacedCard = card
         self.currentCard = None
         
-        logger.info(f"Card placed successfully at ({x}, {y})")
-        logger.debug(f"Card played, last played card set to card {card} at {x};{y}")
+        if not self.isFirstRound:
+            logger.info(f"{self.currentPlayer.getName()} placed a card at ({x}, {y})")
+            
+        logger.debug(f"Last played card set to card {card} at {x};{y}")
         
         self.detectStructures()
         return True
@@ -391,19 +397,23 @@ class GameSession:
             logger.debug("Attempting to skip card placement...")
             
             if self.canPlaceCardAnywhere(self.currentCard):
-                logger.info("Cannot discard card - it can be placed somewhere on the board")
-                logger.debug("Cannot skip card placement - card can be placed somewhere on the board")
-                raise ValueError("CANNOT_DISCARD_PLAYABLE_CARD")
+                #logger.info("Cannot discard card - it can be placed somewhere on the board")
+                logger.debug(f"Player {self.currentPlayer.getName()} was unable to skip card placement - card can be placed somewhere on the board")
+                
+                if self.onShowNotification and not self.currentPlayer.getIsAI():
+                    self.onShowNotification("warning", "Cannot discard card - it can be placed on the board!")
+                
+                #raise ValueError("CANNOT_DISCARD_PLAYABLE_CARD")
             else:
-                logger.info("Card discarded - no valid placement found")
-                logger.debug("Card cannot be placed anywhere - discarding according to official rules...")
+                logger.info(f"Player {self.currentPlayer.getName()} discarded card - no valid placement was found")
+                #logger.debug("Card cannot be placed anywhere - discarding according to official rules...")
                 self.discardCurrentCard()
                 if not self.cardsDeck:
                     self.endGame()
         
         elif self.turnPhase == 2:
-            logger.info("Meeple placement skipped")
-            logger.debug("Skipping figure placement. Finalizing turn...")
+            logger.info(f"Player {self.currentPlayer.getName()} skipped meeple placement")
+            logger.debug("Finalizing turn...")
 
             for structure in self.structures:
                 structure.checkCompletion()
@@ -421,21 +431,33 @@ class GameSession:
 
         card = self.gameBoard.getCard(x, y)
         if card != self.lastPlacedCard:
-            logger.info(f"{player.getName()}: Cannot place meeple here - only on the card you just placed")
-            logger.debug("Unable to play figure, can only place figures on last played card")
+            #logger.info(f"{player.getName()}: Cannot place meeple here - only on the card you just placed")
+            logger.debug(f"Player {player.getName()} was unable to play figure on card {self.gameBoard.getCard(x,y)} at [{x},{y}], can only place figures on last played card")
+            
+            if self.onShowNotification and not player.getIsAI():
+                self.onShowNotification("error", "Cannot place meeple here - only on the card you just placed!")
+            
             return False
 
         if not card:
-            logger.info(f"{player.getName()}: No card found at ({x}, {y})")
-            logger.debug(f"Unable to play figure, no card detected in selected space: {x};{y}")
+            logger.debug(f"Player {player.getName()} was unable to place their meeple at [{x},{y}], no card was found.")
+            #logger.debug(f"Unable to play figure, no card detected in selected space: {x};{y}")
+            
+            if self.onShowNotification and not player.getIsAI():
+                self.onShowNotification("error", "No card found at this position!")
+            
             return False
 
         # Find structure that this figure would be placed on
         structure = self.structureMap.get((x, y, position))
         if structure:
             if structure.figures:
-                logger.info(f"{player.getName()}: Cannot place meeple - this structure is already occupied")
-                logger.debug(f"Unable to play figure, structure already claimed.")
+                logger.debug(f"Player {player.getName()} was unable to place their meeple at [{x},{y}], position {position}, the structure is already occupied")
+                #logger.debug(f"Unable to play figure, structure already claimed.")
+                
+                if self.onShowNotification and not player.getIsAI():
+                    self.onShowNotification("error", "Cannot place meeple - this structure is already occupied!")
+                
                 return False
 
         # Attempt to place figure from player
@@ -443,8 +465,8 @@ class GameSession:
             figure = player.getFigure()
             if figure.place(card, position):
                 self.placedFigures.append(figure)
-                logger.info(f"{player.getName()} placed a meeple on {position} position at ({x}, {y})")
-                logger.debug(f"{player.getName()} placed a figure at ({x}, {y}) on position {position}")
+                logger.info(f"{player.getName()} placed a meeple on {position} position at [{x},{y}]")
+                #logger.debug(f"{player.getName()} placed a figure at ({x}, {y}) on position {position}")
 
                 if structure:
                     structure.addFigure(figure)
@@ -454,8 +476,12 @@ class GameSession:
             else:
                 player.addFigure(figure)
 
-        logger.info(f"{player.getName()}: No meeples left to place")
-        logger.debug("Unable to place figure, player has no figures left.")
+        logger.debug(f"Player {player.getName()} was unable to place their meeple, player has no meeples left")
+        #logger.debug("Unable to place figure, player has no figures left.")
+        
+        if self.onShowNotification and not player.getIsAI():
+            self.onShowNotification("error", "No meeples left to place!")
+        
         return False
             
     def detectStructures(self):
@@ -621,16 +647,16 @@ class GameSession:
         owners = structure.getMajorityOwners()
 
         if not owners:
-            logger.info(f"{structure.structureType} completed but no meeples to score")
-            logger.debug("No figures on structure. No points awarded.")
+            logger.scoring(f"{structure.structureType} was completed but there were no meeples to score")
+            #logger.debug("No figures on structure. No points awarded.")
             return
 
-        logger.info(f"{structure.structureType} completed!")
-        logger.debug(f"Scoring structure: {structure.structureType} for {score} points.")
+        logger.info(f"{structure.structureType} was completed")
+        #logger.debug(f"Scoring structure: {structure.structureType} for {score} points.")
         
         for owner in owners:
-            logger.info(f"{owner.getName()} scores {score} points from {structure.structureType}")
-            logger.debug(f" - {owner.getName()} receives {score} points.")
+            logger.scoring(f"Player {owner.getName()} scored {score} points from the {structure.structureType}")
+            #logger.debug(f" - {owner.getName()} receives {score} points.")
             owner.addScore(score)
 
         structure.setColor(owners[0].getColorWithAlpha())
@@ -638,21 +664,21 @@ class GameSession:
         for figure in structure.getFigures()[:]:
             structure.removeFigure(figure)
             figure.owner.addFigure(figure)
-            logger.info(f"{figure.owner.getName()}'s meeple returned")
+            logger.info(f"{figure.owner.getName()}'s meeple was returned")
             
     def endGame(self):
         logger.info("GAME OVER - No more cards in deck!")
-        logger.info("Scoring remaining incomplete structures...")
+        logger.scoring("Remaining incomplete structures will now be scored...")
         logger.debug("=== END OF GAME TRIGGERED ===")
 
         self.gameOver = True
 
         for structure in self.structures:
             if not structure.getIsCompleted():
-                logger.info(f"Scoring incomplete {structure.structureType}...")
+                logger.scoring(f"Scoring incomplete {structure.structureType}...")
                 self.scoreStructure(structure)
 
-        logger.info("All meeples returned to players")
+        logger.debug("All meeples have been returned to players")
         self.placedFigures.clear()
         self.showFinalResults()
 
@@ -660,15 +686,15 @@ class GameSession:
             self.onTurnEnded()
         
     def showFinalResults(self):
-        logger.info("=== FINAL SCORES ===")
+        logger.scoring("=== FINAL SCORES ===")
         
         sortedPlayers = sorted(self.players, key=lambda p: p.getScore(), reverse=True)
         
         for i, player in enumerate(sortedPlayers):
             if i == 0:
-                logger.info(f"WINNER: {player.getName()}: {player.getScore()} points")
+                logger.scoring(f"WINNER: {player.getName()}: {player.getScore()} points")
             else:
-                logger.info(f"{player.getName()}: {player.getScore()} points")
+                logger.scoring(f"{player.getName()}: {player.getScore()} points")
             
     def getCandidatePositions(self):
         """
@@ -732,6 +758,36 @@ class GameSession:
             
             logger.debug("Card cannot be placed at any candidate position")
             return False
+            
+        finally:
+            while card.rotation != originalRotation:
+                card.rotate()
+                
+    def getRandomValidPlacement(self, card):
+        """
+        Get a random valid placement for the given card
+        :param card: Card to place
+        :return: (x, y, rotations_needed) or None if no placement possible
+        """
+        if not card:
+            return None
+            
+        candidatePositions = list(self.getCandidatePositions())
+        random.shuffle(candidatePositions)
+        
+        originalRotation = card.rotation
+        
+        try:
+            for x, y in candidatePositions:
+                while card.rotation != originalRotation:
+                    card.rotate()
+                    
+                for rotations in range(4):
+                    if self.gameBoard.validateCardPlacement(card, x, y):
+                        return (x, y, rotations)
+                    card.rotate()
+            
+            return None
             
         finally:
             while card.rotation != originalRotation:

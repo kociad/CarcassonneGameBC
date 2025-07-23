@@ -5,6 +5,18 @@ import traceback
 from datetime import datetime
 from pathlib import Path
 
+# Definovat nový SCORING level
+SCORING_LEVEL = 25  # Mezi INFO (20) a WARNING (30)
+logging.addLevelName(SCORING_LEVEL, "SCORING")
+
+def scoring(self, message, *args, **kwargs):
+    """Log 'message % args' with severity 'SCORING'."""
+    if self.isEnabledFor(SCORING_LEVEL):
+        self._log(SCORING_LEVEL, message, args, **kwargs)
+
+# Přidat SCORING metodu do Logger třídy
+logging.Logger.scoring = scoring
+
 def configureLogging():
     """
     Configure logging for the application with file and console output.
@@ -48,7 +60,7 @@ def configureLogging():
     
     logger = logging.getLogger(__name__)
     if debugEnabled:
-        logger.info(f"Logging configured with file output: {logFilename}")
+        logger.debug(f"Logging configured with file output: {logFilename}")
     else:
         logger.info("Logging configured (console only - DEBUG disabled)")
 
@@ -69,7 +81,7 @@ def updateLoggingLevel():
             if isinstance(handler, logging.StreamHandler) and handler.stream == sys.stdout:
                 handler.setLevel(logging.DEBUG)
         logger = logging.getLogger(__name__)
-        logger.info("Debug logging enabled - all messages visible")
+        logger.debug("Debug logging enabled - all messages visible")
     else:
         # Disable only DEBUG level, keep INFO and above
         logging.disable(logging.NOTSET)  # First enable all
@@ -153,7 +165,8 @@ class GameLogHandler(logging.Handler):
             # Map logging levels to our log levels
             levelMapping = {
                 logging.DEBUG: "DEBUG",
-                logging.INFO: "INFO", 
+                logging.INFO: "INFO",
+                SCORING_LEVEL: "SCORING",  # ⭐ Přidáno SCORING level
                 logging.WARNING: "WARNING",
                 logging.ERROR: "ERROR",
                 logging.CRITICAL: "ERROR"

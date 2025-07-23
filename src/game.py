@@ -51,14 +51,14 @@ class Game:
             self.currentScene = None
             self.initScene(GameState.MENU)
             
-            logger.info("Game initialized successfully")
+            logger.debug("Game initialized successfully")
             
         except Exception as e:
             logError("Failed to initialize game", e)
             raise
 
     def run(self):
-        logger.info("Starting main game loop")
+        logger.debug("Starting main game loop")
         try:
             while self.running:
                 events = pygame.event.get()
@@ -69,13 +69,13 @@ class Game:
             logError("Error in main game loop", e)
             raise
         finally:
-            logger.info("Game loop ended")
+            logger.debug("Game loop ended")
 
     def quit(self):
         try:
             self.cleanupPreviousGame()
             pygame.quit()
-            logger.info("Game quit successfully")
+            logger.debug("Game quit successfully")
             exit()
         except Exception as e:
             logError("Error during game quit", e)
@@ -157,9 +157,10 @@ class Game:
                 self.network.onJoinFailed = self.onJoinFailed
 
             self.gameSession.onTurnEnded = self.onTurnEnded
+            self.gameSession.onShowNotification = self.onShowNotification
 
             self.initScene(GameState.GAME)
-            logger.info(f"Game started with {len(playerNames)} players")
+            logger.debug(f"Game started with {len(playerNames)} players")
             
         except Exception as e:
             logError("Failed to start game", e)
@@ -286,6 +287,22 @@ class Game:
 
     def getGameSession(self):
         return self.gameSession
+        
+    # V game.py:
+    def onShowNotification(self, notificationType, message):
+        """
+        Handle notification requests from game session
+        """
+        try:
+            logger.debug(f"onShowNotification called: type={notificationType}, message={message}")
+            
+            if hasattr(self.currentScene, 'showNotification'):
+                logger.debug("Scene has showNotification method, calling it")
+                self.currentScene.showNotification(notificationType, message)
+            else:
+                logger.debug(f"Scene doesn't support notifications: {message}")
+        except Exception as e:
+            logError("Failed to show notification", e)
 
 
 if __name__ == "__main__":

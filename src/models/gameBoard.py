@@ -93,15 +93,15 @@ class GameBoard:
         logger.debug("Validating card placement...")
         
         if not (0 <= x < self.gridSize) or not (0 <= y < self.gridSize):
-            logger.info(f"Cannot place card at ({x}, {y}) - position out of bounds")
+            logger.debug(f"Cannot place card at ({x}, {y}) - position out of bounds")
             return False
         
         if self.getCard(x, y) is not None:
-            logger.info(f"Cannot place card at ({x}, {y}) - position already occupied")
+            logger.debug(f"Cannot place card at ({x}, {y}) - position already occupied")
             return False
             
         if not self.hasNeighbor(x, y):
-            logger.info(f"Cannot place card at ({x}, {y}) - no adjacent cards found")
+            logger.debug(f"Cannot place card at ({x}, {y}) - no adjacent cards found")
             return False
             
         neighbors = {
@@ -118,7 +118,7 @@ class GameBoard:
                     cardTerrain = card.getTerrains()[direction]
                     neighborTerrain = neighbor.getTerrains()[self.getOppositeDirection(direction)]
                     if cardTerrain != neighborTerrain:
-                        logger.info(f"Cannot place card at ({x}, {y}) - {cardTerrain} doesn't match neighbor's {neighborTerrain}")
+                        logger.debug(f"Cannot place card at ({x}, {y}) - {cardTerrain} doesn't match neighbor's {neighborTerrain}")
                         return False
         
         return True

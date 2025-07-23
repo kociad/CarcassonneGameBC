@@ -413,18 +413,10 @@ class GameScene(Scene):
             if allowAction:
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     self.handleMouseClick(event)
-                    
+                
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_SPACE:
-                        try:
-                            self.session.skipCurrentAction()
-                            logger.info("Current action skipped")
-                        except ValueError as e:
-                            if str(e) == "CANNOT_DISCARD_PLAYABLE_CARD":
-                                from ui.components.toast import Toast
-                                self.showDiscardError()
-                            else:
-                                raise
+                        self.session.skipCurrentAction()
                         
         self.handleKeyHold()
 
@@ -486,21 +478,34 @@ class GameScene(Scene):
 
         return min(distances, key=distances.get)
         
-    def showDiscardError(self):
-        """Show error message when trying to discard a playable card"""
+    def showNotification(self, notificationType, message):
+        """
+        Show notification toast - called via callback from game session
+        """
         if not hasattr(self, 'toastQueue'):
             self.toastQueue = []
             self.activeToast = None
         
         from ui.components.toast import Toast
-        errorToast = Toast("Cannot discard card - it can be placed on the board!", type="warning", duration=3)
         
-        if self.activeToast and self.activeToast.message == errorToast.message:
+        # Map notification types to toast types
+        toastTypeMap = {
+            "error": "error",
+            "warning": "warning", 
+            "info": "info",
+            "success": "success"
+        }
+        
+        toastType = toastTypeMap.get(notificationType, "info")
+        toast = Toast(message, type=toastType, duration=3)
+        
+        # Avoid duplicate toasts
+        if self.activeToast and self.activeToast.message == toast.message:
             return
-        if any(t.message == errorToast.message for t in self.toastQueue):
+        if any(t.message == toast.message for t in self.toastQueue):
             return
             
-        self.toastQueue.append(errorToast)
+        self.toastQueue.append(toast)
     
     def update(self):
         fps = settings_manager.get("FPS")
@@ -527,13 +532,15 @@ class GameScene(Scene):
             self.session.getGameOver(),
             self.session.getPlayers()
         )
-        self.drawSidePanel(
-            self.session.getCurrentCard(),
-            len(self.session.getCardsDeck()),
-            self.session.getCurrentPlayer(),
-            self.session.getPlacedFigures(),
-            self.session.getStructures()
-        )
+        
+        if not self.session.getGameOver() and not self.session.getIsFirstRound():
+            self.drawSidePanel(
+                self.session.getCurrentCard(),
+                len(self.session.getCardsDeck()),
+                self.session.getCurrentPlayer(),
+                self.session.getPlacedFigures(),
+                self.session.getStructures()
+            )
         
         self.gameLog.draw(self.screen)
         

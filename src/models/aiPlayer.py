@@ -12,37 +12,35 @@ class AIPlayer(Player):
         super().__init__(name, index, color, isAI=True)
 
     def playTurn(self, gameSession):
-        logger.info(f"{self.name} is thinking...")
-        logger.debug(f"{self.name} (AI) is taking a turn...")
+        logger.info(f"Player {self.name} is thinking...")
+        #logger.debug(f"{self.name} (AI) is taking a turn...")
 
-        candidatePositions = list(gameSession.getCandidatePositions())
-        random.shuffle(candidatePositions)
-        
-        cardPlaced = False
-        targetX, targetY = -1, -1
         currentCard = gameSession.getCurrentCard()
-
-        # Try to place card
-        for x, y in candidatePositions:
-            for rotation in range(4):
-                if gameSession.playCard(x, y):
-                    cardPlaced = True
-                    targetX, targetY = x, y
-                    break
-                currentCard.rotate()
-
-            if cardPlaced:
-                gameSession.setTurnPhase(2)
-                break
-                
-        if not cardPlaced:
-            logger.info(f"{self.name} cannot place card anywhere - discarding")
+        
+        # Try to find valid placement
+        placement = gameSession.getRandomValidPlacement(currentCard)
+        
+        if not placement:
+            logger.info(f"Player {self.name} couldn't place their card anywhere and discarded it")
             gameSession.skipCurrentAction()
             return
-            
-        # Decide on meeple placement
+        
+        x, y, rotations_needed = placement
+        
+        for _ in range(rotations_needed):
+            currentCard.rotate()
+        
+        if gameSession.playCard(x, y):
+            gameSession.setTurnPhase(2)
+            self._handleMeeplePlacement(gameSession, x, y)
+        else:
+            logger.error(f"Player {self.name} failed to place card at validated position [{x},{y}]")
+
+    def _handleMeeplePlacement(self, gameSession, targetX, targetY):
+        """Handle meeple placement phase"""
+        # Decide on meeple placement (50% chance)
         if random.random() > 0.5:
-            logger.info(f"{self.name} decided not to place a meeple")
+            logger.info(f"Player {self.name} decided not to place a meeple")
             gameSession.skipCurrentAction()
             return
             
@@ -57,9 +55,9 @@ class AIPlayer(Player):
             
             if structure and not structure.getFigures():
                 if gameSession.playFigure(self, targetX, targetY, direction):
-                    logger.info(f"{self.name} placed meeple on {direction}")
+                    logger.info(f"Player {self.name} placed meeple on {direction}")
                     gameSession.nextTurn()
                     return
                     
-        logger.info(f"{self.name} couldn't place meeple anywhere")
+        logger.info(f"Player {self.name} couldn't place meeple anywhere")
         gameSession.skipCurrentAction()
