@@ -8,11 +8,12 @@ from utils.settingsManager import settings_manager
 logger = logging.getLogger(__name__)
 
 class GameScene(Scene):
-    def __init__(self, screen, switchSceneCallback, gameSession, clock, network):
+    def __init__(self, screen, switchSceneCallback, gameSession, clock, network, gameLog):
         super().__init__(screen, switchSceneCallback)
         self.session = gameSession
         self.clock = clock
         self.network = network
+        self.gameLog = gameLog
 
         self.scrollSpeed = 10
         self.font = pygame.font.Font(None, 36)
@@ -376,7 +377,13 @@ class GameScene(Scene):
             self.offsetX += self.scrollSpeed
 
     def handleEvents(self, events):
-        self.applySidebarScroll(events)
+        for event in events:
+            if event.type == pygame.MOUSEWHEEL and hasattr(self, 'gameLog') and self.gameLog.visible:
+                self.gameLog.handleScroll(event.y)
+                return
+        
+        if not (hasattr(self, 'gameLog') and self.gameLog.visible):
+            self.applySidebarScroll(events)
         
         for event in events:
             if event.type == pygame.QUIT:
@@ -387,7 +394,11 @@ class GameScene(Scene):
                 self.keysPressed[event.key] = (event.type == pygame.KEYDOWN)
                 
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_ESCAPE:
+                if event.key == pygame.K_TAB:
+                    self.gameLog.toggleVisibility()
+                    #logger.info("Game log visibility toggled")
+                elif event.key == pygame.K_ESCAPE:
+                    #logger.info("Returning to main menu")
                     self.switchScene(GameState.MENU)
 
             # Block game actions if it's not this player's turn in network mode
@@ -407,6 +418,7 @@ class GameScene(Scene):
                     if event.key == pygame.K_SPACE:
                         try:
                             self.session.skipCurrentAction()
+                            logger.info("Current action skipped")
                         except ValueError as e:
                             if str(e) == "CANNOT_DISCARD_PLAYABLE_CARD":
                                 from ui.components.toast import Toast
@@ -522,6 +534,8 @@ class GameScene(Scene):
             self.session.getPlacedFigures(),
             self.session.getStructures()
         )
+        
+        self.gameLog.draw(self.screen)
         
         if hasattr(self, 'toastQueue'):
             if not self.activeToast and self.toastQueue:

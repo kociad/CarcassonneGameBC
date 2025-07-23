@@ -14,6 +14,8 @@ from models.gameSession import GameSession
 from network.connection import NetworkConnection
 from network.message import encodeMessage
 from utils.settingsManager import settings_manager
+from ui.components.gameLog import GameLog
+from utils.loggingConfig import setGameLogInstance
 
 # Configure logging with exception handling
 configureLogging()
@@ -37,6 +39,10 @@ class Game:
 
             self.clock = pygame.time.Clock()
             self.running = True
+            
+            # Initialize persistent game log
+            self.gameLog = GameLog()
+            setGameLogInstance(self.gameLog)
 
             # Game-related attributes (deferred until game starts)
             self.gameSession = None
@@ -93,6 +99,12 @@ class Game:
             logger.debug("Clearing temporary settings...")
             settings_manager.reloadFromFile()
             
+            # Reset game log for new session
+            if hasattr(self, 'gameLog'):
+                self.gameLog.entries.clear()
+                self.gameLog.scrollOffset = 0
+                self.gameLog.addEntry("New game session started", "INFO")
+            
             logger.debug("Previous game cleanup completed")
             
         except Exception as e:
@@ -105,7 +117,7 @@ class Game:
             elif state == GameState.GAME:
                 self.currentScene = GameScene(
                     self.screen, self.initScene, self.gameSession,
-                    self.clock, self.network
+                    self.clock, self.network, self.gameLog  # Pass gameLog to GameScene
                 )
             elif state == GameState.SETTINGS:
                 self.currentScene = SettingsScene(self.screen, self.initScene)

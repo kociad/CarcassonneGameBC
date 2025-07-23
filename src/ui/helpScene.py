@@ -36,6 +36,7 @@ class HelpScene(Scene):
             "RMB (Right Mouse Button) - Rotate card",
             "SPACEBAR - Discard card (only if unplaceable) or skip meeple",
             "ESC - Return to main menu",
+            "TAB - Toggle the game log",
             "",
             "MOUSE WHEEL - Scroll in menus and sidebar",
             "",

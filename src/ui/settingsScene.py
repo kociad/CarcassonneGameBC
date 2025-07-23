@@ -103,6 +103,19 @@ class SettingsScene(Scene):
         
         
         self.sidebarWidthSlider.setDisabled(not settings_manager.get("DEBUG"))
+        currentY += 40
+        
+        self.gameLogMaxEntriesField = InputField(
+            rect=(xCenter, currentY, 200, 40),
+            font=self.inputFont,
+            initialText=str(settings_manager.get("GAME_LOG_MAX_ENTRIES", 2000)),
+            onTextChange=None,
+            numeric=True,
+            minValue=100,
+            maxValue=50000
+        )
+
+        self.gameLogMaxEntriesField.setDisabled(not settings_manager.get("DEBUG"))
         currentY += 60
 
         self.applyButton = Button("Apply", (xCenter, currentY, 200, 60), self.buttonFont)
@@ -134,7 +147,11 @@ class SettingsScene(Scene):
         self.sidebarWidthSlider.setDisabled(not new_value)
         self.tileSizeSlider.setDisabled(not new_value)
         self.figureSizeSlider.setDisabled(not new_value)
-
+        self.gameLogMaxEntriesField.setDisabled(not new_value)
+        
+        if new_value and not old_value:
+            self.addToast(Toast("To enable log file generation, restart the game", type="info"))
+            
     def handleEvents(self, events):
         self.applyScroll(events)
 
@@ -154,6 +171,7 @@ class SettingsScene(Scene):
             self.tileSizeSlider.handleEvent(event, yOffset=self.scrollOffset)
             self.figureSizeSlider.handleEvent(event, yOffset=self.scrollOffset)
             self.sidebarWidthSlider.handleEvent(event, yOffset=self.scrollOffset)
+            self.gameLogMaxEntriesField.handleEvent(event, yOffset=self.scrollOffset)
 
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if self.backButton.isClicked(event.pos, yOffset=self.scrollOffset):
@@ -186,6 +204,19 @@ class SettingsScene(Scene):
         # Sidebar width jen pokud není disabled
         if not self.sidebarWidthSlider.isDisabled():
             changes["SIDEBAR_WIDTH"] = self.sidebarWidthSlider.getValue()
+        
+        # Game Log Max Entries jen pokud není disabled
+        if not self.gameLogMaxEntriesField.isDisabled():
+            try:
+                logMaxEntries = int(self.gameLogMaxEntriesField.getText())
+                if 100 <= logMaxEntries <= 50000:
+                    changes["GAME_LOG_MAX_ENTRIES"] = logMaxEntries
+                else:
+                    self.addToast(Toast("Game log max entries must be between 100 and 50000", type="error"))
+                    return
+            except ValueError:
+                self.addToast(Toast("Invalid game log max entries value", type="error"))
+                return
 
         # Apply all changes at once
         success = True
@@ -195,6 +226,14 @@ class SettingsScene(Scene):
 
         if success:
             self.addToast(Toast("Settings successfully saved", type="success"))
+            
+            # Update game log max entries if it changed
+            if "GAME_LOG_MAX_ENTRIES" in changes:
+                # Get game log instance and update it
+                from utils.loggingConfig import gameLogInstance
+                if gameLogInstance:
+                    gameLogInstance.updateMaxEntries()
+                    
         else:
             self.addToast(Toast("Failed to save some settings", type="error"))
 
@@ -255,12 +294,21 @@ class SettingsScene(Scene):
             centery=self.sidebarWidthSlider.rect.centery + offsetY
         )
         self.screen.blit(sbwLabel, sbwLabelRect)
+        
+        labelColor = (120, 120, 120) if self.gameLogMaxEntriesField.isDisabled() else (255, 255, 255)
+        logLabel = labelFont.render("Game log max entries:", True, labelColor)
+        logLabelRect = logLabel.get_rect(
+            right=self.gameLogMaxEntriesField.rect.left - 10,
+            centery=self.gameLogMaxEntriesField.rect.centery + offsetY
+        )
+        self.screen.blit(logLabel, logLabelRect)
 
         self.fullscreenCheckbox.draw(self.screen, yOffset=offsetY)
         self.debugCheckbox.draw(self.screen, yOffset=offsetY)
-        self.tileSizeSlider.draw(self.screen, yOffset=offsetY)  # Vždy vykreslit
-        self.figureSizeSlider.draw(self.screen, yOffset=offsetY)  # Vždy vykreslit
-        self.sidebarWidthSlider.draw(self.screen, yOffset=offsetY)  # Vždy vykreslit
+        self.tileSizeSlider.draw(self.screen, yOffset=offsetY)
+        self.figureSizeSlider.draw(self.screen, yOffset=offsetY)
+        self.sidebarWidthSlider.draw(self.screen, yOffset=offsetY)
+        self.gameLogMaxEntriesField.draw(self.screen, yOffset=offsetY)
         self.applyButton.draw(self.screen, yOffset=offsetY)
         self.backButton.draw(self.screen, yOffset=offsetY)
         self.resolutionDropdown.draw(self.screen, yOffset=offsetY)

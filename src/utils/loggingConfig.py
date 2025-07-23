@@ -14,22 +14,30 @@ def configureLogging():
     # Import settings_manager to check DEBUG setting
     from utils.settingsManager import settings_manager
     
-    # Always configure logging infrastructure
-    logsDir = Path("logs")
-    logsDir.mkdir(exist_ok=True)
+    # Check if DEBUG is enabled
+    debugEnabled = settings_manager.get("DEBUG", False)
     
-    # Create log filename with timestamp
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    logFilename = logsDir / f"carcassonne_{timestamp}.log"
+    # Prepare handlers list
+    handlers = [logging.StreamHandler(sys.stdout)]  # Always have console output
     
-    # Configure root logger with both file and console
+    # Only add file handler if DEBUG is enabled
+    if debugEnabled:
+        # Create logs directory only when needed
+        logsDir = Path("logs")
+        logsDir.mkdir(exist_ok=True)
+        
+        # Create log filename with timestamp
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        logFilename = logsDir / f"carcassonne_{timestamp}.log"
+        
+        # Add file handler
+        handlers.append(logging.FileHandler(logFilename, encoding='utf-8'))
+    
+    # Configure root logger
     logging.basicConfig(
         level=logging.DEBUG,
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        handlers=[
-            logging.FileHandler(logFilename, encoding='utf-8'),
-            logging.StreamHandler(sys.stdout)
-        ]
+        handlers=handlers
     )
     
     # Set initial logging state based on DEBUG setting
@@ -39,7 +47,10 @@ def configureLogging():
     setupExceptionLogging()
     
     logger = logging.getLogger(__name__)
-    logger.info(f"Logging configured. Log file: {logFilename}")
+    if debugEnabled:
+        logger.info(f"Logging configured with file output: {logFilename}")
+    else:
+        logger.info("Logging configured (console only - DEBUG disabled)")
 
 def updateLoggingLevel():
     """
@@ -109,3 +120,58 @@ def logError(message, exception=None):
         logger.error(f"Exception type: {type(exception).__name__}")
         logger.error(f"Exception message: {str(exception)}")
         logger.error("Full traceback:", exc_info=True)
+        
+gameLogInstance = None
+gameLogHandler = None
+
+def setGameLogInstance(gameLog):
+    """Set the game log instance for UI logging"""
+    global gameLogInstance, gameLogHandler
+    gameLogInstance = gameLog
+    
+    # Now add the handler since we have the instance
+    if gameLogHandler is None:
+        gameLogHandler = GameLogHandler()
+        gameLogHandler.setLevel(logging.DEBUG)  # Capture all levels
+        
+        # Add to root logger
+        rootLogger = logging.getLogger()
+        rootLogger.addHandler(gameLogHandler)
+        
+        logger = logging.getLogger(__name__)
+        logger.debug("Game log handler added to root logger")
+
+class GameLogHandler(logging.Handler):
+    """Custom logging handler that sends messages to the game log UI"""
+    
+    def emit(self, record):
+        global gameLogInstance
+        if gameLogInstance is None:
+            return
+            
+        try:
+            # Map logging levels to our log levels
+            levelMapping = {
+                logging.DEBUG: "DEBUG",
+                logging.INFO: "INFO", 
+                logging.WARNING: "WARNING",
+                logging.ERROR: "ERROR",
+                logging.CRITICAL: "ERROR"
+            }
+            
+            level = levelMapping.get(record.levelno, "INFO")
+            
+            # Get clean message without logger name prefix
+            cleanMessage = record.getMessage()
+            
+            # Add logger name for DEBUG messages to help with debugging
+            if level == "DEBUG":
+                loggerName = record.name.split('.')[-1]  # Get last part of logger name
+                cleanMessage = f"[{loggerName}] {cleanMessage}"
+            
+            # Add to game log
+            gameLogInstance.addEntry(cleanMessage, level)
+            
+        except Exception as e:
+            # Don't let logging errors crash the game
+            pass
