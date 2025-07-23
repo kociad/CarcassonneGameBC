@@ -288,7 +288,6 @@ class Game:
     def getGameSession(self):
         return self.gameSession
         
-    # V game.py:
     def onShowNotification(self, notificationType, message):
         """
         Handle notification requests from game session

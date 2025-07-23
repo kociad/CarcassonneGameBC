@@ -322,7 +322,7 @@ class GameSession:
         self.currentCard = None
         
         if not self.isFirstRound:
-            logger.info(f"{self.currentPlayer.getName()} placed a card at ({x}, {y})")
+            logger.info(f"Player {self.currentPlayer.getName()} placed a card at [{x - self.gameBoard.getCenter()},{self.gameBoard.getCenter() - y}]")
             
         logger.debug(f"Last played card set to card {card} at {x};{y}")
         
@@ -465,7 +465,7 @@ class GameSession:
             figure = player.getFigure()
             if figure.place(card, position):
                 self.placedFigures.append(figure)
-                logger.info(f"{player.getName()} placed a meeple on {position} position at [{x},{y}]")
+                logger.info(f"Player {player.getName()} placed a meeple on {position} position at [{x - self.gameBoard.getCenter()},{self.gameBoard.getCenter() - y}]")
                 #logger.debug(f"{player.getName()} placed a figure at ({x}, {y}) on position {position}")
 
                 if structure:

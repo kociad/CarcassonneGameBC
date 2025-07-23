@@ -4,6 +4,7 @@ import logging
 from ui.scene import Scene
 from gameState import GameState
 from utils.settingsManager import settings_manager
+from ui.components.toast import Toast, ToastManager
 
 logger = logging.getLogger(__name__)
 
@@ -18,8 +19,9 @@ class GameScene(Scene):
         self.scrollSpeed = 10
         self.font = pygame.font.Font(None, 36)
 
-        self.toastQueue = []
-        self.activeToast = None
+        #self.toastQueue = []
+        #self.activeToast = None
+        self.toastManager = ToastManager(maxToasts=5)
 
         self.sidebarScrollOffset = 0
         self.sidebarScrollSpeed = 30
@@ -482,12 +484,7 @@ class GameScene(Scene):
         """
         Show notification toast - called via callback from game session
         """
-        if not hasattr(self, 'toastQueue'):
-            self.toastQueue = []
-            self.activeToast = None
-        
-        from ui.components.toast import Toast
-        
+               
         # Map notification types to toast types
         toastTypeMap = {
             "error": "error",
@@ -499,13 +496,8 @@ class GameScene(Scene):
         toastType = toastTypeMap.get(notificationType, "info")
         toast = Toast(message, type=toastType, duration=3)
         
-        # Avoid duplicate toasts
-        if self.activeToast and self.activeToast.message == toast.message:
-            return
-        if any(t.message == toast.message for t in self.toastQueue):
-            return
-            
-        self.toastQueue.append(toast)
+        # ToastManager handles duplicate checking automatically
+        self.toastManager.addToast(toast)
     
     def update(self):
         fps = settings_manager.get("FPS")
@@ -544,14 +536,6 @@ class GameScene(Scene):
         
         self.gameLog.draw(self.screen)
         
-        if hasattr(self, 'toastQueue'):
-            if not self.activeToast and self.toastQueue:
-                self.activeToast = self.toastQueue.pop(0)
-                self.activeToast.start()
-            
-            if self.activeToast:
-                self.activeToast.draw(self.screen)
-                if self.activeToast.isExpired():
-                    self.activeToast = None
+        self.toastManager.draw(self.screen)
         
         pygame.display.flip()

@@ -33,6 +33,13 @@ class GameBoard:
         :return: Tuple (x, y) representing the center coordinates.
         """
         return self.center, self.center
+        
+    def getCenter(self):
+        """
+        Returns the center value
+        :return: Integer representing the exact halfpoint of the board
+        """
+        return self.center
     
     def placeCard(self, card, x, y):
         """

@@ -4,7 +4,7 @@ from ui.scene import Scene
 from ui.components.button import Button
 from ui.components.inputField import InputField
 from ui.components.dropdown import Dropdown
-from ui.components.toast import Toast
+from ui.components.toast import Toast, ToastManager
 from ui.components.checkbox import Checkbox
 from gameState import GameState
 from utils.settingsManager import settings_manager
@@ -51,8 +51,11 @@ class GamePrepareScene(Scene):
         self.buttonFont = pygame.font.Font(None, 48)
         self.inputFont = pygame.font.Font(None, 36)
         self.dropdownFont = pygame.font.Font(None, 36)
-        self.toastQueue = []
-        self.activeToast = None
+        
+        #self.toastQueue = []
+        #self.activeToast = None
+        self.toastManager = ToastManager(maxToasts=5)
+        
         self.scrollOffset = 0
         self.maxScroll = 0
         self.scrollSpeed = 30
@@ -367,18 +370,11 @@ class GamePrepareScene(Scene):
         self.startButton.draw(self.screen, yOffset=offsetY)
         self.networkModeDropdown.draw(self.screen, yOffset=offsetY)
 
-        if not self.activeToast and self.toastQueue:
-            self.activeToast = self.toastQueue.pop(0)
-            self.activeToast.start()
-        if self.activeToast:
-            self.activeToast.draw(self.screen)
-
         self.maxScroll = max(self.screen.get_height(), self.backButton.rect.bottom + 80)
+        
+        self.toastManager.draw(self.screen)
+        
         pygame.display.flip()
         
     def addToast(self, toast):
-        if self.activeToast and self.activeToast.message == toast.message:
-            return
-        if any(t.message == toast.message for t in self.toastQueue):
-            return
-        self.toastQueue.append(toast)
+        self.toastManager.addToast(toast)

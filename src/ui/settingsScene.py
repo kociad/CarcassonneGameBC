@@ -4,7 +4,7 @@ from gameState import GameState
 from ui.components.button import Button
 from ui.components.inputField import InputField
 from ui.components.dropdown import Dropdown
-from ui.components.toast import Toast
+from ui.components.toast import Toast, ToastManager
 from ui.components.checkbox import Checkbox
 from ui.components.slider import Slider
 from utils.settingsManager import settings_manager
@@ -16,8 +16,9 @@ class SettingsScene(Scene):
         self.buttonFont = pygame.font.Font(None, 48)
         self.inputFont = pygame.font.Font(None, 36)
         self.dropdownFont = pygame.font.Font(None, 36)
-        self.toastQueue = []
-        self.activeToast = None
+        #self.toastQueue = []
+        #self.activeToast = None
+        self.toastManager = ToastManager(maxToasts=5)
 
         self.scrollOffset = 0
         self.maxScroll = 0
@@ -82,7 +83,7 @@ class SettingsScene(Scene):
             font=self.dropdownFont,
             minValue=10, maxValue=50,
             value=settings_manager.get("FIGURE_SIZE"),
-            onChange=lambda value: self.addToast(Toast("Start new game to apply figure size changes", type="warning"))
+            onChange=lambda value: self.addToast(Toast("Restart the game to apply figure size changes", type="warning"))
         )
         
         self.figureSizeSlider.setDisabled(not settings_manager.get("DEBUG"))
@@ -98,7 +99,7 @@ class SettingsScene(Scene):
             minValue=minSidebarWidth,
             maxValue=400,
             value=max(currentSidebarWidth, minSidebarWidth),
-            onChange=lambda value: self.addToast(Toast("Start new game to apply sidebar width changes", type="warning"))
+            onChange=lambda value: self.addToast(Toast("Restart the game to apply sidebar width changes", type="warning"))
         )
         
         
@@ -133,7 +134,7 @@ class SettingsScene(Scene):
             self.sidebarWidthSlider.setValue(newMinSidebarWidth)
             self.addToast(Toast(f"Sidebar width adjusted to minimum ({newMinSidebarWidth}px)", type="info"))
         
-        self.addToast(Toast("Start new game to apply tile size changes", type="warning"))
+        self.addToast(Toast("Restart the game to apply tile size changes", type="warning"))
 
     def onFullscreenChanged(self, key, old_value, new_value):
         """Callback for when fullscreen setting changes"""
@@ -150,7 +151,7 @@ class SettingsScene(Scene):
         self.gameLogMaxEntriesField.setDisabled(not new_value)
         
         if new_value and not old_value:
-            self.addToast(Toast("To enable log file generation, restart the game", type="info"))
+            self.addToast(Toast("Restart the game to enable log file generation", type="info"))
             
     def handleEvents(self, events):
         self.applyScroll(events)
@@ -196,7 +197,7 @@ class SettingsScene(Scene):
 
         # Other settings
         changes["FULLSCREEN"] = self.fullscreenCheckbox.isChecked()
-        #changes["DEBUG"] = self.debugCheckbox.isChecked()
+        changes["DEBUG"] = self.debugCheckbox.isChecked()
         
         # Tile size a figure size jen pokud nejsou disabled
         if not self.tileSizeSlider.isDisabled():
@@ -323,21 +324,11 @@ class SettingsScene(Scene):
         self.backButton.draw(self.screen, yOffset=offsetY)
         self.resolutionDropdown.draw(self.screen, yOffset=offsetY)
 
-        if not self.activeToast and self.toastQueue:
-            self.activeToast = self.toastQueue.pop(0)
-            self.activeToast.start()
-
-        if self.activeToast:
-            self.activeToast.draw(self.screen)
-            if self.activeToast.isExpired():
-                self.activeToast = None
-
         self.maxScroll = max(self.screen.get_height(), self.backButton.rect.bottom + 80)
+        
+        self.toastManager.draw(self.screen)
+        
         pygame.display.flip()
 
     def addToast(self, toast):
-        if self.activeToast and self.activeToast.message == toast.message:
-            return
-        if any(t.message == toast.message for t in self.toastQueue):
-            return
-        self.toastQueue.append(toast)
+        self.toastManager.addToast(toast)
