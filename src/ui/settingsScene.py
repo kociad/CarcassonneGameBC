@@ -199,7 +199,7 @@ class SettingsScene(Scene):
             self.addToast(Toast("Failed to save some settings", type="error"))
 
     def handleFullscreenToggle(self, value):
-        settings_manager.set("FULLSCREEN", value, temporary=True)
+        #settings_manager.set("FULLSCREEN", value, temporary=False)
         self.addToast(Toast("Restart the game to apply fullscreen changes", type="warning"))
 
     def draw(self):
