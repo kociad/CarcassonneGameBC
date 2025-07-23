@@ -55,7 +55,7 @@ class HelpScene(Scene):
         ]
         
         # Calculate content height
-        lineHeight = 35
+        lineHeight = 30
         self.controlsHeight = len(self.controls) * lineHeight
         currentY += self.controlsHeight + 40
         

@@ -291,13 +291,9 @@ class GameScene(Scene):
             except Exception as e:
                 logger.error(f"Failed to get player color: {e}")
                 playerColor = (255, 255, 255)
-
-            # Enhanced highlighting for current player
-            if isCurrentPlayer:
-                playerColor = (255, 255, 100)  # Bright yellow for current player
             
             # Player name with current turn indicator
-            nameText = f">>> {player.getName()} <<<" if isCurrentPlayer else player.getName()
+            nameText = player.getName()
             nameSurface = self.font.render(nameText, True, playerColor)
             nameRect = nameSurface.get_rect()
             nameRect.centerx = sidebarCenterX
@@ -307,7 +303,7 @@ class GameScene(Scene):
             currentY += nameRect.height + 5
 
             # Player score with current player highlighting
-            scoreColor = (255, 255, 100) if isCurrentPlayer else (200, 200, 200)
+            scoreColor = (200, 200, 200)
             scoreSurface = self.font.render(f"Score: {player.getScore()}", True, scoreColor)
             scoreRect = scoreSurface.get_rect()
             scoreRect.centerx = sidebarCenterX
