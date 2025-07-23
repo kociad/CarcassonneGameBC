@@ -16,21 +16,15 @@ class SettingsScene(Scene):
         self.buttonFont = pygame.font.Font(None, 48)
         self.inputFont = pygame.font.Font(None, 36)
         self.dropdownFont = pygame.font.Font(None, 36)
-        #self.toastQueue = []
-        #self.activeToast = None
         self.toastManager = ToastManager(maxToasts=5)
-
         self.scrollOffset = 0
         self.maxScroll = 0
         self.scrollSpeed = 30
 
-        # Subscribe to settings changes for automatic UI updates
         settings_manager.subscribe("FULLSCREEN", self.onFullscreenChanged)
         settings_manager.subscribe("DEBUG", self.onDebugChanged)
 
-        # Get current values from SettingsManager
         currentResolution = f"{settings_manager.get('WINDOW_WIDTH')}x{settings_manager.get('WINDOW_HEIGHT')}"
-
         xCenter = screen.get_width() // 2 - 100
         currentY = 60
 
@@ -67,6 +61,26 @@ class SettingsScene(Scene):
         )
         currentY += 60
 
+        self.fpsSlider = Slider(
+            rect=(xCenter, currentY, 180, 20),
+            font=self.dropdownFont,
+            minValue=30, maxValue=144,
+            value=settings_manager.get("FPS", 60),
+            onChange=lambda value: self.addToast(Toast("Restart the game to apply FPS changes", type="warning"))
+        )
+        self.fpsSlider.setDisabled(not settings_manager.get("DEBUG"))
+        currentY += 40
+
+        self.gridSizeSlider = Slider(
+            rect=(xCenter, currentY, 180, 20),
+            font=self.dropdownFont,
+            minValue=10, maxValue=50,
+            value=settings_manager.get("GRID_SIZE", 20),
+            onChange=lambda value: self.addToast(Toast("Restart the game to apply grid size changes", type="warning"))
+        )
+        self.gridSizeSlider.setDisabled(not settings_manager.get("DEBUG"))
+        currentY += 40
+
         self.tileSizeSlider = Slider(
             rect=(xCenter, currentY, 180, 20),
             font=self.dropdownFont,
@@ -74,7 +88,6 @@ class SettingsScene(Scene):
             value=settings_manager.get("TILE_SIZE"),
             onChange=self.onTileSizeChanged
         )
-        
         self.tileSizeSlider.setDisabled(not settings_manager.get("DEBUG"))
         currentY += 40
 
@@ -85,14 +98,12 @@ class SettingsScene(Scene):
             value=settings_manager.get("FIGURE_SIZE"),
             onChange=lambda value: self.addToast(Toast("Restart the game to apply figure size changes", type="warning"))
         )
-        
         self.figureSizeSlider.setDisabled(not settings_manager.get("DEBUG"))
         currentY += 40
 
         currentTileSize = settings_manager.get("TILE_SIZE")
         currentSidebarWidth = settings_manager.get("SIDEBAR_WIDTH")
         minSidebarWidth = currentTileSize + 20
-
         self.sidebarWidthSlider = Slider(
             rect=(xCenter, currentY, 180, 20),
             font=self.dropdownFont,
@@ -101,11 +112,9 @@ class SettingsScene(Scene):
             value=max(currentSidebarWidth, minSidebarWidth),
             onChange=lambda value: self.addToast(Toast("Restart the game to apply sidebar width changes", type="warning"))
         )
-        
-        
         self.sidebarWidthSlider.setDisabled(not settings_manager.get("DEBUG"))
         currentY += 40
-        
+
         self.gameLogMaxEntriesField = InputField(
             rect=(xCenter, currentY, 200, 40),
             font=self.inputFont,
@@ -115,7 +124,6 @@ class SettingsScene(Scene):
             minValue=100,
             maxValue=50000
         )
-
         self.gameLogMaxEntriesField.setDisabled(not settings_manager.get("DEBUG"))
         currentY += 60
 
@@ -125,7 +133,6 @@ class SettingsScene(Scene):
         self.backButton = Button("Back", (xCenter, currentY, 200, 60), self.buttonFont)
 
     def onTileSizeChanged(self, newTileSize):
-        """Handle tile size change - update sidebar width slider minimum"""
         newMinSidebarWidth = newTileSize + 20
         self.sidebarWidthSlider.setMinValue(newMinSidebarWidth)
         
@@ -137,14 +144,14 @@ class SettingsScene(Scene):
         self.addToast(Toast("Restart the game to apply tile size changes", type="warning"))
 
     def onFullscreenChanged(self, key, old_value, new_value):
-        """Callback for when fullscreen setting changes"""
         self.resolutionDropdown.setDisabled(new_value)
 
     def onDebugChanged(self, key, old_value, new_value):
-        """Callback for when DEBUG setting changes"""
         from utils.loggingConfig import updateLoggingLevel
         updateLoggingLevel()
         
+        self.fpsSlider.setDisabled(not new_value)
+        self.gridSizeSlider.setDisabled(not new_value)
         self.sidebarWidthSlider.setDisabled(not new_value)
         self.tileSizeSlider.setDisabled(not new_value)
         self.figureSizeSlider.setDisabled(not new_value)
@@ -152,65 +159,61 @@ class SettingsScene(Scene):
         
         if new_value and not old_value:
             self.addToast(Toast("Restart the game to enable log file generation", type="info"))
-            
+
     def handleEvents(self, events):
         self.applyScroll(events)
-
         for event in events:
             if event.type == pygame.QUIT:
                 pygame.quit()
                 exit()
-
             if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                 self.switchScene(GameState.MENU)
-
             if self.resolutionDropdown.handleEvent(event, yOffset=self.scrollOffset):
                 continue
-
             self.fullscreenCheckbox.handleEvent(event, yOffset=self.scrollOffset)
             self.debugCheckbox.handleEvent(event, yOffset=self.scrollOffset)
+            self.fpsSlider.handleEvent(event, yOffset=self.scrollOffset)
+            self.gridSizeSlider.handleEvent(event, yOffset=self.scrollOffset)
             self.tileSizeSlider.handleEvent(event, yOffset=self.scrollOffset)
             self.figureSizeSlider.handleEvent(event, yOffset=self.scrollOffset)
             self.sidebarWidthSlider.handleEvent(event, yOffset=self.scrollOffset)
             self.gameLogMaxEntriesField.handleEvent(event, yOffset=self.scrollOffset)
-
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if self.backButton.isClicked(event.pos, yOffset=self.scrollOffset):
                     self.switchScene(GameState.MENU)
                 elif self.applyButton.isClicked(event.pos, yOffset=self.scrollOffset):
                     self.applySettings()
-                    
+
     def handleDebugToggle(self, value):
-        """Handle debug checkbox toggle - apply immediately"""
         settings_manager.set("DEBUG", value, temporary=True)
 
     def applySettings(self):
-        """Apply all settings using SettingsManager"""
         changes = {}
         
-        # Resolution
         selected_resolution = self.resolutionDropdown.getSelected()
         if selected_resolution:
             width, height = map(int, selected_resolution.split("x"))
             changes["WINDOW_WIDTH"] = width
             changes["WINDOW_HEIGHT"] = height
 
-        # Other settings
         changes["FULLSCREEN"] = self.fullscreenCheckbox.isChecked()
         changes["DEBUG"] = self.debugCheckbox.isChecked()
         
-        # Tile size a figure size jen pokud nejsou disabled
+        if not self.fpsSlider.isDisabled():
+            changes["FPS"] = self.fpsSlider.getValue()
+        
+        if not self.gridSizeSlider.isDisabled():
+            changes["GRID_SIZE"] = self.gridSizeSlider.getValue()
+        
         if not self.tileSizeSlider.isDisabled():
             changes["TILE_SIZE"] = self.tileSizeSlider.getValue()
         
         if not self.figureSizeSlider.isDisabled():
             changes["FIGURE_SIZE"] = self.figureSizeSlider.getValue()
         
-        # Sidebar width jen pokud není disabled
         if not self.sidebarWidthSlider.isDisabled():
             changes["SIDEBAR_WIDTH"] = self.sidebarWidthSlider.getValue()
         
-        # Game Log Max Entries jen pokud není disabled
         if not self.gameLogMaxEntriesField.isDisabled():
             try:
                 logMaxEntries = int(self.gameLogMaxEntriesField.getText())
@@ -223,7 +226,6 @@ class SettingsScene(Scene):
                 self.addToast(Toast("Invalid game log max entries value", type="error"))
                 return
 
-        # Apply all changes at once
         success = True
         for key, value in changes.items():
             if not settings_manager.set(key, value, temporary=False):
@@ -237,18 +239,14 @@ class SettingsScene(Scene):
         if success:
             self.addToast(Toast("Settings successfully saved", type="success"))
             
-            # Update game log max entries if it changed
             if "GAME_LOG_MAX_ENTRIES" in changes:
-                # Get game log instance and update it
                 from utils.loggingConfig import gameLogInstance
                 if gameLogInstance:
                     gameLogInstance.updateMaxEntries()
-                    
         else:
             self.addToast(Toast("Failed to save some settings", type="error"))
 
     def handleFullscreenToggle(self, value):
-        #settings_manager.set("FULLSCREEN", value, temporary=False)
         self.resolutionDropdown.setDisabled(value)
         self.addToast(Toast("Restart the game to apply fullscreen changes", type="warning"))
 
@@ -282,6 +280,22 @@ class SettingsScene(Scene):
         )
         self.screen.blit(dbLabel, dbLabelRect)
 
+        labelColor = (120, 120, 120) if self.fpsSlider.isDisabled() else (255, 255, 255)
+        fpsLabel = labelFont.render("FPS:", True, labelColor)
+        fpsLabelRect = fpsLabel.get_rect(
+            right=self.fpsSlider.rect.left - 10,
+            centery=self.fpsSlider.rect.centery + offsetY
+        )
+        self.screen.blit(fpsLabel, fpsLabelRect)
+
+        labelColor = (120, 120, 120) if self.gridSizeSlider.isDisabled() else (255, 255, 255)
+        gridLabel = labelFont.render("Grid size:", True, labelColor)
+        gridLabelRect = gridLabel.get_rect(
+            right=self.gridSizeSlider.rect.left - 10,
+            centery=self.gridSizeSlider.rect.centery + offsetY
+        )
+        self.screen.blit(gridLabel, gridLabelRect)
+
         labelColor = (120, 120, 120) if self.tileSizeSlider.isDisabled() else (255, 255, 255)
         tszLabel = labelFont.render("Tile size:", True, labelColor)
         tszLabelRect = tszLabel.get_rect(
@@ -305,7 +319,7 @@ class SettingsScene(Scene):
             centery=self.sidebarWidthSlider.rect.centery + offsetY
         )
         self.screen.blit(sbwLabel, sbwLabelRect)
-        
+
         labelColor = (120, 120, 120) if self.gameLogMaxEntriesField.isDisabled() else (255, 255, 255)
         logLabel = labelFont.render("Game log max entries:", True, labelColor)
         logLabelRect = logLabel.get_rect(
@@ -316,6 +330,8 @@ class SettingsScene(Scene):
 
         self.fullscreenCheckbox.draw(self.screen, yOffset=offsetY)
         self.debugCheckbox.draw(self.screen, yOffset=offsetY)
+        self.fpsSlider.draw(self.screen, yOffset=offsetY)
+        self.gridSizeSlider.draw(self.screen, yOffset=offsetY)
         self.tileSizeSlider.draw(self.screen, yOffset=offsetY)
         self.figureSizeSlider.draw(self.screen, yOffset=offsetY)
         self.sidebarWidthSlider.draw(self.screen, yOffset=offsetY)
