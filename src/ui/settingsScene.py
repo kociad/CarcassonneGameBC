@@ -62,7 +62,7 @@ class SettingsScene(Scene):
         self.debugCheckbox = Checkbox(
             rect=(xCenter, currentY, 20, 20),
             checked=settings_manager.get("DEBUG"),
-            onToggle=None
+            onToggle=self.handleDebugToggle
         )
         currentY += 60
 
@@ -178,6 +178,10 @@ class SettingsScene(Scene):
                     self.switchScene(GameState.MENU)
                 elif self.applyButton.isClicked(event.pos, yOffset=self.scrollOffset):
                     self.applySettings()
+                    
+    def handleDebugToggle(self, value):
+        """Handle debug checkbox toggle - apply immediately"""
+        settings_manager.set("DEBUG", value, temporary=True)
 
     def applySettings(self):
         """Apply all settings using SettingsManager"""
@@ -192,7 +196,7 @@ class SettingsScene(Scene):
 
         # Other settings
         changes["FULLSCREEN"] = self.fullscreenCheckbox.isChecked()
-        changes["DEBUG"] = self.debugCheckbox.isChecked()
+        #changes["DEBUG"] = self.debugCheckbox.isChecked()
         
         # Tile size a figure size jen pokud nejsou disabled
         if not self.tileSizeSlider.isDisabled():
@@ -223,6 +227,11 @@ class SettingsScene(Scene):
         for key, value in changes.items():
             if not settings_manager.set(key, value, temporary=False):
                 success = False
+                
+        current_debug = settings_manager.get("DEBUG")
+        checkbox_debug = self.debugCheckbox.isChecked()
+        if current_debug != checkbox_debug:
+            settings_manager.set("DEBUG", checkbox_debug, temporary=False)
 
         if success:
             self.addToast(Toast("Settings successfully saved", type="success"))
@@ -239,6 +248,7 @@ class SettingsScene(Scene):
 
     def handleFullscreenToggle(self, value):
         #settings_manager.set("FULLSCREEN", value, temporary=False)
+        self.resolutionDropdown.setDisabled(value)
         self.addToast(Toast("Restart the game to apply fullscreen changes", type="warning"))
 
     def draw(self):
