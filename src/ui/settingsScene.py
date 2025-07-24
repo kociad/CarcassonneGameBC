@@ -11,7 +11,9 @@ from utils.settingsManager import settingsManager
 import typing
 
 class SettingsScene(Scene):
+    """Scene for displaying and modifying game settings such as resolution, fullscreen, debug, and UI options"""
     def __init__(self, screen: pygame.Surface, switchSceneCallback: typing.Callable) -> None:
+        """Initialize the SettingsScene with all UI components and load current settings"""
         super().__init__(screen, switchSceneCallback)
         self.font = pygame.font.Font(None, 80)
         self.buttonFont = pygame.font.Font(None, 48)
@@ -150,6 +152,7 @@ class SettingsScene(Scene):
         )
 
     def onTileSizeChanged(self, newTileSize):
+        """Handle changes to the tile size slider and update sidebar width constraints"""
         newMinSidebarWidth = newTileSize + 20
         self.sidebarWidthSlider.setMinValue(newMinSidebarWidth)
         
@@ -161,9 +164,11 @@ class SettingsScene(Scene):
         self.addToast(Toast("Restart the game to apply tile size changes", type="warning"))
 
     def onFullscreenChanged(self, key, old_value, new_value):
+        """Handle changes to the fullscreen setting and enable/disable resolution dropdown"""
         self.resolutionDropdown.setDisabled(new_value)
 
     def onDebugChanged(self, key, old_value, new_value):
+        """Handle changes to the debug setting and enable/disable debug-related controls"""
         from utils.loggingConfig import updateLoggingLevel
         updateLoggingLevel()
         
@@ -179,6 +184,7 @@ class SettingsScene(Scene):
             self.addToast(Toast("Restart the game to enable log file generation", type="info"))
 
     def handleEvents(self, events: list[pygame.event.Event]) -> None:
+        """Handle all pygame events for the settings scene, including input and button actions"""
         self.applyScroll(events)
         for event in events:
             if event.type == pygame.QUIT:
@@ -204,12 +210,15 @@ class SettingsScene(Scene):
                     self.applySettings()
 
     def handleDebugToggle(self, value):
+        """Handle toggling of the debug checkbox"""
         settingsManager.set("DEBUG", value, temporary=True)
 
     def handleConsoleLogToggle(self, value):
+        """Handle toggling of the console log output checkbox"""
         settingsManager.set("CONSOLE_LOG_OUTPUT", value, temporary=True)
 
     def applySettings(self):
+        """Apply and save all settings changes made in the UI"""
         changes = {}
         
         selected_resolution = self.resolutionDropdown.getSelected()
@@ -270,10 +279,12 @@ class SettingsScene(Scene):
             self.addToast(Toast("Failed to save some settings", type="error"))
 
     def handleFullscreenToggle(self, value):
+        """Handle toggling of the fullscreen checkbox and update UI accordingly"""
         self.resolutionDropdown.setDisabled(value)
         self.addToast(Toast("Restart the game to apply fullscreen changes", type="warning"))
 
     def draw(self) -> None:
+        """Draw the settings scene UI, including all controls and labels"""
         self.screen.fill((30, 30, 30))
         offsetY = self.scrollOffset
         labelFont = self.dropdownFont
@@ -380,4 +391,5 @@ class SettingsScene(Scene):
         pygame.display.flip()
 
     def addToast(self, toast):
+        """Add a toast notification to the scene"""
         self.toastManager.addToast(toast)

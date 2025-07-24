@@ -252,26 +252,33 @@ class GameSession:
         if player is None:
             player = self.currentPlayer
         if self.turnPhase == 1:
-            logger.debug("Turn Phase 1: Attempting to place card...")
-            if self.playCard(x, y):
-                self.turnPhase = 2
-            else:
-                logger.debug("Card placement failed.")
-            return
+            self._handle_card_placement(x, y, player)
         elif self.turnPhase == 2:
-            logger.debug("Turn Phase 2: Attempting to place figure...")
-            if self.playFigure(player, x, y, position):
-                logger.debug("Figure placed.")
-            else:
-                logger.debug("Figure not placed or skipped.")
-                return
-            logger.debug("Checking completed structures...")
-            for structure in self.structures:
-                structure.checkCompletion()
-                if structure.getIsCompleted():
-                    logger.debug(f"Structure {structure.structureType} is completed!")
-                    self.scoreStructure(structure)
+            self._handle_figure_placement(x, y, position, player)
+
+    def _handle_card_placement(self, x: int, y: int, player: typing.Any) -> None:
+        logger.debug("Turn Phase 1: Attempting to place card...")
+        if self.playCard(x, y):
+            self.turnPhase = 2
+        else:
+            logger.debug("Card placement failed.")
+
+    def _handle_figure_placement(self, x: int, y: int, position: str, player: typing.Any) -> None:
+        logger.debug("Turn Phase 2: Attempting to place figure...")
+        if self.playFigure(player, x, y, position):
+            logger.debug("Figure placed.")
+            self._score_completed_structures()
             self.nextTurn()
+        else:
+            logger.debug("Figure not placed or skipped.")
+
+    def _score_completed_structures(self) -> None:
+        logger.debug("Checking completed structures...")
+        for structure in self.structures:
+            structure.checkCompletion()
+            if structure.getIsCompleted():
+                logger.debug(f"Structure {structure.structureType} is completed!")
+                self.scoreStructure(structure)
 
     def skipCurrentAction(self) -> None:
         """Skip the current phase action with official rules validation."""
