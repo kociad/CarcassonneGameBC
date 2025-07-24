@@ -81,7 +81,7 @@ class Slider:
         if disabled:
             self.dragging = False
 
-    def isDisabled(self):
+    def isDisabled(self) -> bool:
         """Return True if the slider is disabled."""
         return self.disabled
 

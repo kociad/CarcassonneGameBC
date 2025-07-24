@@ -20,7 +20,10 @@ def configureLogging() -> None:
     """Configure logging for the application with file and console output and global exception handling."""
     from utils.settingsManager import settingsManager
     debugEnabled = settingsManager.get("DEBUG", False)
-    handlers = [logging.StreamHandler(sys.stdout)]
+    consoleLogEnabled = settingsManager.get("CONSOLE_LOG_OUTPUT", True)
+    handlers = []
+    if consoleLogEnabled:
+        handlers.append(logging.StreamHandler(sys.stdout))
     if debugEnabled:
         logsDir = Path("logs")
         logsDir.mkdir(exist_ok=True)
@@ -38,25 +41,24 @@ def configureLogging() -> None:
     if debugEnabled:
         logger.debug(f"Logging configured with file output: {logFilename}")
     else:
-        logger.info("Logging configured (console only - DEBUG disabled)")
+        logger.info(f"Logging configured (console: {consoleLogEnabled}, DEBUG disabled)")
 
 def updateLoggingLevel() -> None:
     """Update logging level based on current DEBUG setting."""
     from utils.settingsManager import settingsManager
     debugEnabled = settingsManager.get("DEBUG", True)
+    consoleLogEnabled = settingsManager.get("CONSOLE_LOG_OUTPUT", True)
+    logging.disable(logging.NOTSET)
+    for handler in logging.getLogger().handlers:
+        if isinstance(handler, logging.StreamHandler) and handler.stream == sys.stdout:
+            if consoleLogEnabled:
+                handler.setLevel(logging.DEBUG if debugEnabled else logging.INFO)
+            else:
+                handler.setLevel(logging.CRITICAL + 1)  # Effectively disables output
+    logger = logging.getLogger(__name__)
     if debugEnabled:
-        logging.disable(logging.NOTSET)
-        for handler in logging.getLogger().handlers:
-            if isinstance(handler, logging.StreamHandler) and handler.stream == sys.stdout:
-                handler.setLevel(logging.DEBUG)
-        logger = logging.getLogger(__name__)
         logger.debug("Debug logging enabled - all messages visible")
     else:
-        logging.disable(logging.NOTSET)
-        for handler in logging.getLogger().handlers:
-            if isinstance(handler, logging.StreamHandler) and handler.stream == sys.stdout:
-                handler.setLevel(logging.INFO)
-        logger = logging.getLogger(__name__)
         logger.info("Debug logging disabled - INFO and above messages visible")
 
 def setupExceptionLogging():

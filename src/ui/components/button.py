@@ -42,3 +42,7 @@ class Button:
     def setDisabled(self, disabled: bool) -> None:
         self.disabled = disabled
         self.updateRender()
+
+    def isDisabled(self) -> bool:
+        """Return True if the button is disabled."""
+        return self.disabled

@@ -60,6 +60,14 @@ class SettingsScene(Scene):
             checked=settingsManager.get("DEBUG"),
             onToggle=self.handleDebugToggle
         )
+        currentY += 40
+
+        self.consoleLogCheckbox = Checkbox(
+            rect=(xCenter, currentY, 20, 20),
+            checked=settingsManager.get("CONSOLE_LOG_OUTPUT", True),
+            onToggle=self.handleConsoleLogToggle
+        )
+        self.consoleLogCheckbox.setDisabled(not settingsManager.get("DEBUG"))
         currentY += 60
 
         self.fpsSlider = Slider(
@@ -165,6 +173,7 @@ class SettingsScene(Scene):
         self.tileSizeSlider.setDisabled(not new_value)
         self.figureSizeSlider.setDisabled(not new_value)
         self.gameLogMaxEntriesField.setDisabled(not new_value)
+        self.consoleLogCheckbox.setDisabled(not new_value)
         
         if new_value and not old_value:
             self.addToast(Toast("Restart the game to enable log file generation", type="info"))
@@ -181,6 +190,7 @@ class SettingsScene(Scene):
                 continue
             self.fullscreenCheckbox.handleEvent(event, yOffset=self.scrollOffset)
             self.debugCheckbox.handleEvent(event, yOffset=self.scrollOffset)
+            self.consoleLogCheckbox.handleEvent(event, yOffset=self.scrollOffset)
             self.fpsSlider.handleEvent(event, yOffset=self.scrollOffset)
             self.gridSizeSlider.handleEvent(event, yOffset=self.scrollOffset)
             self.tileSizeSlider.handleEvent(event, yOffset=self.scrollOffset)
@@ -196,6 +206,9 @@ class SettingsScene(Scene):
     def handleDebugToggle(self, value):
         settingsManager.set("DEBUG", value, temporary=True)
 
+    def handleConsoleLogToggle(self, value):
+        settingsManager.set("CONSOLE_LOG_OUTPUT", value, temporary=True)
+
     def applySettings(self):
         changes = {}
         
@@ -207,6 +220,7 @@ class SettingsScene(Scene):
 
         changes["FULLSCREEN"] = self.fullscreenCheckbox.isChecked()
         changes["DEBUG"] = self.debugCheckbox.isChecked()
+        changes["CONSOLE_LOG_OUTPUT"] = self.consoleLogCheckbox.isChecked()
         
         if not self.fpsSlider.isDisabled():
             changes["FPS"] = self.fpsSlider.getValue()
@@ -268,7 +282,8 @@ class SettingsScene(Scene):
         titleRect = titleText.get_rect(center=(self.screen.get_width() // 2, self.titleY + offsetY))
         self.screen.blit(titleText, titleRect)
 
-        resLabel = labelFont.render("Resolution:", True, (255, 255, 255))
+        resLabelColor = (120, 120, 120) if self.resolutionDropdown.isDisabled() else (255, 255, 255)
+        resLabel = labelFont.render("Resolution:", True, resLabelColor)
         resLabelRect = resLabel.get_rect(
             right=self.resolutionDropdown.rect.left - 10,
             centery=self.resolutionDropdown.rect.centery + offsetY
@@ -288,6 +303,14 @@ class SettingsScene(Scene):
             centery=self.debugCheckbox.rect.centery + offsetY
         )
         self.screen.blit(dbLabel, dbLabelRect)
+
+        clLabelColor = (120, 120, 120) if self.consoleLogCheckbox.isDisabled() else (255, 255, 255)
+        clLabel = labelFont.render("Console log output:", True, clLabelColor)
+        clLabelRect = clLabel.get_rect(
+            right=self.consoleLogCheckbox.rect.left - 10,
+            centery=self.consoleLogCheckbox.rect.centery + offsetY
+        )
+        self.screen.blit(clLabel, clLabelRect)
 
         labelColor = (120, 120, 120) if self.fpsSlider.isDisabled() else (255, 255, 255)
         fpsLabel = labelFont.render("FPS:", True, labelColor)
@@ -339,6 +362,7 @@ class SettingsScene(Scene):
 
         self.fullscreenCheckbox.draw(self.screen, yOffset=offsetY)
         self.debugCheckbox.draw(self.screen, yOffset=offsetY)
+        self.consoleLogCheckbox.draw(self.screen, yOffset=offsetY)
         self.fpsSlider.draw(self.screen, yOffset=offsetY)
         self.gridSizeSlider.draw(self.screen, yOffset=offsetY)
         self.tileSizeSlider.draw(self.screen, yOffset=offsetY)

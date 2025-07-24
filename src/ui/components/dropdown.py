@@ -80,3 +80,7 @@ class Dropdown:
         """Enable or disable the dropdown."""
         self.disabled = value
         return self
+
+    def isDisabled(self) -> bool:
+        """Return True if the dropdown is disabled."""
+        return self.disabled

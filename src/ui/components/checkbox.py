@@ -43,6 +43,10 @@ class Checkbox:
         """Return True if the checkbox is checked."""
         return self.checked
 
+    def isDisabled(self) -> bool:
+        """Return True if the checkbox is disabled."""
+        return self.disabled
+
     def setChecked(self, state: bool) -> None:
         """Set the checked state of the checkbox."""
         self.checked = bool(state)
