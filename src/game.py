@@ -13,9 +13,10 @@ from utils.loggingConfig import configureLogging, logError
 from models.gameSession import GameSession
 from network.connection import NetworkConnection
 from network.message import encodeMessage
-from utils.settingsManager import settings_manager
+from utils.settingsManager import settingsManager
 from ui.components.gameLog import GameLog
 from utils.loggingConfig import setGameLogInstance
+from ui.lobbyScene import LobbyScene  # NEW: import the lobby scene
 
 # Configure logging with exception handling
 configureLogging()
@@ -27,12 +28,12 @@ class Game:
         try:
             pygame.init()
 
-            if settings_manager.get("FULLSCREEN", False):
+            if settingsManager.get("FULLSCREEN", False):
                 info = pygame.display.Info()
                 self.screen = pygame.display.set_mode((info.current_w, info.current_h), pygame.FULLSCREEN)
             else:
-                width = settings_manager.get("WINDOW_WIDTH", 1920)
-                height = settings_manager.get("WINDOW_HEIGHT", 1080)
+                width = settingsManager.get("WINDOW_WIDTH", 1920)
+                height = settingsManager.get("WINDOW_HEIGHT", 1080)
                 self.screen = pygame.display.set_mode((width, height))
 
             pygame.display.set_caption("Carcassonne")
@@ -97,7 +98,7 @@ class Game:
                 self.gameSession = None
             
             logger.debug("Clearing temporary settings...")
-            settings_manager.reloadFromFile()
+            settingsManager.reloadFromFile()
             
             # Reset game log for new session
             if hasattr(self, 'gameLog'):
@@ -110,24 +111,33 @@ class Game:
         except Exception as e:
             logError("Error during previous game cleanup", e)
 
-    def initScene(self, state):
+    def initScene(self, state, *args):
         try:
             if state == GameState.MENU:
                 self.currentScene = MainMenuScene(self.screen, self.initScene, self.getGameSession, self.cleanupPreviousGame)
             elif state == GameState.GAME:
                 self.currentScene = GameScene(
                     self.screen, self.initScene, self.gameSession,
-                    self.clock, self.network, self.gameLog  # Pass gameLog to GameScene
+                    self.clock, self.network, self.gameLog
                 )
             elif state == GameState.SETTINGS:
                 self.currentScene = SettingsScene(self.screen, self.initScene)
             elif state == GameState.PREPARE:
-                self.currentScene = GamePrepareScene(self.screen, self.initScene, self.startGame)
+                self.currentScene = GamePrepareScene(self.screen, self.initScene)
+            elif state == GameState.LOBBY:
+                self.currentScene = LobbyScene(
+                    self.screen, self.initScene, self.startGame, self.getGameSession, self.network, self.gameLog
+                )
             elif state == GameState.HELP:
                 self.currentScene = HelpScene(self.screen, self.initScene)
-            
+            # Handle dynamic callback from GamePrepareScene
+            elif isinstance(state, str) and state in ("startGame", "startLobby"):
+                playerNames = args[0] if args else []
+                if state == "startGame":
+                    self.startGame(playerNames)
+                else:
+                    self.startLobby(playerNames)
             logger.debug(f"Scene initialized: {state}")
-            
         except Exception as e:
             logError(f"Failed to initialize scene: {state}", e)
             raise
@@ -135,35 +145,53 @@ class Game:
     def startGame(self, playerNames):
         try:
             logger.debug("Initializing new game session...")
-
-            self.gameSession = GameSession(playerNames)
-
-            # Assign host as human player
-            playerIndex = settings_manager.get("PLAYER_INDEX", 0)
-            hostPlayer = self.gameSession.players[playerIndex]
-            hostPlayer.setIsHuman(True)
-            logger.debug(f"Player with index {hostPlayer.getIndex()} marked as human.")
-            logger.debug(f"Player name set to '{hostPlayer.getName()}' from host settings.")
-
             self.network = NetworkConnection()
-
+            networkMode = self.network.networkMode
+            if networkMode in ("host", "local"):
+                self.gameSession = GameSession(playerNames)
+                # Assign host as human player
+                playerIndex = settingsManager.get("PLAYER_INDEX", 0)
+                hostPlayer = self.gameSession.players[playerIndex]
+                hostPlayer.setIsHuman(True)
+                logger.debug(f"Player with index {hostPlayer.getIndex()} marked as human.")
+                logger.debug(f"Player name set to '{hostPlayer.getName()}' from host settings.")
+                self.gameSession.onTurnEnded = self.onTurnEnded
+                self.gameSession.onShowNotification = self.onShowNotification
+            # Set up network callbacks
             self.network.onInitialGameStateReceived = self.onGameStateReceived
             self.network.onSyncGameState = self.onSyncGameState
             self.network.onJoinRejected = self.onJoinRejected
-
-            if self.network.networkMode == "host":
+            if networkMode == "host":
                 self.network.onClientConnected = self.onClientConnected
                 self.network.onClientSubmittedTurn = self.onClientSubmittedTurn
                 self.network.onJoinFailed = self.onJoinFailed
-
-            self.gameSession.onTurnEnded = self.onTurnEnded
-            self.gameSession.onShowNotification = self.onShowNotification
-
             self.initScene(GameState.GAME)
             logger.debug(f"Game started with {len(playerNames)} players")
-            
         except Exception as e:
             logError("Failed to start game", e)
+            raise
+
+    def startLobby(self, playerNames):
+        try:
+            logger.debug("Preparing to enter lobby...")
+            self.network = NetworkConnection()
+            networkMode = self.network.networkMode
+            if networkMode in ("host", "local"):
+                self.gameSession = GameSession(playerNames)
+                playerIndex = settingsManager.get("PLAYER_INDEX", 0)
+                hostPlayer = self.gameSession.players[playerIndex]
+                hostPlayer.setIsHuman(True)
+                logger.debug(f"Player with index {hostPlayer.getIndex()} marked as human.")
+                logger.debug(f"Player name set to '{hostPlayer.getName()}' from host settings.")
+                self.gameSession.onTurnEnded = self.onTurnEnded
+                self.gameSession.onShowNotification = self.onShowNotification
+            # Only go to lobby for network modes
+            if networkMode != "local":
+                self.initScene(GameState.LOBBY)
+            else:
+                self.initScene(GameState.GAME)
+        except Exception as e:
+            logError("Failed to start lobby", e)
             raise
 
     def onGameStateReceived(self, data):
@@ -178,10 +206,10 @@ class Game:
                     if not player.getIsAI() and not player.isHuman:
                         player.isHuman = True
                         logger.debug(f"Player with index {player.getIndex()} marked as human.")
-                        playersList = settings_manager.get("PLAYERS", ["Player 1"])
+                        playersList = settingsManager.get("PLAYERS", ["Player 1"])
                         player.name = playersList[0]
                         logger.debug(f"Player name set to '{player.name}' from client settings.")
-                        settings_manager.set("PLAYER_INDEX", player.getIndex(), temporary=True)
+                        settingsManager.set("PLAYER_INDEX", player.getIndex(), temporary=True)
                         logger.debug(f"Client assigned to player index {player.getIndex()}")
                         assigned = True
                         break
@@ -234,7 +262,7 @@ class Game:
 
     def onTurnEnded(self):
         try:
-            networkMode = settings_manager.get("NETWORK_MODE", "local")
+            networkMode = settingsManager.get("NETWORK_MODE", "local")
             if networkMode == "local":
                 return
 

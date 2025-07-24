@@ -24,10 +24,10 @@ def configureLogging():
     """
     
     # Import settings_manager to check DEBUG setting
-    from utils.settingsManager import settings_manager
+    from utils.settingsManager import settingsManager
     
     # Check if DEBUG is enabled
-    debugEnabled = settings_manager.get("DEBUG", False)
+    debugEnabled = settingsManager.get("DEBUG", False)
     
     # Prepare handlers list
     handlers = [logging.StreamHandler(sys.stdout)]  # Always have console output
@@ -69,9 +69,9 @@ def updateLoggingLevel():
     Update logging level based on current DEBUG setting.
     INFO and above are always visible, DEBUG only when DEBUG=True
     """
-    from utils.settingsManager import settings_manager
+    from utils.settingsManager import settingsManager
     
-    debugEnabled = settings_manager.get("DEBUG", True)
+    debugEnabled = settingsManager.get("DEBUG", True)
     
     if debugEnabled:
         # Enable all logging (including DEBUG)

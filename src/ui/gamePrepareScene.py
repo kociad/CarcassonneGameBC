@@ -7,7 +7,7 @@ from ui.components.dropdown import Dropdown
 from ui.components.toast import Toast, ToastManager
 from ui.components.checkbox import Checkbox
 from gameState import GameState
-from utils.settingsManager import settings_manager
+from utils.settingsManager import settingsManager
 
 class PlayerConfiguration:
     """Single source of truth for player data"""
@@ -39,13 +39,13 @@ class PlayerConfiguration:
         return PlayerConfiguration(self.name, self.isAI, self.enabled)
 
 class GamePrepareScene(Scene):
-    def __init__(self, screen, switchSceneCallback, startGameCallback):
+    def __init__(self, screen, switchSceneCallback):
         super().__init__(screen, switchSceneCallback)
         
         # Reload settings from file to get clean state (clear runtime overrides from previous game)
-        settings_manager.reloadFromFile()
+        settingsManager.reloadFromFile()
         
-        self.startGameCallback = startGameCallback
+        self.switchSceneCallback = switchSceneCallback
         
         self.font = pygame.font.Font(None, 80)
         self.buttonFont = pygame.font.Font(None, 48)
@@ -61,7 +61,7 @@ class GamePrepareScene(Scene):
         self.scrollSpeed = 30
 
         # Store original default player names
-        self.originalPlayerNames = settings_manager.get("PLAYERS", []).copy()
+        self.originalPlayerNames = settingsManager.get("PLAYERS", []).copy()
         
         # SINGLE SOURCE OF TRUTH - all player data lives here
         self.players = []
@@ -75,9 +75,9 @@ class GamePrepareScene(Scene):
             self.players.append(PlayerConfiguration(name, False, enabled))
         
         # Network settings
-        networkMode = settings_manager.get("NETWORK_MODE", "local")
-        hostIP = settings_manager.get("HOST_IP", "0.0.0.0")
-        port = str(settings_manager.get("HOST_PORT", 222))
+        networkMode = settingsManager.get("NETWORK_MODE", "local")
+        hostIP = settingsManager.get("HOST_IP", "0.0.0.0")
+        port = str(settingsManager.get("HOST_PORT", 222))
         self.localIP = socket.gethostbyname(socket.gethostname())
         self.networkMode = networkMode
 
@@ -210,7 +210,7 @@ class GamePrepareScene(Scene):
         elif isLocal:
             hostValue = None
         else:
-            hostValue = settings_manager.get("HOST_IP", "0.0.0.0")
+            hostValue = settingsManager.get("HOST_IP", "0.0.0.0")
 
         self.hostIPField.setText(hostValue or "")
         self.hostIPField.setDisabled(isLocal)
@@ -262,23 +262,25 @@ class GamePrepareScene(Scene):
         for player in self.players:
             if player.enabled:
                 playerNames.append(player.getDisplayName())
-        
         # Update settings using SettingsManager
-        settings_manager.set("PLAYERS", playerNames, temporary=True)
-        settings_manager.set("NETWORK_MODE", self.networkModeDropdown.getSelected(), temporary=True)
-        settings_manager.set("HOST_IP", self.hostIPField.getText(), temporary=True)
-
+        settingsManager.set("PLAYERS", playerNames, temporary=True)
+        settingsManager.set("NETWORK_MODE", self.networkModeDropdown.getSelected(), temporary=True)
+        settingsManager.set("HOST_IP", self.hostIPField.getText(), temporary=True)
         if self.networkModeDropdown.getSelected() != "local":
             try:
                 port = int(self.portField.getText())
                 if not (1024 <= port <= 65535):
                     raise ValueError
-                settings_manager.set("HOST_PORT", port, temporary=True)
+                settingsManager.set("HOST_PORT", port, temporary=True)
             except ValueError:
                 self.addToast(Toast("Invalid port number", type="error"))
                 return
-                
-        self.startGameCallback(playerNames)
+        # Dynamically choose the correct callback based on current network mode
+        networkMode = self.networkModeDropdown.getSelected()
+        if networkMode == "local":
+            self.switchScene("startGame", playerNames)
+        else:
+            self.switchScene("startLobby", playerNames)
 
     def handleEvents(self, events):
         self.applyScroll(events)

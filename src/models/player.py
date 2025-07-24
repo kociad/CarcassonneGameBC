@@ -111,9 +111,9 @@ class Player:
             "score": self.score,
             "index": self.index,
             "color": self.color,
-            "is_ai": self.isAI,
-            "figures_remaining": len(self.figures),
-            "is_human": self.isHuman
+            "isAI": self.isAI,
+            "figuresRemaining": len(self.figures),
+            "isHuman": self.isHuman
         }
     
     @staticmethod
@@ -122,14 +122,14 @@ class Player:
             name = str(data["name"])
             index = int(data["index"])
             color = str(data["color"])
-            is_ai = bool(data.get("is_ai", False))
+            isAI = bool(data.get("isAI", False))
             score = int(data.get("score", 0))
-            figures_remaining = int(data.get("figures_remaining", 7))
-            is_human = bool(data.get("is_human", False))
+            figuresRemaining = int(data.get("figuresRemaining", 7))
+            isHuman = bool(data.get("isHuman", False))
 
-            player = Player(name=name, index=index, color=color, isAI=is_ai, isHuman=is_human)
+            player = Player(name=name, index=index, color=color, isAI=isAI, isHuman=isHuman)
             player.score = score
-            player.figures = [Figure(player) for _ in range(figures_remaining)]
+            player.figures = [Figure(player) for _ in range(figuresRemaining)]
 
             return player
 

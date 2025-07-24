@@ -6,3 +6,4 @@ class GameState(Enum):
     SETTINGS = auto()
     PREPARE = auto()
     HELP = auto()
+    LOBBY = auto()

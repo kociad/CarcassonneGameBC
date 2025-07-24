@@ -835,9 +835,9 @@ class GameSession:
         session.players = players
 
         try:
-            session.currentPlayer = players[int(data.get("current_player_index", 0))]
+            session.currentPlayer = players[int(data.get("currentPlayerIndex", 0))]
         except (IndexError, ValueError, TypeError) as e:
-            logger.warning(f"Invalid current_player_index, defaulting to first: {e}")
+            logger.warning(f"Invalid currentPlayerIndex, defaulting to first: {e}")
             session.currentPlayer = players[0] if players else None
 
         session.cardsDeck = []
@@ -848,15 +848,15 @@ class GameSession:
                 logger.warning(f"Skipping malformed card in deck: {c} - {e}")
 
         try:
-            session.currentCard = Card.deserialize(data["current_card"]) if data.get("current_card") else None
+            session.currentCard = Card.deserialize(data["currentCard"]) if data.get("currentCard") else None
         except Exception as e:
-            logger.warning(f"Failed to deserialize current_card - {e}")
+            logger.warning(f"Failed to deserialize currentCard - {e}")
             session.currentCard = None
 
         try:
-            session.lastPlacedCard = Card.deserialize(data["last_placed_card"]) if data.get("last_placed_card") else None
+            session.lastPlacedCard = Card.deserialize(data["lastPlacedCard"]) if data.get("lastPlacedCard") else None
         except Exception as e:
-            logger.warning(f"Failed to deserialize last_placed_card - {e}")
+            logger.warning(f"Failed to deserialize lastPlacedCard - {e}")
             session.lastPlacedCard = None
 
         try:

@@ -3,7 +3,7 @@ import webbrowser
 from ui.scene import Scene
 from ui.components.button import Button
 from gameState import GameState
-from utils.settingsManager import settings_manager
+from utils.settingsManager import settingsManager
 import logging
 
 logger = logging.getLogger(__name__)

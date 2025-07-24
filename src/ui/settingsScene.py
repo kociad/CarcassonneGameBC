@@ -7,7 +7,7 @@ from ui.components.dropdown import Dropdown
 from ui.components.toast import Toast, ToastManager
 from ui.components.checkbox import Checkbox
 from ui.components.slider import Slider
-from utils.settingsManager import settings_manager
+from utils.settingsManager import settingsManager
 
 class SettingsScene(Scene):
     def __init__(self, screen, switchSceneCallback):
@@ -21,10 +21,10 @@ class SettingsScene(Scene):
         self.maxScroll = 0
         self.scrollSpeed = 30
 
-        settings_manager.subscribe("FULLSCREEN", self.onFullscreenChanged)
-        settings_manager.subscribe("DEBUG", self.onDebugChanged)
+        settingsManager.subscribe("FULLSCREEN", self.onFullscreenChanged)
+        settingsManager.subscribe("DEBUG", self.onDebugChanged)
 
-        currentResolution = f"{settings_manager.get('WINDOW_WIDTH')}x{settings_manager.get('WINDOW_HEIGHT')}"
+        currentResolution = f"{settingsManager.get('WINDOW_WIDTH')}x{settingsManager.get('WINDOW_HEIGHT')}"
         xCenter = screen.get_width() // 2 - 100
         currentY = 60
 
@@ -44,19 +44,19 @@ class SettingsScene(Scene):
             defaultIndex=defaultIndex,
             onSelect=lambda value: self.addToast(Toast("Restart the game to apply resolution changes", type="warning")),
         )
-        self.resolutionDropdown.setDisabled(settings_manager.get("FULLSCREEN"))
+        self.resolutionDropdown.setDisabled(settingsManager.get("FULLSCREEN"))
         currentY += 60
 
         self.fullscreenCheckbox = Checkbox(
             rect=(xCenter, currentY, 20, 20),
-            checked=settings_manager.get("FULLSCREEN"),
+            checked=settingsManager.get("FULLSCREEN"),
             onToggle=self.handleFullscreenToggle
         )
         currentY += 40
 
         self.debugCheckbox = Checkbox(
             rect=(xCenter, currentY, 20, 20),
-            checked=settings_manager.get("DEBUG"),
+            checked=settingsManager.get("DEBUG"),
             onToggle=self.handleDebugToggle
         )
         currentY += 60
@@ -65,44 +65,44 @@ class SettingsScene(Scene):
             rect=(xCenter, currentY, 180, 20),
             font=self.dropdownFont,
             minValue=30, maxValue=144,
-            value=settings_manager.get("FPS", 60),
+            value=settingsManager.get("FPS", 60),
             onChange=lambda value: self.addToast(Toast("Restart the game to apply FPS changes", type="warning"))
         )
-        self.fpsSlider.setDisabled(not settings_manager.get("DEBUG"))
+        self.fpsSlider.setDisabled(not settingsManager.get("DEBUG"))
         currentY += 40
 
         self.gridSizeSlider = Slider(
             rect=(xCenter, currentY, 180, 20),
             font=self.dropdownFont,
             minValue=10, maxValue=50,
-            value=settings_manager.get("GRID_SIZE", 20),
+            value=settingsManager.get("GRID_SIZE", 20),
             onChange=lambda value: self.addToast(Toast("Restart the game to apply grid size changes", type="warning"))
         )
-        self.gridSizeSlider.setDisabled(not settings_manager.get("DEBUG"))
+        self.gridSizeSlider.setDisabled(not settingsManager.get("DEBUG"))
         currentY += 40
 
         self.tileSizeSlider = Slider(
             rect=(xCenter, currentY, 180, 20),
             font=self.dropdownFont,
             minValue=50, maxValue=150,
-            value=settings_manager.get("TILE_SIZE"),
+            value=settingsManager.get("TILE_SIZE"),
             onChange=self.onTileSizeChanged
         )
-        self.tileSizeSlider.setDisabled(not settings_manager.get("DEBUG"))
+        self.tileSizeSlider.setDisabled(not settingsManager.get("DEBUG"))
         currentY += 40
 
         self.figureSizeSlider = Slider(
             rect=(xCenter, currentY, 180, 20),
             font=self.dropdownFont,
             minValue=10, maxValue=50,
-            value=settings_manager.get("FIGURE_SIZE"),
+            value=settingsManager.get("FIGURE_SIZE"),
             onChange=lambda value: self.addToast(Toast("Restart the game to apply figure size changes", type="warning"))
         )
-        self.figureSizeSlider.setDisabled(not settings_manager.get("DEBUG"))
+        self.figureSizeSlider.setDisabled(not settingsManager.get("DEBUG"))
         currentY += 40
 
-        currentTileSize = settings_manager.get("TILE_SIZE")
-        currentSidebarWidth = settings_manager.get("SIDEBAR_WIDTH")
+        currentTileSize = settingsManager.get("TILE_SIZE")
+        currentSidebarWidth = settingsManager.get("SIDEBAR_WIDTH")
         minSidebarWidth = currentTileSize + 20
         self.sidebarWidthSlider = Slider(
             rect=(xCenter, currentY, 180, 20),
@@ -112,19 +112,19 @@ class SettingsScene(Scene):
             value=max(currentSidebarWidth, minSidebarWidth),
             onChange=lambda value: self.addToast(Toast("Restart the game to apply sidebar width changes", type="warning"))
         )
-        self.sidebarWidthSlider.setDisabled(not settings_manager.get("DEBUG"))
+        self.sidebarWidthSlider.setDisabled(not settingsManager.get("DEBUG"))
         currentY += 40
 
         self.gameLogMaxEntriesField = InputField(
             rect=(xCenter, currentY, 200, 40),
             font=self.inputFont,
-            initialText=str(settings_manager.get("GAME_LOG_MAX_ENTRIES", 2000)),
+            initialText=str(settingsManager.get("GAME_LOG_MAX_ENTRIES", 2000)),
             onTextChange=None,
             numeric=True,
             minValue=100,
             maxValue=50000
         )
-        self.gameLogMaxEntriesField.setDisabled(not settings_manager.get("DEBUG"))
+        self.gameLogMaxEntriesField.setDisabled(not settingsManager.get("DEBUG"))
         currentY += 60
 
         self.applyButton = Button("Apply", (xCenter, currentY, 200, 60), self.buttonFont)
@@ -185,7 +185,7 @@ class SettingsScene(Scene):
                     self.applySettings()
 
     def handleDebugToggle(self, value):
-        settings_manager.set("DEBUG", value, temporary=True)
+        settingsManager.set("DEBUG", value, temporary=True)
 
     def applySettings(self):
         changes = {}
@@ -228,13 +228,13 @@ class SettingsScene(Scene):
 
         success = True
         for key, value in changes.items():
-            if not settings_manager.set(key, value, temporary=False):
+            if not settingsManager.set(key, value, temporary=False):
                 success = False
                 
-        current_debug = settings_manager.get("DEBUG")
+        current_debug = settingsManager.get("DEBUG")
         checkbox_debug = self.debugCheckbox.isChecked()
         if current_debug != checkbox_debug:
-            settings_manager.set("DEBUG", checkbox_debug, temporary=False)
+            settingsManager.set("DEBUG", checkbox_debug, temporary=False)
 
         if success:
             self.addToast(Toast("Settings successfully saved", type="success"))

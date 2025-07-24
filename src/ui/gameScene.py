@@ -3,7 +3,7 @@ import logging
 
 from ui.scene import Scene
 from gameState import GameState
-from utils.settingsManager import settings_manager
+from utils.settingsManager import settingsManager
 from ui.components.toast import Toast, ToastManager
 
 logger = logging.getLogger(__name__)
@@ -26,11 +26,11 @@ class GameScene(Scene):
         self.sidebarScrollOffset = 0
         self.sidebarScrollSpeed = 30
 
-        tileSize = settings_manager.get("TILE_SIZE")
-        gridSize = settings_manager.get("GRID_SIZE")
-        windowWidth = settings_manager.get("WINDOW_WIDTH")
-        windowHeight = settings_manager.get("WINDOW_HEIGHT")
-        sidebarWidth = settings_manager.get("SIDEBAR_WIDTH")
+        tileSize = settingsManager.get("TILE_SIZE")
+        gridSize = settingsManager.get("GRID_SIZE")
+        windowWidth = settingsManager.get("WINDOW_WIDTH")
+        windowHeight = settingsManager.get("WINDOW_HEIGHT")
+        sidebarWidth = settingsManager.get("SIDEBAR_WIDTH")
         
         gameAreaWidth = windowWidth - sidebarWidth
         
@@ -50,8 +50,8 @@ class GameScene(Scene):
         for event in events:
             if event.type == pygame.MOUSEWHEEL:
                 mouseX, mouseY = pygame.mouse.get_pos()
-                windowWidth = settings_manager.get("WINDOW_WIDTH")
-                sidebarWidth = settings_manager.get("SIDEBAR_WIDTH")
+                windowWidth = settingsManager.get("WINDOW_WIDTH")
+                sidebarWidth = settingsManager.get("SIDEBAR_WIDTH")
                 panelX = windowWidth - sidebarWidth
                 
                 if mouseX >= panelX:
@@ -83,14 +83,14 @@ class GameScene(Scene):
             message = f"{winner.getName()} wins with {winner.getScore()} points!"
             gameOverFont = pygame.font.Font(None, 72)
             textSurface = gameOverFont.render(message, True, (255, 255, 255))
-            window_width = settings_manager.get("WINDOW_WIDTH")
-            window_height = settings_manager.get("WINDOW_HEIGHT")
+            window_width = settingsManager.get("WINDOW_WIDTH")
+            window_height = settingsManager.get("WINDOW_HEIGHT")
             textRect = textSurface.get_rect(center=(window_width // 2, window_height // 2))
             self.screen.blit(textSurface, textRect)
             return  # Skip rest of rendering
                 
-        if settings_manager.get("DEBUG"):
-            tile_size = settings_manager.get("TILE_SIZE")
+        if settingsManager.get("DEBUG"):
+            tile_size = settingsManager.get("TILE_SIZE")
             # Draw grid lines
             for x in range(0, (gameBoard.getGridSize() + 1) * tile_size, tile_size):
                 pygame.draw.line(self.screen, (0, 0, 0), (x - self.offsetX, 0 - self.offsetY), (x - self.offsetX, gameBoard.getGridSize() * tile_size - self.offsetY))
@@ -98,7 +98,7 @@ class GameScene(Scene):
                 pygame.draw.line(self.screen, (0, 0, 0), (0 - self.offsetX, y - self.offsetY), (gameBoard.getGridSize() * tile_size - self.offsetX, y - self.offsetY))
         
         # Draw placed cards and their grid coordinates
-        tile_size = settings_manager.get("TILE_SIZE")
+        tile_size = settingsManager.get("TILE_SIZE")
         for y in range(gameBoard.gridSize):
             for x in range(gameBoard.gridSize):
                 card = gameBoard.getCard(x, y)
@@ -111,14 +111,14 @@ class GameScene(Scene):
                             logger.error(f"Rotation failed for card: {e}")
                             imageToDraw = card.image
                     self.screen.blit(imageToDraw, (x * tile_size - self.offsetX, y * tile_size - self.offsetY))
-                if settings_manager.get("DEBUG"):
+                if settingsManager.get("DEBUG"):
                     # Draw X, Y coordinates at the center of each grid cell
                     textSurface = self.font.render(f"{x},{y}", True, (255, 255, 255))
                     textX = x * tile_size - self.offsetX + tile_size // 3
                     textY = y * tile_size - self.offsetY + tile_size // 3
                     self.screen.blit(textSurface, (textX, textY))
                 
-        if settings_manager.get("DEBUG"):
+        if settingsManager.get("DEBUG"):
             # Draw completed detected structures with tint only on relevant directions
             for structure in detectedStructures:
                 if structure.getIsCompleted():
@@ -159,8 +159,8 @@ class GameScene(Scene):
                             self.screen.blit(rect, (cardX * tile_size - self.offsetX, cardY * tile_size - self.offsetY))
 
         # Draw placed figures (meeples) at correct positions on the card
-        tile_size = settings_manager.get("TILE_SIZE")
-        figure_size = settings_manager.get("FIGURE_SIZE")
+        tile_size = settingsManager.get("TILE_SIZE")
+        figure_size = settingsManager.get("FIGURE_SIZE")
         for figure in placedFigures:
             if figure.card:
                 cardPosition = [(x, y) for y in range(gameBoard.gridSize) for x in range(gameBoard.gridSize) if gameBoard.getCard(x, y) == figure.card]
@@ -185,9 +185,9 @@ class GameScene(Scene):
                     self.screen.blit(figure.image, (figureX - tile_size * 0.15, figureY - tile_size * 0.15))  # Adjust for better centering
                     
     def drawSidePanel(self, selectedCard, remainingCards, currentPlayer, placedFigures, detectedStructures):
-        windowWidth = settings_manager.get("WINDOW_WIDTH")
-        windowHeight = settings_manager.get("WINDOW_HEIGHT")
-        sidebarWidth = settings_manager.get("SIDEBAR_WIDTH")
+        windowWidth = settingsManager.get("WINDOW_WIDTH")
+        windowHeight = settingsManager.get("WINDOW_HEIGHT")
+        sidebarWidth = settingsManager.get("SIDEBAR_WIDTH")
         
         panelX = windowWidth - sidebarWidth
         sidebarCenterX = panelX + sidebarWidth // 2
@@ -218,13 +218,13 @@ class GameScene(Scene):
         offsetY = self.sidebarScrollOffset
 
         # Turn status - only show when DEBUG is enabled
-        if settings_manager.get("DEBUG", False):
-            networkMode = settings_manager.get("NETWORK_MODE")
+        if settingsManager.get("DEBUG", False):
+            networkMode = settingsManager.get("NETWORK_MODE")
             if networkMode == "local":
                 statusText = "Local mode"
                 statusColor = (100, 100, 255)
             else:
-                playerIndex = settings_manager.get("PLAYER_INDEX")
+                playerIndex = settingsManager.get("PLAYER_INDEX")
                 isMyTurn = currentPlayer.getIndex() == playerIndex
                 statusText = "Your Turn" if isMyTurn else "Waiting..."
                 statusColor = (0, 255, 0) if isMyTurn else (200, 0, 0)
@@ -258,7 +258,7 @@ class GameScene(Scene):
             playerSectionHeight = 80  # Increased from 60 to make it taller
             figures = player.getFigures()
             if figures:
-                figureSize = settings_manager.get("FIGURE_SIZE")
+                figureSize = settingsManager.get("FIGURE_SIZE")
                 figuresPerRow = max(1, (sidebarWidth - 20) // (figureSize + 5))
                 figuresPerRow = min(figuresPerRow, len(figures))
                 totalRows = (len(figures) + figuresPerRow - 1) // figuresPerRow
@@ -314,7 +314,7 @@ class GameScene(Scene):
 
             # Player's meeples
             if figures:
-                figureSize = settings_manager.get("FIGURE_SIZE")
+                figureSize = settingsManager.get("FIGURE_SIZE")
                 padding = 10
                 availableWidth = sidebarWidth - (2 * padding)
                 figuresPerRow = max(1, availableWidth // (figureSize + 5))
@@ -347,7 +347,7 @@ class GameScene(Scene):
                 currentY += sectionSpacing
 
         # Debug info at the very end (after all players)
-        if settings_manager.get("DEBUG"):
+        if settingsManager.get("DEBUG"):
             currentY += sectionSpacing
             structureSurface = self.font.render(f"Structures: {len(detectedStructures)}", True, (255, 255, 255))
             structureRect = structureSurface.get_rect()
@@ -401,10 +401,10 @@ class GameScene(Scene):
 
             # Block game actions if it's not this player's turn in network mode
             allowAction = True
-            network_mode = settings_manager.get("NETWORK_MODE")
+            network_mode = settingsManager.get("NETWORK_MODE")
             if network_mode in ("host", "client"):
                 currentPlayer = self.session.getCurrentPlayer()
-                player_index = settings_manager.get("PLAYER_INDEX")
+                player_index = settingsManager.get("PLAYER_INDEX")
                 if not currentPlayer or currentPlayer.getIndex() != player_index or self.session.getGameOver():
                     allowAction = False
 
@@ -420,7 +420,7 @@ class GameScene(Scene):
 
     def handleMouseClick(self, event):
         x, y = event.pos
-        tile_size = settings_manager.get("TILE_SIZE")
+        tile_size = settingsManager.get("TILE_SIZE")
         gridX, gridY = (x + self.getOffsetX()) // tile_size, (y + self.getOffsetY()) // tile_size
 
         logger.debug(f"Registered {event.button}")
@@ -445,7 +445,7 @@ class GameScene(Scene):
             self.scroll("right")
             
     def detectClickDirection(self, mouseX, mouseY, gridX, gridY):
-        tile_size = settings_manager.get("TILE_SIZE")
+        tile_size = settingsManager.get("TILE_SIZE")
         tileScreenX = gridX * tile_size - self.getOffsetX()
         tileScreenY = gridY * tile_size - self.getOffsetY()
 
@@ -496,7 +496,7 @@ class GameScene(Scene):
         self.toastManager.addToast(toast)
     
     def update(self):
-        fps = settings_manager.get("FPS")
+        fps = settingsManager.get("FPS")
         if self.session.getGameOver():
             self.clock.tick(fps)
             return

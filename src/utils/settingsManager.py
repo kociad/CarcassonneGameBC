@@ -185,4 +185,4 @@ class SettingsManager:
                     logger.error(f"Observer callback failed for {key}: {e}")
 
 # Global singleton instance
-settings_manager = SettingsManager()
+settingsManager = SettingsManager()

@@ -1,7 +1,7 @@
 import pygame
 import time
 from typing import List, Tuple
-from utils.settingsManager import settings_manager
+from utils.settingsManager import settingsManager
 
 class GameLogEntry:
     def __init__(self, message: str, level: str = "INFO", timestamp: float = None):
@@ -15,7 +15,7 @@ class GameLogEntry:
 class GameLog:
     def __init__(self):
         # Get max entries from settings
-        self.maxEntries = settings_manager.get("GAME_LOG_MAX_ENTRIES", 2000)
+        self.maxEntries = settingsManager.get("GAME_LOG_MAX_ENTRIES", 2000)
         
         self.entries: List[GameLogEntry] = []
         self.visible = False
@@ -67,7 +67,7 @@ class GameLog:
             return
             
         # Filter entries based on debug setting to get accurate count
-        debugEnabled = settings_manager.get("DEBUG", False)
+        debugEnabled = settingsManager.get("DEBUG", False)
         filteredCount = 0
         for entry in self.entries:
             if entry.level == "DEBUG" and not debugEnabled:
@@ -77,7 +77,7 @@ class GameLog:
         self.scrollOffset += scrollDelta * 5  # 5 lines per scroll
         
         # Calculate max scroll based on filtered entries
-        usableHeight = settings_manager.get("WINDOW_HEIGHT", 1080) - 100
+        usableHeight = settingsManager.get("WINDOW_HEIGHT", 1080) - 100
         lineHeight = 32
         maxVisibleLines = usableHeight // lineHeight
         maxScroll = max(0, filteredCount - maxVisibleLines)
@@ -86,14 +86,14 @@ class GameLog:
     
     def getVisibleLines(self) -> int:
         """Calculate how many lines can fit on screen"""
-        screenHeight = settings_manager.get("WINDOW_HEIGHT", 1080)
+        screenHeight = settingsManager.get("WINDOW_HEIGHT", 1080)
         usableHeight = screenHeight - 100  # Leave space for title and margins
         lineHeight = 32  # Increased line height for better readability
         return usableHeight // lineHeight
         
     def updateMaxEntries(self):
         """Update max entries from settings and trim if necessary"""
-        newMaxEntries = settings_manager.get("GAME_LOG_MAX_ENTRIES", 2000)
+        newMaxEntries = settingsManager.get("GAME_LOG_MAX_ENTRIES", 2000)
         
         if newMaxEntries != self.maxEntries:
             self.maxEntries = newMaxEntries
@@ -109,8 +109,8 @@ class GameLog:
         if not self.visible:
             return
             
-        screenWidth = settings_manager.get("WINDOW_WIDTH", 1920)
-        screenHeight = settings_manager.get("WINDOW_HEIGHT", 1080)
+        screenWidth = settingsManager.get("WINDOW_WIDTH", 1920)
+        screenHeight = settingsManager.get("WINDOW_HEIGHT", 1080)
         
         # Semi-transparent dark background for better readability
         overlay = pygame.Surface((screenWidth, screenHeight), pygame.SRCALPHA)
@@ -128,7 +128,7 @@ class GameLog:
         screen.blit(titleText, titleRect)
         
         # Filter entries based on debug setting FIRST
-        debugEnabled = settings_manager.get("DEBUG", False)
+        debugEnabled = settingsManager.get("DEBUG", False)
         filteredEntries = []
         for entry in self.entries:
             if entry.level == "DEBUG" and not debugEnabled:

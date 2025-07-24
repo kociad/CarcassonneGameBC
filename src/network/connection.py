@@ -3,7 +3,7 @@ import threading
 import logging
 from network.message import decodeMessage
 from models.gameSession import GameSession
-from utils.settingsManager import settings_manager
+from utils.settingsManager import settingsManager
 
 logger = logging.getLogger(__name__)
 
@@ -11,7 +11,7 @@ BUFFER_SIZE = 4096
 
 class NetworkConnection:
     def __init__(self):
-        self.networkMode = settings_manager.get("NETWORK_MODE", "local")  # 'host', 'client', or 'local'
+        self.networkMode = settingsManager.get("NETWORK_MODE", "local")  # 'host', 'client', or 'local'
         self.running = False
         self.connections = []  # only for host mode
         self.socket = None
@@ -33,8 +33,8 @@ class NetworkConnection:
 
         if self.networkMode == "host":
             try:
-                host_ip = settings_manager.get("HOST_IP", "0.0.0.0")
-                host_port = settings_manager.get("HOST_PORT", 222)
+                host_ip = settingsManager.get("HOST_IP", "0.0.0.0")
+                host_port = settingsManager.get("HOST_PORT", 222)
                 self.socket.bind((host_ip, host_port))
                 self.socket.listen()
                 logger.debug(f"Host listening on {host_ip}:{host_port}...")
@@ -43,8 +43,8 @@ class NetworkConnection:
                 logger.exception(f"Failed to bind socket: {e}")
         elif self.networkMode == "client":
             try:
-                host_ip = settings_manager.get("HOST_IP", "0.0.0.0")
-                host_port = settings_manager.get("HOST_PORT", 222)
+                host_ip = settingsManager.get("HOST_IP", "0.0.0.0")
+                host_port = settingsManager.get("HOST_PORT", 222)
                 self.socket.connect((host_ip, host_port))
                 logger.debug(f"Connected to host at {host_ip}:{host_port}")
                 threading.Thread(target=self.receiveLoop, args=(self.socket,), daemon=True).start()
