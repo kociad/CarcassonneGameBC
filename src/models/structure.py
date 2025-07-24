@@ -1,97 +1,70 @@
 import random
 import logging
-
+import typing
 from models.figure import Figure
-
 import settings
 
 logger = logging.getLogger(__name__)
 
 class Structure:
-    
-    def __init__(self, structureType):
+    """Represents a structure (city, road, monastery, or field) in the game."""
+    def __init__(self, structureType: str) -> None:
         """
-        Init structure
-        :param structureType: Type of the structure ('City', 'Road', 'Monastery', 'Field')
+        Initialize a structure.
+        :param structureType: Type of the structure ('City', 'Road', 'Monastery', 'Field').
         """
-        
         self.structureType = structureType
-        self.cards = [] # List of cards that are part of the structure
-        self.cardSides = set()  # Store (card, direction) tuples here
-        self.figures = [] # List of figures placed in this structure
-        self.isCompleted = False # Tracking whether the structure has been completed
-        self.color = (255,255,255,150)
+        self.cards = []
+        self.cardSides = set()
+        self.figures = []
+        self.isCompleted = False
+        self.color = (255, 255, 255, 150)
 
-    def getStructureType(self):
-        """
-        Structure type getter method
-        :return: Structure type
-        """
+    def getStructureType(self) -> str:
+        """Return the structure type."""
         return self.structureType
-        
-    def getColor(self):
-        """
-        Structure color getter method
-        :return: Structure color
-        """
+
+    def getColor(self) -> tuple:
+        """Return the structure color."""
         return self.color
-        
-    def getIsCompleted(self):
-        """
-        Is completed getter method
-        :return: Bool indicating if the structure is completed
-        """
+
+    def getIsCompleted(self) -> bool:
+        """Return True if the structure is completed."""
         return self.isCompleted
-        
-    def getFigures(self):
-        """
-        Structure figure list getter method
-        :return: List of figures assigned to given structure
-        """
+
+    def getFigures(self) -> list:
+        """Return the list of figures assigned to this structure."""
         return self.figures
-        
-    def setColor(self, color):
-        """
-        Structure color setter method
-        :param color: Color to be set
-        """
+
+    def setColor(self, color: tuple) -> None:
+        """Set the color of the structure."""
         self.color = color
-       
-    def setFigures(self, figures):
-        """
-        Figures setter method
-        :param figures: List of figure objects to be used
-        """
+
+    def setFigures(self, figures: list) -> None:
+        """Set the figures for this structure."""
         self.figures = figures
-        
-    def addCardSide(self, card, direction):
+
+    def addCardSide(self, card: typing.Any, direction: str) -> None:
+        """Add a card and direction to the structure."""
         if not card in self.cards:
             self.cards.append(card)
         self.cardSides.add((card, direction))
-        
-    def addFigure(self, figure):
-        """
-        Add a figure to the structure
-        :param figure: The figure being placed
-        """
+
+    def addFigure(self, figure: typing.Any) -> bool:
+        """Add a figure to the structure if not already claimed."""
         if not self.figures:
             self.figures.append(figure)
             return True
-        return False # Figure placement denied if structure has already been claimed
-        
-    def removeFigure(self, figure):
-        """
-        Remove figure from the structure and clears its placement on card
-        :param figure: Figure to be removed
-        """
+        return False
+
+    def removeFigure(self, figure: typing.Any) -> None:
+        """Remove a figure from the structure and clear its placement."""
         logger.debug(f"Removing figure {figure} belonging to {figure.getOwner()}")
         self.figures.remove(figure)
         figure.remove()
-        
-    def checkCompletion(self):
-        """
-        Check if the structure is completed and set it accordingly
-        """
+
+    def checkCompletion(self) -> None:
+        """Check if the structure is completed and update its status."""
         if self.structureType == "City":
             self.isCompleted = self.checkCityCompletion()
         elif self.structureType == "Road":
@@ -101,90 +74,63 @@ class Structure:
         elif self.structureType == "Field":
             self.isCompleted = self.checkFieldCompletion()
 
-    def checkCityCompletion(self):
-        """
-        Check if city structure is completed.
-        :return: True if completed, False otherwise
-        """
+    def checkCityCompletion(self) -> bool:
+        """Return True if the city structure is completed."""
         for card, direction in self.cardSides:
-            # Check external neighbor
             neighborCard = card.getNeighbors().get(direction)
-
             if not neighborCard:
-                return False  # Open edge
-
+                return False
         return True
-        
-    def checkRoadCompletion(self):
-        """
-        Check if road structure is completed.
-        :return: True if completed, False otherwise
-        """
+
+    def checkRoadCompletion(self) -> bool:
+        """Return True if the road structure is completed."""
         for card, direction in self.cardSides:
-            # Check external neighbor
             neighborCard = card.getNeighbors().get(direction)
-
             if not neighborCard:
-                return False  # Open edge
-                
+                return False
         return True
-        
-    def checkMonasteryCompletion(self):
-        """
-        Check if monastery structure is completed.
-        :return: True if completed, False otherwise
-        """
+
+    def checkMonasteryCompletion(self) -> bool:
+        """Return True if the monastery structure is completed."""
         for card, direction in self.cardSides:
             neighbors = card.getNeighbors()
             for direction in neighbors:
                 if not neighbors[direction]:
-                    return False  # No neighbor in NESW direction
-                if direction in ["N","S"] and not (neighbors[direction].getNeighbor("W") and neighbors[direction].getNeighbor("E")):
-                    return False  # No diagonal neighbor
-                    
+                    return False
+                if direction in ["N", "S"] and not (neighbors[direction].getNeighbor("W") and neighbors[direction].getNeighbor("E")):
+                    return False
         return True
-        
-    def checkFieldCompletion(self):
+
+    def checkFieldCompletion(self) -> bool:
+        """Return True if the field structure is completed (always False)."""
         return False
-        
-    def getMajorityOwners(self):
-        """
-        Determines player(s) with the most figures in this structure.
-        :return: List of Player instances who hold majority.
-        """
+
+    def getMajorityOwners(self) -> list:
+        """Return the player(s) with the most figures in this structure."""
         logger.debug("Retrieving structure owners...")
         owner_counts = {}
         for figure in self.figures:
             owner = figure.getOwner()
             logger.debug(f"Found figure with owner - {owner}")
             owner_counts[owner] = owner_counts.get(owner, 0) + 1
-
         if not owner_counts:
             return []
-
         max_count = max(owner_counts.values())
         logger.debug(f"Retrieved owners: {owner_counts}")
         return [owner for owner, count in owner_counts.items() if count == max_count]
-        
-    def merge(self, otherStructure):
-        """
-        Merges another structure into this one by combining cards, card sides, and figures.
-        :param otherStructure: The Structure to merge into this one.
-        """
+
+    def merge(self, otherStructure: 'Structure') -> None:
+        """Merge another structure into this one."""
         self.cardSides.update(otherStructure.cardSides)
-        
-        # Merge figures
         for figure in otherStructure.figures:
             self.figures.append(figure)
-            
-        # Merge cards
         for card in otherStructure.cards:
             self.cards.append(card)
-        
-    def getScore(self, gameSession=None):
+
+    def getScore(self, gameSession: typing.Any = None) -> int:
+        """Calculate and return the score for this structure."""
         score = 0
         gameOver = gameSession.getGameOver()
-
         if self.structureType == "City":
             if not gameOver:
                 for card in self.cards:
@@ -196,52 +142,42 @@ class Structure:
                     if card.getFeatures():
                         score += 1 if "coat" in card.getFeatures() else 0
                 score += len(self.cards)
-
         elif self.structureType == "Road":
             score = len(self.cards)
-
         elif self.structureType == "Monastery":
             for card, direction in self.cardSides:
-                score += 1 # Adding 1 score for the monastery itself
+                score += 1
                 neighbors = card.getNeighbors()
                 for direction in neighbors:
                     if neighbors[direction]:
-                        score += 1 # Adding 1 score for each NESW neighbors
-                        if direction in ["N","S"]: # Scoring diagonal neighbors
+                        score += 1
+                        if direction in ["N", "S"]:
                             if neighbors[direction].getNeighbor("W"):
                                 score += 1
                             if neighbors[direction].getNeighbor("E"):
                                 score += 1
-
         elif self.structureType == "Field" and gameSession:
             if settings.DEBUG:
                 self.isCompleted = True
-            
             scoredCities = set()
-
-            # Get all completed cities
             completedCities = [
                 s for s in gameSession.structures
                 if s.getStructureType() == "City" and s.getIsCompleted()
             ]
-
             for card, _ in self.cardSides:
                 neighbors = card.getNeighbors().values()
-                touchedCards = set([card])  # Include the field's own card
-                touchedCards.update([n for n in neighbors if n])  # Add valid neighbor cards
-
-                # Check if any of these cards are part of completed cities
+                touchedCards = set([card])
+                touchedCards.update([n for n in neighbors if n])
                 for cityStructure in completedCities:
                     for cityCard, _ in cityStructure.cardSides:
                         if cityCard in touchedCards:
                             scoredCities.add(cityStructure)
-                            break  # No need to scan the rest of this city
-
+                            break
             score = len(scoredCities) * 3
-            
         return score
-        
-    def serialize(self):
+
+    def serialize(self) -> dict:
+        """Serialize the structure to a dictionary."""
         return {
             "structure_type": self.structureType,
             "card_sides": [
@@ -259,21 +195,18 @@ class Structure:
             "is_completed": self.isCompleted,
             "color": tuple(self.color) if hasattr(self.color, "__iter__") else (255, 255, 255, 150)
         }
-        
+
     @staticmethod
-    def deserialize(data, gameBoard, playerMap, placedFigures):
+    def deserialize(data: dict, gameBoard: typing.Any, playerMap: dict, placedFigures: list) -> 'Structure':
+        """Deserialize a structure from a dictionary."""
         s = Structure(data["structure_type"])
         s.isCompleted = bool(data.get("is_completed", False))
-
-        # Parse color safely
         raw_color = data.get("color", (255, 255, 255, 150))
         try:
             s.color = tuple(int(c) for c in raw_color)
         except Exception as e:
             logger.warning(f"Failed to parse color: {raw_color} - {e}")
             s.color = (255, 255, 255, 150)
-
-        # Rebuild cardSides
         for side in data.get("card_sides", []):
             try:
                 x = int(side["x"])
@@ -286,37 +219,28 @@ class Structure:
                         s.cards.append(card)
             except (KeyError, ValueError, TypeError) as e:
                 logger.warning(f"Skipping malformed card_side: {side} - {e}")
-
-        # Rebuild figures (use existing instances if possible)
         for f in data.get("figures", []):
             try:
                 owner_index = int(f["owner_index"])
                 position = str(f["position_on_card"])
                 pos_data = f.get("card_position")
                 card = None
-
                 if pos_data and isinstance(pos_data, dict):
                     x = int(pos_data["X"])
                     y = int(pos_data["Y"])
                     card = gameBoard.getCard(x, y)
-
                 owner = playerMap.get(owner_index)
                 if not owner:
                     raise ValueError(f"Owner with index {owner_index} not found")
-
-                # Try to find existing figure
                 matched = next(
                     (fig for fig in placedFigures
                      if fig.owner == owner and fig.card == card and fig.positionOnCard == position),
                     None
                 )
-
                 if matched:
                     s.figures.append(matched)
                 else:
                     logger.warning(f"No matching figure found in placedFigures for: {f}")
-
             except (KeyError, ValueError, TypeError) as e:
                 logger.warning(f"Skipping malformed figure: {f} - {e}")
-
         return s

@@ -1,111 +1,84 @@
 import pygame
 import logging
+import typing
 
 from models.figure import Figure
-
 import settings
 
 logger = logging.getLogger(__name__)
 
 class Player:
-    
-    def __init__(self, name, index, color, isAI=False, isHuman=False):
+    """Represents a player in the game."""
+    def __init__(self, name: str, index: int, color: str, isAI: bool = False, isHuman: bool = False) -> None:
         """
-        Initializes a player with a name, score, and a placeholder for figures.
+        Initialize a player.
         :param name: The name of the player.
-        :param score: Current player score
-        :param index: Players index in the game
-        :param figures: list of figures
-        :param color: Color of players figures
+        :param index: Player's index in the game.
+        :param color: Color of player's figures.
+        :param isAI: Whether the player is AI-controlled.
+        :param isHuman: Whether the player is human-controlled.
         """
         self.name = name
         self.color = color
         self.score = 0
         self.index = index
-        self.figures = [Figure(self) for _ in range(7)]  # Each player starts with 7 figures
+        self.figures = [Figure(self) for _ in range(7)]
         self.isAI = isAI
         self.isHuman = isHuman
-        
-    def getIsAI(self):
-        """
-        Is player AI getter method
-        :return: True if player is AI controlled, False otherwise
-        """
-        #logger.debug(f"Player {self.name} AI status: {self.isAI}")
+
+    def getIsAI(self) -> bool:
+        """Return True if player is AI-controlled."""
         return self.isAI
-    
-    def getName(self):
-        """
-        Player name getter method
-        :return: Player name string
-        """
+
+    def getName(self) -> str:
+        """Return the player's name."""
         return self.name
-        
-    def getScore(self):
-        """
-        Player score getter method
-        :return: Player score number
-        """
+
+    def getScore(self) -> int:
+        """Return the player's score."""
         return self.score
-        
-    def getFigures(self):
-        """
-        Player figures getter method
-        :return: List of figures held by the player
-        """
+
+    def getFigures(self) -> list:
+        """Return the list of figures held by the player."""
         return self.figures
-        
-    def getIndex(self):
-        """
-        Player index getter method
-        :return: Index of the player
-        """
+
+    def getIndex(self) -> int:
+        """Return the player's index."""
         return self.index
-        
-    def getColor(self):
-        """
-        Player color getter method
-        :return: Color of the player figures
-        """
+
+    def getColor(self) -> str:
+        """Return the color of the player's figures."""
         return self.color
-        
-    def getColorWithAlpha(self, alpha=150):
+
+    def getColorWithAlpha(self, alpha: int = 150) -> pygame.Color:
+        """Return the player's color as a pygame.Color with the given alpha."""
         color = pygame.Color(self.color)
         color.a = alpha
-        return (color)
-        
-    def getFigure(self):
-        """
-        Gets a figure rom the figures list
-        :return: If the list contains any figures then figure, else False
-        """
+        return color
+
+    def getFigure(self) -> typing.Union['Figure', bool]:
+        """Pop and return a figure if available, else return False."""
         logger.debug("Retrieving figure...")
-        
         if self.figures:
             logger.debug("Figure retrieved")
             return self.figures.pop()
         logger.debug("Unable to retrieve figure")
         return False
-        
-    def addFigure(self, figure):
-        """
-        Add figure to the player's list
-        :param figure: Figure to be added
-        """
+
+    def addFigure(self, figure: 'Figure') -> None:
+        """Add a figure to the player's list."""
         self.figures.append(figure)
-        
-    
-    def addScore(self, points):
-        """
-        Adds points to the player's score.
-        :param points: The number of points to add.
-        """
-        self.score += points
-        
-    def setIsHuman(self, isHuman):
+
+    def addScore(self, score: int) -> None:
+        """Add points to the player's score."""
+        self.score += score
+
+    def setIsHuman(self, isHuman: bool) -> None:
+        """Set whether the player is human-controlled."""
         self.isHuman = isHuman
-        
-    def serialize(self):
+
+    def serialize(self) -> dict:
+        """Serialize the player to a dictionary."""
         return {
             "name": self.name,
             "score": self.score,
@@ -115,9 +88,10 @@ class Player:
             "figuresRemaining": len(self.figures),
             "isHuman": self.isHuman
         }
-    
+
     @staticmethod
-    def deserialize(data):
+    def deserialize(data: dict) -> 'Player':
+        """Deserialize a player from a dictionary."""
         try:
             name = str(data["name"])
             index = int(data["index"])
@@ -130,9 +104,7 @@ class Player:
             player = Player(name=name, index=index, color=color, isAI=isAI, isHuman=isHuman)
             player.score = score
             player.figures = [Figure(player) for _ in range(figuresRemaining)]
-
             return player
-
         except (KeyError, ValueError, TypeError) as e:
             logger.error(f"Failed to deserialize Player object: {e}\nData: {data}")
             return None

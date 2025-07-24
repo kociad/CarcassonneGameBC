@@ -1,6 +1,7 @@
 import pygame
 import logging
 from datetime import datetime
+import typing
 
 from ui.mainMenuScene import MainMenuScene
 from ui.settingsScene import SettingsScene
@@ -24,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 
 class Game:
-    def __init__(self):
+    def __init__(self) -> None:
         try:
             pygame.init()
 
@@ -58,7 +59,7 @@ class Game:
             logError("Failed to initialize game", e)
             raise
 
-    def run(self):
+    def run(self) -> None:
         logger.debug("Starting main game loop")
         try:
             while self.running:
@@ -82,7 +83,7 @@ class Game:
             logError("Error during game quit", e)
             exit()
 
-    def cleanupPreviousGame(self):
+    def cleanupPreviousGame(self) -> None:
         """Clean up resources from previous game session"""
         try:
             logger.debug("Cleaning up previous game resources...")
@@ -111,7 +112,7 @@ class Game:
         except Exception as e:
             logError("Error during previous game cleanup", e)
 
-    def initScene(self, state, *args):
+    def initScene(self, state: GameState, *args: typing.Any) -> None:
         try:
             if state == GameState.MENU:
                 self.currentScene = MainMenuScene(self.screen, self.initScene, self.getGameSession, self.cleanupPreviousGame)
@@ -142,13 +143,14 @@ class Game:
             logError(f"Failed to initialize scene: {state}", e)
             raise
 
-    def startGame(self, playerNames):
+    def startGame(self, playerNames: list[str]) -> None:
         try:
             logger.debug("Initializing new game session...")
             self.network = NetworkConnection()
             networkMode = self.network.networkMode
             if networkMode in ("host", "local"):
-                self.gameSession = GameSession(playerNames)
+                lobbyCompleted = True
+                self.gameSession = GameSession(playerNames, lobbyCompleted=lobbyCompleted, networkMode=networkMode)
                 # Assign host as human player
                 playerIndex = settingsManager.get("PLAYER_INDEX", 0)
                 hostPlayer = self.gameSession.players[playerIndex]
@@ -171,13 +173,14 @@ class Game:
             logError("Failed to start game", e)
             raise
 
-    def startLobby(self, playerNames):
+    def startLobby(self, playerNames: list[str]) -> None:
         try:
             logger.debug("Preparing to enter lobby...")
             self.network = NetworkConnection()
             networkMode = self.network.networkMode
             if networkMode in ("host", "local"):
-                self.gameSession = GameSession(playerNames)
+                lobbyCompleted = networkMode == "local"
+                self.gameSession = GameSession(playerNames, lobbyCompleted=lobbyCompleted, networkMode=networkMode)
                 playerIndex = settingsManager.get("PLAYER_INDEX", 0)
                 hostPlayer = self.gameSession.players[playerIndex]
                 hostPlayer.setIsHuman(True)
@@ -194,7 +197,7 @@ class Game:
             logError("Failed to start lobby", e)
             raise
 
-    def onGameStateReceived(self, data):
+    def onGameStateReceived(self, data: dict) -> None:
         try:
             self.gameSession = GameSession.deserialize(data)
             self.gameSession.onTurnEnded = self.onTurnEnded
@@ -313,7 +316,7 @@ class Game:
         except Exception as e:
             logError("Failed to handle join rejection", e)
 
-    def getGameSession(self):
+    def getGameSession(self) -> typing.Optional['GameSession']:
         return self.gameSession
         
     def onShowNotification(self, notificationType, message):

@@ -1,72 +1,61 @@
 import pygame
 from ui.components.inputField import InputField
 from ui.components.toast import Toast
+import typing
 
 class Slider:
-    def __init__(self, rect, font, minValue=0, maxValue=100, value=50, onChange=None):
+    """A slider UI component for selecting a numeric value."""
+    def __init__(self, rect: pygame.Rect, font, minValue: float, maxValue: float, initialValue: float = None, value: float = None, onChange: typing.Callable = None) -> None:
+        """Initialize the slider. Accepts either 'initialValue' or 'value' for the initial value."""
         self.rect = pygame.Rect(rect)
         self.font = font
         self.minValue = minValue
         self.maxValue = maxValue
-        self.value = value
+        # Use 'value' if provided, else 'initialValue', else minValue
+        self.value = value if value is not None else (initialValue if initialValue is not None else minValue)
         self.onChange = onChange
-        self.lastReportedValue = value
+        self.lastReportedValue = self.value
         self.disabled = False
-
         self.handleRadius = 10
         self.dragging = False
-
-        # Normal colors
         self.bgColor = (200, 200, 200)
         self.fgColor = (100, 100, 255)
         self.handleColor = (255, 255, 255)
         self.borderColor = (0, 0, 0)
-        
-        # Disabled colors
         self.disabledBgColor = (100, 100, 100)
         self.disabledFgColor = (60, 60, 60)
         self.disabledHandleColor = (150, 150, 150)
         self.disabledBorderColor = (80, 80, 80)
-
-        # Toast queue pro error zprávy
         self.toastQueue = []
         self.activeToast = None
-
-        # Input field pro manuální zadání hodnoty (umístěn vpravo od slideru)
         inputFieldWidth = 60
         inputFieldHeight = self.rect.height
-        inputX = self.rect.right + 10  # 10px mezera mezi sliderem a input fieldem
+        inputX = self.rect.right + 10
         inputY = self.rect.y
-        
         self.inputField = InputField(
             rect=(inputX, inputY, inputFieldWidth, inputFieldHeight),
             font=font,
-            initialText=str(value),
-            onTextChange=None,  # Žádná validace během psaní
+            initialText=str(self.value),
+            onTextChange=None,
             numeric=True,
             minValue=minValue,
-            maxValue=maxValue
         )
 
     def _validateAndApplyInput(self):
-        """Validate input field value and apply if valid"""
+        """Validate input field value and apply if valid."""
         inputText = self.inputField.getText().strip()
-        
         if not inputText:
-            # Prázdný input - resetuj na současnou hodnotu
             self.inputField.setText(str(self.value))
             return
-            
         try:
             newValue = int(inputText)
             if newValue < self.minValue:
                 self._showToast(f"Value must be at least {self.minValue}", "error")
-                self.inputField.setText(str(self.value))  # Resetuj na současnou hodnotu
+                self.inputField.setText(str(self.value))
             elif newValue > self.maxValue:
                 self._showToast(f"Value must be at most {self.maxValue}", "error")
-                self.inputField.setText(str(self.value))  # Resetuj na současnou hodnotu
+                self.inputField.setText(str(self.value))
             else:
-                # Platná hodnota - aplikuj ji
                 if newValue != self.value:
                     self.value = newValue
                     if newValue != self.lastReportedValue:
@@ -74,58 +63,44 @@ class Slider:
                         if self.onChange:
                             self.onChange(newValue)
         except ValueError:
-            # Neplatné číslo - resetuj na současnou hodnotu
             self.inputField.setText(str(self.value))
 
     def _showToast(self, message, toastType="info"):
-        """Show toast notification"""
-        # Zkontroluj jestli už není stejná zpráva aktivní
+        """Show toast notification."""
         if self.activeToast and self.activeToast.message == message:
             return
         if any(t.message == message for t in self.toastQueue):
             return
-            
         toast = Toast(message, type=toastType)
         self.toastQueue.append(toast)
 
     def setDisabled(self, disabled):
-        """Enable or disable the slider"""
+        """Enable or disable the slider."""
         self.disabled = disabled
         self.inputField.setDisabled(disabled)
         if disabled:
             self.dragging = False
 
     def isDisabled(self):
-        """Check if slider is disabled"""
+        """Return True if the slider is disabled."""
         return self.disabled
 
-    def handleEvent(self, event, yOffset=0):
-        # Sleduj kdy input field ztratí focus nebo se stiskne Enter
+    def handleEvent(self, event: pygame.event.Event, yOffset: int = 0) -> None:
+        """Handle a pygame event for the slider."""
         wasActive = self.inputField.active
-        
-        # Zpracuj input field
         self.inputField.handleEvent(event, yOffset=yOffset)
-        
-        # Pokud input field ztratil focus, validuj
         if wasActive and not self.inputField.active:
             self._validateAndApplyInput()
-        
-        # Pokud se stiskl Enter v input fieldu, také validuj
-        if (self.inputField.active and event.type == pygame.KEYDOWN and 
-            event.key == pygame.K_RETURN):
+        if (self.inputField.active and event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN):
             self._validateAndApplyInput()
-        
         if self.disabled:
             return
-            
         shiftedRect = self.rect.move(0, yOffset)
         handleRect = self._handleRect(yOffset)
-
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             if handleRect.collidepoint(event.pos):
                 self.dragging = True
             elif shiftedRect.collidepoint(event.pos):
-                # Klik na slider bar - přeskoč na pozici
                 relX = min(max(event.pos[0], shiftedRect.left), shiftedRect.right)
                 ratio = (relX - shiftedRect.left) / shiftedRect.width
                 newValue = int(self.minValue + ratio * (self.maxValue - self.minValue))
@@ -136,15 +111,12 @@ class Slider:
                         self.lastReportedValue = newValue
                         if self.onChange:
                             self.onChange(newValue)
-
         elif event.type == pygame.MOUSEBUTTONUP:
             self.dragging = False
-
         elif event.type == pygame.MOUSEMOTION and self.dragging:
             relX = min(max(event.pos[0], shiftedRect.left), shiftedRect.right)
             ratio = (relX - shiftedRect.left) / shiftedRect.width
             newValue = int(self.minValue + ratio * (self.maxValue - self.minValue))
-
             if newValue != self.value:
                 self.value = newValue
                 self.inputField.setText(str(newValue))
@@ -153,7 +125,8 @@ class Slider:
                     if self.onChange:
                         self.onChange(newValue)
 
-    def _handleRect(self, yOffset=0):
+    def _handleRect(self, yOffset: int = 0) -> pygame.Rect:
+        """Return the rectangle for the slider handle."""
         handleX = self.rect.left + ((self.value - self.minValue) / (self.maxValue - self.minValue)) * self.rect.width
         handleY = self.rect.centery + yOffset
         return pygame.Rect(
@@ -163,10 +136,9 @@ class Slider:
             self.handleRadius * 2
         )
 
-    def draw(self, surface, yOffset=0):
+    def draw(self, surface: pygame.Surface, yOffset: int = 0) -> None:
+        """Draw the slider on the given surface, offset vertically by yOffset."""
         shiftedRect = self.rect.move(0, yOffset)
-
-        # Choose colors based on disabled state
         if self.disabled:
             bgColor = self.disabledBgColor
             fgColor = self.disabledFgColor
@@ -177,48 +149,36 @@ class Slider:
             fgColor = self.fgColor
             handleColor = self.handleColor
             borderColor = self.borderColor
-
-        # Bar background
         pygame.draw.rect(surface, bgColor, shiftedRect)
         pygame.draw.rect(surface, borderColor, shiftedRect, 1)
-
-        # Filled portion
         fillWidth = ((self.value - self.minValue) / (self.maxValue - self.minValue)) * shiftedRect.width
         pygame.draw.rect(surface, fgColor, pygame.Rect(shiftedRect.left, shiftedRect.top, fillWidth, shiftedRect.height))
-
-        # Handle
         handleRect = self._handleRect(yOffset)
         pygame.draw.circle(surface, handleColor, handleRect.center, self.handleRadius)
         pygame.draw.circle(surface, borderColor, handleRect.center, self.handleRadius, 1)
-
-        # Draw input field
         self.inputField.draw(surface, yOffset=yOffset)
-
-        # Draw toasts
         if not self.activeToast and self.toastQueue:
             self.activeToast = self.toastQueue.pop(0)
             self.activeToast.start()
-
         if self.activeToast:
             self.activeToast.draw(surface)
             if self.activeToast.isExpired():
                 self.activeToast = None
 
-    def getValue(self):
+    def getValue(self) -> float:
+        """Return the current value of the slider."""
         return self.value
 
-    def setValue(self, newValue):
-        """Set slider value"""
+    def setValue(self, newValue: float) -> None:
+        """Set the slider value."""
         self.value = max(self.minValue, min(self.maxValue, newValue))
         self.lastReportedValue = self.value
         self.inputField.setText(str(self.value))
 
-    def setMinValue(self, newMinValue):
-        """Update minimum value of slider"""
+    def setMinValue(self, newMinValue: float) -> None:
+        """Update the minimum value of the slider."""
         self.minValue = newMinValue
         self.inputField.minValue = newMinValue
-        # Ensure current value is still valid
         if self.value < self.minValue:
             self.value = self.minValue
             self.lastReportedValue = self.value
-            self.inputField.setText(str(self.value))

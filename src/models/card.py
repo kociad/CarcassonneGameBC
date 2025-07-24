@@ -4,6 +4,8 @@ import logging
 
 import settings
 
+import typing
+
 logger = logging.getLogger(__name__)
 
 class Card:
@@ -11,7 +13,7 @@ class Card:
     Represents a tile (card) in the game with an image and terrain properties.
     """
     
-    def __init__(self, image_path, terrains, connections, features):
+    def __init__(self, image_path: str, terrains: dict, connections: typing.Optional[dict], features: typing.Any) -> None:
         """
         Initializes a tile with an image and terrain data.
         :param image_path: Path to the tile image.
@@ -28,14 +30,14 @@ class Card:
         self.position = {"X": None, "Y": None}
         self.rotation = 0  # Card rotation (0, 90, 180, 270)
     
-    def getPosition(self):
+    def getPosition(self) -> dict:
         """
         Card position getter method
         :return: Card position
         """
         return self.position
         
-    def setPosition(self, x, y):
+    def setPosition(self, x: int, y: int) -> None:
         """
         Card position setter method
         :param x: X coordinate of the card
@@ -43,35 +45,35 @@ class Card:
         """
         self.position = {"X": x, "Y": y}
     
-    def getImage(self):
+    def getImage(self) -> pygame.Surface:
         """
         Card image getter method
         :return: Card image
         """
         return self.image
         
-    def getTerrains(self):
+    def getTerrains(self) -> dict:
         """
         Card terrains getter method
         :return: Dictionary with terrain info (e.g., {"N": "city", "S": "road"})
         """
         return self.terrains
         
-    def getNeighbors(self):
+    def getNeighbors(self) -> dict:
         """
         Card neighbors getter method
         :return: Neighbors dictationary
         """
         return self.neighbors
         
-    def getNeighbor(self, direction):
+    def getNeighbor(self, direction: str) -> typing.Any:
         """
         Card neighbor getter method for specific direction
         :return: Neighbor card or None
         """
         return self.neighbors[direction]
         
-    def setNeighbor(self, direction, neighbor):
+    def setNeighbor(self, direction: str, neighbor: typing.Any) -> None:
         """
         Card neighbor setter method
         :param direction: Direction which neighbor is to be added
@@ -79,21 +81,21 @@ class Card:
         """
         self.neighbors[direction] = neighbor
         
-    def getConnections(self):
+    def getConnections(self) -> typing.Optional[dict]:
         """
         Card connections getter method
         :return: Dict with connections within the card
         """
         return self.connections
         
-    def getFeatures(self):
+    def getFeatures(self) -> typing.Any:
         """
         Card features getter method
         :return: List of features on the card
         """
         return self.features
     
-    def rotate(self):
+    def rotate(self) -> None:
         """
         Rotates the card 90 degrees clockwise.
         """
@@ -124,10 +126,7 @@ class Card:
 
             self.connections = newConnections
 
-    def canPlaceFigure(self, figure):
-        return True # To be implemented
-        
-    def serialize(self):
+    def serialize(self) -> dict:
         return {
             "image_path": self.imagePath,
             "terrains": self.terrains,
@@ -143,7 +142,7 @@ class Card:
         }
 
     @staticmethod
-    def deserialize(data):
+    def deserialize(data: dict) -> 'Card':
         try:
             image_path = str(data["image_path"])
             terrains = dict(data["terrains"])

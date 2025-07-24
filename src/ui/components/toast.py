@@ -2,6 +2,7 @@ import pygame
 import time
 import math
 import logging
+import typing
 
 logger = logging.getLogger(__name__)
 
@@ -13,11 +14,11 @@ TOAST_COLORS = {
 }
 
 class Toast:
-    def __init__(self, message, duration=2, font=None, type="info"):
+    def __init__(self, message: str, type: str = "info", duration: float = 2.0) -> None:
         self.message = message
         self.duration = duration
         self.startTime = None
-        self.font = font or pygame.font.Font(None, 36)
+        self.font = pygame.font.Font(None, 36)
         self.type = type if type in TOAST_COLORS else "info"
         self.active = False
         
@@ -30,7 +31,7 @@ class Toast:
         self.slidingOut = False
         self.slideOutStartTime = None
 
-    def start(self, targetY=0):
+    def start(self, targetY: int = 0) -> None:
         self.startTime = time.time()
         self.active = True
         self.targetY = targetY
@@ -44,12 +45,12 @@ class Toast:
         self.isSliding = True
         self.slidingOut = False
 
-    def startSlideOut(self):
+    def startSlideOut(self) -> None:
         if not self.slidingOut:
             self.slidingOut = True
             self.slideOutStartTime = time.time()
 
-    def isExpired(self):
+    def isExpired(self) -> bool:
         if not self.active:
             return False
         
@@ -64,7 +65,7 @@ class Toast:
         
         return False
 
-    def update(self):
+    def update(self) -> None:
         if not self.active:
             return
         
@@ -106,7 +107,7 @@ class Toast:
                 else:
                     self.currentY = max(self.currentY - maxMove, self.targetY)
 
-    def draw(self, screen):
+    def draw(self, screen: pygame.Surface) -> None:
         if not self.active:
             return
         
@@ -139,13 +140,13 @@ class Toast:
         screen.blit(textSurf, textRect)
 
 class ToastManager:
-    def __init__(self, maxToasts=5):
+    def __init__(self, maxToasts: int = 5) -> None:
         self.maxToasts = maxToasts
         self.toasts = []
         self.baseY = 50
         self.toastSpacing = 50
     
-    def addToast(self, toast):
+    def addToast(self, toast: Toast) -> bool:
         activeToasts = [t for t in self.toasts if not t.isExpired() and not t.slidingOut]
         
         if len(activeToasts) >= self.maxToasts:
@@ -155,7 +156,7 @@ class ToastManager:
         self._updatePositions()
         return True
     
-    def _updatePositions(self):
+    def _updatePositions(self) -> None:
         screen = pygame.display.get_surface()
         if not screen:
             return
@@ -172,26 +173,26 @@ class ToastManager:
                 if toast.targetY != targetY:
                     toast.targetY = targetY
     
-    def update(self):
+    def update(self) -> None:
         initialCount = len(self.toasts)
         self.toasts = [t for t in self.toasts if not t.isExpired()]
         
         if len(self.toasts) != initialCount:
             self._updatePositions()
     
-    def draw(self, screen):
+    def draw(self, screen: pygame.Surface) -> None:
         self.update()
         
         for toast in self.toasts:
             if toast.active:
                 toast.draw(screen)
     
-    def clear(self):
+    def clear(self) -> None:
         for toast in self.toasts:
             toast.startSlideOut()
     
-    def getActiveCount(self):
+    def getActiveCount(self) -> int:
         return len([t for t in self.toasts if not t.isExpired() and not t.slidingOut])
     
-    def isFull(self):
+    def isFull(self) -> bool:
         return self.getActiveCount() >= self.maxToasts

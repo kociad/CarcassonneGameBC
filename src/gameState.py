@@ -1,9 +1,9 @@
 from enum import Enum, auto
 
 class GameState(Enum):
-    MENU = auto()
-    GAME = auto()
-    SETTINGS = auto()
-    PREPARE = auto()
-    HELP = auto()
-    LOBBY = auto()
+    MENU: int = auto()
+    GAME: int = auto()
+    SETTINGS: int = auto()
+    PREPARE: int = auto()
+    HELP: int = auto()
+    LOBBY: int = auto()

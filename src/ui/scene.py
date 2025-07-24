@@ -1,23 +1,29 @@
 import pygame
+import typing
 
 class Scene:
-    def __init__(self, screen, switchSceneCallback):
+    """Base class for all scenes in the UI."""
+    def __init__(self, screen: pygame.Surface, switchSceneCallback: typing.Callable) -> None:
         self.screen = screen
         self.switchScene = switchSceneCallback
         self.scrollOffset = 0
         self.maxScroll = 0
         self.scrollSpeed = 30
 
-    def handleEvents(self, events):
+    def handleEvents(self, events: list[pygame.event.Event]) -> None:
+        """Handle events for the scene."""
         raise NotImplementedError
 
-    def update(self):
+    def update(self) -> None:
+        """Update the scene state."""
         pass
 
-    def draw(self):
+    def draw(self) -> None:
+        """Draw the scene."""
         raise NotImplementedError
 
-    def applyScroll(self, events):
+    def applyScroll(self, events: list[pygame.event.Event]) -> None:
+        """Apply scroll events to the scene."""
         for event in events:
             if event.type == pygame.MOUSEWHEEL:
                 self.scrollOffset += event.y * self.scrollSpeed
@@ -26,11 +32,11 @@ class Scene:
                     self.scrollOffset -= self.scrollSpeed
                 elif event.key == pygame.K_UP:
                     self.scrollOffset += self.scrollSpeed
-
         self.scrollOffset = max(
             min(0, self.scrollOffset),
             min(0, self.screen.get_height() - self.maxScroll)
         )
 
-    def getScrollOffset(self):
+    def getScrollOffset(self) -> int:
+        """Return the current scroll offset."""
         return self.scrollOffset

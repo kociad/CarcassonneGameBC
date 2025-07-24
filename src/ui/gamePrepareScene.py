@@ -8,6 +8,7 @@ from ui.components.toast import Toast, ToastManager
 from ui.components.checkbox import Checkbox
 from gameState import GameState
 from utils.settingsManager import settingsManager
+import typing
 
 class PlayerConfiguration:
     """Single source of truth for player data"""
@@ -39,7 +40,7 @@ class PlayerConfiguration:
         return PlayerConfiguration(self.name, self.isAI, self.enabled)
 
 class GamePrepareScene(Scene):
-    def __init__(self, screen, switchSceneCallback):
+    def __init__(self, screen: pygame.Surface, switchSceneCallback: typing.Callable) -> None:
         super().__init__(screen, switchSceneCallback)
         
         # Reload settings from file to get clean state (clear runtime overrides from previous game)
@@ -89,8 +90,16 @@ class GamePrepareScene(Scene):
         currentY += 80
         
         # Initialize buttons
-        self.addPlayerButton = Button("+", (self.screen.get_width() // 2 + 180, currentY + 60, 40, 40), self.buttonFont)
-        self.removePlayerButton = Button("−", (self.screen.get_width() // 2 + 230, currentY + 60, 40, 40), self.buttonFont)
+        self.addPlayerButton = Button(
+            (self.screen.get_width() // 2 + 180, currentY + 60, 40, 40),
+            "+",
+            self.buttonFont
+        )
+        self.removePlayerButton = Button(
+            (self.screen.get_width() // 2 + 230, currentY + 60, 40, 40),
+            "−",
+            self.buttonFont
+        )
 
         self.playerListY = currentY
 
@@ -125,9 +134,17 @@ class GamePrepareScene(Scene):
         currentY += 80
 
         # Start and Back buttons
-        self.startButton = Button("Start Game", (xCenter, currentY, 200, 60), self.buttonFont)
+        self.startButton = Button(
+            (xCenter, currentY, 200, 60),
+            "Start Game",
+            self.buttonFont
+        )
         currentY += 80
-        self.backButton = Button("Back", (xCenter, currentY, 200, 60), self.buttonFont)
+        self.backButton = Button(
+            (xCenter, currentY, 200, 60),
+            "Back",
+            self.buttonFont
+        )
         
         # Initial state
         self.handleNetworkModeChange(networkMode)
@@ -136,7 +153,7 @@ class GamePrepareScene(Scene):
         """Get count of enabled players"""
         return sum(1 for player in self.players if player.enabled)
         
-    def buildPlayerFields(self):
+    def buildPlayerFields(self) -> None:
         """Build UI fields based on current player data (single source of truth)"""
         self.playerFields = []
 
@@ -185,7 +202,7 @@ class GamePrepareScene(Scene):
 
             self.playerFields.append((nameField, aiCheckbox))
             
-    def togglePlayerAI(self, index, value):
+    def togglePlayerAI(self, index: int, value: bool) -> None:
         """Toggle AI status for a player"""
         # Update single source of truth
         self.players[index].setAI(value)
@@ -194,7 +211,7 @@ class GamePrepareScene(Scene):
         nameField = self.playerFields[index][0]
         nameField.setText(self.players[index].getDisplayName())
         
-    def handleNetworkModeChange(self, mode):
+    def handleNetworkModeChange(self, mode: str) -> None:
         """Handle network mode change"""
         self.networkMode = mode
         isLocal = mode == "local"
@@ -219,7 +236,7 @@ class GamePrepareScene(Scene):
         # Rebuild UI based on new mode
         self.buildPlayerFields()
         
-    def addPlayerField(self):
+    def addPlayerField(self) -> None:
         """Add a new player"""
         enabledCount = self.getEnabledPlayersCount()
         if enabledCount >= 6:
@@ -234,7 +251,7 @@ class GamePrepareScene(Scene):
                 
         self.buildPlayerFields()
         
-    def removePlayerField(self):
+    def removePlayerField(self) -> None:
         """Remove a player"""
         enabledCount = self.getEnabledPlayersCount()
         if enabledCount <= 2:
@@ -255,7 +272,7 @@ class GamePrepareScene(Scene):
                 
         self.buildPlayerFields()
         
-    def applySettingsAndStart(self):
+    def applySettingsAndStart(self) -> None:
         """Apply settings and start the game"""
         # Get enabled player names from our single source of truth
         playerNames = []
@@ -282,7 +299,7 @@ class GamePrepareScene(Scene):
         else:
             self.switchScene("startLobby", playerNames)
 
-    def handleEvents(self, events):
+    def handleEvents(self, events: list[pygame.event.Event]) -> None:
         self.applyScroll(events)
 
         for event in events:
@@ -315,7 +332,7 @@ class GamePrepareScene(Scene):
                 elif self.removePlayerButton.isClicked(event.pos, yOffset=self.scrollOffset):
                     self.removePlayerField()
                     
-    def draw(self):
+    def draw(self) -> None:
         self.screen.fill((30, 30, 30))
         offsetY = self.scrollOffset
 

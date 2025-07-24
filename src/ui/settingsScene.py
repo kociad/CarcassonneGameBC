@@ -8,9 +8,10 @@ from ui.components.toast import Toast, ToastManager
 from ui.components.checkbox import Checkbox
 from ui.components.slider import Slider
 from utils.settingsManager import settingsManager
+import typing
 
 class SettingsScene(Scene):
-    def __init__(self, screen, switchSceneCallback):
+    def __init__(self, screen: pygame.Surface, switchSceneCallback: typing.Callable) -> None:
         super().__init__(screen, switchSceneCallback)
         self.font = pygame.font.Font(None, 80)
         self.buttonFont = pygame.font.Font(None, 48)
@@ -127,10 +128,18 @@ class SettingsScene(Scene):
         self.gameLogMaxEntriesField.setDisabled(not settingsManager.get("DEBUG"))
         currentY += 60
 
-        self.applyButton = Button("Apply", (xCenter, currentY, 200, 60), self.buttonFont)
+        self.applyButton = Button(
+            (xCenter, currentY, 200, 60),
+            "Apply",
+            self.buttonFont
+        )
         currentY += 80
 
-        self.backButton = Button("Back", (xCenter, currentY, 200, 60), self.buttonFont)
+        self.backButton = Button(
+            (xCenter, currentY, 200, 60),
+            "Back",
+            self.buttonFont
+        )
 
     def onTileSizeChanged(self, newTileSize):
         newMinSidebarWidth = newTileSize + 20
@@ -160,7 +169,7 @@ class SettingsScene(Scene):
         if new_value and not old_value:
             self.addToast(Toast("Restart the game to enable log file generation", type="info"))
 
-    def handleEvents(self, events):
+    def handleEvents(self, events: list[pygame.event.Event]) -> None:
         self.applyScroll(events)
         for event in events:
             if event.type == pygame.QUIT:
@@ -250,7 +259,7 @@ class SettingsScene(Scene):
         self.resolutionDropdown.setDisabled(value)
         self.addToast(Toast("Restart the game to apply fullscreen changes", type="warning"))
 
-    def draw(self):
+    def draw(self) -> None:
         self.screen.fill((30, 30, 30))
         offsetY = self.scrollOffset
         labelFont = self.dropdownFont

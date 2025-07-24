@@ -1,5 +1,6 @@
 import pygame
 import logging
+import typing
 
 from ui.scene import Scene
 from gameState import GameState
@@ -9,7 +10,7 @@ from ui.components.toast import Toast, ToastManager
 logger = logging.getLogger(__name__)
 
 class GameScene(Scene):
-    def __init__(self, screen, switchSceneCallback, gameSession, clock, network, gameLog):
+    def __init__(self, screen: pygame.Surface, switchSceneCallback: typing.Callable, gameSession: typing.Any, clock: typing.Any, network: typing.Any, gameLog: typing.Any) -> None:
         super().__init__(screen, switchSceneCallback)
         self.session = gameSession
         self.clock = clock
@@ -45,7 +46,7 @@ class GameScene(Scene):
             pygame.K_UP: False, pygame.K_DOWN: False, pygame.K_LEFT: False, pygame.K_RIGHT: False
         }
 
-    def applySidebarScroll(self, events):
+    def applySidebarScroll(self, events: list[pygame.event.Event]) -> None:
         """Handle sidebar scrolling events"""
         for event in events:
             if event.type == pygame.MOUSEWHEEL:
@@ -58,21 +59,21 @@ class GameScene(Scene):
                     self.sidebarScrollOffset -= event.y * self.sidebarScrollSpeed
                     self.sidebarScrollOffset = max(0, self.sidebarScrollOffset)
 
-    def getOffsetX(self):
+    def getOffsetX(self) -> int:
         """
         Renderer x-axis offset getter method
         :return: Offset on the x-axis
         """
         return self.offsetX
         
-    def getOffsetY(self):
+    def getOffsetY(self) -> int:
         """
         Renderer y-axis offset getter method
         :return: Offset on the y-axis
         """
         return self.offsetY
 
-    def drawBoard(self, gameBoard, placedFigures, detectedStructures, isFirstRound, isGameOver, players):
+    def drawBoard(self, gameBoard: typing.Any, placedFigures: list, detectedStructures: list, isFirstRound: bool, isGameOver: bool, players: list) -> None:
         """
         Draws the game board, including grid lines and placed cards.
         """
@@ -184,7 +185,7 @@ class GameScene(Scene):
                     
                     self.screen.blit(figure.image, (figureX - tile_size * 0.15, figureY - tile_size * 0.15))  # Adjust for better centering
                     
-    def drawSidePanel(self, selectedCard, remainingCards, currentPlayer, placedFigures, detectedStructures):
+    def drawSidePanel(self, selectedCard: typing.Any, remainingCards: int, currentPlayer: typing.Any, placedFigures: list, detectedStructures: list) -> None:
         windowWidth = settingsManager.get("WINDOW_WIDTH")
         windowHeight = settingsManager.get("WINDOW_HEIGHT")
         sidebarWidth = settingsManager.get("SIDEBAR_WIDTH")
@@ -360,7 +361,7 @@ class GameScene(Scene):
         maxScroll = max(0, currentY - windowHeight + 50)  # 50px buffer
         self.sidebarScrollOffset = min(self.sidebarScrollOffset, maxScroll)
 
-    def scroll(self, direction):
+    def scroll(self, direction: str) -> None:
         """
         Scrolls the view of the board based on user input.
         :param direction: The direction to scroll ('up', 'down', 'left', 'right').
@@ -374,7 +375,7 @@ class GameScene(Scene):
         elif direction == "right":
             self.offsetX += self.scrollSpeed
 
-    def handleEvents(self, events):
+    def handleEvents(self, events: list[pygame.event.Event]) -> None:
         for event in events:
             if event.type == pygame.MOUSEWHEEL and hasattr(self, 'gameLog') and self.gameLog.visible:
                 self.gameLog.handleScroll(event.y)
@@ -394,9 +395,7 @@ class GameScene(Scene):
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_TAB:
                     self.gameLog.toggleVisibility()
-                    #logger.info("Game log visibility toggled")
                 elif event.key == pygame.K_ESCAPE:
-                    #logger.info("Returning to main menu")
                     self.switchScene(GameState.MENU)
 
             # Block game actions if it's not this player's turn in network mode
@@ -418,7 +417,7 @@ class GameScene(Scene):
                         
         self.handleKeyHold()
 
-    def handleMouseClick(self, event):
+    def handleMouseClick(self, event: pygame.event.Event) -> None:
         x, y = event.pos
         tile_size = settingsManager.get("TILE_SIZE")
         gridX, gridY = (x + self.getOffsetX()) // tile_size, (y + self.getOffsetY()) // tile_size
@@ -427,14 +426,12 @@ class GameScene(Scene):
 
         if event.button == 1:
             direction = self.detectClickDirection(x, y, gridX, gridY)
-            logger.debug(f"self.session.playTurn triggered for {gridX},{gridY}")
             self.session.playTurn(gridX, gridY, direction)
 
         if event.button == 3 and self.session.getCurrentCard():
-            logger.debug("currentCard.rotate triggered")
             self.session.getCurrentCard().rotate()
         
-    def handleKeyHold(self):
+    def handleKeyHold(self) -> None:
         if self.keysPressed.get(pygame.K_w) or self.keysPressed.get(pygame.K_UP):
             self.scroll("up")
         if self.keysPressed.get(pygame.K_s) or self.keysPressed.get(pygame.K_DOWN):
@@ -444,7 +441,7 @@ class GameScene(Scene):
         if self.keysPressed.get(pygame.K_d) or self.keysPressed.get(pygame.K_RIGHT):
             self.scroll("right")
             
-    def detectClickDirection(self, mouseX, mouseY, gridX, gridY):
+    def detectClickDirection(self, mouseX: int, mouseY: int, gridX: int, gridY: int) -> typing.Optional[str]:
         tile_size = settingsManager.get("TILE_SIZE")
         tileScreenX = gridX * tile_size - self.getOffsetX()
         tileScreenY = gridY * tile_size - self.getOffsetY()
@@ -476,7 +473,7 @@ class GameScene(Scene):
 
         return min(distances, key=distances.get)
         
-    def showNotification(self, notificationType, message):
+    def showNotification(self, notificationType: str, message: str) -> None:
         """
         Show notification toast - called via callback from game session
         """
@@ -495,7 +492,7 @@ class GameScene(Scene):
         # ToastManager handles duplicate checking automatically
         self.toastManager.addToast(toast)
     
-    def update(self):
+    def update(self) -> None:
         fps = settingsManager.get("FPS")
         if self.session.getGameOver():
             self.clock.tick(fps)
@@ -511,7 +508,7 @@ class GameScene(Scene):
         currentPlayer.playTurn(self.session)
         self.clock.tick(fps)
         
-    def draw(self):
+    def draw(self) -> None:
         self.drawBoard(
             self.session.getGameBoard(),
             self.session.getPlacedFigures(),
