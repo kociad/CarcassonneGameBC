@@ -647,11 +647,12 @@ class GameSession:
         owners = structure.getMajorityOwners()
 
         if not owners:
-            logger.scoring(f"{structure.structureType} was completed but there were no meeples to score")
+            logger.debug(f"{structure.structureType} was completed but there were no meeples to score")
             #logger.debug("No figures on structure. No points awarded.")
             return
 
-        logger.info(f"{structure.structureType} was completed")
+        if not self.gameOver:
+            logger.info(f"{structure.structureType} was completed")
         #logger.debug(f"Scoring structure: {structure.structureType} for {score} points.")
         
         for owner in owners:
@@ -675,7 +676,7 @@ class GameSession:
 
         for structure in self.structures:
             if not structure.getIsCompleted():
-                logger.scoring(f"Scoring incomplete {structure.structureType}...")
+                logger.debug(f"Scoring incomplete {structure.structureType}...")
                 self.scoreStructure(structure)
 
         logger.debug("All meeples have been returned to players")

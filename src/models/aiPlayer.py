@@ -40,7 +40,7 @@ class AIPlayer(Player):
         """Handle meeple placement phase"""
         # Decide on meeple placement (50% chance)
         if random.random() > 0.5:
-            logger.info(f"Player {self.name} decided not to place a meeple")
+            logger.debug(f"Player {self.name} decided not to place a meeple")
             gameSession.skipCurrentAction()
             return
             
@@ -55,7 +55,7 @@ class AIPlayer(Player):
             
             if structure and not structure.getFigures():
                 if gameSession.playFigure(self, targetX, targetY, direction):
-                    logger.info(f"Player {self.name} placed meeple on {direction}")
+                    logger.debug(f"Player {self.name} placed meeple on {direction}")
                     gameSession.nextTurn()
                     return
                     
