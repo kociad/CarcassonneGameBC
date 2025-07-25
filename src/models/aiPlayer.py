@@ -145,14 +145,14 @@ class AIPlayer(Player):
         chosen = self._chooseFigurePlacementByDifficulty(scoredPlacements)
         logger.debug(f"AI {self.name} chose figure placement: {chosen}")
         if chosen is None:
-            logger.game(f"Player {self.name} decided not to place a figure")
+            #logger.game(f"Player {self.name} decided not to place a figure")
             gameSession.skipCurrentAction()
             return
         if gameSession.playFigure(self, targetX, targetY, chosen):
-            logger.game(f"Player {self.name} placed figure on {chosen}")
+            #logger.game(f"Player {self.name} placed figure on {chosen}")
             gameSession.nextTurn()
         else:
-            logger.game(f"Player {self.name} couldn't place figure on {chosen}")
+            #logger.game(f"Player {self.name} couldn't place figure on {chosen}")
             gameSession.skipCurrentAction()
 
     def _chooseFigurePlacementByDifficulty(self, scoredPlacements: list[tuple[str | None, int]]) -> str | None:
