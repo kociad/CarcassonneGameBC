@@ -133,6 +133,16 @@ class GameBoard:
                 opposite = {"N": "S", "S": "N", "E": "W", "W": "E"}[direction]
                 neighbor.neighbors[opposite] = card
 
+    def removeCard(self, x: int, y: int) -> None:
+        """Remove a card from the board at the given coordinates."""
+        if not (0 <= x < self.gridSize) or not (0 <= y < self.gridSize):
+            raise ValueError(f"x and y must be between 0 and {self.gridSize - 1}, got {x}, {y}")
+        card = self.getCard(x, y)
+        if card:
+            self.grid[y][x] = None
+            card.setPosition(None, None)
+            self.updateNeighbors(x, y)
+
     def serialize(self) -> dict:
         """Serialize the game board to a dictionary."""
         placed = []

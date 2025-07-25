@@ -92,7 +92,12 @@ class GameSession:
             index = 0
             for player in playerNames:
                 if player.startswith("AI_"):
-                    self.players.append(AIPlayer(player, index, colors.pop()))
+                    difficulty = 'medium'
+                    if 'HARD' in player.upper():
+                        difficulty = 'hard'
+                    elif 'EASY' in player.upper():
+                        difficulty = 'easy'
+                    self.players.append(AIPlayer(player, index, colors.pop(), difficulty=difficulty))
                 else:
                     self.players.append(Player(player, index, colors.pop()))
                 index += 1

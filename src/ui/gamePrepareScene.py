@@ -9,6 +9,7 @@ from ui.components.checkbox import Checkbox
 from gameState import GameState
 from utils.settingsManager import settingsManager
 import typing
+import settings
 
 class PlayerConfiguration:
     """Single source of truth for player data"""
@@ -85,17 +86,28 @@ class GamePrepareScene(Scene):
             self.buttonFont
         )
         self.playerListY = currentY
+        self.aiDifficulties = ["easy", "medium", "hard"]
+        self.aiDifficultyDropdownY = self.playerListY + (6 * 50) + 30
+        self.aiDifficultyDropdown = Dropdown(
+            rect=(xCenter, self.aiDifficultyDropdownY, 200, 40),
+            font=self.dropdownFont,
+            options=[d.capitalize() for d in self.aiDifficulties],
+            defaultIndex=1,
+            onSelect=self.handleAIDifficultyChange
+        )
+        self.buildPlayerFields()
+        # Shift network mode and subsequent fields down by 60px to make space for AI difficulty
+        currentY = self.aiDifficultyDropdownY + 60
         self.networkModes = ["local", "host", "client"]
         defaultIndex = self.networkModes.index(networkMode)
         self.networkModeDropdown = Dropdown(
-            rect=(xCenter, currentY + (6 * 50) + 20, 200, 40),
+            rect=(xCenter, currentY, 200, 40),
             font=self.dropdownFont,
             options=self.networkModes,
             defaultIndex=defaultIndex,
             onSelect=self.handleNetworkModeChange
         )
-        self.buildPlayerFields()
-        currentY += (6 * 50) + 20 + 60
+        currentY += 60
         self.hostIPField = InputField(
             rect=(xCenter, currentY, 200, 40),
             font=self.inputFont
@@ -128,6 +140,7 @@ class GamePrepareScene(Scene):
     def buildPlayerFields(self) -> None:
         """Build UI fields based on current player data (single source of truth)"""
         self.playerFields = []
+        aiDifficulty = self.aiDifficulties[self.aiDifficultyDropdown.selectedIndex].upper()
         for i, player in enumerate(self.players):
             y = self.playerListY + (i * 50 if i == 0 else 60 + (i - 1) * 50)
             def makeTextChangeHandler(index):
@@ -147,12 +160,26 @@ class GamePrepareScene(Scene):
                 nameField.setText("")
                 nameField.setDisabled(True)
             else:
-                nameField.setText(player.getDisplayName())
+                name = player.getDisplayName()
+                if player.enabled and player.isAI:
+                    if "[" in name:
+                        name = name.split("[")[0].strip()
+                    name = f"{name} [{aiDifficulty}]"
+                    player.name = name
+                nameField.setText(name)
                 nameField.setDisabled(not player.enabled)
                 if i > 0 and self.networkMode == "host":
                     nameField.setReadOnly(True)
             aiCheckbox = None
-            if i != 0:
+            if i == 0:
+                canToggleAI = settings.DEBUG
+                aiCheckbox = Checkbox(
+                    rect=(self.screen.get_width() // 2 + 110, y + 10, 20, 20),
+                    checked=player.isAI,
+                    onToggle=(lambda value, index=i: self.togglePlayerAI(index, value)) if canToggleAI else None
+                )
+                aiCheckbox.setDisabled(not player.enabled or not canToggleAI)
+            elif i != 0:
                 canToggleAI = (self.networkMode == "local")
                 aiCheckbox = Checkbox(
                     rect=(self.screen.get_width() // 2 + 110, y + 10, 20, 20),
@@ -161,12 +188,25 @@ class GamePrepareScene(Scene):
                 )
                 aiCheckbox.setDisabled(not player.enabled or not canToggleAI)
             self.playerFields.append((nameField, aiCheckbox))
+        # Always show AI difficulty dropdown, but only enable if any AI and local mode
+        anyAI = any(p.enabled and p.isAI for p in self.players)
+        self.aiDifficultyDropdown.setDisabled(not (anyAI and self.networkMode == "local"))
             
     def togglePlayerAI(self, index: int, value: bool) -> None:
         """Toggle AI status for a player"""
         self.players[index].setAI(value)
-        nameField = self.playerFields[index][0]
-        nameField.setText(self.players[index].getDisplayName())
+        if value:
+            aiDifficulty = self.aiDifficulties[self.aiDifficultyDropdown.selectedIndex].upper()
+            name = self.players[index].getDisplayName()
+            if "[" in name:
+                name = name.split("[")[0].strip()
+            self.players[index].name = f"{name} [{aiDifficulty}]"
+        else:
+            name = self.players[index].getDisplayName()
+            if "[" in name:
+                name = name.split("[")[0].strip()
+            self.players[index].name = name
+        self.buildPlayerFields()
         
     def handleNetworkModeChange(self, mode: str) -> None:
         """Handle network mode change"""
@@ -176,6 +216,11 @@ class GamePrepareScene(Scene):
             for i, player in enumerate(self.players):
                 if i > 0:
                     player.setAI(False)
+            for player in self.players:
+                name = player.getDisplayName()
+                if "[" in name:
+                    name = name.split("[")[0].strip()
+                player.name = name
         if mode == "host":
             hostValue = self.localIP
         elif isLocal:
@@ -185,6 +230,17 @@ class GamePrepareScene(Scene):
         self.hostIPField.setText(hostValue or "")
         self.hostIPField.setDisabled(isLocal)
         self.portField.setDisabled(isLocal)
+        self.buildPlayerFields()
+        
+    def handleAIDifficultyChange(self, _selected=None):
+        """Update all enabled AI player names to match the selected difficulty."""
+        aiDifficulty = self.aiDifficulties[self.aiDifficultyDropdown.selectedIndex].upper()
+        for player in self.players:
+            if player.enabled and player.isAI:
+                name = player.getDisplayName()
+                if "[" in name:
+                    name = name.split("[")[0].strip()
+                player.name = f"{name} [{aiDifficulty}]"
         self.buildPlayerFields()
         
     def addPlayerField(self) -> None:
@@ -250,6 +306,8 @@ class GamePrepareScene(Scene):
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     self.switchScene(GameState.MENU)
+            if self.aiDifficultyDropdown.handleEvent(event, yOffset=self.scrollOffset):
+                continue
             if self.networkModeDropdown.handleEvent(event, yOffset=self.scrollOffset):
                 continue
             self.hostIPField.handleEvent(event, yOffset=self.scrollOffset)
@@ -276,24 +334,6 @@ class GamePrepareScene(Scene):
         titleRect = titleText.get_rect(center=(self.screen.get_width() // 2, self.titleY + offsetY))
         self.screen.blit(titleText, titleRect)
         labelFont = self.dropdownFont
-        netLabel = labelFont.render("Network mode:", True, (255, 255, 255))
-        netLabelRect = netLabel.get_rect(
-            right=self.networkModeDropdown.rect.left - 10,
-            centery=self.networkModeDropdown.rect.centery + offsetY
-        )
-        self.screen.blit(netLabel, netLabelRect)
-        ipLabel = labelFont.render("Host IP:", True, (255, 255, 255))
-        ipLabelRect = ipLabel.get_rect(
-            right=self.hostIPField.rect.left - 10,
-            centery=self.hostIPField.rect.centery + offsetY
-        )
-        self.screen.blit(ipLabel, ipLabelRect)
-        portLabel = labelFont.render("Port:", True, (255, 255, 255))
-        portLabelRect = portLabel.get_rect(
-            right=self.portField.rect.left - 10,
-            centery=self.portField.rect.centery + offsetY
-        )
-        self.screen.blit(portLabel, portLabelRect)
         for i, (nameField, aiCheckbox) in enumerate(self.playerFields):
             labelText = "Your name:" if i == 0 else f"Player {i + 1}:"
             pLabel = labelFont.render(labelText, True, (255, 255, 255))
@@ -310,15 +350,40 @@ class GamePrepareScene(Scene):
                     midleft=(aiCheckbox.rect.right + 8, aiCheckbox.rect.centery + offsetY)
                 )
                 self.screen.blit(aiLabel, aiLabelRect)
+        ipLabel = labelFont.render("Host IP:", True, (255, 255, 255))
+        ipLabelRect = ipLabel.get_rect(
+            right=self.hostIPField.rect.left - 10,
+            centery=self.hostIPField.rect.centery + offsetY
+        )
+        self.screen.blit(ipLabel, ipLabelRect)
+        portLabel = labelFont.render("Port:", True, (255, 255, 255))
+        portLabelRect = portLabel.get_rect(
+            right=self.portField.rect.left - 10,
+            centery=self.portField.rect.centery + offsetY
+        )
+        self.screen.blit(portLabel, portLabelRect)
         self.hostIPField.draw(self.screen, yOffset=offsetY)
         self.portField.draw(self.screen, yOffset=offsetY)
         self.addPlayerButton.draw(self.screen, yOffset=offsetY)
         self.removePlayerButton.draw(self.screen, yOffset=offsetY)
         self.backButton.draw(self.screen, yOffset=offsetY)
         self.startButton.draw(self.screen, yOffset=offsetY)
+        netLabel = labelFont.render("Network mode:", True, (255, 255, 255))
+        netLabelRect = netLabel.get_rect(
+            right=self.networkModeDropdown.rect.left - 10,
+            centery=self.networkModeDropdown.rect.centery + offsetY
+        )
+        self.screen.blit(netLabel, netLabelRect)
         self.networkModeDropdown.draw(self.screen, yOffset=offsetY)
-        self.maxScroll = max(self.screen.get_height(), self.backButton.rect.bottom + 80)
+        aiDiffLabel = labelFont.render("AI Difficulty:", True, (255, 255, 255))
+        aiDiffLabelRect = aiDiffLabel.get_rect(
+            right=self.aiDifficultyDropdown.rect.left - 10,
+            centery=self.aiDifficultyDropdown.rect.centery + offsetY
+        )
+        self.screen.blit(aiDiffLabel, aiDiffLabelRect)
+        self.aiDifficultyDropdown.draw(self.screen, yOffset=offsetY)
         self.toastManager.draw(self.screen)
+        self.maxScroll = max(self.screen.get_height(), self.backButton.rect.bottom + 80)
         pygame.display.flip()
         
     def addToast(self, toast):
