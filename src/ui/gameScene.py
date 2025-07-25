@@ -106,14 +106,40 @@ class GameScene(Scene):
         self.screen.fill((0, 128, 0))
         
         if isGameOver:
-            winner = max(players, key=lambda p: p.getScore())
-            message = f"{winner.getName()} wins with {winner.getScore()} points!"
+            sortedPlayers = sorted(players, key=lambda p: p.getScore(), reverse=True)
+            winner = sortedPlayers[0]
+            windowWidth = settingsManager.get("WINDOW_WIDTH")
+            windowHeight = settingsManager.get("WINDOW_HEIGHT")
+
             gameOverFont = pygame.font.Font(None, 72)
-            textSurface = gameOverFont.render(message, True, (255, 255, 255))
-            window_width = settingsManager.get("WINDOW_WIDTH")
-            window_height = settingsManager.get("WINDOW_HEIGHT")
-            textRect = textSurface.get_rect(center=(window_width // 2, window_height // 2))
-            self.screen.blit(textSurface, textRect)
+            playerFont = pygame.font.Font(None, 48)
+            infoFont = pygame.font.Font(None, 36)
+
+            winnerMessage = f"{winner.getName()} wins with {winner.getScore()} points!"
+            winnerSurface = gameOverFont.render(winnerMessage, True, (255, 255, 255))
+            winnerRect = winnerSurface.get_rect(center=(windowWidth // 2, windowHeight // 2 - 100))
+            self.screen.blit(winnerSurface, winnerRect)
+
+            startY = windowHeight // 2 - 20
+            for i, player in enumerate(sortedPlayers):
+                colorMap = {
+                    "red": (255, 100, 100),
+                    "blue": (100, 100, 255),
+                    "green": (100, 255, 100),
+                    "yellow": (255, 255, 100),
+                    "pink": (255, 100, 255),
+                    "black": (200, 200, 200),
+                }
+                playerColor = colorMap.get(player.getColor(), (255, 255, 255))
+                playerMsg = f"{player.getName()}: {player.getScore()} points"
+                playerSurface = playerFont.render(playerMsg, True, playerColor)
+                playerRect = playerSurface.get_rect(center=(windowWidth // 2, startY + i * 55))
+                self.screen.blit(playerSurface, playerRect)
+
+            escMsg = "Press ESC to return to menu"
+            escSurface = infoFont.render(escMsg, True, (200, 200, 200))
+            escRect = escSurface.get_rect(center=(windowWidth // 2, startY + len(sortedPlayers) * 60 + 20))
+            self.screen.blit(escSurface, escRect)
             return
                 
         if settingsManager.get("DEBUG"):
