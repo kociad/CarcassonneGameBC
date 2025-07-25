@@ -125,7 +125,8 @@ class Structure:
         for figure in otherStructure.figures:
             self.figures.append(figure)
         for card in otherStructure.cards:
-            self.cards.append(card)
+            if card not in self.cards:
+                self.cards.append(card)
 
     def getScore(self, gameSession: typing.Any = None) -> int:
         """Calculate and return the score for this structure."""
