@@ -96,7 +96,6 @@ class GamePrepareScene(Scene):
             onSelect=self.handleAIDifficultyChange
         )
         self.buildPlayerFields()
-        # Shift network mode and subsequent fields down by 60px to make space for AI difficulty
         currentY = self.aiDifficultyDropdownY + 60
         self.networkModes = ["local", "host", "client"]
         defaultIndex = self.networkModes.index(networkMode)
@@ -139,17 +138,36 @@ class GamePrepareScene(Scene):
         
     def buildPlayerFields(self) -> None:
         """Build UI fields based on current player data (single source of truth)"""
+        forbiddenWords = ["ai", "easy", "medium", "hard"]
         self.playerFields = []
         aiDifficulty = self.aiDifficulties[self.aiDifficultyDropdown.selectedIndex].upper()
         for i, player in enumerate(self.players):
             y = self.playerListY + (i * 50 if i == 0 else 60 + (i - 1) * 50)
             def makeTextChangeHandler(index):
                 def handler(newText):
+                    lowerName = newText.lower()
+                    if any(word in lowerName for word in forbiddenWords):
+                        if index < len(self.originalPlayerNames):
+                            defaultName = self.originalPlayerNames[index]
+                        else:
+                            defaultName = f"Player {index + 1}"
+                        self.players[index].setName(defaultName)
+                        self.players[index].setAI(False)
+                        if hasattr(self, 'playerFields') and len(self.playerFields) > index:
+                            nameField = self.playerFields[index][0]
+                            nameField.setText(defaultName)
+                        if hasattr(self, 'playerFields') and len(self.playerFields) > index:
+                            aiCheckbox = self.playerFields[index][1]
+                            if aiCheckbox:
+                                aiCheckbox.setChecked(False)
+                        self.addToast(Toast("Forbidden word in name! Name reset.", type="error"))
+                        return
                     self.players[index].setName(newText)
+                    self.players[index].setAI(False)
                     if hasattr(self, 'playerFields') and len(self.playerFields) > index:
                         aiCheckbox = self.playerFields[index][1]
                         if aiCheckbox:
-                            aiCheckbox.setChecked(self.players[index].isAI)
+                            aiCheckbox.setChecked(False)
                 return handler
             nameField = InputField(
                 rect=(self.screen.get_width() // 2 - 100, y, 200, 40),
