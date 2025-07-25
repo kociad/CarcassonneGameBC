@@ -667,3 +667,14 @@ class GameSession:
                 updated_figures.append(fig_lookup.get(key, fig))
             structure.setFigures(updated_figures)
         return session
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        state['onTurnEnded'] = None
+        state['onShowNotification'] = None
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        self.onTurnEnded = None
+        self.onShowNotification = None
