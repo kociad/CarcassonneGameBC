@@ -86,7 +86,7 @@ class MainMenuScene(Scene):
                 elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     if self.confirmYesButton.isClicked(event.pos):
                         self.showConfirmDialog = False
-                        logger.info("Starting new game - cleaning up previous session")
+                        logger.game("Starting new game - cleaning up previous session")
                         self.cleanupPreviousGame()
                         self.switchScene(GameState.PREPARE)
                     elif self.confirmNoButton.isClicked(event.pos):
@@ -109,7 +109,7 @@ class MainMenuScene(Scene):
                     if self.getGameSession():
                         self.showConfirmDialog = True
                     else:
-                        logger.info("Starting new game")
+                        logger.game("Starting new game")
                         self.switchScene(GameState.PREPARE)
                 elif self.settingsButton.isClicked(event.pos, yOffset=self.scrollOffset):
                     self.switchScene(GameState.SETTINGS)

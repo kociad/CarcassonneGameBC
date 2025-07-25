@@ -19,12 +19,12 @@ class AIPlayer(Player):
 
     def playTurn(self, gameSession: 'GameSession') -> None:
         """Perform the AI's turn logic."""
-        logger.info(f"Player {self.name} is thinking...")
+        logger.game(f"Player {self.name} is thinking...")
         logger.debug(f"AI difficulty: {self.difficulty}")
         currentCard = gameSession.getCurrentCard()
         placements = self._getAllValidPlacements(gameSession, currentCard)
         if not placements:
-            logger.info(f"Player {self.name} couldn't place their card anywhere and discarded it")
+            logger.game(f"Player {self.name} couldn't place their card anywhere and discarded it")
             gameSession.skipCurrentAction()
             return
         scoredPlacements = []
@@ -145,14 +145,14 @@ class AIPlayer(Player):
         chosen = self._chooseFigurePlacementByDifficulty(scoredPlacements)
         logger.debug(f"AI {self.name} chose figure placement: {chosen}")
         if chosen is None:
-            logger.info(f"Player {self.name} decided not to place a figure")
+            logger.game(f"Player {self.name} decided not to place a figure")
             gameSession.skipCurrentAction()
             return
         if gameSession.playFigure(self, targetX, targetY, chosen):
-            logger.info(f"Player {self.name} placed figure on {chosen}")
+            logger.game(f"Player {self.name} placed figure on {chosen}")
             gameSession.nextTurn()
         else:
-            logger.info(f"Player {self.name} couldn't place figure on {chosen}")
+            logger.game(f"Player {self.name} couldn't place figure on {chosen}")
             gameSession.skipCurrentAction()
 
     def _chooseFigurePlacementByDifficulty(self, scoredPlacements: list[tuple[str | None, int]]) -> str | None:

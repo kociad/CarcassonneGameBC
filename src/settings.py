@@ -1,6 +1,8 @@
 #Fixed variables
 FPS = 60
 
+AI_TURN_DELAY = 1.0  # Delay between AI turns in seconds
+
 ASSETS_PATH = "src/assets/"
 TILE_IMAGES_PATH = ASSETS_PATH + "tiles/"
 MEEPLE_IMAGES_PATH = ASSETS_PATH + "meeples/"
@@ -47,6 +49,6 @@ SIDEBAR_WIDTH = 250
 # Debug
 DEBUG = False
 CONSOLE_LOG_OUTPUT = False
-GAME_LOG_MAX_ENTRIES = 10000
+GAME_LOG_MAX_ENTRIES = 20000
 
 

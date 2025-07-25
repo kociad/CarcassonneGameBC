@@ -53,6 +53,8 @@ class GameScene(Scene):
         self._candidatePositionsCard = None
         self._candidatePositionsRotation = None
 
+        self._lastAITurnTime = 0
+
     def updateCandidatePositionsCache(self):
         """Update the candidate positions cache"""
         currentCard = self.session.getCurrentCard()
@@ -522,12 +524,17 @@ class GameScene(Scene):
             self.clock.tick(fps)
             return
 
+        aiDelay = settingsManager.get("AI_TURN_DELAY")
+        now = pygame.time.get_ticks()
+        if now - self._lastAITurnTime < aiDelay * 1000:
+            self.clock.tick(fps)
+            return
         currentPlayer.playTurn(self.session)
+        self._lastAITurnTime = pygame.time.get_ticks()
         self.clock.tick(fps)
         
     def draw(self) -> None:
         """Draw the entire game scene, including the board, sidebar, game log, and notifications"""
-        # Check if current card changed (e.g., after play, discard, or new turn)
         currentCard = self.session.getCurrentCard()
         currentRotation = getattr(currentCard, 'rotation', 0) if currentCard else None
         if (

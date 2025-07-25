@@ -6,7 +6,9 @@ from datetime import datetime
 from pathlib import Path
 import typing
 
-SCORING_LEVEL = 25
+GAME_LEVEL = 25
+SCORING_LEVEL = 26
+logging.addLevelName(GAME_LEVEL, "GAME")
 logging.addLevelName(SCORING_LEVEL, "SCORING")
 
 def scoring(self, message, *args, **kwargs):
@@ -15,6 +17,11 @@ def scoring(self, message, *args, **kwargs):
         self._log(SCORING_LEVEL, message, args, **kwargs)
 
 logging.Logger.scoring = scoring
+
+def game(self, message, *args, **kwargs):
+    if self.isEnabledFor(GAME_LEVEL):
+        self._log(GAME_LEVEL, message, args, **kwargs)
+logging.Logger.game = game
 
 def configureLogging() -> None:
     """Configure logging for the application with file and console output and global exception handling."""
@@ -40,8 +47,6 @@ def configureLogging() -> None:
     logger = logging.getLogger(__name__)
     if debugEnabled:
         logger.debug(f"Logging configured with file output: {logFilename}")
-    else:
-        logger.info(f"Logging configured (console: {consoleLogEnabled}, DEBUG disabled)")
 
 def updateLoggingLevel() -> None:
     """Update logging level based on current DEBUG setting."""
@@ -58,8 +63,6 @@ def updateLoggingLevel() -> None:
     logger = logging.getLogger(__name__)
     if debugEnabled:
         logger.debug("Debug logging enabled - all messages visible")
-    else:
-        logger.info("Debug logging disabled - INFO and above messages visible")
 
 def setupExceptionLogging():
     """Set up global exception handling to log all unhandled exceptions."""
@@ -111,17 +114,17 @@ class GameLogHandler(logging.Handler):
         try:
             levelMapping = {
                 logging.DEBUG: "DEBUG",
-                logging.INFO: "INFO",
+                logging.INFO: "GAME",
+                GAME_LEVEL: "GAME",
                 SCORING_LEVEL: "SCORING",
                 logging.WARNING: "WARNING",
                 logging.ERROR: "ERROR",
                 logging.CRITICAL: "ERROR"
             }
-            level = levelMapping.get(record.levelno, "INFO")
+            level = levelMapping.get(record.levelno, "GAME")
+            if level not in ("GAME", "SCORING"):
+                return
             cleanMessage = record.getMessage()
-            if level == "DEBUG":
-                loggerName = record.name.split('.')[-1]
-                cleanMessage = f"[{loggerName}] {cleanMessage}"
             gameLogInstance.addEntry(cleanMessage, level)
         except Exception:
             pass
