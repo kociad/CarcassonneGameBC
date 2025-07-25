@@ -22,9 +22,9 @@ HOST_PORT = 2222  # TCP port to use
 PLAYER_INDEX = 0
 
 # General Game Settings
-WINDOW_WIDTH = 1920
-WINDOW_HEIGHT = 1080
-FULLSCREEN = False
+WINDOW_WIDTH = 2560
+WINDOW_HEIGHT = 1440
+FULLSCREEN = True
 
 # Apply dynamic fullscreen resolution override if needed
 if FULLSCREEN:
@@ -34,7 +34,7 @@ if FULLSCREEN:
         info = pygame.display.Info()
         WINDOW_WIDTH = info.current_w
         WINDOW_HEIGHT = info.current_h
-        pygame.display.quit()
+        # pygame.display.quit()
     except Exception as e:
         print(f"Failed to detect fullscreen resolution: {e}")
 
@@ -45,8 +45,8 @@ GRID_SIZE = 20
 SIDEBAR_WIDTH = 250
 
 # Debug
-DEBUG = True
-CONSOLE_LOG_OUTPUT = True
+DEBUG = False
+CONSOLE_LOG_OUTPUT = False
 GAME_LOG_MAX_ENTRIES = 10000
 
 
