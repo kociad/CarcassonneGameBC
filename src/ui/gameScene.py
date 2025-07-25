@@ -49,6 +49,27 @@ class GameScene(Scene):
             pygame.K_UP: False, pygame.K_DOWN: False, pygame.K_LEFT: False, pygame.K_RIGHT: False
         }
 
+        self._candidatePositionsCache = []
+        self._candidatePositionsCard = None
+        self._candidatePositionsRotation = None
+
+    def updateCandidatePositionsCache(self):
+        """Update the candidate positions cache"""
+        currentCard = self.session.getCurrentCard()
+        if currentCard is None:
+            self._candidatePositionsCache = []
+            self._candidatePositionsCard = None
+            self._candidatePositionsRotation = None
+            return
+        self._candidatePositionsCard = currentCard
+        self._candidatePositionsRotation = getattr(currentCard, 'rotation', 0)
+        candidatePositions = self.session.getCandidatePositions()
+        gameBoard = self.session.getGameBoard()
+        self._candidatePositionsCache = [
+            (x, y) for (x, y) in candidatePositions
+            if gameBoard.validateCardPlacement(currentCard, x, y)
+        ]
+
     def applySidebarScroll(self, events: list[pygame.event.Event]) -> None:
         """Handle sidebar scrolling events"""
         for event in events:
@@ -94,13 +115,29 @@ class GameScene(Scene):
             return
                 
         if settingsManager.get("DEBUG"):
-            tile_size = settingsManager.get("TILE_SIZE")
-            for x in range(0, (gameBoard.getGridSize() + 1) * tile_size, tile_size):
-                pygame.draw.line(self.screen, (0, 0, 0), (x - self.offsetX, 0 - self.offsetY), (x - self.offsetX, gameBoard.getGridSize() * tile_size - self.offsetY))
-            for y in range(0, (gameBoard.getGridSize() + 1) * tile_size, tile_size):
-                pygame.draw.line(self.screen, (0, 0, 0), (0 - self.offsetX, y - self.offsetY), (gameBoard.getGridSize() * tile_size - self.offsetX, y - self.offsetY))
+            tileSize = settingsManager.get("TILE_SIZE")
+            for x in range(0, (gameBoard.getGridSize() + 1) * tileSize, tileSize):
+                pygame.draw.line(self.screen, (0, 0, 0), (x - self.offsetX, 0 - self.offsetY), (x - self.offsetX, gameBoard.getGridSize() * tileSize - self.offsetY))
+            for y in range(0, (gameBoard.getGridSize() + 1) * tileSize, tileSize):
+                pygame.draw.line(self.screen, (0, 0, 0), (0 - self.offsetX, y - self.offsetY), (gameBoard.getGridSize() * tileSize - self.offsetX, y - self.offsetY))
         
-        tile_size = settingsManager.get("TILE_SIZE")
+        tileSize = settingsManager.get("TILE_SIZE")
+        if not isGameOver:
+            currentCard = self.session.getCurrentCard()
+            currentRotation = getattr(currentCard, 'rotation', 0) if currentCard else None
+            if (
+                currentCard is not None and
+                (self._candidatePositionsCard is not currentCard or self._candidatePositionsRotation != currentRotation)
+            ):
+                self.updateCandidatePositionsCache()
+            for (x, y) in self._candidatePositionsCache:
+                highlightColor = (255, 255, 0, 100)
+                highlightSurface = pygame.Surface((tileSize, tileSize), pygame.SRCALPHA)
+                highlightSurface.fill(highlightColor)
+                self.screen.blit(
+                    highlightSurface,
+                    (x * tileSize - self.offsetX, y * tileSize - self.offsetY)
+                )
         for y in range(gameBoard.gridSize):
             for x in range(gameBoard.gridSize):
                 card = gameBoard.getCard(x, y)
@@ -112,11 +149,11 @@ class GameScene(Scene):
                         except Exception as e:
                             logger.error(f"Rotation failed for card: {e}")
                             imageToDraw = card.image
-                    self.screen.blit(imageToDraw, (x * tile_size - self.offsetX, y * tile_size - self.offsetY))
+                    self.screen.blit(imageToDraw, (x * tileSize - self.offsetX, y * tileSize - self.offsetY))
                 if settingsManager.get("DEBUG"):
                     textSurface = self.font.render(f"{x},{y}", True, (255, 255, 255))
-                    textX = x * tile_size - self.offsetX + tile_size // 3
-                    textY = y * tile_size - self.offsetY + tile_size // 3
+                    textX = x * tileSize - self.offsetX + tileSize // 3
+                    textY = y * tileSize - self.offsetY + tileSize // 3
                     self.screen.blit(textSurface, (textX, textY))
                 
         if settingsManager.get("DEBUG"):
@@ -136,49 +173,49 @@ class GameScene(Scene):
                         cardPosition = [(x, y) for y in range(gameBoard.gridSize) for x in range(gameBoard.gridSize) if gameBoard.getCard(x, y) == card]
                         if cardPosition:
                             cardX, cardY = cardPosition[0]
-                            rect = pygame.Surface((tile_size, tile_size), pygame.SRCALPHA)
+                            rect = pygame.Surface((tileSize, tileSize), pygame.SRCALPHA)
                             rect.fill((0, 0, 0, 0))
                             
                             for direction in directions:
                                 if direction == "N":
-                                    pygame.draw.rect(rect, tintColor, (0, 0, tile_size, tile_size // 3))
+                                    pygame.draw.rect(rect, tintColor, (0, 0, tileSize, tileSize // 3))
                                 elif direction == "S":
-                                    pygame.draw.rect(rect, tintColor, (0, 2 * tile_size // 3, tile_size, tile_size // 3))
+                                    pygame.draw.rect(rect, tintColor, (0, 2 * tileSize // 3, tileSize, tileSize // 3))
                                 elif direction == "E":
-                                    pygame.draw.rect(rect, tintColor, (2 * tile_size // 3, 0, tile_size // 3, tile_size))
+                                    pygame.draw.rect(rect, tintColor, (2 * tileSize // 3, 0, tileSize // 3, tileSize))
                                 elif direction == "W":
-                                    pygame.draw.rect(rect, tintColor, (0, 0, tile_size // 3, tile_size))
+                                    pygame.draw.rect(rect, tintColor, (0, 0, tileSize // 3, tileSize))
                                 elif direction == "C":
-                                    centerX = tile_size // 2
-                                    centerY = tile_size // 2
-                                    radius = tile_size // 6
+                                    centerX = tileSize // 2
+                                    centerY = tileSize // 2
+                                    radius = tileSize // 6
                                     pygame.draw.circle(rect, tintColor, (centerX, centerY), radius)
 
-                            self.screen.blit(rect, (cardX * tile_size - self.offsetX, cardY * tile_size - self.offsetY))
+                            self.screen.blit(rect, (cardX * tileSize - self.offsetX, cardY * tileSize - self.offsetY))
 
-        tile_size = settingsManager.get("TILE_SIZE")
-        figure_size = settingsManager.get("FIGURE_SIZE")
+        tileSize = settingsManager.get("TILE_SIZE")
+        figureSize = settingsManager.get("FIGURE_SIZE")
         for figure in placedFigures:
             if figure.card:
                 cardPosition = [(x, y) for y in range(gameBoard.gridSize) for x in range(gameBoard.gridSize) if gameBoard.getCard(x, y) == figure.card]
                 if cardPosition:
-                    padding = tile_size * 0.1
-                    figureOffset = figure_size / 2
-                    baseX = cardPosition[0][0] * tile_size - self.offsetX
-                    baseY = cardPosition[0][1] * tile_size - self.offsetY
+                    padding = tileSize * 0.1
+                    figureOffset = figureSize / 2
+                    baseX = cardPosition[0][0] * tileSize - self.offsetX
+                    baseY = cardPosition[0][1] * tileSize - self.offsetY
 
                     if figure.positionOnCard == "N":
-                        figureX, figureY = baseX + tile_size / 2, baseY + padding + figureOffset
+                        figureX, figureY = baseX + tileSize / 2, baseY + padding + figureOffset
                     elif figure.positionOnCard == "S":
-                        figureX, figureY = baseX + tile_size / 2, baseY + tile_size - padding - figureOffset
+                        figureX, figureY = baseX + tileSize / 2, baseY + tileSize - padding - figureOffset
                     elif figure.positionOnCard == "E":
-                        figureX, figureY = baseX + tile_size - padding - figureOffset, baseY + tile_size / 2
+                        figureX, figureY = baseX + tileSize - padding - figureOffset, baseY + tileSize / 2
                     elif figure.positionOnCard == "W":
-                        figureX, figureY = baseX + padding + figureOffset, baseY + tile_size / 2
+                        figureX, figureY = baseX + padding + figureOffset, baseY + tileSize / 2
                     else:
-                        figureX, figureY = baseX + tile_size / 2, baseY + tile_size / 2
+                        figureX, figureY = baseX + tileSize / 2, baseY + tileSize / 2
                     
-                    self.screen.blit(figure.image, (figureX - tile_size * 0.15, figureY - tile_size * 0.15))
+                    self.screen.blit(figure.image, (figureX - tileSize * 0.15, figureY - tileSize * 0.15))
                     
     def drawSidePanel(self, selectedCard: typing.Any, remainingCards: int, currentPlayer: typing.Any, placedFigures: list, detectedStructures: list) -> None:
         """
@@ -382,11 +419,11 @@ class GameScene(Scene):
                     self.switchScene(GameState.MENU)
 
             allowAction = True
-            network_mode = settingsManager.get("NETWORK_MODE")
-            if network_mode in ("host", "client"):
+            networkMode = settingsManager.get("NETWORK_MODE")
+            if networkMode in ("host", "client"):
                 currentPlayer = self.session.getCurrentPlayer()
-                player_index = settingsManager.get("PLAYER_INDEX")
-                if not currentPlayer or currentPlayer.getIndex() != player_index or self.session.getGameOver():
+                playerIndex = settingsManager.get("PLAYER_INDEX")
+                if not currentPlayer or currentPlayer.getIndex() != playerIndex or self.session.getGameOver():
                     allowAction = False
 
             if allowAction:
@@ -402,17 +439,17 @@ class GameScene(Scene):
     def handleMouseClick(self, event: pygame.event.Event) -> None:
         """Handle mouse click events for board interaction"""
         x, y = event.pos
-        tile_size = settingsManager.get("TILE_SIZE")
-        gridX, gridY = (x + self.getOffsetX()) // tile_size, (y + self.getOffsetY()) // tile_size
+        tileSize = settingsManager.get("TILE_SIZE")
+        gridX, gridY = (x + self.getOffsetX()) // tileSize, (y + self.getOffsetY()) // tileSize
 
         logger.debug(f"Registered {event.button}")
 
         if event.button == 1:
             direction = self.detectClickDirection(x, y, gridX, gridY)
             self.session.playTurn(gridX, gridY, direction)
-
         if event.button == 3 and self.session.getCurrentCard():
             self.session.getCurrentCard().rotate()
+            self.updateCandidatePositionsCache()
         
     def handleKeyHold(self) -> None:
         """Handle continuous key presses for board scrolling"""
@@ -427,9 +464,9 @@ class GameScene(Scene):
             
     def detectClickDirection(self, mouseX: int, mouseY: int, gridX: int, gridY: int) -> typing.Optional[str]:
         """Detect which direction (N, S, E, W, C) was clicked on a card"""
-        tile_size = settingsManager.get("TILE_SIZE")
-        tileScreenX = gridX * tile_size - self.getOffsetX()
-        tileScreenY = gridY * tile_size - self.getOffsetY()
+        tileSize = settingsManager.get("TILE_SIZE")
+        tileScreenX = gridX * tileSize - self.getOffsetX()
+        tileScreenY = gridY * tileSize - self.getOffsetY()
 
         relativeX = mouseX - tileScreenX
         relativeY = mouseY - tileScreenY
@@ -442,8 +479,8 @@ class GameScene(Scene):
 
         supportsCenter = card.getTerrains().get("C") is not None
 
-        thirdSize = tile_size // 3
-        twoThirdSize = 2 * tile_size // 3
+        thirdSize = tileSize // 3
+        twoThirdSize = 2 * tileSize // 3
 
         if thirdSize < relativeX < twoThirdSize and thirdSize < relativeY < twoThirdSize:
             if supportsCenter:
@@ -451,9 +488,9 @@ class GameScene(Scene):
 
         distances = {
             "N": relativeY,
-            "S": tile_size - relativeY,
+            "S": tileSize - relativeY,
             "W": relativeX,
-            "E": tile_size - relativeX
+            "E": tileSize - relativeX
         }
 
         return min(distances, key=distances.get)
@@ -490,6 +527,14 @@ class GameScene(Scene):
         
     def draw(self) -> None:
         """Draw the entire game scene, including the board, sidebar, game log, and notifications"""
+        # Check if current card changed (e.g., after play, discard, or new turn)
+        currentCard = self.session.getCurrentCard()
+        currentRotation = getattr(currentCard, 'rotation', 0) if currentCard else None
+        if (
+            currentCard is not None and
+            (self._candidatePositionsCard is not currentCard or self._candidatePositionsRotation != currentRotation)
+        ):
+            self.updateCandidatePositionsCache()
         self.drawBoard(
             self.session.getGameBoard(),
             self.session.getPlacedFigures(),
