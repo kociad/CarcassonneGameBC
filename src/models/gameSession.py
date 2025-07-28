@@ -102,7 +102,7 @@ class GameSession:
                     
                     self.players.append(AIPlayer(player, index, color, difficulty))
                 else:
-                    self.players.append(Player(player, index, color))
+                    self.players.append(Player(player, color, index))
                 index += 1
             self.currentPlayer = self.players[len(self.players) - 1]
         logger.debug("Player list generated")

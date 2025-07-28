@@ -11,7 +11,7 @@ SOUND_PATH = ASSETS_PATH + "sounds/"
 TILE_SIZE = 96
 FIGURE_SIZE = 25
 GRID_SIZE = 20
-SIDEBAR_WIDTH = 250
+SIDEBAR_WIDTH = 300
 
 #Session defaults
 #Player settings (valid for host only)
