@@ -6,6 +6,7 @@ from ui.scene import Scene
 from gameState import GameState
 from utils.settingsManager import settingsManager
 from ui.components.toast import Toast, ToastManager
+from ui.components.button import Button
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +47,37 @@ class GameScene(Scene):
 
         self.validPlacements = set()
         self.lastCardState = (None, None)
+
+        self.undoButton = None
+        self.initializeUndoButton()
+
+    def initializeUndoButton(self) -> None:
+        """Initialize the undo button."""
+        windowWidth = settingsManager.get("WINDOW_WIDTH")
+        sidebarWidth = settingsManager.get("SIDEBAR_WIDTH")
+        panelX = windowWidth - sidebarWidth
+        
+        buttonWidth = sidebarWidth - 20
+        buttonHeight = 40
+        buttonX = panelX + 10
+        buttonY = settingsManager.get("WINDOW_HEIGHT") - 60
+        
+        self.undoButton = Button(
+            rect=pygame.Rect(buttonX, buttonY, buttonWidth, buttonHeight),
+            text="Undo",
+            font=self.font,
+            callback=self.handleUndo,
+            disabled=not settingsManager.get("DEBUG", False)
+        )
+
+    def handleUndo(self) -> None:
+        """Handle undo button click."""
+        if self.session.undo():
+            if self.session.onShowNotification:
+                self.session.onShowNotification("info", "Game state restored!")
+        else:
+            if self.session.onShowNotification:
+                self.session.onShowNotification("warning", "No actions to undo!")
 
     def applySidebarScroll(self, events: list[pygame.event.Event]) -> None:
         """Handle sidebar scrolling events"""
@@ -395,6 +427,10 @@ class GameScene(Scene):
         maxScroll = max(0, currentY - windowHeight + 50)
         self.sidebarScrollOffset = min(self.sidebarScrollOffset, maxScroll)
 
+        if self.undoButton and settingsManager.get("DEBUG", False):
+            self.undoButton.setDisabled(not self.session.canUndo())
+            self.undoButton.draw(self.screen)
+
     def scroll(self, direction: str) -> None:
         """
         Scrolls the view of the board based on user input.
@@ -432,6 +468,11 @@ class GameScene(Scene):
                 elif event.key == pygame.K_ESCAPE:
                     self.switchScene(GameState.MENU)
 
+            if event.type == pygame.MOUSEBUTTONDOWN and self.undoButton:
+                if self.undoButton.isClicked(event.pos):
+                    self.undoButton.handleEvent(event)
+                    return
+
             allowAction = True
             network_mode = settingsManager.get("NETWORK_MODE")
             if network_mode in ("host", "client"):
@@ -442,7 +483,13 @@ class GameScene(Scene):
 
             if allowAction:
                 if event.type == pygame.MOUSEBUTTONDOWN:
-                    self.handleMouseClick(event)
+                    mouseX, mouseY = event.pos
+                    windowWidth = settingsManager.get("WINDOW_WIDTH")
+                    sidebarWidth = settingsManager.get("SIDEBAR_WIDTH")
+                    panelX = windowWidth - sidebarWidth
+                    
+                    if mouseX < panelX:
+                        self.handleMouseClick(event)
                 
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_SPACE:

@@ -37,11 +37,70 @@ class GameSession:
         self.onShowNotification = None
         self.lobbyCompleted = lobbyCompleted
         self.networkMode = networkMode
+        
+        self.gameHistory = []
+        self.maxHistorySize = 50  # Limit history to prevent memory issues
+        
         if not noInit:
             self.generatePlayerList(playerNames)
             self.cardsDeck = self.generateCardsDeck()
             self.shuffleCardsDeck(self.cardsDeck)
             self.placeStartingCard()
+
+    def saveGameState(self) -> None:
+        """Save the current game state to history for undo functionality."""
+        try:
+            gameState = self.serialize()
+            self.gameHistory.append(gameState)
+            
+            if len(self.gameHistory) > self.maxHistorySize:
+                self.gameHistory.pop(0)
+                
+            logger.debug(f"Game state saved. History size: {len(self.gameHistory)}")
+        except Exception as e:
+            logger.error(f"Failed to save game state: {e}")
+
+    def canUndo(self) -> bool:
+        """Check if undo is available."""
+        return len(self.gameHistory) > 0
+
+    def undo(self) -> bool:
+        """Restore the previous game state."""
+        if not self.canUndo():
+            logger.warning("No game states available for undo")
+            return False
+            
+        try:
+            previousState = self.gameHistory.pop()
+            restoredSession = GameSession.deserialize(previousState)
+            
+            self.gameBoard = restoredSession.gameBoard
+            self.cardsDeck = restoredSession.cardsDeck
+            self.players = restoredSession.players
+            self.currentPlayer = restoredSession.currentPlayer
+            self.structures = restoredSession.structures
+            self.gameMode = restoredSession.gameMode
+            self.currentCard = restoredSession.currentCard
+            self.isFirstRound = restoredSession.isFirstRound
+            self.placedFigures = restoredSession.placedFigures
+            self.turnPhase = restoredSession.turnPhase
+            self.structureMap = restoredSession.structureMap
+            self.gameOver = restoredSession.gameOver
+            self.lobbyCompleted = restoredSession.lobbyCompleted
+            self.networkMode = restoredSession.networkMode
+            
+            self.lastPlacedCard = restoredSession.lastPlacedCard
+            
+            if hasattr(restoredSession, 'onTurnEnded'):
+                self.onTurnEnded = restoredSession.onTurnEnded
+            if hasattr(restoredSession, 'onShowNotification'):
+                self.onShowNotification = restoredSession.onShowNotification
+                
+            logger.debug("Game state restored from history")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to restore game state: {e}")
+            return False
 
     def getPlayers(self) -> list:
         """Return the list of player objects."""
@@ -251,8 +310,10 @@ class GameSession:
         """Play a single complete game turn in two phases."""
         if player is None:
             player = self.currentPlayer
+        
         if self.turnPhase == 1:
             logger.debug("Turn Phase 1: Attempting to place card...")
+            self.saveGameState()
             if self.playCard(x, y):
                 self.turnPhase = 2
             else:
@@ -260,10 +321,13 @@ class GameSession:
             return
         elif self.turnPhase == 2:
             logger.debug("Turn Phase 2: Attempting to place figure...")
+            self.saveGameState()
             if self.playFigure(player, x, y, position):
                 logger.debug("Figure placed.")
             else:
                 logger.debug("Figure not placed or skipped.")
+                if self.gameHistory:
+                    self.gameHistory.pop()
                 return
             logger.debug("Checking completed structures...")
             for structure in self.structures:
@@ -277,6 +341,7 @@ class GameSession:
         """Skip the current phase action with official rules validation."""
         if self.turnPhase == 1:
             logger.debug("Attempting to skip card placement...")
+            self.saveGameState()
             if self.canPlaceCardAnywhere(self.currentCard):
                 logger.debug(f"Player {self.currentPlayer.getName()} was unable to skip card placement - card can be placed somewhere on the board")
                 if self.onShowNotification and not self.currentPlayer.getIsAI():
@@ -288,6 +353,7 @@ class GameSession:
                     self.endGame()
         elif self.turnPhase == 2:
             logger.info(f"Player {self.currentPlayer.getName()} skipped meeple placement")
+            self.saveGameState()
             logger.debug("Finalizing turn...")
             for structure in self.structures:
                 structure.checkCompletion()
@@ -548,7 +614,7 @@ class GameSession:
             "deck": [card.serialize() for card in self.cardsDeck],
             "board": self.gameBoard.serialize(),
             "current_card": self.currentCard.serialize() if self.currentCard else None,
-            "last_placed_card": self.lastPlacedCard.serialize() if self.lastPlacedCard else None,
+            "last_placed_card_position": self.gameBoard.getCardPosition(self.lastPlacedCard) if self.lastPlacedCard else None,
             "is_first_round": self.isFirstRound,
             "turn_phase": self.turnPhase,
             "game_over": self.gameOver,
@@ -563,8 +629,8 @@ class GameSession:
             "structure_map": list(self.structureMap.keys()),
             "structures": [s.serialize() for s in self.structures if hasattr(s, 'serialize')],
             "game_mode": self.gameMode,
-            "lobbyCompleted": self.lobbyCompleted,
-            "networkMode": self.networkMode
+            "lobby_completed": self.lobbyCompleted,
+            "network_mode": self.networkMode
         }
 
     @classmethod
@@ -579,14 +645,14 @@ class GameSession:
                     players.append(Player.deserialize(p))
             except Exception as e:
                 logger.warning(f"Skipping malformed player entry: {p} - {e}")
-        lobbyCompleted = data.get("lobbyCompleted", True)
-        networkMode = data.get("networkMode", 'local')
+        lobbyCompleted = data.get("lobby_completed", True)
+        networkMode = data.get("network_mode", 'local')
         session = cls([p.getName() for p in players], noInit=True, lobbyCompleted=lobbyCompleted, networkMode=networkMode)
         session.players = players
         try:
-            session.currentPlayer = players[int(data.get("currentPlayerIndex", 0))]
+            session.currentPlayer = players[int(data.get("current_player_index", 0))]
         except (IndexError, ValueError, TypeError) as e:
-            logger.warning(f"Invalid currentPlayerIndex, defaulting to first: {e}")
+            logger.warning(f"Invalid current_player_index, defaulting to first: {e}")
             session.currentPlayer = players[0] if players else None
         session.cardsDeck = []
         for c in data.get("deck", []):
@@ -595,20 +661,25 @@ class GameSession:
             except Exception as e:
                 logger.warning(f"Skipping malformed card in deck: {c} - {e}")
         try:
-            session.currentCard = Card.deserialize(data["currentCard"]) if data.get("currentCard") else None
+            session.currentCard = Card.deserialize(data["current_card"]) if data.get("current_card") else None
         except Exception as e:
             logger.warning(f"Failed to deserialize currentCard - {e}")
             session.currentCard = None
-        try:
-            session.lastPlacedCard = Card.deserialize(data["lastPlacedCard"]) if data.get("lastPlacedCard") else None
-        except Exception as e:
-            logger.warning(f"Failed to deserialize lastPlacedCard - {e}")
-            session.lastPlacedCard = None
         try:
             session.gameBoard = GameBoard.deserialize(data.get("board", {}))
         except Exception as e:
             logger.warning(f"Failed to deserialize gameBoard - {e}")
             session.gameBoard = GameBoard()
+        try:
+            lastPlacedCardPos = data.get("last_placed_card_position")
+            if lastPlacedCardPos:
+                x, y = lastPlacedCardPos
+                session.lastPlacedCard = session.gameBoard.getCard(x, y)
+            else:
+                session.lastPlacedCard = None
+        except Exception as e:
+            logger.warning(f"Failed to deserialize lastPlacedCard position - {e}")
+            session.lastPlacedCard = None
         try:
             session.isFirstRound = bool(data.get("is_first_round", True))
             session.turnPhase = int(data.get("turn_phase", 1))
