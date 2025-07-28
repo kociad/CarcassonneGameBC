@@ -1,10 +1,25 @@
 import pygame
 import typing
 
+
 class Dropdown:
     """A dropdown selection UI component."""
+
     def __init__(self, rect: pygame.Rect, font: pygame.font.Font, options: list[str], onSelect: typing.Optional[typing.Callable] = None, defaultIndex: int = 0, textColor: tuple = (0, 0, 0), bgColor: tuple = (255, 255, 255), borderColor: tuple = (0, 0, 0), highlightColor: tuple = (200, 200, 200)) -> None:
-        """Initialize the dropdown."""
+        """
+        Initialize the dropdown.
+        
+        Args:
+            rect: Rectangle defining dropdown position and size
+            font: Font to use for rendering
+            options: List of options to choose from
+            onSelect: Function to call when an option is selected
+            defaultIndex: Index of the default selected option
+            textColor: Color of the text
+            bgColor: Background color
+            borderColor: Border color
+            highlightColor: Color for highlighting selected option
+        """
         self.rect = pygame.Rect(rect)
         self.font = font
         self.options = options
@@ -18,7 +33,16 @@ class Dropdown:
         self.highlightColor = highlightColor
 
     def handleEvent(self, event: pygame.event.Event, yOffset: int = 0) -> bool:
-        """Handle a pygame event for the dropdown."""
+        """
+        Handle a pygame event for the dropdown.
+        
+        Args:
+            event: Pygame event to handle
+            yOffset: Vertical offset for event detection
+            
+        Returns:
+            True if event was handled, False otherwise
+        """
         if self.disabled:
             return False
         shiftedRect = self.rect.move(0, yOffset)
@@ -44,7 +68,13 @@ class Dropdown:
         return False
 
     def draw(self, surface: pygame.Surface, yOffset: int = 0) -> None:
-        """Draw the dropdown on the given surface, offset vertically by yOffset."""
+        """
+        Draw the dropdown on the given surface.
+        
+        Args:
+            surface: Surface to draw on
+            yOffset: Vertical offset for drawing
+        """
         drawRect = self.rect.move(0, yOffset)
         fullHeight = self.rect.height + (len(self.options) * self.rect.height if self.expanded else 0)
         drawSurface = pygame.Surface((self.rect.width, fullHeight), pygame.SRCALPHA)
@@ -68,15 +98,28 @@ class Dropdown:
         surface.blit(drawSurface, drawRect.topleft)
 
     def getSelected(self) -> str:
-        """Return the currently selected option."""
+        """Get the currently selected option."""
         return self.options[self.selectedIndex]
 
     def setSelected(self, index: int) -> None:
-        """Set the selected option by index."""
+        """
+        Set the selected option by index.
+        
+        Args:
+            index: Index of the option to select
+        """
         if 0 <= index < len(self.options):
             self.selectedIndex = index
 
     def setDisabled(self, value: bool) -> 'Dropdown':
-        """Enable or disable the dropdown."""
+        """
+        Enable or disable the dropdown.
+        
+        Args:
+            value: Whether to disable the dropdown
+            
+        Returns:
+            Self for method chaining
+        """
         self.disabled = value
         return self

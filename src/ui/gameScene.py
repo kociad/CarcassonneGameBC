@@ -47,37 +47,10 @@ class GameScene(Scene):
 
         self.validPlacements = set()
         self.lastCardState = (None, None)
-
-        self.undoButton = None
-        self.initializeUndoButton()
-
-    def initializeUndoButton(self) -> None:
-        """Initialize the undo button."""
-        windowWidth = settingsManager.get("WINDOW_WIDTH")
-        sidebarWidth = settingsManager.get("SIDEBAR_WIDTH")
-        panelX = windowWidth - sidebarWidth
         
-        buttonWidth = sidebarWidth - 20
-        buttonHeight = 40
-        buttonX = panelX + 10
-        buttonY = settingsManager.get("WINDOW_HEIGHT") - 60
-        
-        self.undoButton = Button(
-            rect=pygame.Rect(buttonX, buttonY, buttonWidth, buttonHeight),
-            text="Undo",
-            font=self.font,
-            callback=self.handleUndo,
-            disabled=not settingsManager.get("DEBUG", False)
-        )
+        self.lastAITurnTime = 0
+        self.aiTurnDelay = settingsManager.get("AI_TURN_DELAY", 1.0)
 
-    def handleUndo(self) -> None:
-        """Handle undo button click."""
-        if self.session.undo():
-            if self.session.onShowNotification:
-                self.session.onShowNotification("info", "Game state restored!")
-        else:
-            if self.session.onShowNotification:
-                self.session.onShowNotification("warning", "No actions to undo!")
 
     def applySidebarScroll(self, events: list[pygame.event.Event]) -> None:
         """Handle sidebar scrolling events"""
@@ -157,12 +130,12 @@ class GameScene(Scene):
             sortedPlayers = sorted(players, key=lambda p: (-p.getScore(), p.getName()))
             numRows = len(sortedPlayers) + 1  # header + players
             rowHeight = 55
-            tableWidth = 400
+            tableWidth = 600
             tableHeight = numRows * rowHeight + 20
             tableX = window_width // 2 - tableWidth // 2
             tableY = textRect.bottom + 30
-            col1X = window_width // 2 - 100
-            col2X = window_width // 2 + 100
+            col1X = window_width // 2 - 150
+            col2X = window_width // 2 + 150
 
             pygame.draw.rect(self.screen, (40, 40, 40), (tableX, tableY, tableWidth, tableHeight))
             headerY = tableY + rowHeight // 2
@@ -385,6 +358,7 @@ class GameScene(Scene):
             currentY += scoreRect.height + 10
 
             if figures:
+                
                 figureSize = settingsManager.get("FIGURE_SIZE")
                 padding = 10
                 availableWidth = sidebarWidth - (2 * padding)
@@ -427,10 +401,6 @@ class GameScene(Scene):
         maxScroll = max(0, currentY - windowHeight + 50)
         self.sidebarScrollOffset = min(self.sidebarScrollOffset, maxScroll)
 
-        if self.undoButton and settingsManager.get("DEBUG", False):
-            self.undoButton.setDisabled(not self.session.canUndo())
-            self.undoButton.draw(self.screen)
-
     def scroll(self, direction: str) -> None:
         """
         Scrolls the view of the board based on user input.
@@ -467,11 +437,6 @@ class GameScene(Scene):
                     self.gameLog.toggleVisibility()
                 elif event.key == pygame.K_ESCAPE:
                     self.switchScene(GameState.MENU)
-
-            if event.type == pygame.MOUSEBUTTONDOWN and self.undoButton:
-                if self.undoButton.isClicked(event.pos):
-                    self.undoButton.handleEvent(event)
-                    return
 
             allowAction = True
             network_mode = settingsManager.get("NETWORK_MODE")
@@ -583,7 +548,21 @@ class GameScene(Scene):
             self.clock.tick(fps)
             return
 
-        currentPlayer.playTurn(self.session)
+        if self.session.getCurrentCard() is None:
+            self.clock.tick(fps)
+            return
+
+        currentTime = pygame.time.get_ticks() / 1000.0
+        if currentTime - self.lastAITurnTime < self.aiTurnDelay:
+            self.clock.tick(fps)
+            return
+
+        if hasattr(currentPlayer, 'playTurn'):
+            currentPlayer.playTurn(self.session)
+            self.lastAITurnTime = currentTime
+        else:
+            logger.warning(f"Player {currentPlayer.getName()} is marked as AI but doesn't have playTurn method")
+        
         self.clock.tick(fps)
         
     def draw(self) -> None:

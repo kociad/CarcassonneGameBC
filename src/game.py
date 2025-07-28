@@ -1,3 +1,10 @@
+"""
+Main game controller and application entry point.
+
+This module contains the main Game class that manages the game loop,
+scene transitions, network communication, and overall game state.
+"""
+
 import pygame
 import logging
 from datetime import datetime
@@ -17,7 +24,7 @@ from network.message import encodeMessage
 from utils.settingsManager import settingsManager
 from ui.components.gameLog import GameLog
 from utils.loggingConfig import setGameLogInstance
-from ui.lobbyScene import LobbyScene  # NEW: import the lobby scene
+from ui.lobbyScene import LobbyScene
 
 # Configure logging with exception handling
 configureLogging()
@@ -25,7 +32,21 @@ logger = logging.getLogger(__name__)
 
 
 class Game:
+    """
+    Main game controller class.
+    
+    Manages the game loop, scene transitions, network communication,
+    and overall game state. Handles initialization, cleanup, and
+    coordination between different game components.
+    """
+
     def __init__(self) -> None:
+        """
+        Initialize the game and set up the main window.
+        
+        Sets up pygame, creates the display window, initializes
+        the game log, and starts with the main menu scene.
+        """
         try:
             pygame.init()
 
@@ -60,6 +81,12 @@ class Game:
             raise
 
     def run(self) -> None:
+        """
+        Start the main game loop.
+        
+        Handles events, updates the current scene, and renders
+        the game until the application is closed.
+        """
         logger.debug("Starting main game loop")
         try:
             while self.running:
@@ -73,7 +100,13 @@ class Game:
         finally:
             logger.debug("Game loop ended")
 
-    def quit(self):
+    def quit(self) -> None:
+        """
+        Clean up resources and exit the game.
+        
+        Performs cleanup of game resources, closes pygame,
+        and exits the application.
+        """
         try:
             self.cleanupPreviousGame()
             pygame.quit()
@@ -84,7 +117,12 @@ class Game:
             exit()
 
     def cleanupPreviousGame(self) -> None:
-        """Clean up resources from previous game session"""
+        """
+        Clean up resources from previous game session.
+        
+        Closes network connections, clears game session,
+        and resets temporary settings and game log.
+        """
         try:
             logger.debug("Cleaning up previous game resources...")
             
@@ -113,6 +151,13 @@ class Game:
             logError("Error during previous game cleanup", e)
 
     def initScene(self, state: GameState, *args: typing.Any) -> None:
+        """
+        Initialize a new scene based on the game state.
+        
+        Args:
+            state: The game state to transition to
+            *args: Additional arguments passed to scene constructors
+        """
         try:
             if state == GameState.MENU:
                 self.currentScene = MainMenuScene(self.screen, self.initScene, self.getGameSession, self.cleanupPreviousGame)
@@ -144,6 +189,12 @@ class Game:
             raise
 
     def startGame(self, playerNames: list[str]) -> None:
+        """
+        Start a new game session.
+        
+        Args:
+            playerNames: List of player names for the game
+        """
         try:
             logger.debug("Initializing new game session...")
             self.network = NetworkConnection()
@@ -174,6 +225,12 @@ class Game:
             raise
 
     def startLobby(self, playerNames: list[str]) -> None:
+        """
+        Start a lobby for network games.
+        
+        Args:
+            playerNames: List of player names for the game
+        """
         try:
             logger.debug("Preparing to enter lobby...")
             self.network = NetworkConnection()
@@ -198,6 +255,12 @@ class Game:
             raise
 
     def onGameStateReceived(self, data: dict) -> None:
+        """
+        Handle received game state from network.
+        
+        Args:
+            data: Serialized game state data
+        """
         try:
             self.gameSession = GameSession.deserialize(data)
             self.gameSession.onTurnEnded = self.onTurnEnded
@@ -226,7 +289,13 @@ class Game:
         except Exception as e:
             logError("Failed to process received game state", e)
 
-    def onClientConnected(self, conn):
+    def onClientConnected(self, conn) -> None:
+        """
+        Handle new client connection.
+        
+        Args:
+            conn: Network connection to the client
+        """
         try:
             logger.debug("Sending current game state to new client...")
             gameState = self.gameSession.serialize()
@@ -236,7 +305,13 @@ class Game:
         except Exception as e:
             logError("Failed to send game state to client", e)
 
-    def onClientSubmittedTurn(self, data):
+    def onClientSubmittedTurn(self, data: dict) -> None:
+        """
+        Handle turn submission from client.
+        
+        Args:
+            data: Serialized game state from client
+        """
         try:
             self.gameSession = GameSession.deserialize(data)
             self.gameSession.onTurnEnded = self.onTurnEnded
@@ -245,7 +320,8 @@ class Game:
         except Exception as e:
             logError("Failed to process client submitted turn", e)
 
-    def broadcastGameState(self):
+    def broadcastGameState(self) -> None:
+        """Broadcast current game state to all connected clients."""
         try:
             if self.network.networkMode == "host":
                 gameState = self.gameSession.serialize()
@@ -255,7 +331,13 @@ class Game:
         except Exception as e:
             logError("Failed to broadcast game state", e)
 
-    def onSyncGameState(self, data):
+    def onSyncGameState(self, data: dict) -> None:
+        """
+        Handle game state synchronization from host.
+        
+        Args:
+            data: Serialized game state data
+        """
         try:
             self.gameSession = GameSession.deserialize(data)
             self.gameSession.onTurnEnded = self.onTurnEnded
@@ -263,7 +345,8 @@ class Game:
         except Exception as e:
             logError("Failed to sync game state", e)
 
-    def onTurnEnded(self):
+    def onTurnEnded(self) -> None:
+        """Handle turn completion and network synchronization."""
         try:
             networkMode = settingsManager.get("NETWORK_MODE", "local")
             if networkMode == "local":
@@ -289,7 +372,14 @@ class Game:
         except Exception as e:
             logError("Failed to handle turn ended", e)
 
-    def onJoinFailed(self, data, conn):
+    def onJoinFailed(self, data: dict, conn) -> None:
+        """
+        Handle failed client join attempt.
+        
+        Args:
+            data: Join failure data
+            conn: Network connection to the client
+        """
         try:
             reason = data.get("reason", "unspecified")
             logger.debug(f"Client join failed: {reason}")
@@ -299,7 +389,13 @@ class Game:
         except Exception as e:
             logError("Failed to handle join failure", e)
 
-    def onJoinRejected(self, data):
+    def onJoinRejected(self, data: dict) -> None:
+        """
+        Handle join rejection from host.
+        
+        Args:
+            data: Join rejection data
+        """
         try:
             reason = data.get("reason", "unknown")
             logger.debug(f"Join rejected by host. Reason: {reason}")
@@ -307,7 +403,13 @@ class Game:
         except Exception as e:
             logError("Failed to handle join rejection", e)
 
-    def handleJoinRejected(self, reason):
+    def handleJoinRejected(self, reason: str) -> None:
+        """
+        Handle join rejection with user feedback.
+        
+        Args:
+            reason: Reason for the rejection
+        """
         try:
             logger.debug(f"Handling join rejection (reason: {reason})")
             print(f"Join rejected: {reason}")
@@ -317,11 +419,21 @@ class Game:
             logError("Failed to handle join rejection", e)
 
     def getGameSession(self) -> typing.Optional['GameSession']:
+        """
+        Get the current game session.
+        
+        Returns:
+            Current game session or None if no session exists
+        """
         return self.gameSession
         
-    def onShowNotification(self, notificationType, message):
+    def onShowNotification(self, notificationType: str, message: str) -> None:
         """
-        Handle notification requests from game session
+        Handle notification requests from game session.
+        
+        Args:
+            notificationType: Type of notification
+            message: Notification message
         """
         try:
             logger.debug(f"onShowNotification called: type={notificationType}, message={message}")

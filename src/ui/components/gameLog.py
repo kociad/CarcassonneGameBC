@@ -4,20 +4,33 @@ from typing import List, Tuple
 import typing
 from utils.settingsManager import settingsManager
 
+
 class GameLogEntry:
     """Represents a single entry in the game log."""
-    def __init__(self, message: str, level: str = "INFO", timestamp: float = None):
+
+    def __init__(self, message: str, level: str = "INFO", timestamp: float = None) -> None:
+        """
+        Initialize a game log entry.
+        
+        Args:
+            message: Log message
+            level: Log level (INFO, DEBUG, SCORING, WARNING, ERROR)
+            timestamp: Timestamp for the entry
+        """
         self.message = message
         self.level = level
         self.timestamp = timestamp or time.time()
 
     def getFormattedTime(self) -> str:
-        """Return the formatted timestamp for the log entry."""
+        """Get the formatted timestamp for the log entry."""
         return time.strftime("%H:%M:%S", time.localtime(self.timestamp))
+
 
 class GameLog:
     """Handles the display and management of the game log UI overlay."""
+
     def __init__(self) -> None:
+        """Initialize the game log."""
         self.maxEntries = settingsManager.get("GAME_LOG_MAX_ENTRIES", 2000)
         self.entries: List[GameLogEntry] = []
         self.visible = False
@@ -40,7 +53,13 @@ class GameLog:
         }
 
     def addEntry(self, message: str, level: str = "INFO") -> None:
-        """Add a new log entry."""
+        """
+        Add a new log entry.
+        
+        Args:
+            message: Log message
+            level: Log level
+        """
         entry = GameLogEntry(message, level)
         self.entries.append(entry)
         if len(self.entries) > self.maxEntries:
@@ -56,7 +75,12 @@ class GameLog:
         self.scrollOffset = 0
 
     def handleScroll(self, scrollDelta: int) -> None:
-        """Handle scrolling through log entries."""
+        """
+        Handle scrolling through log entries.
+        
+        Args:
+            scrollDelta: Scroll amount
+        """
         if not self.visible:
             return
         debugEnabled = settingsManager.get("DEBUG", False)
@@ -73,7 +97,7 @@ class GameLog:
         self.scrollOffset = max(0, min(self.scrollOffset, maxScroll))
 
     def getVisibleLines(self) -> int:
-        """Return the number of visible lines in the log."""
+        """Get the number of visible lines in the log."""
         screenHeight = settingsManager.get("WINDOW_HEIGHT", 1080)
         usableHeight = screenHeight - 100
         lineHeight = 32
@@ -89,8 +113,13 @@ class GameLog:
                 self.entries = self.entries[removeCount:]
                 self.scrollToBottom()
 
-    def draw(self, screen) -> None:
-        """Draw the game log overlay."""
+    def draw(self, screen: pygame.Surface) -> None:
+        """
+        Draw the game log overlay.
+        
+        Args:
+            screen: Surface to draw on
+        """
         if not self.visible:
             return
         screenWidth = settingsManager.get("WINDOW_WIDTH", 1920)

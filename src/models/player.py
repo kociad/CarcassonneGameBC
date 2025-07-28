@@ -1,22 +1,25 @@
 import pygame
 import logging
 import typing
-
 from models.figure import Figure
 import settings
 
 logger = logging.getLogger(__name__)
 
+
 class Player:
     """Represents a player in the game."""
-    def __init__(self, name: str, index: int, color: str, isAI: bool = False, isHuman: bool = False) -> None:
+
+    def __init__(self, name: str, color: str, index: int, isAI: bool = False, isHuman: bool = False) -> None:
         """
         Initialize a player.
-        :param name: The name of the player.
-        :param index: Player's index in the game.
-        :param color: Color of player's figures.
-        :param isAI: Whether the player is AI-controlled.
-        :param isHuman: Whether the player is human-controlled.
+        
+        Args:
+            name: The name of the player
+            color: Color of player's figures (string like "blue", "red", etc.)
+            index: Player's index in the game
+            isAI: Whether the player is AI-controlled
+            isHuman: Whether the player is human-controlled
         """
         self.name = name
         self.color = color
@@ -27,37 +30,50 @@ class Player:
         self.isHuman = isHuman
 
     def getIsAI(self) -> bool:
-        """Return True if player is AI-controlled."""
+        """Check if player is AI-controlled."""
         return self.isAI
 
     def getName(self) -> str:
-        """Return the player's name."""
+        """Get the player's name."""
         return self.name
 
     def getScore(self) -> int:
-        """Return the player's score."""
+        """Get the player's score."""
         return self.score
 
     def getFigures(self) -> list:
-        """Return the list of figures held by the player."""
+        """Get the list of figures held by the player."""
         return self.figures
 
     def getIndex(self) -> int:
-        """Return the player's index."""
+        """Get the player's index."""
         return self.index
 
     def getColor(self) -> str:
-        """Return the color of the player's figures."""
+        """Get the color of the player's figures."""
         return self.color
 
     def getColorWithAlpha(self, alpha: int = 150) -> pygame.Color:
-        """Return the player's color as a pygame.Color with the given alpha."""
+        """
+        Get the player's color as a pygame.Color with the given alpha.
+        
+        Args:
+            alpha: Alpha value for the color
+            
+        Returns:
+            pygame.Color with specified alpha
+        """
         color = pygame.Color(self.color)
         color.a = alpha
         return color
 
     def getFigure(self) -> typing.Union['Figure', bool]:
-        """Pop and return a figure if available, else return False."""
+        """
+        Pop and return a figure if available.
+        
+        Returns:
+            Figure if available, False otherwise
+        """
         logger.debug("Retrieving figure...")
         if self.figures:
             logger.debug("Figure retrieved")
@@ -66,15 +82,30 @@ class Player:
         return False
 
     def addFigure(self, figure: 'Figure') -> None:
-        """Add a figure to the player's list."""
+        """
+        Add a figure to the player's list.
+        
+        Args:
+            figure: Figure to add
+        """
         self.figures.append(figure)
 
     def addScore(self, score: int) -> None:
-        """Add points to the player's score."""
+        """
+        Add points to the player's score.
+        
+        Args:
+            score: Points to add
+        """
         self.score += score
 
     def setIsHuman(self, isHuman: bool) -> None:
-        """Set whether the player is human-controlled."""
+        """
+        Set whether the player is human-controlled.
+        
+        Args:
+            isHuman: Whether the player is human
+        """
         self.isHuman = isHuman
 
     def serialize(self) -> dict:
@@ -91,7 +122,15 @@ class Player:
 
     @staticmethod
     def deserialize(data: dict) -> 'Player':
-        """Deserialize a player from a dictionary."""
+        """
+        Create a Player instance from serialized data.
+        
+        Args:
+            data: Serialized player data
+            
+        Returns:
+            Player instance with restored state or None if deserialization failed
+        """
         try:
             name = str(data["name"])
             index = int(data["index"])
@@ -101,7 +140,7 @@ class Player:
             figuresRemaining = int(data.get("figuresRemaining", 7))
             isHuman = bool(data.get("isHuman", False))
 
-            player = Player(name=name, index=index, color=color, isAI=isAI, isHuman=isHuman)
+            player = Player(name=name, color=color, index=index, isAI=isAI, isHuman=isHuman)
             player.score = score
             player.figures = [Figure(player) for _ in range(figuresRemaining)]
             return player

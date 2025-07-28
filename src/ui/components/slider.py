@@ -3,15 +3,27 @@ from ui.components.inputField import InputField
 from ui.components.toast import Toast
 import typing
 
+
 class Slider:
     """A slider UI component for selecting a numeric value."""
+
     def __init__(self, rect: pygame.Rect, font, minValue: float, maxValue: float, initialValue: float = None, value: float = None, onChange: typing.Callable = None) -> None:
-        """Initialize the slider. Accepts either 'initialValue' or 'value' for the initial value."""
+        """
+        Initialize the slider.
+        
+        Args:
+            rect: Rectangle defining slider position and size
+            font: Font to use for rendering
+            minValue: Minimum value of the slider
+            maxValue: Maximum value of the slider
+            initialValue: Initial value (alternative to value)
+            value: Initial value
+            onChange: Function to call when value changes
+        """
         self.rect = pygame.Rect(rect)
         self.font = font
         self.minValue = minValue
         self.maxValue = maxValue
-        # Use 'value' if provided, else 'initialValue', else minValue
         self.value = value if value is not None else (initialValue if initialValue is not None else minValue)
         self.onChange = onChange
         self.lastReportedValue = self.value
@@ -41,7 +53,7 @@ class Slider:
             minValue=minValue,
         )
 
-    def _validateAndApplyInput(self):
+    def _validateAndApplyInput(self) -> None:
         """Validate input field value and apply if valid."""
         inputText = self.inputField.getText().strip()
         if not inputText:
@@ -65,8 +77,14 @@ class Slider:
         except ValueError:
             self.inputField.setText(str(self.value))
 
-    def _showToast(self, message, toastType="info"):
-        """Show toast notification."""
+    def _showToast(self, message: str, toastType: str = "info") -> None:
+        """
+        Show toast notification.
+        
+        Args:
+            message: Message to display
+            toastType: Type of toast notification
+        """
         if self.activeToast and self.activeToast.message == message:
             return
         if any(t.message == message for t in self.toastQueue):
@@ -74,19 +92,30 @@ class Slider:
         toast = Toast(message, type=toastType)
         self.toastQueue.append(toast)
 
-    def setDisabled(self, disabled):
-        """Enable or disable the slider."""
+    def setDisabled(self, disabled: bool) -> None:
+        """
+        Enable or disable the slider.
+        
+        Args:
+            disabled: Whether to disable the slider
+        """
         self.disabled = disabled
         self.inputField.setDisabled(disabled)
         if disabled:
             self.dragging = False
 
-    def isDisabled(self):
-        """Return True if the slider is disabled."""
+    def isDisabled(self) -> bool:
+        """Check if the slider is disabled."""
         return self.disabled
 
     def handleEvent(self, event: pygame.event.Event, yOffset: int = 0) -> None:
-        """Handle a pygame event for the slider."""
+        """
+        Handle a pygame event for the slider.
+        
+        Args:
+            event: Pygame event to handle
+            yOffset: Vertical offset for event detection
+        """
         wasActive = self.inputField.active
         self.inputField.handleEvent(event, yOffset=yOffset)
         if wasActive and not self.inputField.active:
@@ -126,7 +155,15 @@ class Slider:
                         self.onChange(newValue)
 
     def _handleRect(self, yOffset: int = 0) -> pygame.Rect:
-        """Return the rectangle for the slider handle."""
+        """
+        Get the rectangle for the slider handle.
+        
+        Args:
+            yOffset: Vertical offset
+            
+        Returns:
+            Rectangle for the slider handle
+        """
         handleX = self.rect.left + ((self.value - self.minValue) / (self.maxValue - self.minValue)) * self.rect.width
         handleY = self.rect.centery + yOffset
         return pygame.Rect(
@@ -137,7 +174,13 @@ class Slider:
         )
 
     def draw(self, surface: pygame.Surface, yOffset: int = 0) -> None:
-        """Draw the slider on the given surface, offset vertically by yOffset."""
+        """
+        Draw the slider on the given surface.
+        
+        Args:
+            surface: Surface to draw on
+            yOffset: Vertical offset for drawing
+        """
         shiftedRect = self.rect.move(0, yOffset)
         if self.disabled:
             bgColor = self.disabledBgColor
@@ -166,17 +209,27 @@ class Slider:
                 self.activeToast = None
 
     def getValue(self) -> float:
-        """Return the current value of the slider."""
+        """Get the current value of the slider."""
         return self.value
 
     def setValue(self, newValue: float) -> None:
-        """Set the slider value."""
+        """
+        Set the slider value.
+        
+        Args:
+            newValue: New value to set
+        """
         self.value = max(self.minValue, min(self.maxValue, newValue))
         self.lastReportedValue = self.value
         self.inputField.setText(str(self.value))
 
     def setMinValue(self, newMinValue: float) -> None:
-        """Update the minimum value of the slider."""
+        """
+        Update the minimum value of the slider.
+        
+        Args:
+            newMinValue: New minimum value
+        """
         self.minValue = newMinValue
         self.inputField.minValue = newMinValue
         if self.value < self.minValue:

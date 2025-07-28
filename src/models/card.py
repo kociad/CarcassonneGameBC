@@ -1,110 +1,97 @@
 import pygame
-
 import logging
-
 import settings
-
 import typing
 
 logger = logging.getLogger(__name__)
 
+
 class Card:
-    """
-    Represents a tile (card) in the game with an image and terrain properties.
-    """
-    
-    def __init__(self, image_path: str, terrains: dict, connections: typing.Optional[dict], features: typing.Any) -> None:
+    """Represents a tile (card) in the game with an image and terrain properties."""
+
+    def __init__(self, imagePath: str, terrains: dict, connections: typing.Optional[dict], features: typing.Any) -> None:
         """
-        Initializes a tile with an image and terrain data.
-        :param image_path: Path to the tile image.
-        :param terrain: Dictionary defining terrain types for each side.
+        Initialize a tile with an image and terrain data.
+        
+        Args:
+            imagePath: Path to the tile image
+            terrains: Dictionary defining terrain types for each side
+            connections: Dictionary defining connections within the card
+            features: List of features on the card
         """
-        self.imagePath = image_path
-        original_image = pygame.image.load(image_path)
-        self.image = pygame.transform.scale(original_image, (settings.TILE_SIZE, settings.TILE_SIZE))  # Resize to match settings.TILE_SIZE
-        self.terrains = terrains  # Dictionary with terrain info (e.g., {"N": "city", "S": "road"})
+        self.imagePath = imagePath
+        originalImage = pygame.image.load(imagePath)
+        self.image = pygame.transform.scale(originalImage, (settings.TILE_SIZE, settings.TILE_SIZE))
+        self.terrains = terrains
         self.connections = connections
-        self.occupied = {} # Currently unused
+        self.occupied = {}
         self.features = features
         self.neighbors = {"N": None, "E": None, "S": None, "W": None}
         self.position = {"X": None, "Y": None}
-        self.rotation = 0  # Card rotation (0, 90, 180, 270)
-    
+        self.rotation = 0
+
     def getPosition(self) -> dict:
-        """
-        Card position getter method
-        :return: Card position
-        """
+        """Get the card's position on the board."""
         return self.position
-        
+
     def setPosition(self, x: int, y: int) -> None:
         """
-        Card position setter method
-        :param x: X coordinate of the card
-        :param y: Y coordinate of the card
+        Set the card's position on the board.
+        
+        Args:
+            x: X coordinate of the card
+            y: Y coordinate of the card
         """
         self.position = {"X": x, "Y": y}
-    
+
     def getImage(self) -> pygame.Surface:
-        """
-        Card image getter method
-        :return: Card image
-        """
+        """Get the card's image."""
         return self.image
-        
+
     def getTerrains(self) -> dict:
-        """
-        Card terrains getter method
-        :return: Dictionary with terrain info (e.g., {"N": "city", "S": "road"})
-        """
+        """Get the card's terrain information."""
         return self.terrains
-        
+
     def getNeighbors(self) -> dict:
-        """
-        Card neighbors getter method
-        :return: Neighbors dictationary
-        """
+        """Get the card's neighboring cards."""
         return self.neighbors
-        
+
     def getNeighbor(self, direction: str) -> typing.Any:
         """
-        Card neighbor getter method for specific direction
-        :return: Neighbor card or None
+        Get a specific neighbor card.
+        
+        Args:
+            direction: Direction to get neighbor from
+            
+        Returns:
+            Neighbor card or None
         """
         return self.neighbors[direction]
-        
+
     def setNeighbor(self, direction: str, neighbor: typing.Any) -> None:
         """
-        Card neighbor setter method
-        :param direction: Direction which neighbor is to be added
-        :param neighbor: Neighbor card to be added
+        Set a neighbor card.
+        
+        Args:
+            direction: Direction to set neighbor for
+            neighbor: Neighbor card to set
         """
         self.neighbors[direction] = neighbor
-        
+
     def getConnections(self) -> typing.Optional[dict]:
-        """
-        Card connections getter method
-        :return: Dict with connections within the card
-        """
+        """Get the card's internal connections."""
         return self.connections
-        
+
     def getFeatures(self) -> typing.Any:
-        """
-        Card features getter method
-        :return: List of features on the card
-        """
+        """Get the card's features."""
         return self.features
-    
+
     def rotate(self) -> None:
-        """
-        Rotates the card 90 degrees clockwise.
-        """
+        """Rotate the card 90 degrees clockwise."""
         self.rotation = (self.rotation + 90) % 360
-        #self.image = pygame.transform.rotate(self.image, -90)
-        
+
         logger.debug(f"Card rotation - {self.rotation}")
 
-        # Rotate terrain mapping
         directionMap = {
             "N": "E",
             "E": "S",
@@ -117,7 +104,6 @@ class Card:
             for dir in self.terrains
         }
 
-        # Rotate connections
         if self.connections:
             newConnections = {}
             for dir, connectedList in self.connections.items():
@@ -127,8 +113,9 @@ class Card:
             self.connections = newConnections
 
     def serialize(self) -> dict:
+        """Serialize the card to a dictionary."""
         return {
-            "image_path": self.imagePath,
+            "imagePath": self.imagePath,
             "terrains": self.terrains,
             "connections": self.connections,
             "features": self.features,
@@ -143,8 +130,17 @@ class Card:
 
     @staticmethod
     def deserialize(data: dict) -> 'Card':
+        """
+        Create a Card instance from serialized data.
+        
+        Args:
+            data: Serialized card data
+            
+        Returns:
+            Card instance with restored state
+        """
         try:
-            image_path = str(data["image_path"])
+            imagePath = str(data["imagePath"])
             terrains = dict(data["terrains"])
             connections = data.get("connections", None)
             if connections is not None and not isinstance(connections, dict):
@@ -158,7 +154,7 @@ class Card:
 
         try:
             card = Card(
-                image_path=image_path,
+                imagePath=imagePath,
                 terrains=terrains,
                 connections=connections,
                 features=features
@@ -187,12 +183,11 @@ class Card:
                 logger.warning(f"Invalid 'position' format: {pos}, defaulting to None")
                 card.position = {"X": None, "Y": None}
 
-            # Store rotation for future use but don't apply rotate()
-            raw_rotation = data.get("rotation", 0)
+            rawRotation = data.get("rotation", 0)
             try:
-                card.rotation = int(raw_rotation)
+                card.rotation = int(rawRotation)
             except Exception as e:
-                logger.warning(f"Invalid rotation value: {raw_rotation}, defaulting to 0 - {e}")
+                logger.warning(f"Invalid rotation value: {rawRotation}, defaulting to 0 - {e}")
                 card.rotation = 0
 
         except Exception as e:

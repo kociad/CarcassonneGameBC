@@ -89,6 +89,26 @@ class SettingsScene(Scene):
         self.aiTurnDelayField.setDisabled(not settingsManager.get("DEBUG"))
         currentY += 60
 
+        self.aiSimulationCheckbox = Checkbox(
+            rect=(xCenter, currentY, 20, 20),
+            checked=settingsManager.get("AI_USE_SIMULATION", False),
+            onToggle=lambda value: self.handleAISimulationToggle(value)
+        )
+        self.aiSimulationCheckbox.setDisabled(not settingsManager.get("DEBUG"))
+        currentY += 40
+
+        self.aiStrategicCandidatesField = InputField(
+            rect=(xCenter, currentY, 80, 40),
+            font=self.inputFont,
+            initialText=str(settingsManager.get("AI_STRATEGIC_CANDIDATES", 3)),
+            onTextChange=None,
+            numeric=True,
+            minValue=-1,
+            maxValue=20
+        )
+        self.aiStrategicCandidatesField.setDisabled(not settingsManager.get("DEBUG"))
+        currentY += 60
+
         self.fpsSlider = Slider(
             rect=(xCenter, currentY, 180, 20),
             font=self.dropdownFont,
@@ -192,6 +212,8 @@ class SettingsScene(Scene):
         self.figureSizeSlider.setDisabled(not new_value)
         self.gameLogMaxEntriesField.setDisabled(not new_value)
         self.aiTurnDelayField.setDisabled(not new_value)
+        self.aiSimulationCheckbox.setDisabled(not new_value)
+        self.aiStrategicCandidatesField.setDisabled(not new_value)
         self.logToConsoleCheckbox.setDisabled(not new_value)        
 
     def handleEvents(self, events: list[pygame.event.Event]) -> None:
@@ -208,6 +230,7 @@ class SettingsScene(Scene):
             self.debugCheckbox.handleEvent(event, yOffset=self.scrollOffset)
             self.logToConsoleCheckbox.handleEvent(event, yOffset=self.scrollOffset)
             self.validPlacementCheckbox.handleEvent(event, yOffset=self.scrollOffset)
+            self.aiSimulationCheckbox.handleEvent(event, yOffset=self.scrollOffset)
             fpsWasDragging = self.fpsSlider.dragging
             gridWasDragging = self.gridSizeSlider.dragging
             tileWasDragging = self.tileSizeSlider.dragging
@@ -231,6 +254,7 @@ class SettingsScene(Scene):
                     self.addToast(Toast("In order to apply sidebar width setting, restart the game", type="warning"))
             self.gameLogMaxEntriesField.handleEvent(event, yOffset=self.scrollOffset)
             self.aiTurnDelayField.handleEvent(event, yOffset=self.scrollOffset)
+            self.aiStrategicCandidatesField.handleEvent(event, yOffset=self.scrollOffset)
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if self.backButton.isClicked(event.pos, yOffset=self.scrollOffset):
                     self.switchScene(GameState.MENU)
@@ -242,6 +266,9 @@ class SettingsScene(Scene):
 
     def handleAITurnDelayToggle(self, value):
         settingsManager.set("AI_TURN_DELAY_ENABLED", value, temporary=True)
+
+    def handleAISimulationToggle(self, value):
+        settingsManager.set("AI_USE_SIMULATION", value, temporary=True)
 
     def handleLogToConsoleToggle(self, value):
         settingsManager.set("LOG_TO_CONSOLE", value, temporary=True)
@@ -264,6 +291,8 @@ class SettingsScene(Scene):
             changes["LOG_TO_CONSOLE"] = self.logToConsoleCheckbox.isChecked()
         if not self.validPlacementCheckbox.isDisabled():
             changes["SHOW_VALID_PLACEMENTS"] = self.validPlacementCheckbox.isChecked()
+        if not self.aiSimulationCheckbox.isDisabled():
+            changes["AI_USE_SIMULATION"] = self.aiSimulationCheckbox.isChecked()
         if not self.aiTurnDelayField.isDisabled():
             try:
                 delay = float(self.aiTurnDelayField.getText())
@@ -301,6 +330,18 @@ class SettingsScene(Scene):
                     return
             except ValueError:
                 self.addToast(Toast("Invalid game log max entries value", type="error"))
+                return
+
+        if not self.aiStrategicCandidatesField.isDisabled():
+            try:
+                candidates = int(self.aiStrategicCandidatesField.getText())
+                if candidates == -1 or (1 <= candidates <= 20):
+                    changes["AI_STRATEGIC_CANDIDATES"] = candidates
+                else:
+                    self.addToast(Toast("AI strategic candidates must be -1 (all) or between 1 and 20", type="error"))
+                    return
+            except ValueError:
+                self.addToast(Toast("Invalid AI strategic candidates value", type="error"))
                 return
 
         success = True
@@ -442,6 +483,25 @@ class SettingsScene(Scene):
         self.sidebarWidthSlider.draw(self.screen, yOffset=offsetY)
         self.gameLogMaxEntriesField.draw(self.screen, yOffset=offsetY)
         self.aiTurnDelayField.draw(self.screen, yOffset=offsetY)
+
+        labelColor = (120, 120, 120) if self.aiSimulationCheckbox.isDisabled() else (255, 255, 255)
+        aiSimulationLabel = labelFont.render("AI simulation:", True, labelColor)
+        aiSimulationLabelRect = aiSimulationLabel.get_rect(
+            right=self.aiSimulationCheckbox.rect.left - 10,
+            centery=self.aiSimulationCheckbox.rect.centery + offsetY
+        )
+        self.screen.blit(aiSimulationLabel, aiSimulationLabelRect)
+        self.aiSimulationCheckbox.draw(self.screen, yOffset=offsetY)
+
+        labelColor = (120, 120, 120) if self.aiStrategicCandidatesField.isDisabled() else (255, 255, 255)
+        aiCandidatesLabel = labelFont.render("AI strategic candidates:", True, labelColor)
+        aiCandidatesLabelRect = aiCandidatesLabel.get_rect(
+            right=self.aiStrategicCandidatesField.rect.left - 10,
+            centery=self.aiStrategicCandidatesField.rect.centery + offsetY
+        )
+        self.screen.blit(aiCandidatesLabel, aiCandidatesLabelRect)
+        self.aiStrategicCandidatesField.draw(self.screen, yOffset=offsetY)
+
         self.applyButton.draw(self.screen, yOffset=offsetY)
         self.backButton.draw(self.screen, yOffset=offsetY)
         self.resolutionDropdown.draw(self.screen, yOffset=offsetY)

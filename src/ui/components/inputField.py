@@ -2,9 +2,28 @@ import pygame
 import time
 import typing
 
+
 class InputField:
     """A text input field UI component."""
+
     def __init__(self, rect: pygame.Rect, font: pygame.font.Font, placeholder: str = "", text: str = "", initialText: str = "", textColor: tuple = (0, 0, 0), bgColor: tuple = (255, 255, 255), borderColor: tuple = (0, 0, 0), onTextChange: typing.Optional[typing.Callable] = None, numeric: bool = False, minValue: typing.Optional[float] = None, maxValue: typing.Optional[float] = None) -> None:
+        """
+        Initialize the input field.
+        
+        Args:
+            rect: Rectangle defining input field position and size
+            font: Font to use for rendering text
+            placeholder: Placeholder text to show when empty
+            text: Initial text value
+            initialText: Alternative initial text value
+            textColor: Color of the text
+            bgColor: Background color
+            borderColor: Border color
+            onTextChange: Function to call when text changes
+            numeric: Whether to only allow numeric input
+            minValue: Minimum value for numeric input
+            maxValue: Maximum value for numeric input
+        """
         self.rect = pygame.Rect(rect)
         self.font = font
         self.placeholder = placeholder
@@ -26,7 +45,13 @@ class InputField:
         self.cursorPos = len(self.text)
 
     def handleEvent(self, event: pygame.event.Event, yOffset: int = 0) -> None:
-        """Handle a pygame event for the input field."""
+        """
+        Handle a pygame event for the input field.
+        
+        Args:
+            event: Pygame event to handle
+            yOffset: Vertical offset for event detection
+        """
         if self.disabled or self.readOnly:
             return
         shiftedRect = self.rect.move(0, yOffset)
@@ -77,7 +102,13 @@ class InputField:
             self.scrollOffset = max(0, self.scrollOffset)
 
     def draw(self, surface: pygame.Surface, yOffset: int = 0) -> None:
-        """Draw the input field on the given surface."""
+        """
+        Draw the input field on the given surface.
+        
+        Args:
+            surface: Surface to draw on
+            yOffset: Vertical offset for drawing
+        """
         now = time.time()
         if now - self.lastBlink > self.blinkInterval:
             self.cursorVisible = not self.cursorVisible
@@ -103,25 +134,40 @@ class InputField:
             pygame.draw.line(surface, textColor, (cursorX, cursorY), (cursorX, cursorY + cursorHeight), 2)
 
     def getText(self) -> str:
-        """Return the current text value."""
+        """Get the current text value."""
         return self.text
 
     def setText(self, value: str) -> None:
-        """Set the text value of the input field."""
+        """
+        Set the text value of the input field.
+        
+        Args:
+            value: Text value to set
+        """
         self.text = str(value)
         self.cursorPos = len(self.text)
         self.scrollOffset = 0
 
     def setDisabled(self, value: bool) -> None:
-        """Enable or disable the input field."""
+        """
+        Enable or disable the input field.
+        
+        Args:
+            value: Whether to disable the input field
+        """
         self.disabled = value
         if value:
             self.active = False
 
     def setReadOnly(self, value: bool) -> None:
-        """Set the input field to read-only mode."""
+        """
+        Set the input field to read-only mode.
+        
+        Args:
+            value: Whether to make the field read-only
+        """
         self.readOnly = value
 
     def isDisabled(self) -> bool:
-        """Return True if the input field is disabled."""
+        """Check if the input field is disabled."""
         return self.disabled

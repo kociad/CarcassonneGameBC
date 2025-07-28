@@ -13,8 +13,19 @@ TOAST_COLORS = {
     "warning": ((0, 0, 0), (255, 215, 0))
 }
 
+
 class Toast:
+    """A toast notification component."""
+
     def __init__(self, message: str, type: str = "info", duration: float = 2.0) -> None:
+        """
+        Initialize the toast notification.
+        
+        Args:
+            message: Message to display
+            type: Type of toast (info, success, error, warning)
+            duration: How long to display the toast
+        """
         self.message = message
         self.duration = duration
         self.startTime = None
@@ -32,6 +43,12 @@ class Toast:
         self.slideOutStartTime = None
 
     def start(self, targetY: int = 0) -> None:
+        """
+        Start the toast animation.
+        
+        Args:
+            targetY: Target Y position for the toast
+        """
         self.startTime = time.time()
         self.active = True
         self.targetY = targetY
@@ -46,11 +63,13 @@ class Toast:
         self.slidingOut = False
 
     def startSlideOut(self) -> None:
+        """Start the slide-out animation."""
         if not self.slidingOut:
             self.slidingOut = True
             self.slideOutStartTime = time.time()
 
     def isExpired(self) -> bool:
+        """Check if the toast has expired."""
         if not self.active:
             return False
         
@@ -66,6 +85,7 @@ class Toast:
         return False
 
     def update(self) -> None:
+        """Update the toast animation."""
         if not self.active:
             return
         
@@ -108,6 +128,12 @@ class Toast:
                     self.currentY = max(self.currentY - maxMove, self.targetY)
 
     def draw(self, screen: pygame.Surface) -> None:
+        """
+        Draw the toast on the screen.
+        
+        Args:
+            screen: Surface to draw on
+        """
         if not self.active:
             return
         
@@ -139,14 +165,32 @@ class Toast:
         
         screen.blit(textSurf, textRect)
 
+
 class ToastManager:
+    """Manages multiple toast notifications."""
+
     def __init__(self, maxToasts: int = 5) -> None:
+        """
+        Initialize the toast manager.
+        
+        Args:
+            maxToasts: Maximum number of toasts to display simultaneously
+        """
         self.maxToasts = maxToasts
         self.toasts = []
         self.baseY = 50
         self.toastSpacing = 50
     
     def addToast(self, toast: Toast) -> bool:
+        """
+        Add a toast to the manager.
+        
+        Args:
+            toast: Toast to add
+            
+        Returns:
+            True if toast was added, False if manager is full
+        """
         activeToasts = [t for t in self.toasts if not t.isExpired() and not t.slidingOut]
         
         if len(activeToasts) >= self.maxToasts:
@@ -157,6 +201,7 @@ class ToastManager:
         return True
     
     def _updatePositions(self) -> None:
+        """Update the positions of all active toasts."""
         screen = pygame.display.get_surface()
         if not screen:
             return
@@ -174,6 +219,7 @@ class ToastManager:
                     toast.targetY = targetY
     
     def update(self) -> None:
+        """Update all toasts and remove expired ones."""
         initialCount = len(self.toasts)
         self.toasts = [t for t in self.toasts if not t.isExpired()]
         
@@ -181,6 +227,12 @@ class ToastManager:
             self._updatePositions()
     
     def draw(self, screen: pygame.Surface) -> None:
+        """
+        Draw all active toasts.
+        
+        Args:
+            screen: Surface to draw on
+        """
         self.update()
         
         for toast in self.toasts:
@@ -188,11 +240,14 @@ class ToastManager:
                 toast.draw(screen)
     
     def clear(self) -> None:
+        """Start slide-out animation for all toasts."""
         for toast in self.toasts:
             toast.startSlideOut()
     
     def getActiveCount(self) -> int:
+        """Get the number of active toasts."""
         return len([t for t in self.toasts if not t.isExpired() and not t.slidingOut])
     
     def isFull(self) -> bool:
+        """Check if the manager is at maximum capacity."""
         return self.getActiveCount() >= self.maxToasts

@@ -11,7 +11,11 @@ from utils.settingsManager import settingsManager
 import typing
 
 FORBIDDEN_WORDS = [
-    "ai"
+    "ai",
+    "easy",
+    "normal", 
+    "hard",
+    "expert"
 ]
 
 class PlayerConfiguration:
@@ -112,6 +116,15 @@ class GamePrepareScene(Scene):
         self.buildPlayerFields()
         currentY += (6 * 50) + 20 + 60
 
+        self.aiDifficultyDropdown = Dropdown(
+            rect=(xCenter, currentY, 200, 40),
+            font=self.dropdownFont,
+            options=["EASY", "NORMAL", "HARD", "EXPERT"],
+            defaultIndex=1,
+            onSelect=self.handleAIDifficultyChange
+        )
+        currentY += 60
+
         self.hostIPField = InputField(
             rect=(xCenter, currentY, 200, 40),
             font=self.inputFont
@@ -197,6 +210,7 @@ class GamePrepareScene(Scene):
                     nameField.setReadOnly(True)
 
             aiCheckbox = None
+            
             if i == 0:
                 canToggleAI = settingsManager.get("DEBUG", False)
                 aiCheckbox = Checkbox(
@@ -205,6 +219,7 @@ class GamePrepareScene(Scene):
                     onToggle=(lambda value, index=i: self.togglePlayerAI(index, value)) if canToggleAI else None
                 )
                 aiCheckbox.setDisabled(not player.enabled or not canToggleAI)
+                
             elif i != 0:
                 canToggleAI = (self.networkMode == "local")
                 aiCheckbox = Checkbox(
@@ -222,6 +237,45 @@ class GamePrepareScene(Scene):
         
         nameField = self.playerFields[index][0]
         nameField.setText(self.players[index].getDisplayName())
+        
+        if value:
+            player = self.players[index]
+            baseName = player.name
+            if baseName.startswith("AI_EASY_"):
+                baseName = baseName[8:]
+            elif baseName.startswith("AI_HARD_"):
+                baseName = baseName[8:]
+            elif baseName.startswith("AI_EXPERT_"):
+                baseName = baseName[10:]
+            elif baseName.startswith("AI_NORMAL_"):
+                baseName = baseName[10:]
+            elif baseName.startswith("AI_"):
+                baseName = baseName[3:]
+            
+            player.name = f"AI_NORMAL_{baseName}"
+            nameField.setText(player.getDisplayName())
+        
+    def handleAIDifficultyChange(self, difficulty: str) -> None:
+        """Handle AI difficulty change for all AI players"""
+        for i, player in enumerate(self.players):
+            if player.isAI:
+                baseName = player.name
+                if baseName.startswith("AI_EASY_"):
+                    baseName = baseName[8:]
+                elif baseName.startswith("AI_HARD_"):
+                    baseName = baseName[8:]
+                elif baseName.startswith("AI_EXPERT_"):
+                    baseName = baseName[10:]
+                elif baseName.startswith("AI_NORMAL_"):
+                    baseName = baseName[10:]
+                elif baseName.startswith("AI_"):
+                    baseName = baseName[3:]
+                
+                player.name = f"AI_{difficulty}_{baseName}"
+                
+                if i < len(self.playerFields):
+                    nameField = self.playerFields[i][0]
+                    nameField.setText(player.getDisplayName())
         
     def handleNetworkModeChange(self, mode: str) -> None:
         """Handle network mode change"""
@@ -243,6 +297,8 @@ class GamePrepareScene(Scene):
         self.hostIPField.setText(hostValue or "")
         self.hostIPField.setDisabled(isLocal)
         self.portField.setDisabled(isLocal)
+        
+        self.aiDifficultyDropdown.setDisabled(not isLocal)
         
         self.buildPlayerFields()
         
@@ -285,6 +341,7 @@ class GamePrepareScene(Scene):
         for player in self.players:
             if player.enabled:
                 playerNames.append(player.getDisplayName())
+                    
         settingsManager.set("PLAYERS", playerNames, temporary=True)
         settingsManager.set("NETWORK_MODE", self.networkModeDropdown.getSelected(), temporary=True)
         settingsManager.set("HOST_IP", self.hostIPField.getText(), temporary=True)
@@ -316,6 +373,9 @@ class GamePrepareScene(Scene):
                     self.switchScene(GameState.MENU)
 
             if self.networkModeDropdown.handleEvent(event, yOffset=self.scrollOffset):
+                continue
+
+            if self.aiDifficultyDropdown.handleEvent(event, yOffset=self.scrollOffset):
                 continue
 
             self.hostIPField.handleEvent(event, yOffset=self.scrollOffset)
@@ -353,6 +413,13 @@ class GamePrepareScene(Scene):
         )
         self.screen.blit(netLabel, netLabelRect)
 
+        aiLabel = labelFont.render("AI Difficulty:", True, (255, 255, 255))
+        aiLabelRect = aiLabel.get_rect(
+            right=self.aiDifficultyDropdown.rect.left - 10,
+            centery=self.aiDifficultyDropdown.rect.centery + offsetY
+        )
+        self.screen.blit(aiLabel, aiLabelRect)
+
         ipLabel = labelFont.render("Host IP:", True, (255, 255, 255))
         ipLabelRect = ipLabel.get_rect(
             right=self.hostIPField.rect.left - 10,
@@ -387,6 +454,7 @@ class GamePrepareScene(Scene):
 
         self.hostIPField.draw(self.screen, yOffset=offsetY)
         self.portField.draw(self.screen, yOffset=offsetY)
+        self.aiDifficultyDropdown.draw(self.screen, yOffset=offsetY)
         self.addPlayerButton.draw(self.screen, yOffset=offsetY)
         self.removePlayerButton.draw(self.screen, yOffset=offsetY)
         self.backButton.draw(self.screen, yOffset=offsetY)

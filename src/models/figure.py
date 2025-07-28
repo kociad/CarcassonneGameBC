@@ -6,26 +6,39 @@ import settings
 
 logger = logging.getLogger(__name__)
 
+
 class Figure:
     """Represents a figure (meeple) belonging to a player."""
-    def __init__(self, owner: 'Player', image_path: str = settings.MEEPLE_IMAGES_PATH) -> None:
+
+    def __init__(self, owner: 'Player', imagePath: str = settings.MEEPLE_IMAGES_PATH) -> None:
         """
         Initialize a figure for a specific player.
-        :param owner: Player who owns the figure.
-        :param image_path: Path to the meeple image.
+        
+        Args:
+            owner: Player who owns the figure
+            imagePath: Path to the meeple image
         """
         self.owner = owner
-        original_image = pygame.image.load(image_path + f"{owner.getColor()}.png")
-        self.image = pygame.transform.scale(original_image, (settings.FIGURE_SIZE, settings.FIGURE_SIZE))
+        originalImage = pygame.image.load(imagePath + f"{owner.getColor()}.png")
+        self.image = pygame.transform.scale(originalImage, (settings.FIGURE_SIZE, settings.FIGURE_SIZE))
         self.card = None
         self.positionOnCard = None
 
     def getOwner(self) -> 'Player':
-        """Return the player who owns the figure."""
+        """Get the player who owns the figure."""
         return self.owner
 
     def place(self, card: typing.Any, position: typing.Any) -> bool:
-        """Attempt to place the figure on a given card at a given position."""
+        """
+        Attempt to place the figure on a given card at a given position.
+        
+        Args:
+            card: Card to place the figure on
+            position: Position on the card to place the figure
+            
+        Returns:
+            True if placement was successful, False otherwise
+        """
         logger.debug(f"Placing figure on card {card} position {position}...")
         if card is not None:
             self.card = card
@@ -46,17 +59,27 @@ class Figure:
         if self.card:
             position = self.card.getPosition() if self.card else None
         return {
-            "owner_index": self.owner.getIndex(),
-            "position_on_card": self.positionOnCard,
-            "card_position": position
+            "ownerIndex": self.owner.getIndex(),
+            "positionOnCard": self.positionOnCard,
+            "cardPosition": position
         }
 
     @staticmethod
     def deserialize(data: dict, playerMap: dict, gameBoard: typing.Any) -> typing.Optional['Figure']:
-        """Deserialize a figure from a dictionary."""
+        """
+        Create a Figure instance from serialized data.
+        
+        Args:
+            data: Serialized figure data
+            playerMap: Mapping of player indices to player objects
+            gameBoard: The game board
+            
+        Returns:
+            Figure instance with restored state or None if deserialization failed
+        """
         try:
-            owner_index = int(data["owner_index"])
-            owner = playerMap[owner_index]
+            ownerIndex = int(data["ownerIndex"])
+            owner = playerMap[ownerIndex]
         except (KeyError, ValueError, TypeError) as e:
             logger.error(f"Failed to resolve owner for figure: {data} - {e}")
             return None
@@ -66,26 +89,26 @@ class Figure:
             logger.error(f"Failed to initialize Figure for owner {owner.getName()} - {e}")
             return None
         try:
-            pos_data = data.get("card_position")
-            if pos_data is not None:
-                if isinstance(pos_data, (list, tuple)):
-                    x, y = int(pos_data[0]), int(pos_data[1])
-                elif isinstance(pos_data, dict):
-                    x, y = int(pos_data["X"]), int(pos_data["Y"])
+            posData = data.get("cardPosition")
+            if posData is not None:
+                if isinstance(posData, (list, tuple)):
+                    x, y = int(posData[0]), int(posData[1])
+                elif isinstance(posData, dict):
+                    x, y = int(posData["X"]), int(posData["Y"])
                 else:
-                    raise TypeError("card_position must be dict or list/tuple")
+                    raise TypeError("cardPosition must be dict or list/tuple")
                 card = gameBoard.getCard(x, y)
                 figure.card = card
         except Exception as e:
             logger.warning(f"Failed to set card position for figure: {data} - {e}")
             figure.card = None
         try:
-            position = data.get("position_on_card")
+            position = data.get("positionOnCard")
             if position is not None:
                 figure.positionOnCard = str(position)
             else:
                 figure.positionOnCard = None
         except Exception as e:
-            logger.warning(f"Failed to set figure position_on_card: {data} - {e}")
+            logger.warning(f"Failed to set figure positionOnCard: {data} - {e}")
             figure.positionOnCard = None
         return figure

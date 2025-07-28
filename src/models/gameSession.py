@@ -9,99 +9,37 @@ from models.structure import Structure
 from models.aiPlayer import AIPlayer
 from models.figure import Figure
 import settings
+from utils.settingsManager import settingsManager
 
 logger = logging.getLogger(__name__)
 
 class GameSession:
     """Manages the overall game state, including players, board, and card placement."""
     def __init__(self, playerNames: list[str], noInit: bool = False, lobbyCompleted: bool = True, networkMode: str = 'local') -> None:
-        """
-        Initialize the game session with players, board, and card deck.
-        :param playerNames: List of player names to create Player instances.
-        :param noInit: If True, skip player and deck initialization.
-        """
-        self.gameBoard = GameBoard()
-        self.cardsDeck = None
+        """Initialize a new game session."""
         self.players = []
         self.currentPlayer = None
-        self.structures = []
-        self.gameMode = None
+        self.gameBoard = GameBoard()
+        self.cardsDeck = []
         self.currentCard = None
         self.lastPlacedCard = None
         self.isFirstRound = True
-        self.placedFigures = []
-        self.turnPhase = 1
-        self.structureMap = {}
         self.gameOver = False
+        self.turnPhase = 1
+        self.placedFigures = []
+        self.structures = []
+        self.structureMap = {}
+        self.networkMode = networkMode
+        self.lobbyCompleted = lobbyCompleted
         self.onTurnEnded = None
         self.onShowNotification = None
-        self.lobbyCompleted = lobbyCompleted
-        self.networkMode = networkMode
-        
-        self.gameHistory = []
-        self.maxHistorySize = 50  # Limit history to prevent memory issues
         
         if not noInit:
             self.generatePlayerList(playerNames)
             self.cardsDeck = self.generateCardsDeck()
             self.shuffleCardsDeck(self.cardsDeck)
             self.placeStartingCard()
-
-    def saveGameState(self) -> None:
-        """Save the current game state to history for undo functionality."""
-        try:
-            gameState = self.serialize()
-            self.gameHistory.append(gameState)
             
-            if len(self.gameHistory) > self.maxHistorySize:
-                self.gameHistory.pop(0)
-                
-            logger.debug(f"Game state saved. History size: {len(self.gameHistory)}")
-        except Exception as e:
-            logger.error(f"Failed to save game state: {e}")
-
-    def canUndo(self) -> bool:
-        """Check if undo is available."""
-        return len(self.gameHistory) > 0
-
-    def undo(self) -> bool:
-        """Restore the previous game state."""
-        if not self.canUndo():
-            logger.warning("No game states available for undo")
-            return False
-            
-        try:
-            previousState = self.gameHistory.pop()
-            restoredSession = GameSession.deserialize(previousState)
-            
-            self.gameBoard = restoredSession.gameBoard
-            self.cardsDeck = restoredSession.cardsDeck
-            self.players = restoredSession.players
-            self.currentPlayer = restoredSession.currentPlayer
-            self.structures = restoredSession.structures
-            self.gameMode = restoredSession.gameMode
-            self.currentCard = restoredSession.currentCard
-            self.isFirstRound = restoredSession.isFirstRound
-            self.placedFigures = restoredSession.placedFigures
-            self.turnPhase = restoredSession.turnPhase
-            self.structureMap = restoredSession.structureMap
-            self.gameOver = restoredSession.gameOver
-            self.lobbyCompleted = restoredSession.lobbyCompleted
-            self.networkMode = restoredSession.networkMode
-            
-            self.lastPlacedCard = restoredSession.lastPlacedCard
-            
-            if hasattr(restoredSession, 'onTurnEnded'):
-                self.onTurnEnded = restoredSession.onTurnEnded
-            if hasattr(restoredSession, 'onShowNotification'):
-                self.onShowNotification = restoredSession.onShowNotification
-                
-            logger.debug("Game state restored from history")
-            return True
-        except Exception as e:
-            logger.error(f"Failed to restore game state: {e}")
-            return False
-
     def getPlayers(self) -> list:
         """Return the list of player objects."""
         return self.players
@@ -150,10 +88,21 @@ class GameSession:
         if playerNames:
             index = 0
             for player in playerNames:
+                color = colors.pop()
                 if player.startswith("AI_"):
-                    self.players.append(AIPlayer(player, index, colors.pop()))
+                    difficulty = "NORMAL" 
+                    if player.startswith("AI_EASY_"):
+                        difficulty = "EASY"
+                    elif player.startswith("AI_HARD_"):
+                        difficulty = "HARD"
+                    elif player.startswith("AI_EXPERT_"):
+                        difficulty = "EXPERT"
+                    elif player.startswith("AI_NORMAL_"):
+                        difficulty = "NORMAL"
+                    
+                    self.players.append(AIPlayer(player, index, color, difficulty))
                 else:
-                    self.players.append(Player(player, index, colors.pop()))
+                    self.players.append(Player(player, index, color))
                 index += 1
             self.currentPlayer = self.players[len(self.players) - 1]
         logger.debug("Player list generated")
@@ -237,7 +186,7 @@ class GameSession:
         if self.cardsDeck:
             if self.playCard(center_x, center_y):
                 self.isFirstRound = False
-                logger.debug("First turn played")
+                logger.debug("First turn played - starting card placed, moving to next player")
                 self.nextTurn()
         else:
             logger.debug("Unable to play first round, no cardsDeck available")
@@ -264,9 +213,12 @@ class GameSession:
             self.currentCard = self.drawCard()
             if self.currentCard:
                 logger.info(f"New card drawn - {len(self.cardsDeck)} cards remaining")
-            self.turnPhase = 1
-            if self.onTurnEnded:
-                self.onTurnEnded()
+                self.turnPhase = 1
+                if self.onTurnEnded:
+                    self.onTurnEnded()
+            else:
+                logger.debug("No card drawn, ending game")
+                self.endGame()
         else:
             self.endGame()
 
@@ -311,23 +263,22 @@ class GameSession:
         if player is None:
             player = self.currentPlayer
         
+        logger.debug(f"playTurn called - Phase: {self.turnPhase}, Player: {player.getName()}, Position: ({x},{y})")
+        
         if self.turnPhase == 1:
             logger.debug("Turn Phase 1: Attempting to place card...")
-            self.saveGameState()
             if self.playCard(x, y):
                 self.turnPhase = 2
+                logger.debug("Card placed successfully, moving to Phase 2")
             else:
                 logger.debug("Card placement failed.")
             return
         elif self.turnPhase == 2:
             logger.debug("Turn Phase 2: Attempting to place figure...")
-            self.saveGameState()
             if self.playFigure(player, x, y, position):
                 logger.debug("Figure placed.")
             else:
                 logger.debug("Figure not placed or skipped.")
-                if self.gameHistory:
-                    self.gameHistory.pop()
                 return
             logger.debug("Checking completed structures...")
             for structure in self.structures:
@@ -341,7 +292,6 @@ class GameSession:
         """Skip the current phase action with official rules validation."""
         if self.turnPhase == 1:
             logger.debug("Attempting to skip card placement...")
-            self.saveGameState()
             if self.canPlaceCardAnywhere(self.currentCard):
                 logger.debug(f"Player {self.currentPlayer.getName()} was unable to skip card placement - card can be placed somewhere on the board")
                 if self.onShowNotification and not self.currentPlayer.getIsAI():
@@ -353,7 +303,6 @@ class GameSession:
                     self.endGame()
         elif self.turnPhase == 2:
             logger.info(f"Player {self.currentPlayer.getName()} skipped meeple placement")
-            self.saveGameState()
             logger.debug("Finalizing turn...")
             for structure in self.structures:
                 structure.checkCompletion()
@@ -384,16 +333,20 @@ class GameSession:
                     self.onShowNotification("error", "Cannot place meeple - this structure is already occupied!")
                 return False
         if player.figures:
+            logger.debug(f"Player {player.getName()} has {len(player.figures)} figures before placement")
             figure = player.getFigure()
+            logger.debug(f"Player {player.getName()} has {len(player.figures)} figures after getFigure()")
             if figure.place(card, position):
                 self.placedFigures.append(figure)
                 logger.info(f"Player {player.getName()} placed a meeple on {position} position at [{x - self.gameBoard.getCenter()},{self.gameBoard.getCenter() - y}]")
                 if structure:
                     structure.addFigure(figure)
+                logger.debug(f"Player {player.getName()} has {len(player.figures)} figures after successful placement")
                 logger.debug("Figure played")
                 return True
             else:
                 player.addFigure(figure)
+                logger.debug(f"Player {player.getName()} has {len(player.figures)} figures after failed placement (figure returned)")
         logger.debug(f"Player {player.getName()} was unable to place their meeple, player has no meeples left")
         if self.onShowNotification and not player.getIsAI():
             self.onShowNotification("error", "No meeples left to place!")
