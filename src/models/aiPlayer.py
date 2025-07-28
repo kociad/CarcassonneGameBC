@@ -870,6 +870,8 @@ class AIPlayer(Player):
             if bestScore >= threshold:
                 if gameSession.playFigure(self, targetX, targetY, bestDirection):
                     logger.debug(f"Player {self.name} placed meeple on {bestDirection} (score: {bestScore}, conserving: {shouldConserve})")
+                    # Check for completed structures and score them immediately
+                    self._checkAndScoreCompletedStructures(gameSession)
                     gameSession.nextTurn()
                     return
             else:
@@ -1027,11 +1029,22 @@ class AIPlayer(Player):
         if bestDirection and bestScore > 0:
             if gameSession.playFigure(self, targetX, targetY, bestDirection):
                 logger.debug(f"Player {self.name} placed meeple on {bestDirection} (score: {bestScore})")
+                # Check for completed structures and score them immediately
+                self._checkAndScoreCompletedStructures(gameSession)
                 gameSession.nextTurn()
                 return
         
         logger.info(f"Player {self.name} couldn't place meeple anywhere or chose not to")
         gameSession.skipCurrentAction()
+
+    def _checkAndScoreCompletedStructures(self, gameSession: 'GameSession') -> None:
+        """Check for completed structures and score them immediately."""
+        logger.debug("Checking completed structures...")
+        for structure in gameSession.structures:
+            structure.checkCompletion()
+            if structure.getIsCompleted():
+                logger.debug(f"Structure {structure.structureType} is completed!")
+                gameSession.scoreStructure(structure)
 
     def _evaluateMeeplePlacement(self, gameSession: 'GameSession', x: int, y: int, direction: str) -> float:
         """
@@ -1089,6 +1102,8 @@ class AIPlayer(Player):
             if structure and not structure.getFigures():
                 if gameSession.playFigure(self, targetX, targetY, direction):
                     logger.debug(f"Player {self.name} placed meeple on {direction}")
+                    # Check for completed structures and score them immediately
+                    self._checkAndScoreCompletedStructures(gameSession)
                     gameSession.nextTurn()
                     return
                     

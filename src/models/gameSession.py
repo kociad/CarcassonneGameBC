@@ -275,18 +275,20 @@ class GameSession:
             return
         elif self.turnPhase == 2:
             logger.debug("Turn Phase 2: Attempting to place figure...")
-            if self.playFigure(player, x, y, position):
+            meeplePlaced = self.playFigure(player, x, y, position)
+            if meeplePlaced:
                 logger.debug("Figure placed.")
+                # Check for completed structures and end turn
+                logger.debug("Checking completed structures...")
+                for structure in self.structures:
+                    structure.checkCompletion()
+                    if structure.getIsCompleted():
+                        logger.debug(f"Structure {structure.structureType} is completed!")
+                        self.scoreStructure(structure)
+                self.nextTurn()
             else:
                 logger.debug("Figure not placed or skipped.")
-                return
-            logger.debug("Checking completed structures...")
-            for structure in self.structures:
-                structure.checkCompletion()
-                if structure.getIsCompleted():
-                    logger.debug(f"Structure {structure.structureType} is completed!")
-                    self.scoreStructure(structure)
-            self.nextTurn()
+                # Don't end turn - wait for manual action
 
     def skipCurrentAction(self) -> None:
         """Skip the current phase action with official rules validation."""
