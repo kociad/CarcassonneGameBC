@@ -50,3 +50,7 @@ class Checkbox:
     def setDisabled(self, disabled: bool) -> None:
         """Enable or disable the checkbox."""
         self.disabled = bool(disabled)
+
+    def isDisabled(self) -> bool:
+        """Return True if the checkbox is disabled."""
+        return self.disabled

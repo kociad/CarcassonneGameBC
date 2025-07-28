@@ -20,8 +20,6 @@ class GameScene(Scene):
         self.scrollSpeed = 10
         self.font = pygame.font.Font(None, 36)
 
-        #self.toastQueue = []
-        #self.activeToast = None
         self.toastManager = ToastManager(maxToasts=5)
 
         self.sidebarScrollOffset = 0
@@ -45,6 +43,9 @@ class GameScene(Scene):
             pygame.K_w: False, pygame.K_s: False, pygame.K_a: False, pygame.K_d: False,
             pygame.K_UP: False, pygame.K_DOWN: False, pygame.K_LEFT: False, pygame.K_RIGHT: False
         }
+
+        self.validPlacements = set()
+        self.lastCardState = (None, None)
 
     def applySidebarScroll(self, events: list[pygame.event.Event]) -> None:
         """Handle sidebar scrolling events"""
@@ -73,32 +74,89 @@ class GameScene(Scene):
         """
         return self.offsetY
 
+    def updateValidPlacements(self):
+        """Update the set of valid placements for the current card and board state."""
+        currentCard = self.session.getCurrentCard()
+        if not currentCard:
+            self.validPlacements = set()
+            self.lastCardState = (None, None)
+            return
+        card_id = id(currentCard)
+        rotation = getattr(currentCard, 'rotation', 0)
+        if (card_id, rotation) == self.lastCardState:
+            return
+        self.lastCardState = (card_id, rotation)
+        candidates = self.session.getCandidatePositions()
+        valid = set()
+        gameBoard = self.session.getGameBoard()
+        for (x, y) in candidates:
+            if gameBoard.validateCardPlacement(currentCard, x, y):
+                valid.add((x, y))
+        self.validPlacements = valid
+
     def drawBoard(self, gameBoard: typing.Any, placedFigures: list, detectedStructures: list, isFirstRound: bool, isGameOver: bool, players: list) -> None:
         """
         Draws the game board, including grid lines and placed cards.
         """
-        self.screen.fill((0, 128, 0))  # Green background for the board
+        self.updateValidPlacements()
+        self.screen.fill((0, 128, 0))
+
+        if settingsManager.get("SHOW_VALID_PLACEMENTS", True):
+            tileSize = settingsManager.get("TILE_SIZE")
+            highlightColor = (255, 255, 0, 100)
+            for (x, y) in self.validPlacements:
+                rect = pygame.Surface((tileSize, tileSize), pygame.SRCALPHA)
+                rect.fill(highlightColor)
+                self.screen.blit(rect, (x * tileSize - self.offsetX, y * tileSize - self.offsetY))
         
         if isGameOver:
             winner = max(players, key=lambda p: p.getScore())
             message = f"{winner.getName()} wins with {winner.getScore()} points!"
             gameOverFont = pygame.font.Font(None, 72)
-            textSurface = gameOverFont.render(message, True, (255, 255, 255))
             window_width = settingsManager.get("WINDOW_WIDTH")
             window_height = settingsManager.get("WINDOW_HEIGHT")
-            textRect = textSurface.get_rect(center=(window_width // 2, window_height // 2))
+            winnerY = window_height // 3 - 40
+            textSurface = gameOverFont.render(message, True, (255, 255, 255))
+            textRect = textSurface.get_rect(center=(window_width // 2, winnerY))
             self.screen.blit(textSurface, textRect)
-            return  # Skip rest of rendering
+
+            tableFont = pygame.font.Font(None, 48)
+            rowFont = pygame.font.Font(None, 42)
+            sortedPlayers = sorted(players, key=lambda p: (-p.getScore(), p.getName()))
+            numRows = len(sortedPlayers) + 1  # header + players
+            rowHeight = 55
+            tableWidth = 400
+            tableHeight = numRows * rowHeight + 20
+            tableX = window_width // 2 - tableWidth // 2
+            tableY = textRect.bottom + 30
+            col1X = window_width // 2 - 100
+            col2X = window_width // 2 + 100
+
+            pygame.draw.rect(self.screen, (40, 40, 40), (tableX, tableY, tableWidth, tableHeight))
+            headerY = tableY + rowHeight // 2
+            headerPlayer = tableFont.render("Player", True, (255, 255, 255))
+            headerScore = tableFont.render("Score", True, (255, 255, 255))
+            self.screen.blit(headerPlayer, headerPlayer.get_rect(center=(col1X, headerY)))
+            self.screen.blit(headerScore, headerScore.get_rect(center=(col2X, headerY)))
+            pygame.draw.line(self.screen, (100, 100, 100), (tableX + 10, tableY + rowHeight), (tableX + tableWidth - 10, tableY + rowHeight), 2)
+
+            for i, player in enumerate(sortedPlayers):
+                rowY = tableY + rowHeight * (i + 1) + rowHeight // 2
+                nameSurface = rowFont.render(player.getName(), True, (220, 220, 220))
+                scoreSurface = rowFont.render(str(player.getScore()), True, (220, 220, 220))
+                self.screen.blit(nameSurface, nameSurface.get_rect(center=(col1X, rowY)))
+                self.screen.blit(scoreSurface, scoreSurface.get_rect(center=(col2X, rowY)))
+                if i < len(sortedPlayers) - 1:
+                    pygame.draw.line(self.screen, (70, 70, 70), (tableX + 10, tableY + rowHeight * (i + 2)), (tableX + tableWidth - 10, tableY + rowHeight * (i + 2)), 1)
+            return
                 
         if settingsManager.get("DEBUG"):
             tile_size = settingsManager.get("TILE_SIZE")
-            # Draw grid lines
             for x in range(0, (gameBoard.getGridSize() + 1) * tile_size, tile_size):
                 pygame.draw.line(self.screen, (0, 0, 0), (x - self.offsetX, 0 - self.offsetY), (x - self.offsetX, gameBoard.getGridSize() * tile_size - self.offsetY))
             for y in range(0, (gameBoard.getGridSize() + 1) * tile_size, tile_size):
                 pygame.draw.line(self.screen, (0, 0, 0), (0 - self.offsetX, y - self.offsetY), (gameBoard.getGridSize() * tile_size - self.offsetX, y - self.offsetY))
         
-        # Draw placed cards and their grid coordinates
         tile_size = settingsManager.get("TILE_SIZE")
         for y in range(gameBoard.gridSize):
             for x in range(gameBoard.gridSize):
@@ -113,23 +171,20 @@ class GameScene(Scene):
                             imageToDraw = card.image
                     self.screen.blit(imageToDraw, (x * tile_size - self.offsetX, y * tile_size - self.offsetY))
                 if settingsManager.get("DEBUG"):
-                    # Draw X, Y coordinates at the center of each grid cell
                     textSurface = self.font.render(f"{x},{y}", True, (255, 255, 255))
                     textX = x * tile_size - self.offsetX + tile_size // 3
                     textY = y * tile_size - self.offsetY + tile_size // 3
                     self.screen.blit(textSurface, (textX, textY))
                 
         if settingsManager.get("DEBUG"):
-            # Draw completed detected structures with tint only on relevant directions
             for structure in detectedStructures:
                 if structure.getIsCompleted():
                     tintColor = structure.getColor()
                     
-                    # Group card sides by card for drawing
                     cardEdgeMap = {}
                     for card, direction in structure.cardSides:
                         if direction is None:
-                            continue  # Skip invalid directions
+                            continue
                         if card not in cardEdgeMap:
                             cardEdgeMap[card] = []
                         cardEdgeMap[card].append(direction)
@@ -139,9 +194,8 @@ class GameScene(Scene):
                         if cardPosition:
                             cardX, cardY = cardPosition[0]
                             rect = pygame.Surface((tile_size, tile_size), pygame.SRCALPHA)
-                            rect.fill((0, 0, 0, 0))  # Transparent base
+                            rect.fill((0, 0, 0, 0))
                             
-                            # Draw only relevant edges for this structure
                             for direction in directions:
                                 if direction == "N":
                                     pygame.draw.rect(rect, tintColor, (0, 0, tile_size, tile_size // 3))
@@ -159,31 +213,29 @@ class GameScene(Scene):
 
                             self.screen.blit(rect, (cardX * tile_size - self.offsetX, cardY * tile_size - self.offsetY))
 
-        # Draw placed figures (meeples) at correct positions on the card
         tile_size = settingsManager.get("TILE_SIZE")
         figure_size = settingsManager.get("FIGURE_SIZE")
         for figure in placedFigures:
             if figure.card:
                 cardPosition = [(x, y) for y in range(gameBoard.gridSize) for x in range(gameBoard.gridSize) if gameBoard.getCard(x, y) == figure.card]
                 if cardPosition:
-                    padding = tile_size * 0.1 # Distance from the border
-                    figureOffset = figure_size / 2 # Compensate for figure size
+                    padding = tile_size * 0.1
+                    figureOffset = figure_size / 2
                     baseX = cardPosition[0][0] * tile_size - self.offsetX
                     baseY = cardPosition[0][1] * tile_size - self.offsetY
 
-                    # Use precise float values for accurate positioning
-                    if figure.positionOnCard == "N":  # Top
+                    if figure.positionOnCard == "N":
                         figureX, figureY = baseX + tile_size / 2, baseY + padding + figureOffset
-                    elif figure.positionOnCard == "S":  # Bottom
+                    elif figure.positionOnCard == "S":
                         figureX, figureY = baseX + tile_size / 2, baseY + tile_size - padding - figureOffset
-                    elif figure.positionOnCard == "E":  # Right
+                    elif figure.positionOnCard == "E":
                         figureX, figureY = baseX + tile_size - padding - figureOffset, baseY + tile_size / 2
-                    elif figure.positionOnCard == "W":  # Left
+                    elif figure.positionOnCard == "W":
                         figureX, figureY = baseX + padding + figureOffset, baseY + tile_size / 2
-                    else:  # Default to center if invalid position
+                    else:
                         figureX, figureY = baseX + tile_size / 2, baseY + tile_size / 2
                     
-                    self.screen.blit(figure.image, (figureX - tile_size * 0.15, figureY - tile_size * 0.15))  # Adjust for better centering
+                    self.screen.blit(figure.image, (figureX - tile_size * 0.15, figureY - tile_size * 0.15))
                     
     def drawSidePanel(self, selectedCard: typing.Any, remainingCards: int, currentPlayer: typing.Any, placedFigures: list, detectedStructures: list) -> None:
         windowWidth = settingsManager.get("WINDOW_WIDTH")
@@ -198,7 +250,6 @@ class GameScene(Scene):
         sectionSpacing = 25
         scrollableContentStartY = currentY
 
-        # FIXED CONTENT - Current card
         if selectedCard:
             imageToDraw = selectedCard.getImage()
             if hasattr(selectedCard, "rotation") and selectedCard.rotation:
@@ -215,10 +266,8 @@ class GameScene(Scene):
             currentY += cardRect.height + sectionSpacing
             scrollableContentStartY = currentY
 
-        # SCROLLABLE CONTENT
         offsetY = self.sidebarScrollOffset
 
-        # Turn status - only show when DEBUG is enabled
         if settingsManager.get("DEBUG", False):
             networkMode = settingsManager.get("NETWORK_MODE")
             if networkMode == "local":
@@ -238,7 +287,6 @@ class GameScene(Scene):
                 self.screen.blit(statusSurface, statusRect)
             currentY += statusRect.height + sectionSpacing
 
-        # Cards remaining
         cardsSurface = self.font.render(f"Cards left: {remainingCards}", True, (255, 255, 255))
         cardsRect = cardsSurface.get_rect()
         cardsRect.centerx = sidebarCenterX
@@ -247,16 +295,13 @@ class GameScene(Scene):
             self.screen.blit(cardsSurface, cardsRect)
         currentY += cardsRect.height + sectionSpacing
 
-        # Get all players from game session
         allPlayers = self.session.getPlayers()
         
-        # Display each player's info
         for i, player in enumerate(allPlayers):
             playerStartY = currentY
             isCurrentPlayer = (player == currentPlayer)
             
-            # Calculate player section height for background (taller rectangle)
-            playerSectionHeight = 80  # Increased from 60 to make it taller
+            playerSectionHeight = 80
             figures = player.getFigures()
             if figures:
                 figureSize = settingsManager.get("FIGURE_SIZE")
@@ -265,26 +310,22 @@ class GameScene(Scene):
                 totalRows = (len(figures) + figuresPerRow - 1) // figuresPerRow
                 playerSectionHeight += totalRows * figureSize + (totalRows - 1) * 5
             
-            # Draw background and border for current player
             if isCurrentPlayer:
                 playerBgRect = pygame.Rect(panelX + 5, currentY - offsetY - 10, sidebarWidth - 10, playerSectionHeight)
-                # Only draw if visible
                 if playerBgRect.bottom > scrollableContentStartY and playerBgRect.top < windowHeight:
-                    pygame.draw.rect(self.screen, (60, 80, 120), playerBgRect)  # Blue background
-                    pygame.draw.rect(self.screen, (100, 150, 255), playerBgRect, 2)  # Blue border
+                    pygame.draw.rect(self.screen, (60, 80, 120), playerBgRect)
+                    pygame.draw.rect(self.screen, (100, 150, 255), playerBgRect, 2)
             
-            # Get player's color and convert string to RGB
             try:
                 colorString = player.getColor()
                 
-                # Convert color name to RGB tuple
                 colorMap = {
                     "red": (255, 100, 100),
                     "blue": (100, 100, 255),
                     "green": (100, 255, 100),
                     "yellow": (255, 255, 100),
                     "pink": (255, 100, 255),
-                    "black": (200, 200, 200),  # Light gray for visibility
+                    "black": (200, 200, 200),
                 }
                 
                 playerColor = colorMap.get(colorString, (255, 255, 255))
@@ -293,7 +334,6 @@ class GameScene(Scene):
                 logger.error(f"Failed to get player color: {e}")
                 playerColor = (255, 255, 255)
             
-            # Player name with current turn indicator
             nameText = player.getName()
             nameSurface = self.font.render(nameText, True, playerColor)
             nameRect = nameSurface.get_rect()
@@ -303,7 +343,6 @@ class GameScene(Scene):
                 self.screen.blit(nameSurface, nameRect)
             currentY += nameRect.height + 5
 
-            # Player score with current player highlighting
             scoreColor = (200, 200, 200)
             scoreSurface = self.font.render(f"Score: {player.getScore()}", True, scoreColor)
             scoreRect = scoreSurface.get_rect()
@@ -311,9 +350,8 @@ class GameScene(Scene):
             scoreRect.y = currentY - offsetY
             if scoreRect.bottom > scrollableContentStartY and scoreRect.top < windowHeight:
                 self.screen.blit(scoreSurface, scoreRect)
-            currentY += scoreRect.height + 10  # Extra spacing after score
+            currentY += scoreRect.height + 10
 
-            # Player's meeples
             if figures:
                 figureSize = settingsManager.get("FIGURE_SIZE")
                 padding = 10
@@ -327,7 +365,6 @@ class GameScene(Scene):
                 gridStartX = sidebarCenterX - actualGridWidth // 2
                 gridStartY = currentY - offsetY
                 
-                # Only draw meeples if they're visible
                 if gridStartY + totalRows * (figureSize + 5) > scrollableContentStartY and gridStartY < windowHeight:
                     for j, figure in enumerate(figures):
                         row = j // figuresPerRow
@@ -336,18 +373,15 @@ class GameScene(Scene):
                         figX = gridStartX + col * (figureSize + 5)
                         figY = gridStartY + row * (figureSize + 5)
                         
-                        # Only draw if meeple is visible
                         if figY + figureSize > scrollableContentStartY and figY < windowHeight:
                             self.screen.blit(figure.image, (figX, figY))
                 
                 gridHeight = totalRows * figureSize + (totalRows - 1) * 5
                 currentY += gridHeight
 
-            # Add consistent spacing between players (except after last player)
             if i < len(allPlayers) - 1:
                 currentY += sectionSpacing
 
-        # Debug info at the very end (after all players)
         if settingsManager.get("DEBUG"):
             currentY += sectionSpacing
             structureSurface = self.font.render(f"Structures: {len(detectedStructures)}", True, (255, 255, 255))
@@ -358,7 +392,7 @@ class GameScene(Scene):
                 self.screen.blit(structureSurface, structureRect)
             currentY += structureRect.height
 
-        maxScroll = max(0, currentY - windowHeight + 50)  # 50px buffer
+        maxScroll = max(0, currentY - windowHeight + 50)
         self.sidebarScrollOffset = min(self.sidebarScrollOffset, maxScroll)
 
     def scroll(self, direction: str) -> None:
@@ -398,7 +432,6 @@ class GameScene(Scene):
                 elif event.key == pygame.K_ESCAPE:
                     self.switchScene(GameState.MENU)
 
-            # Block game actions if it's not this player's turn in network mode
             allowAction = True
             network_mode = settingsManager.get("NETWORK_MODE")
             if network_mode in ("host", "client"):
@@ -427,9 +460,11 @@ class GameScene(Scene):
         if event.button == 1:
             direction = self.detectClickDirection(x, y, gridX, gridY)
             self.session.playTurn(gridX, gridY, direction)
+            self.updateValidPlacements()  # Board updated, recalc
 
         if event.button == 3 and self.session.getCurrentCard():
             self.session.getCurrentCard().rotate()
+            self.updateValidPlacements()  # Card rotated, recalc
         
     def handleKeyHold(self) -> None:
         if self.keysPressed.get(pygame.K_w) or self.keysPressed.get(pygame.K_UP):
@@ -477,8 +512,6 @@ class GameScene(Scene):
         """
         Show notification toast - called via callback from game session
         """
-               
-        # Map notification types to toast types
         toastTypeMap = {
             "error": "error",
             "warning": "warning", 
@@ -489,7 +522,6 @@ class GameScene(Scene):
         toastType = toastTypeMap.get(notificationType, "info")
         toast = Toast(message, type=toastType, duration=3)
         
-        # ToastManager handles duplicate checking automatically
         self.toastManager.addToast(toast)
     
     def update(self) -> None:
@@ -504,11 +536,11 @@ class GameScene(Scene):
             self.clock.tick(fps)
             return
 
-        # AI turn
         currentPlayer.playTurn(self.session)
         self.clock.tick(fps)
         
     def draw(self) -> None:
+        self.updateValidPlacements()
         self.drawBoard(
             self.session.getGameBoard(),
             self.session.getPlacedFigures(),

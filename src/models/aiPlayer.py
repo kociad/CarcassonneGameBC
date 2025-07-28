@@ -1,10 +1,12 @@
 import logging
 import random
 import typing
+import time
 
 from models.player import Player
 
 import settings
+from utils.settingsManager import settingsManager
 
 logger = logging.getLogger(__name__)
 
@@ -16,6 +18,8 @@ class AIPlayer(Player):
     def playTurn(self, gameSession: 'GameSession') -> None:
         """Perform the AI's turn logic."""
         logger.info(f"Player {self.name} is thinking...")
+        delay = settingsManager.get("AI_TURN_DELAY", 1.0)
+        time.sleep(delay)
         currentCard = gameSession.getCurrentCard()
         placement = gameSession.getRandomValidPlacement(currentCard)
         if not placement:

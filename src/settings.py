@@ -7,6 +7,12 @@ MEEPLE_IMAGES_PATH = ASSETS_PATH + "meeples/"
 BACKGROUND_IMAGE_PATH = ASSETS_PATH + "backgrounds/"
 SOUND_PATH = ASSETS_PATH + "sounds/"
 
+# Tile Settings
+TILE_SIZE = 96
+FIGURE_SIZE = 25
+GRID_SIZE = 20
+SIDEBAR_WIDTH = 250
+
 #Session defaults
 #Player settings (valid for host only)
 PLAYERS = ["Adam", "Benedict", "Cecil", "David", "Ernest", "Francis"]
@@ -25,6 +31,7 @@ PLAYER_INDEX = 0
 WINDOW_WIDTH = 1920
 WINDOW_HEIGHT = 1080
 FULLSCREEN = False
+SHOW_VALID_PLACEMENTS = True
 
 # Apply dynamic fullscreen resolution override if needed
 if FULLSCREEN:
@@ -38,14 +45,12 @@ if FULLSCREEN:
     except Exception as e:
         print(f"Failed to detect fullscreen resolution: {e}")
 
-# Tile Settings
-TILE_SIZE = 96
-FIGURE_SIZE = 25
-GRID_SIZE = 20
-SIDEBAR_WIDTH = 250
-
 # Debug
-DEBUG = False
+DEBUG = True
+LOG_TO_CONSOLE = True
 GAME_LOG_MAX_ENTRIES = 10000
+
+# AI Settings
+AI_TURN_DELAY = 0.0
 
 

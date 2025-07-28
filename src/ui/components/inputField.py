@@ -23,6 +23,7 @@ class InputField:
         self.minValue = minValue
         self.maxValue = maxValue
         self.onTextChange = onTextChange
+        self.cursorPos = len(self.text)
 
     def handleEvent(self, event: pygame.event.Event, yOffset: int = 0) -> None:
         """Handle a pygame event for the input field."""
@@ -33,25 +34,47 @@ class InputField:
             self.active = shiftedRect.collidepoint(event.pos)
         if self.active and event.type == pygame.KEYDOWN:
             oldText = self.text
-            if event.key == pygame.K_BACKSPACE:
-                self.text = self.text[:-1]
+            if event.key == pygame.K_LEFT:
+                if self.cursorPos > 0:
+                    self.cursorPos -= 1
+            elif event.key == pygame.K_RIGHT:
+                if self.cursorPos < len(self.text):
+                    self.cursorPos += 1
+            elif event.key == pygame.K_HOME:
+                self.cursorPos = 0
+            elif event.key == pygame.K_END:
+                self.cursorPos = len(self.text)
+            elif event.key == pygame.K_BACKSPACE:
+                if self.cursorPos > 0:
+                    self.text = self.text[:self.cursorPos-1] + self.text[self.cursorPos:]
+                    self.cursorPos -= 1
+            elif event.key == pygame.K_DELETE:
+                if self.cursorPos < len(self.text):
+                    self.text = self.text[:self.cursorPos] + self.text[self.cursorPos+1:]
             elif event.key == pygame.K_RETURN:
                 self.active = False
             else:
                 if self.numeric:
                     if event.unicode.isdigit() or (event.unicode == '-' and len(self.text) == 0):
-                        self.text += event.unicode
+                        self.text = self.text[:self.cursorPos] + event.unicode + self.text[self.cursorPos:]
+                        self.cursorPos += 1
                 else:
                     if event.unicode and event.unicode.isprintable():
-                        self.text += event.unicode
+                        self.text = self.text[:self.cursorPos] + event.unicode + self.text[self.cursorPos:]
+                        self.cursorPos += 1
+            self.cursorPos = max(0, min(self.cursorPos, len(self.text)))
             if self.onTextChange and self.text != oldText:
                 self.onTextChange(self.text)
-            textWidth = self.font.size(self.text)[0]
+            cursorX = self.font.size(self.text[:self.cursorPos])[0]
             visibleWidth = self.rect.width - 10
-            if textWidth > visibleWidth:
-                self.scrollOffset = textWidth - visibleWidth
-            else:
-                self.scrollOffset = 0
+            if cursorX - self.scrollOffset > visibleWidth:
+                self.scrollOffset = cursorX - visibleWidth
+            elif cursorX - self.scrollOffset < 0:
+                self.scrollOffset = cursorX
+            textWidth = self.font.size(self.text)[0]
+            if textWidth - self.scrollOffset < visibleWidth:
+                self.scrollOffset = max(0, textWidth - visibleWidth)
+            self.scrollOffset = max(0, self.scrollOffset)
 
     def draw(self, surface: pygame.Surface, yOffset: int = 0) -> None:
         """Draw the input field on the given surface."""
@@ -74,7 +97,7 @@ class InputField:
             (drawRect.x + 5, drawRect.y + (drawRect.height - textSurface.get_height()) // 2)
         )
         if self.active and not self.disabled and self.cursorVisible:
-            cursorX = drawRect.x + 5 + self.font.size(self.text)[0] - self.scrollOffset
+            cursorX = drawRect.x + 5 + self.font.size(self.text[:self.cursorPos])[0] - self.scrollOffset
             cursorY = drawRect.y + 5
             cursorHeight = drawRect.height - 10
             pygame.draw.line(surface, textColor, (cursorX, cursorY), (cursorX, cursorY + cursorHeight), 2)
@@ -86,6 +109,7 @@ class InputField:
     def setText(self, value: str) -> None:
         """Set the text value of the input field."""
         self.text = str(value)
+        self.cursorPos = len(self.text)
         self.scrollOffset = 0
 
     def setDisabled(self, value: bool) -> None:

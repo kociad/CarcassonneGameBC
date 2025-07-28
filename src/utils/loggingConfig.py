@@ -6,7 +6,7 @@ from datetime import datetime
 from pathlib import Path
 import typing
 
-SCORING_LEVEL = 25
+SCORING_LEVEL = 26
 logging.addLevelName(SCORING_LEVEL, "SCORING")
 
 def scoring(self, message, *args, **kwargs):
@@ -20,7 +20,11 @@ def configureLogging() -> None:
     """Configure logging for the application with file and console output and global exception handling."""
     from utils.settingsManager import settingsManager
     debugEnabled = settingsManager.get("DEBUG", False)
-    handlers = [logging.StreamHandler(sys.stdout)]
+    logToConsole = settingsManager.get("LOG_TO_CONSOLE", True)
+    handlers = []
+    logFilename = None
+    if debugEnabled and logToConsole:
+        handlers.append(logging.StreamHandler(sys.stdout))
     if debugEnabled:
         logsDir = Path("logs")
         logsDir.mkdir(exist_ok=True)
@@ -36,9 +40,14 @@ def configureLogging() -> None:
     setupExceptionLogging()
     logger = logging.getLogger(__name__)
     if debugEnabled:
-        logger.debug(f"Logging configured with file output: {logFilename}")
+        msg = f"Logging configured with file output: {logFilename}"
+        if logToConsole:
+            msg += " and console output"
+        logger.debug(msg)
+    """
     else:
-        logger.info("Logging configured (console only - DEBUG disabled)")
+        logger.info("Logging configured (no console output - DEBUG disabled)")
+    """
 
 def updateLoggingLevel() -> None:
     """Update logging level based on current DEBUG setting."""
@@ -116,6 +125,8 @@ class GameLogHandler(logging.Handler):
                 logging.CRITICAL: "ERROR"
             }
             level = levelMapping.get(record.levelno, "INFO")
+            if level not in ("INFO", "SCORING"):
+                return
             cleanMessage = record.getMessage()
             if level == "DEBUG":
                 loggerName = record.name.split('.')[-1]

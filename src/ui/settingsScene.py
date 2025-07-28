@@ -43,7 +43,7 @@ class SettingsScene(Scene):
             font=self.dropdownFont,
             options=resolutionOptions,
             defaultIndex=defaultIndex,
-            onSelect=lambda value: self.addToast(Toast("Restart the game to apply resolution changes", type="warning")),
+            onSelect=lambda value: self.addToast(Toast("In order to apply resolution setting, restart the game", type="warning")),
         )
         self.resolutionDropdown.setDisabled(settingsManager.get("FULLSCREEN"))
         currentY += 60
@@ -51,15 +51,42 @@ class SettingsScene(Scene):
         self.fullscreenCheckbox = Checkbox(
             rect=(xCenter, currentY, 20, 20),
             checked=settingsManager.get("FULLSCREEN"),
-            onToggle=self.handleFullscreenToggle
+            onToggle=lambda value: [self.handleFullscreenToggle(value), self.addToast(Toast("In order to apply fullscreen setting, restart the game", type="warning"))]
+        )
+        currentY += 40
+
+        self.validPlacementCheckbox = Checkbox(
+            rect=(xCenter, currentY, 20, 20),
+            checked=settingsManager.get("SHOW_VALID_PLACEMENTS", True),
+            onToggle=lambda value: self.handleValidPlacementToggle(value)
         )
         currentY += 40
 
         self.debugCheckbox = Checkbox(
             rect=(xCenter, currentY, 20, 20),
             checked=settingsManager.get("DEBUG"),
-            onToggle=self.handleDebugToggle
+            onToggle=lambda value: [self.handleDebugToggle(value), self.addToast(Toast("In order to apply debug setting, restart the game", type="warning"))]
         )
+        currentY += 40
+
+        self.logToConsoleCheckbox = Checkbox(
+            rect=(xCenter, currentY, 20, 20),
+            checked=settingsManager.get("LOG_TO_CONSOLE", True),
+            onToggle=lambda value: [self.handleLogToConsoleToggle(value), self.addToast(Toast("In order to apply log to console setting, restart the game", type="warning"))]
+        )
+        self.logToConsoleCheckbox.setDisabled(not settingsManager.get("DEBUG"))
+        currentY += 40
+
+        self.aiTurnDelayField = InputField(
+            rect=(xCenter, currentY, 80, 40),
+            font=self.inputFont,
+            initialText=str(settingsManager.get("AI_TURN_DELAY", 1.0)),
+            onTextChange=None,
+            numeric=True,
+            minValue=0.0,
+            maxValue=10.0
+        )
+        self.aiTurnDelayField.setDisabled(not settingsManager.get("DEBUG"))
         currentY += 60
 
         self.fpsSlider = Slider(
@@ -67,7 +94,7 @@ class SettingsScene(Scene):
             font=self.dropdownFont,
             minValue=30, maxValue=144,
             value=settingsManager.get("FPS", 60),
-            onChange=lambda value: self.addToast(Toast("Restart the game to apply FPS changes", type="warning"))
+            onChange=None
         )
         self.fpsSlider.setDisabled(not settingsManager.get("DEBUG"))
         currentY += 40
@@ -77,7 +104,7 @@ class SettingsScene(Scene):
             font=self.dropdownFont,
             minValue=10, maxValue=50,
             value=settingsManager.get("GRID_SIZE", 20),
-            onChange=lambda value: self.addToast(Toast("Restart the game to apply grid size changes", type="warning"))
+            onChange=None
         )
         self.gridSizeSlider.setDisabled(not settingsManager.get("DEBUG"))
         currentY += 40
@@ -87,7 +114,7 @@ class SettingsScene(Scene):
             font=self.dropdownFont,
             minValue=50, maxValue=150,
             value=settingsManager.get("TILE_SIZE"),
-            onChange=self.onTileSizeChanged
+            onChange=None
         )
         self.tileSizeSlider.setDisabled(not settingsManager.get("DEBUG"))
         currentY += 40
@@ -97,7 +124,7 @@ class SettingsScene(Scene):
             font=self.dropdownFont,
             minValue=10, maxValue=50,
             value=settingsManager.get("FIGURE_SIZE"),
-            onChange=lambda value: self.addToast(Toast("Restart the game to apply figure size changes", type="warning"))
+            onChange=None
         )
         self.figureSizeSlider.setDisabled(not settingsManager.get("DEBUG"))
         currentY += 40
@@ -111,7 +138,7 @@ class SettingsScene(Scene):
             minValue=minSidebarWidth,
             maxValue=400,
             value=max(currentSidebarWidth, minSidebarWidth),
-            onChange=lambda value: self.addToast(Toast("Restart the game to apply sidebar width changes", type="warning"))
+            onChange=None
         )
         self.sidebarWidthSlider.setDisabled(not settingsManager.get("DEBUG"))
         currentY += 40
@@ -120,7 +147,7 @@ class SettingsScene(Scene):
             rect=(xCenter, currentY, 200, 40),
             font=self.inputFont,
             initialText=str(settingsManager.get("GAME_LOG_MAX_ENTRIES", 2000)),
-            onTextChange=None,
+            onTextChange=lambda value: self.addToast(Toast("In order to apply game log max entries setting, restart the game", type="warning")),
             numeric=True,
             minValue=100,
             maxValue=50000
@@ -150,7 +177,6 @@ class SettingsScene(Scene):
             self.sidebarWidthSlider.setValue(newMinSidebarWidth)
             self.addToast(Toast(f"Sidebar width adjusted to minimum ({newMinSidebarWidth}px)", type="info"))
         
-        self.addToast(Toast("Restart the game to apply tile size changes", type="warning"))
 
     def onFullscreenChanged(self, key, old_value, new_value):
         self.resolutionDropdown.setDisabled(new_value)
@@ -165,9 +191,8 @@ class SettingsScene(Scene):
         self.tileSizeSlider.setDisabled(not new_value)
         self.figureSizeSlider.setDisabled(not new_value)
         self.gameLogMaxEntriesField.setDisabled(not new_value)
-        
-        if new_value and not old_value:
-            self.addToast(Toast("Restart the game to enable log file generation", type="info"))
+        self.aiTurnDelayField.setDisabled(not new_value)
+        self.logToConsoleCheckbox.setDisabled(not new_value)        
 
     def handleEvents(self, events: list[pygame.event.Event]) -> None:
         self.applyScroll(events)
@@ -181,12 +206,31 @@ class SettingsScene(Scene):
                 continue
             self.fullscreenCheckbox.handleEvent(event, yOffset=self.scrollOffset)
             self.debugCheckbox.handleEvent(event, yOffset=self.scrollOffset)
+            self.logToConsoleCheckbox.handleEvent(event, yOffset=self.scrollOffset)
+            self.validPlacementCheckbox.handleEvent(event, yOffset=self.scrollOffset)
+            fpsWasDragging = self.fpsSlider.dragging
+            gridWasDragging = self.gridSizeSlider.dragging
+            tileWasDragging = self.tileSizeSlider.dragging
+            figureWasDragging = self.figureSizeSlider.dragging
+            sidebarWasDragging = self.sidebarWidthSlider.dragging
             self.fpsSlider.handleEvent(event, yOffset=self.scrollOffset)
             self.gridSizeSlider.handleEvent(event, yOffset=self.scrollOffset)
             self.tileSizeSlider.handleEvent(event, yOffset=self.scrollOffset)
             self.figureSizeSlider.handleEvent(event, yOffset=self.scrollOffset)
             self.sidebarWidthSlider.handleEvent(event, yOffset=self.scrollOffset)
+            if event.type == pygame.MOUSEBUTTONUP:
+                if fpsWasDragging:
+                    self.addToast(Toast("In order to apply FPS setting, restart the game", type="warning"))
+                if gridWasDragging:
+                    self.addToast(Toast("In order to apply grid size setting, restart the game", type="warning"))
+                if tileWasDragging:
+                    self.addToast(Toast("In order to apply tile size setting, restart the game", type="warning"))
+                if figureWasDragging:
+                    self.addToast(Toast("In order to apply figure size setting, restart the game", type="warning"))
+                if sidebarWasDragging:
+                    self.addToast(Toast("In order to apply sidebar width setting, restart the game", type="warning"))
             self.gameLogMaxEntriesField.handleEvent(event, yOffset=self.scrollOffset)
+            self.aiTurnDelayField.handleEvent(event, yOffset=self.scrollOffset)
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if self.backButton.isClicked(event.pos, yOffset=self.scrollOffset):
                     self.switchScene(GameState.MENU)
@@ -195,6 +239,15 @@ class SettingsScene(Scene):
 
     def handleDebugToggle(self, value):
         settingsManager.set("DEBUG", value, temporary=True)
+
+    def handleAITurnDelayToggle(self, value):
+        settingsManager.set("AI_TURN_DELAY_ENABLED", value, temporary=True)
+
+    def handleLogToConsoleToggle(self, value):
+        settingsManager.set("LOG_TO_CONSOLE", value, temporary=True)
+
+    def handleValidPlacementToggle(self, value):
+        settingsManager.set("SHOW_VALID_PLACEMENTS", value, temporary=True)
 
     def applySettings(self):
         changes = {}
@@ -207,6 +260,21 @@ class SettingsScene(Scene):
 
         changes["FULLSCREEN"] = self.fullscreenCheckbox.isChecked()
         changes["DEBUG"] = self.debugCheckbox.isChecked()
+        if not self.logToConsoleCheckbox.isDisabled():
+            changes["LOG_TO_CONSOLE"] = self.logToConsoleCheckbox.isChecked()
+        if not self.validPlacementCheckbox.isDisabled():
+            changes["SHOW_VALID_PLACEMENTS"] = self.validPlacementCheckbox.isChecked()
+        if not self.aiTurnDelayField.isDisabled():
+            try:
+                delay = float(self.aiTurnDelayField.getText())
+                if 0.0 <= delay <= 10.0:
+                    changes["AI_TURN_DELAY"] = delay
+                else:
+                    self.addToast(Toast("AI turn delay must be between 0 and 10 seconds", type="error"))
+                    return
+            except ValueError:
+                self.addToast(Toast("Invalid AI turn delay value", type="error"))
+                return
         
         if not self.fpsSlider.isDisabled():
             changes["FPS"] = self.fpsSlider.getValue()
@@ -247,6 +315,7 @@ class SettingsScene(Scene):
 
         if success:
             self.addToast(Toast("Settings successfully saved", type="success"))
+            #self.addToast(Toast("Restart the game to apply changes", type="warning"))
             
             if "GAME_LOG_MAX_ENTRIES" in changes:
                 from utils.loggingConfig import gameLogInstance
@@ -257,7 +326,6 @@ class SettingsScene(Scene):
 
     def handleFullscreenToggle(self, value):
         self.resolutionDropdown.setDisabled(value)
-        self.addToast(Toast("Restart the game to apply fullscreen changes", type="warning"))
 
     def draw(self) -> None:
         self.screen.fill((30, 30, 30))
@@ -288,6 +356,32 @@ class SettingsScene(Scene):
             centery=self.debugCheckbox.rect.centery + offsetY
         )
         self.screen.blit(dbLabel, dbLabelRect)
+
+        labelColor = (120, 120, 120) if self.logToConsoleCheckbox.isDisabled() else (255, 255, 255)
+        logToConsoleLabel = labelFont.render("Log to console:", True, labelColor)
+        logToConsoleLabelRect = logToConsoleLabel.get_rect(
+            right=self.logToConsoleCheckbox.rect.left - 10,
+            centery=self.logToConsoleCheckbox.rect.centery + offsetY
+        )
+        self.screen.blit(logToConsoleLabel, logToConsoleLabelRect)
+        self.logToConsoleCheckbox.draw(self.screen, yOffset=offsetY)
+
+        labelColor = (120, 120, 120) if self.validPlacementCheckbox.isDisabled() else (255, 255, 255)
+        validPlacementsLabel = labelFont.render("Show valid card placements:", True, labelColor)
+        validPlacementsLabelRect = validPlacementsLabel.get_rect(
+            right=self.validPlacementCheckbox.rect.left - 10,
+            centery=self.validPlacementCheckbox.rect.centery + offsetY
+        )
+        self.screen.blit(validPlacementsLabel, validPlacementsLabelRect)
+
+        labelColor = (120, 120, 120) if self.aiTurnDelayField.isDisabled() else (255, 255, 255)
+        aiDelayLabel = labelFont.render("AI turn delay (s):", True, labelColor)
+        aiDelayLabelRect = aiDelayLabel.get_rect(
+            right=self.aiTurnDelayField.rect.left - 10,
+            centery=self.aiTurnDelayField.rect.centery + offsetY
+        )
+        self.screen.blit(aiDelayLabel, aiDelayLabelRect)
+        self.aiTurnDelayField.draw(self.screen, yOffset=offsetY)
 
         labelColor = (120, 120, 120) if self.fpsSlider.isDisabled() else (255, 255, 255)
         fpsLabel = labelFont.render("FPS:", True, labelColor)
@@ -339,12 +433,15 @@ class SettingsScene(Scene):
 
         self.fullscreenCheckbox.draw(self.screen, yOffset=offsetY)
         self.debugCheckbox.draw(self.screen, yOffset=offsetY)
+        self.logToConsoleCheckbox.draw(self.screen, yOffset=offsetY)
+        self.validPlacementCheckbox.draw(self.screen, yOffset=self.scrollOffset)
         self.fpsSlider.draw(self.screen, yOffset=offsetY)
         self.gridSizeSlider.draw(self.screen, yOffset=offsetY)
         self.tileSizeSlider.draw(self.screen, yOffset=offsetY)
         self.figureSizeSlider.draw(self.screen, yOffset=offsetY)
         self.sidebarWidthSlider.draw(self.screen, yOffset=offsetY)
         self.gameLogMaxEntriesField.draw(self.screen, yOffset=offsetY)
+        self.aiTurnDelayField.draw(self.screen, yOffset=offsetY)
         self.applyButton.draw(self.screen, yOffset=offsetY)
         self.backButton.draw(self.screen, yOffset=offsetY)
         self.resolutionDropdown.draw(self.screen, yOffset=offsetY)
