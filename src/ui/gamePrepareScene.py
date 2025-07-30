@@ -119,7 +119,7 @@ class GamePrepareScene(Scene):
         self.aiDifficultyDropdown = Dropdown(
             rect=(xCenter, currentY, 200, 40),
             font=self.dropdownFont,
-            options=["EASY", "NORMAL", "HARD", "EXPERT"],
+            options=["easy", "normal", "hard", "expert"],
             defaultIndex=1,
             onSelect=self.handleAIDifficultyChange
         )
@@ -285,6 +285,19 @@ class GamePrepareScene(Scene):
         if not isLocal:
             for i, player in enumerate(self.players):
                 if i > 0:
+                    baseName = player.name
+                    if baseName.startswith("AI_EASY_"):
+                        baseName = baseName[8:]
+                    elif baseName.startswith("AI_HARD_"):
+                        baseName = baseName[8:]
+                    elif baseName.startswith("AI_EXPERT_"):
+                        baseName = baseName[10:]
+                    elif baseName.startswith("AI_NORMAL_"):
+                        baseName = baseName[10:]
+                    elif baseName.startswith("AI_"):
+                        baseName = baseName[3:]
+                    
+                    player.name = baseName
                     player.setAI(False)
 
         if mode == "host":
