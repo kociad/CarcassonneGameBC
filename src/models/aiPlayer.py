@@ -352,7 +352,8 @@ class AIPlayer(Player):
             x, y, rotationsNeeded, cardCopy = bestMove
             currentCard = gameSession.getCurrentCard()
             
-            for _ in range(rotationsNeeded):
+            originalRotation = currentCard.rotation
+            while currentCard.rotation != rotationsNeeded:
                 currentCard.rotate()
             
             if gameSession.playCard(x, y):
@@ -360,6 +361,8 @@ class AIPlayer(Player):
                 self._handleMeeplePlacementAdvanced(gameSession, x, y)
             else:
                 logger.error(f"Player {self.name} failed to place card at validated position [{x},{y}]")
+                while currentCard.rotation != originalRotation:
+                    currentCard.rotate()
                 gameSession.skipCurrentAction()
         else:
             logger.info(f"Player {self.name} couldn't find any valid placements and will discard the card")
@@ -402,25 +405,15 @@ class AIPlayer(Player):
         """
         placements = []
         
-        candidatePositions = gameSession.getCandidatePositions()
-        logger.debug(f"AI {self.name} checking {len(candidatePositions)} candidate positions for card placement")
+        validPlacements = gameSession.getValidPlacements(card)
+        logger.debug(f"AI {self.name} found {len(validPlacements)} valid placements")
         
-        originalRotation = card.rotation
-        for x, y in candidatePositions:
-            while card.rotation != originalRotation:
-                card.rotate()
-            
-            for rotation in range(4):
-                if gameSession.getGameBoard().validateCardPlacement(card, x, y):
-                    cardCopy = self._createCardCopy(card)
-                    for _ in range(rotation):
-                        cardCopy.rotate()
-                    placements.append((x, y, rotation, cardCopy))
-                    logger.debug(f"AI {self.name} found valid placement at ({x},{y}) with rotation {rotation * 90}")
-                card.rotate()
-        
-        while card.rotation != originalRotation:
-            card.rotate()
+        for x, y, cardRotation in validPlacements:
+            cardCopy = self._createCardCopy(card)
+            while cardCopy.rotation != cardRotation:
+                cardCopy.rotate()
+            placements.append((x, y, cardRotation, cardCopy))
+            logger.debug(f"AI {self.name} found valid placement at ({x},{y}) with rotation {cardRotation * 90}")
         
         logger.debug(f"AI {self.name} found {len(placements)} valid placements")
         return placements

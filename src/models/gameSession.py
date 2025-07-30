@@ -35,6 +35,9 @@ class GameSession:
         self.onTurnEnded = None
         self.onShowNotification = None
         
+        self._candidatePositions = set()
+        self._lastBoardState = None
+        
         if not noInit:
             self.generatePlayerList(playerNames)
             self.cardsDeck = self.generateCardsDeck()
@@ -243,6 +246,7 @@ class GameSession:
         if not self.isFirstRound:
             logger.info(f"Player {self.currentPlayer.getName()} placed a card at [{x - self.gameBoard.getCenter()},{self.gameBoard.getCenter() - y}]")
         logger.debug(f"Last played card set to card {card} at {x};{y}")
+        self._invalidateCandidateCache()
         self.detectStructures()
         return True
 
@@ -506,24 +510,69 @@ class GameSession:
             else:
                 logger.scoring(f"{player.getName()}: {player.getScore()} points")
 
+    def _getBoardStateHash(self) -> int:
+        """Get a hash of the current board state for caching."""
+        return len([(x, y) for y in range(self.gameBoard.getGridSize()) 
+                   for x in range(self.gameBoard.getGridSize()) 
+                   if self.gameBoard.getCard(x, y)])
+
+    def _updateCandidatePositions(self) -> None:
+        """Update the cached candidate positions based on current board state."""
+        currentState = self._getBoardStateHash()
+        if self._lastBoardState == currentState:
+            return
+        
+        self._lastBoardState = currentState
+        self._candidatePositions.clear()
+        
+        occupiedPositions = set()
+        for y in range(self.gameBoard.getGridSize()):
+            for x in range(self.gameBoard.getGridSize()):
+                if self.gameBoard.getCard(x, y):
+                    occupiedPositions.add((x, y))
+        
+        for x, y in occupiedPositions:
+            for dx, dy in [(1, 0), (-1, 0), (0, 1), (0, -1)]:
+                nx, ny = x + dx, y + dy
+                if (0 <= nx < self.gameBoard.getGridSize() and 
+                    0 <= ny < self.gameBoard.getGridSize() and
+                    not self.gameBoard.getCard(nx, ny)):
+                    self._candidatePositions.add((nx, ny))
+
     def getCandidatePositions(self) -> set:
         """Get all candidate positions where a card could potentially be placed."""
-        candidatePositions = set()
-        gridSize = self.gameBoard.getGridSize()
-        for y in range(gridSize):
-            for x in range(gridSize):
-                if self.gameBoard.getCard(x, y):
-                    neighbors = [
-                        (x + 1, y),
-                        (x - 1, y),
-                        (x, y + 1),
-                        (x, y - 1)
-                    ]
-                    for nx, ny in neighbors:
-                        if 0 <= nx < gridSize and 0 <= ny < gridSize:
-                            if not self.gameBoard.getCard(nx, ny):
-                                candidatePositions.add((nx, ny))
-        return candidatePositions
+        self._updateCandidatePositions()
+        return self._candidatePositions.copy()
+
+    def _invalidateCandidateCache(self) -> None:
+        """Invalidate the candidate positions cache."""
+        self._lastBoardState = None
+        self._candidatePositions.clear()
+
+    def invalidateCandidateCache(self) -> None:
+        """Public method to invalidate the candidate positions cache."""
+        self._invalidateCandidateCache()
+
+    def getValidPlacements(self, card: typing.Any) -> set:
+        """Get all valid placements for a specific card."""
+        if not card:
+            return set()
+        
+        candidates = self.getCandidatePositions()
+        valid = set()
+        
+        originalRotation = card.rotation
+        try:
+            for x, y in candidates:
+                for rotation in range(4):
+                    if self.gameBoard.validateCardPlacement(card, x, y):
+                        valid.add((x, y, card.rotation))
+                    card.rotate()
+        finally:
+            while card.rotation != originalRotation:
+                card.rotate()
+        
+        return valid
 
     def canPlaceCardAnywhere(self, card: typing.Any) -> bool:
         """Check if card can be placed anywhere on the board."""
@@ -533,46 +582,28 @@ class GameSession:
         if self.isFirstRound:
             logger.debug("First round - card can always be placed")
             return True
-        candidatePositions = self.getCandidatePositions()
-        logger.debug(f"Found {len(candidatePositions)} candidate positions to check")
-        if not candidatePositions:
-            logger.debug("No candidate positions found")
-            return False
-        originalRotation = card.rotation
-        try:
-            for x, y in candidatePositions:
-                while card.rotation != originalRotation:
-                    card.rotate()
-                for rotation in range(4):
-                    if self.gameBoard.validateCardPlacement(card, x, y):
-                        logger.debug(f"Card can be placed at ({x}, {y}) with rotation {card.rotation} 6")
-                        return True
-                    card.rotate()
-            logger.debug("Card cannot be placed at any candidate position")
-            return False
-        finally:
-            while card.rotation != originalRotation:
-                card.rotate()
+        
+        validPlacements = self.getValidPlacements(card)
+        logger.debug(f"Found {len(validPlacements)} valid placements")
+        
+        return len(validPlacements) > 0
 
     def getRandomValidPlacement(self, card: typing.Any) -> typing.Optional[tuple]:
         """Get a random valid placement for the given card."""
         if not card:
             return None
-        candidatePositions = list(self.getCandidatePositions())
-        random.shuffle(candidatePositions)
-        originalRotation = card.rotation
-        try:
-            for x, y in candidatePositions:
-                while card.rotation != originalRotation:
-                    card.rotate()
-                for rotations in range(4):
-                    if self.gameBoard.validateCardPlacement(card, x, y):
-                        return (x, y, rotations)
-                    card.rotate()
+        
+        validPlacements = list(self.getValidPlacements(card))
+        if not validPlacements:
             return None
-        finally:
-            while card.rotation != originalRotation:
-                card.rotate()
+        
+        x, y, rotation = random.choice(validPlacements)
+        
+        originalRotation = card.rotation
+        while card.rotation != rotation:
+            card.rotate()
+        
+        return (x, y, rotation)
 
     def serialize(self) -> dict:
         """Serialize the game session to a dictionary."""

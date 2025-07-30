@@ -106,18 +106,18 @@ class GameScene(Scene):
             self.validPlacements = set()
             self.lastCardState = (None, None)
             return
+        
         card_id = id(currentCard)
         rotation = getattr(currentCard, 'rotation', 0)
-        if (card_id, rotation) == self.lastCardState:
+        currentState = (card_id, rotation)
+        
+        if currentState == self.lastCardState:
             return
-        self.lastCardState = (card_id, rotation)
-        candidates = self.session.getCandidatePositions()
-        valid = set()
-        gameBoard = self.session.getGameBoard()
-        for (x, y) in candidates:
-            if gameBoard.validateCardPlacement(currentCard, x, y):
-                valid.add((x, y))
-        self.validPlacements = valid
+        
+        self.lastCardState = currentState
+        
+        validPlacements = self.session.getValidPlacements(currentCard)
+        self.validPlacements = {(x, y) for x, y, cardRotation in validPlacements if cardRotation == rotation}
 
     def drawBoard(self, gameBoard: typing.Any, placedFigures: list, detectedStructures: list, isFirstRound: bool, isGameOver: bool, players: list) -> None:
         """
