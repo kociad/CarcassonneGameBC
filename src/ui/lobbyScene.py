@@ -59,6 +59,10 @@ class LobbyScene(Scene):
         self.connectedHumans = sum(1 for s in self.statusList if s["status"] == "Connected")
         self.allConnected = (self.connectedHumans == self.requiredHumans)
         self.startButton.setDisabled(not (self.isHost and self.allConnected))
+        
+        print(f"Lobby status update - Required: {self.requiredHumans}, Connected: {self.connectedHumans}, All connected: {self.allConnected}")
+        for i, status in enumerate(self.statusList):
+            print(f"  Player {i}: {status['name']} - {status['status']}")
 
     def handleEvents(self, events: list[pygame.event.Event]) -> None:
         """Handle user and network events in the lobby scene."""

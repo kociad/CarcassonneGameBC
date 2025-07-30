@@ -23,6 +23,7 @@ class NetworkConnection:
         self.onSyncGameState = None
         self.onJoinFailed = None
         self.onJoinRejected = None
+        self.onPlayerClaimed = None
         if self.networkMode == "local":
             logger.debug("Running in local mode. Networking is disabled.")
             return
@@ -95,6 +96,10 @@ class NetworkConnection:
                 self.onInitialGameStateReceived(payload)
         elif action == "ack_game_state":
             logger.debug("Client confirmed receiving game state: %s", payload)
+        elif action == "player_claimed" and self.networkMode == "host":
+            logger.debug("Received player claimed from client")
+            if self.onPlayerClaimed:
+                self.onPlayerClaimed(payload, conn)
         elif action == "submit_turn" and self.networkMode == "host":
             logger.debug("Received submitted turn from client")
             if self.onClientSubmittedTurn:
@@ -169,4 +174,5 @@ class NetworkConnection:
             self.onSyncGameState = None
             self.onJoinFailed = None
             self.onJoinRejected = None
+            self.onPlayerClaimed = None
             self.socket = None

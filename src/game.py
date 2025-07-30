@@ -217,6 +217,7 @@ class Game:
             if networkMode == "host":
                 self.network.onClientConnected = self.onClientConnected
                 self.network.onClientSubmittedTurn = self.onClientSubmittedTurn
+                self.network.onPlayerClaimed = self.onPlayerClaimed
                 self.network.onJoinFailed = self.onJoinFailed
             self.initScene(GameState.GAME)
             logger.debug(f"Game started with {len(playerNames)} players")
@@ -245,6 +246,14 @@ class Game:
                 logger.debug(f"Player name set to '{hostPlayer.getName()}' from host settings.")
                 self.gameSession.onTurnEnded = self.onTurnEnded
                 self.gameSession.onShowNotification = self.onShowNotification
+            self.network.onInitialGameStateReceived = self.onGameStateReceived
+            self.network.onSyncGameState = self.onSyncGameState
+            self.network.onJoinRejected = self.onJoinRejected
+            if networkMode == "host":
+                self.network.onClientConnected = self.onClientConnected
+                self.network.onClientSubmittedTurn = self.onClientSubmittedTurn
+                self.network.onPlayerClaimed = self.onPlayerClaimed
+                self.network.onJoinFailed = self.onJoinFailed
             # Only go to lobby for network modes
             if networkMode != "local":
                 self.initScene(GameState.LOBBY)
@@ -264,11 +273,14 @@ class Game:
         try:
             self.gameSession = GameSession.deserialize(data)
             self.gameSession.onTurnEnded = self.onTurnEnded
+            self.gameSession.onShowNotification = self.onShowNotification
             logger.debug("Game session replaced with synchronized state from host")
 
             if self.network.networkMode == "client":
                 assigned = False
+                print(f"Client received game state with {len(self.gameSession.getPlayers())} players")
                 for player in self.gameSession.getPlayers():
+                    print(f"  Player {player.getIndex()}: {player.getName()} - AI: {player.getIsAI()}, Human: {player.isHuman}")
                     if not player.getIsAI() and not player.isHuman:
                         player.isHuman = True
                         logger.debug(f"Player with index {player.getIndex()} marked as human.")
@@ -278,13 +290,18 @@ class Game:
                         settingsManager.set("PLAYER_INDEX", player.getIndex(), temporary=True)
                         logger.debug(f"Client assigned to player index {player.getIndex()}")
                         assigned = True
+                        print(f"Client claimed player {player.getIndex()}: {player.getName()}")
                         break
 
                 if assigned:
-                    self.network.sendToHost(encodeMessage("ack_game_state", {"status": "ok"}))
+                    updatedGameState = self.gameSession.serialize()
+                    self.network.sendToHost(encodeMessage("player_claimed", updatedGameState))
+                    logger.debug("Client claimed player and sent updated game state to host")
+                    print("Client sent player_claimed message to host")
                 else:
                     logger.debug("No available player slots for client")
                     self.network.sendToHost(encodeMessage("join_failed", {"reason": "no_slots"}))
+                    print("No available player slots for client")
                     
         except Exception as e:
             logError("Failed to process received game state", e)
@@ -302,8 +319,27 @@ class Game:
             message = encodeMessage("init_game_state", gameState)
             conn.sendall((message + "\n").encode())
             logger.debug("Game state sent successfully.")
+            print(f"Host sent game state to client with {len(self.gameSession.getPlayers())} players")
         except Exception as e:
             logError("Failed to send game state to client", e)
+
+    def onPlayerClaimed(self, data: dict, conn) -> None:
+        """
+        Handle player claim from client.
+        
+        Args:
+            data: Serialized game state from client with claimed player
+            conn: Network connection to the client
+        """
+        try:
+            self.gameSession = GameSession.deserialize(data)
+            self.gameSession.onTurnEnded = self.onTurnEnded
+            self.gameSession.onShowNotification = self.onShowNotification
+            logger.debug("Host updated game session with client's claimed player")
+            print(f"Host received player claim, updated game session with {len(self.gameSession.getPlayers())} players")
+            self.broadcastGameState()
+        except Exception as e:
+            logError("Failed to process player claim", e)
 
     def onClientSubmittedTurn(self, data: dict) -> None:
         """
@@ -328,6 +364,7 @@ class Game:
                 message = encodeMessage("sync_game_state", gameState)
                 self.network.sendToAll(message)
                 logger.debug("Broadcasted updated game state to all clients.")
+                print(f"Host broadcasted game state to all clients with {len(self.gameSession.getPlayers())} players")
         except Exception as e:
             logError("Failed to broadcast game state", e)
 
@@ -341,7 +378,9 @@ class Game:
         try:
             self.gameSession = GameSession.deserialize(data)
             self.gameSession.onTurnEnded = self.onTurnEnded
+            self.gameSession.onShowNotification = self.onShowNotification
             logger.debug("Client game session updated from host sync.")
+            print(f"Client received sync game state with {len(self.gameSession.getPlayers())} players")
         except Exception as e:
             logError("Failed to sync game state", e)
 
