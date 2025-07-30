@@ -77,18 +77,6 @@ class SettingsScene(Scene):
         self.logToConsoleCheckbox.setDisabled(not settingsManager.get("DEBUG"))
         currentY += 40
 
-        self.aiTurnDelayField = InputField(
-            rect=(xCenter, currentY, 80, 40),
-            font=self.inputFont,
-            initialText=str(settingsManager.get("AI_TURN_DELAY", 1.0)),
-            onTextChange=None,
-            numeric=True,
-            minValue=0.0,
-            maxValue=10.0
-        )
-        self.aiTurnDelayField.setDisabled(not settingsManager.get("DEBUG"))
-        currentY += 60
-
         self.aiSimulationCheckbox = Checkbox(
             rect=(xCenter, currentY, 20, 20),
             checked=settingsManager.get("AI_USE_SIMULATION", False),
@@ -223,7 +211,6 @@ class SettingsScene(Scene):
         self.tileSizeSlider.setDisabled(not new_value)
         self.figureSizeSlider.setDisabled(not new_value)
         self.gameLogMaxEntriesField.setDisabled(not new_value)
-        self.aiTurnDelayField.setDisabled(not new_value)
         self.aiSimulationCheckbox.setDisabled(not new_value)
         self.aiStrategicCandidatesField.setDisabled(not new_value)
         self.aiThinkingSpeedField.setDisabled(not new_value)
@@ -266,7 +253,6 @@ class SettingsScene(Scene):
                 if sidebarWasDragging:
                     self.addToast(Toast("In order to apply sidebar width setting, restart the game", type="warning"))
             self.gameLogMaxEntriesField.handleEvent(event, yOffset=self.scrollOffset)
-            self.aiTurnDelayField.handleEvent(event, yOffset=self.scrollOffset)
             self.aiStrategicCandidatesField.handleEvent(event, yOffset=self.scrollOffset)
             self.aiThinkingSpeedField.handleEvent(event, yOffset=self.scrollOffset)
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
@@ -277,9 +263,6 @@ class SettingsScene(Scene):
 
     def handleDebugToggle(self, value):
         settingsManager.set("DEBUG", value, temporary=True)
-
-    def handleAITurnDelayToggle(self, value):
-        settingsManager.set("AI_TURN_DELAY_ENABLED", value, temporary=True)
 
     def handleAISimulationToggle(self, value):
         settingsManager.set("AI_USE_SIMULATION", value, temporary=True)
@@ -307,17 +290,6 @@ class SettingsScene(Scene):
             changes["SHOW_VALID_PLACEMENTS"] = self.validPlacementCheckbox.isChecked()
         if not self.aiSimulationCheckbox.isDisabled():
             changes["AI_USE_SIMULATION"] = self.aiSimulationCheckbox.isChecked()
-        if not self.aiTurnDelayField.isDisabled():
-            try:
-                delay = float(self.aiTurnDelayField.getText())
-                if 0.0 <= delay <= 10.0:
-                    changes["AI_TURN_DELAY"] = delay
-                else:
-                    self.addToast(Toast("AI turn delay must be between 0 and 10 seconds", type="error"))
-                    return
-            except ValueError:
-                self.addToast(Toast("Invalid AI turn delay value", type="error"))
-                return
         
         if not self.fpsSlider.isDisabled():
             changes["FPS"] = self.fpsSlider.getValue()
@@ -441,15 +413,6 @@ class SettingsScene(Scene):
         )
         self.screen.blit(validPlacementsLabel, validPlacementsLabelRect)
 
-        labelColor = (120, 120, 120) if self.aiTurnDelayField.isDisabled() else (255, 255, 255)
-        aiDelayLabel = labelFont.render("AI turn delay (s):", True, labelColor)
-        aiDelayLabelRect = aiDelayLabel.get_rect(
-            right=self.aiTurnDelayField.rect.left - 10,
-            centery=self.aiTurnDelayField.rect.centery + offsetY
-        )
-        self.screen.blit(aiDelayLabel, aiDelayLabelRect)
-        self.aiTurnDelayField.draw(self.screen, yOffset=offsetY)
-
         labelColor = (120, 120, 120) if self.fpsSlider.isDisabled() else (255, 255, 255)
         fpsLabel = labelFont.render("FPS:", True, labelColor)
         fpsLabelRect = fpsLabel.get_rect(
@@ -508,7 +471,6 @@ class SettingsScene(Scene):
         self.figureSizeSlider.draw(self.screen, yOffset=offsetY)
         self.sidebarWidthSlider.draw(self.screen, yOffset=offsetY)
         self.gameLogMaxEntriesField.draw(self.screen, yOffset=offsetY)
-        self.aiTurnDelayField.draw(self.screen, yOffset=offsetY)
 
         labelColor = (120, 120, 120) if self.aiSimulationCheckbox.isDisabled() else (255, 255, 255)
         aiSimulationLabel = labelFont.render("AI simulation:", True, labelColor)
