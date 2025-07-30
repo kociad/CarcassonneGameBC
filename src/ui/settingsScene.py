@@ -32,6 +32,10 @@ class SettingsScene(Scene):
         self.titleY = currentY
         currentY += 60
 
+        # ===== DISPLAY SETTINGS =====
+        self.displayLabelY = currentY
+        currentY += 50
+
         resolutionOptions = [
             "800x600", "1024x768", "1280x720", "1366x768",
             "1600x900", "1920x1080", "2560x1440", "3840x2160"
@@ -53,14 +57,22 @@ class SettingsScene(Scene):
             checked=settingsManager.get("FULLSCREEN"),
             onToggle=lambda value: [self.handleFullscreenToggle(value), self.addToast(Toast("In order to apply fullscreen setting, restart the game", type="warning"))]
         )
-        currentY += 40
+        currentY += 80
+
+        # ===== GAME SETTINGS =====
+        self.gameLabelY = currentY
+        currentY += 50
 
         self.validPlacementCheckbox = Checkbox(
             rect=(xCenter, currentY, 20, 20),
             checked=settingsManager.get("SHOW_VALID_PLACEMENTS", True),
             onToggle=lambda value: self.handleValidPlacementToggle(value)
         )
-        currentY += 40
+        currentY += 80
+
+        # ===== DEBUG SETTINGS =====
+        self.debugLabelY = currentY
+        currentY += 50
 
         self.debugCheckbox = Checkbox(
             rect=(xCenter, currentY, 20, 20),
@@ -75,38 +87,6 @@ class SettingsScene(Scene):
             onToggle=lambda value: [self.handleLogToConsoleToggle(value), self.addToast(Toast("In order to apply log to console setting, restart the game", type="warning"))]
         )
         self.logToConsoleCheckbox.setDisabled(not settingsManager.get("DEBUG"))
-        currentY += 40
-
-        self.aiSimulationCheckbox = Checkbox(
-            rect=(xCenter, currentY, 20, 20),
-            checked=settingsManager.get("AI_USE_SIMULATION", False),
-            onToggle=lambda value: self.handleAISimulationToggle(value)
-        )
-        self.aiSimulationCheckbox.setDisabled(not settingsManager.get("DEBUG"))
-        currentY += 40
-
-        self.aiStrategicCandidatesField = InputField(
-            rect=(xCenter, currentY, 80, 40),
-            font=self.inputFont,
-            initialText=str(settingsManager.get("AI_STRATEGIC_CANDIDATES", 3)),
-            onTextChange=None,
-            numeric=True,
-            minValue=-1,
-            maxValue=20
-        )
-        self.aiStrategicCandidatesField.setDisabled(not settingsManager.get("DEBUG"))
-        currentY += 60
-
-        self.aiThinkingSpeedField = InputField(
-            rect=(xCenter, currentY, 80, 40),
-            font=self.inputFont,
-            initialText=str(settingsManager.get("AI_THINKING_SPEED", 0.5)),
-            onTextChange=None,
-            numeric=True,
-            minValue=-1,
-            maxValue=2.0
-        )
-        self.aiThinkingSpeedField.setDisabled(not settingsManager.get("DEBUG"))
         currentY += 60
 
         self.fpsSlider = Slider(
@@ -173,19 +153,57 @@ class SettingsScene(Scene):
             maxValue=50000
         )
         self.gameLogMaxEntriesField.setDisabled(not settingsManager.get("DEBUG"))
+        currentY += 80
+
+        # ===== AI SETTINGS =====
+        self.aiLabelY = currentY
+        currentY += 50
+
+        self.aiSimulationCheckbox = Checkbox(
+            rect=(xCenter, currentY, 20, 20),
+            checked=settingsManager.get("AI_USE_SIMULATION", False),
+            onToggle=lambda value: self.handleAISimulationToggle(value)
+        )
+        self.aiSimulationCheckbox.setDisabled(not settingsManager.get("DEBUG"))
+        currentY += 40
+
+        self.aiStrategicCandidatesField = InputField(
+            rect=(xCenter, currentY, 80, 40),
+            font=self.inputFont,
+            initialText=str(settingsManager.get("AI_STRATEGIC_CANDIDATES", 3)),
+            onTextChange=None,
+            numeric=True,
+            minValue=-1,
+            maxValue=20
+        )
+        self.aiStrategicCandidatesField.setDisabled(not settingsManager.get("DEBUG"))
         currentY += 60
+
+        self.aiThinkingSpeedField = InputField(
+            rect=(xCenter, currentY, 80, 40),
+            font=self.inputFont,
+            initialText=str(settingsManager.get("AI_THINKING_SPEED", 0.5)),
+            onTextChange=None,
+            numeric=True,
+            minValue=-1,
+            maxValue=2.0
+        )
+        self.aiThinkingSpeedField.setDisabled(not settingsManager.get("DEBUG"))
+        currentY += 80
 
         self.applyButton = Button(
             (xCenter, currentY, 200, 60),
             "Apply",
-            self.buttonFont
+            self.buttonFont,
+            lambda: self.applySettings()
         )
         currentY += 80
 
         self.backButton = Button(
             (xCenter, currentY, 200, 60),
             "Back",
-            self.buttonFont
+            self.buttonFont,
+            lambda: self.switchScene(GameState.MENU)
         )
 
     def onTileSizeChanged(self, newTileSize):
@@ -375,6 +393,32 @@ class SettingsScene(Scene):
         titleRect = titleText.get_rect(center=(self.screen.get_width() // 2, self.titleY + offsetY))
         self.screen.blit(titleText, titleRect)
 
+        # Draw section headers
+        displayLabel = self.dropdownFont.render("Display Settings", True, (255, 255, 100))
+        displayLabelRect = displayLabel.get_rect()
+        displayLabelRect.centerx = self.screen.get_width() // 2
+        displayLabelRect.y = self.displayLabelY + offsetY
+        self.screen.blit(displayLabel, displayLabelRect)
+
+        gameLabel = self.dropdownFont.render("Game Settings", True, (255, 255, 100))
+        gameLabelRect = gameLabel.get_rect()
+        gameLabelRect.centerx = self.screen.get_width() // 2
+        gameLabelRect.y = self.gameLabelY + offsetY
+        self.screen.blit(gameLabel, gameLabelRect)
+
+        debugLabel = self.dropdownFont.render("Debug Settings", True, (255, 255, 100))
+        debugLabelRect = debugLabel.get_rect()
+        debugLabelRect.centerx = self.screen.get_width() // 2
+        debugLabelRect.y = self.debugLabelY + offsetY
+        self.screen.blit(debugLabel, debugLabelRect)
+
+        aiLabel = self.dropdownFont.render("AI Settings", True, (255, 255, 100))
+        aiLabelRect = aiLabel.get_rect()
+        aiLabelRect.centerx = self.screen.get_width() // 2
+        aiLabelRect.y = self.aiLabelY + offsetY
+        self.screen.blit(aiLabel, aiLabelRect)
+
+        # Display Settings
         resLabel = labelFont.render("Resolution:", True, (255, 255, 255))
         resLabelRect = resLabel.get_rect(
             right=self.resolutionDropdown.rect.left - 10,
@@ -389,6 +433,16 @@ class SettingsScene(Scene):
         )
         self.screen.blit(fsLabel, fsLabelRect)
 
+        # Game Settings
+        labelColor = (120, 120, 120) if self.validPlacementCheckbox.isDisabled() else (255, 255, 255)
+        validPlacementsLabel = labelFont.render("Show valid card placements:", True, labelColor)
+        validPlacementsLabelRect = validPlacementsLabel.get_rect(
+            right=self.validPlacementCheckbox.rect.left - 10,
+            centery=self.validPlacementCheckbox.rect.centery + offsetY
+        )
+        self.screen.blit(validPlacementsLabel, validPlacementsLabelRect)
+
+        # Debug Settings (DEBUG checkbox first)
         dbLabel = labelFont.render("Debug:", True, (255, 255, 255))
         dbLabelRect = dbLabel.get_rect(
             right=self.debugCheckbox.rect.left - 10,
@@ -403,15 +457,6 @@ class SettingsScene(Scene):
             centery=self.logToConsoleCheckbox.rect.centery + offsetY
         )
         self.screen.blit(logToConsoleLabel, logToConsoleLabelRect)
-        self.logToConsoleCheckbox.draw(self.screen, yOffset=offsetY)
-
-        labelColor = (120, 120, 120) if self.validPlacementCheckbox.isDisabled() else (255, 255, 255)
-        validPlacementsLabel = labelFont.render("Show valid card placements:", True, labelColor)
-        validPlacementsLabelRect = validPlacementsLabel.get_rect(
-            right=self.validPlacementCheckbox.rect.left - 10,
-            centery=self.validPlacementCheckbox.rect.centery + offsetY
-        )
-        self.screen.blit(validPlacementsLabel, validPlacementsLabelRect)
 
         labelColor = (120, 120, 120) if self.fpsSlider.isDisabled() else (255, 255, 255)
         fpsLabel = labelFont.render("FPS:", True, labelColor)
@@ -461,17 +506,7 @@ class SettingsScene(Scene):
         )
         self.screen.blit(logLabel, logLabelRect)
 
-        self.fullscreenCheckbox.draw(self.screen, yOffset=offsetY)
-        self.debugCheckbox.draw(self.screen, yOffset=offsetY)
-        self.logToConsoleCheckbox.draw(self.screen, yOffset=offsetY)
-        self.validPlacementCheckbox.draw(self.screen, yOffset=self.scrollOffset)
-        self.fpsSlider.draw(self.screen, yOffset=offsetY)
-        self.gridSizeSlider.draw(self.screen, yOffset=offsetY)
-        self.tileSizeSlider.draw(self.screen, yOffset=offsetY)
-        self.figureSizeSlider.draw(self.screen, yOffset=offsetY)
-        self.sidebarWidthSlider.draw(self.screen, yOffset=offsetY)
-        self.gameLogMaxEntriesField.draw(self.screen, yOffset=offsetY)
-
+        # AI Settings
         labelColor = (120, 120, 120) if self.aiSimulationCheckbox.isDisabled() else (255, 255, 255)
         aiSimulationLabel = labelFont.render("AI simulation:", True, labelColor)
         aiSimulationLabelRect = aiSimulationLabel.get_rect(
@@ -479,7 +514,6 @@ class SettingsScene(Scene):
             centery=self.aiSimulationCheckbox.rect.centery + offsetY
         )
         self.screen.blit(aiSimulationLabel, aiSimulationLabelRect)
-        self.aiSimulationCheckbox.draw(self.screen, yOffset=offsetY)
 
         labelColor = (120, 120, 120) if self.aiStrategicCandidatesField.isDisabled() else (255, 255, 255)
         aiCandidatesLabel = labelFont.render("AI strategic candidates:", True, labelColor)
@@ -488,7 +522,6 @@ class SettingsScene(Scene):
             centery=self.aiStrategicCandidatesField.rect.centery + offsetY
         )
         self.screen.blit(aiCandidatesLabel, aiCandidatesLabelRect)
-        self.aiStrategicCandidatesField.draw(self.screen, yOffset=offsetY)
 
         labelColor = (120, 120, 120) if self.aiThinkingSpeedField.isDisabled() else (255, 255, 255)
         thinkingSpeedLabel = labelFont.render("AI Thinking Speed (s):", True, labelColor)
@@ -497,11 +530,25 @@ class SettingsScene(Scene):
             centery=self.aiThinkingSpeedField.rect.centery + offsetY
         )
         self.screen.blit(thinkingSpeedLabel, thinkingSpeedLabelRect)
+
+        # Draw all UI components in logical order
+        self.fullscreenCheckbox.draw(self.screen, yOffset=offsetY)
+        self.validPlacementCheckbox.draw(self.screen, yOffset=offsetY)
+        self.debugCheckbox.draw(self.screen, yOffset=offsetY)
+        self.logToConsoleCheckbox.draw(self.screen, yOffset=offsetY)
+        self.fpsSlider.draw(self.screen, yOffset=offsetY)
+        self.gridSizeSlider.draw(self.screen, yOffset=offsetY)
+        self.tileSizeSlider.draw(self.screen, yOffset=offsetY)
+        self.figureSizeSlider.draw(self.screen, yOffset=offsetY)
+        self.sidebarWidthSlider.draw(self.screen, yOffset=offsetY)
+        self.gameLogMaxEntriesField.draw(self.screen, yOffset=offsetY)
+        self.aiSimulationCheckbox.draw(self.screen, yOffset=offsetY)
+        self.aiStrategicCandidatesField.draw(self.screen, yOffset=offsetY)
         self.aiThinkingSpeedField.draw(self.screen, yOffset=offsetY)
+        self.resolutionDropdown.draw(self.screen, yOffset=offsetY)
 
         self.applyButton.draw(self.screen, yOffset=offsetY)
         self.backButton.draw(self.screen, yOffset=offsetY)
-        self.resolutionDropdown.draw(self.screen, yOffset=offsetY)
 
         self.maxScroll = max(self.screen.get_height(), self.backButton.rect.bottom + 80)
         

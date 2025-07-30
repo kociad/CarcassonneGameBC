@@ -8,6 +8,7 @@ from gameState import GameState
 from utils.settingsManager import settingsManager
 from ui.components.toast import Toast, ToastManager
 from ui.components.button import Button
+from ui.components.progressBar import ProgressBar
 
 logger = logging.getLogger(__name__)
 
@@ -52,6 +53,23 @@ class GameScene(Scene):
         self.lastAITurnTime = 0
         self.playerActionTime = 0
         self.aiTurnStartTime = None
+
+        barWidth = sidebarWidth - 40
+        barHeight = 20
+        barX = windowWidth - sidebarWidth + 20
+        barY = 0
+        self.aiThinkingProgressBar = ProgressBar(
+            rect=(barX, barY, barWidth, barHeight),
+            font=self.font,
+            minValue=0.0,
+            maxValue=1.0,
+            value=0.0,
+            backgroundColor=(80, 80, 80),
+            progressColor=(100, 255, 100),
+            borderColor=(150, 150, 150),
+            showText=True,
+            textColor=(255, 255, 255)
+        )
 
 
     def applySidebarScroll(self, events: list[pygame.event.Event]) -> None:
@@ -106,7 +124,7 @@ class GameScene(Scene):
         Draws the game board, including grid lines and placed cards.
         """
         self.updateValidPlacements()
-        self.screen.fill((0, 128, 0))
+        self.screen.fill((25, 25, 25))
 
         if settingsManager.get("SHOW_VALID_PLACEMENTS", True):
             tileSize = settingsManager.get("TILE_SIZE")
@@ -418,26 +436,13 @@ class GameScene(Scene):
             currentY += thinkingRect.height + 10
             
             progress = currentPlayer.getThinkingProgress()
-            barWidth = sidebarWidth - 40
-            barHeight = 20
-            barX = panelX + 20
-            barY = currentY - offsetY
+            self.aiThinkingProgressBar.setProgress(progress)
+            self.aiThinkingProgressBar.rect.y = currentY - offsetY
             
-            if barY + barHeight > scrollableContentStartY and barY < windowHeight:
-                pygame.draw.rect(self.screen, (80, 80, 80), (barX, barY, barWidth, barHeight))
-                progressWidth = int(barWidth * progress)
-                if progressWidth > 0:
-                    pygame.draw.rect(self.screen, (100, 255, 100), (barX, barY, progressWidth, barHeight))
-                pygame.draw.rect(self.screen, (150, 150, 150), (barX, barY, barWidth, barHeight), 2)
-                
-                progressText = f"{int(progress * 100)}%"
-                progressSurface = self.font.render(progressText, True, (255, 255, 255))
-                progressRect = progressSurface.get_rect()
-                progressRect.centerx = barX + barWidth // 2
-                progressRect.centery = barY + barHeight // 2
-                self.screen.blit(progressSurface, progressRect)
+            if self.aiThinkingProgressBar.rect.bottom > scrollableContentStartY and self.aiThinkingProgressBar.rect.top < windowHeight:
+                self.aiThinkingProgressBar.draw(self.screen, yOffset=0)
             
-            currentY += barHeight + 10
+            currentY += self.aiThinkingProgressBar.rect.height + 10
 
         if settingsManager.get("DEBUG"):
             currentY += sectionSpacing

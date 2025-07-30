@@ -47,12 +47,12 @@ if FULLSCREEN:
         print(f"Failed to detect fullscreen resolution: {e}")
 
 # Debug
-DEBUG = False
+DEBUG = True
 LOG_TO_CONSOLE = True
 GAME_LOG_MAX_ENTRIES = 10000
 
 # AI Settings
 AI_USE_SIMULATION = True
-AI_STRATEGIC_CANDIDATES = 3
+AI_STRATEGIC_CANDIDATES = -1
 AI_THINKING_SPEED = 0.5
 
