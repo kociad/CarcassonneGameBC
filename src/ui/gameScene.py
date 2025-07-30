@@ -86,12 +86,13 @@ class GameScene(Scene):
         currentCard = self.session.getCurrentCard()
         cardState = id(currentCard) if currentCard else 0
         validPlacements = len(self.validPlacements)
-        
-        return hash((boardState, cardState, validPlacements))
+        offsetX = self.offsetX
+        offsetY = self.offsetY
+        return hash((boardState, cardState, validPlacements, offsetX, offsetY))
 
     def _getRenderCacheKey(self, renderType: str) -> tuple:
         """Get a cache key for rendering."""
-        return (renderType, self._getRenderStateHash())
+        return (renderType, self._getRenderStateHash(), self.offsetX, self.offsetY)
 
     def _invalidateRenderCache(self) -> None:
         """Invalidate the rendering cache."""
