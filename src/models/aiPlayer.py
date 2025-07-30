@@ -153,6 +153,13 @@ class AIPlayer(Player):
         self._aiThinkingProgress = 0
         self._aiThinkingStartTime = None
         self._aiThinkingMaxTime = settingsManager.get("AI_THINKING_SPEED", 0.5)
+        
+        self._evaluationCache = {}
+        self._evaluationCacheValid = False
+        self._lastBoardState = None
+        
+        self._meepleCache = {}
+        self._meepleCacheValid = False
 
     def _getPreset(self) -> Dict[str, Any]:
         """Get the AI preset configuration for the current difficulty."""
@@ -232,6 +239,9 @@ class AIPlayer(Player):
         self._aiThinkingState = "evaluating_placements"
         self._aiThinkingProgress = 0
         self._aiThinkingStartTime = time.time()
+        
+        self._invalidateEvaluationCache()
+        self._invalidateMeepleCache()
         self._aiThinkingData = {
             'gameSession': gameSession,
             'currentCard': gameSession.getCurrentCard(),
@@ -392,6 +402,53 @@ class AIPlayer(Player):
         else:
             return 1.0
 
+    def _getEvaluationCacheKey(self, card: Card, x: int, y: int, evaluationType: str) -> tuple:
+        """Get a cache key for AI evaluation."""
+        return (id(card), x, y, card.rotation, evaluationType)
+
+    def _invalidateEvaluationCache(self) -> None:
+        """Invalidate the AI evaluation cache."""
+        self._evaluationCache.clear()
+        self._evaluationCacheValid = False
+        self._lastBoardState = None
+
+    def invalidateEvaluationCache(self) -> None:
+        """Public method to invalidate the AI evaluation cache."""
+        self._invalidateEvaluationCache()
+
+    def _getMeepleCacheKey(self, x: int, y: int, direction: str, meepleType: str) -> tuple:
+        """Get a cache key for meeple placement evaluation."""
+        return (x, y, direction, meepleType)
+
+    def _invalidateMeepleCache(self) -> None:
+        """Invalidate the meeple placement cache."""
+        self._meepleCache.clear()
+        self._meepleCacheValid = False
+
+    def invalidateMeepleCache(self) -> None:
+        """Public method to invalidate the meeple placement cache."""
+        self._invalidateMeepleCache()
+
+    def _evaluateCached(self, card: Card, x: int, y: int, evaluationType: str, evaluationFunc) -> float:
+        """Evaluate with caching support."""
+        cache_key = self._getEvaluationCacheKey(card, x, y, evaluationType)
+        if cache_key in self._evaluationCache:
+            return self._evaluationCache[cache_key]
+        
+        result = evaluationFunc()
+        self._evaluationCache[cache_key] = result
+        return result
+
+    def _evaluateMeepleCached(self, x: int, y: int, direction: str, meepleType: str, evaluationFunc) -> float:
+        """Evaluate meeple placement with caching support."""
+        cache_key = self._getMeepleCacheKey(x, y, direction, meepleType)
+        if cache_key in self._meepleCache:
+            return self._meepleCache[cache_key]
+        
+        result = evaluationFunc()
+        self._meepleCache[cache_key] = result
+        return result
+
     def _getMultipleValidPlacements(self, gameSession: 'GameSession', card: Card) -> List[Tuple[int, int, int, Card]]:
         """
         Get all valid card placements using the game's existing validation.
@@ -460,12 +517,18 @@ class AIPlayer(Player):
         for _ in range(rotationsNeeded):
             currentCard.rotate()
         
-        score = self._evaluateCardPlacementAdvanced(gameSession, x, y, currentCard)
-        score += self._evaluateMeepleOpportunityAdvanced(gameSession, x, y, currentCard)
-        score += self._evaluateStructureCompletionPotential(gameSession, x, y, currentCard)
-        score += self._evaluateFieldPotential(gameSession, x, y, currentCard)
-        score += self._evaluateOpponentBlocking(gameSession, x, y, currentCard)
-        score += self._evaluateMultiTurnPotential(gameSession, x, y, currentCard)
+        score = self._evaluateCached(currentCard, x, y, "placement", 
+                                   lambda: self._evaluateCardPlacementAdvanced(gameSession, x, y, currentCard))
+        score += self._evaluateCached(currentCard, x, y, "meeple", 
+                                    lambda: self._evaluateMeepleOpportunityAdvanced(gameSession, x, y, currentCard))
+        score += self._evaluateCached(currentCard, x, y, "structure", 
+                                    lambda: self._evaluateStructureCompletionPotential(gameSession, x, y, currentCard))
+        score += self._evaluateCached(currentCard, x, y, "field", 
+                                    lambda: self._evaluateFieldPotential(gameSession, x, y, currentCard))
+        score += self._evaluateCached(currentCard, x, y, "blocking", 
+                                    lambda: self._evaluateOpponentBlocking(gameSession, x, y, currentCard))
+        score += self._evaluateCached(currentCard, x, y, "multiturn", 
+                                    lambda: self._evaluateMultiTurnPotential(gameSession, x, y, currentCard))
         
         while currentCard.rotation != originalRotation:
             currentCard.rotate()
@@ -981,34 +1044,37 @@ class AIPlayer(Player):
         Returns:
             A score representing the desirability of this meeple placement
         """
-        score = 0.0
-        structure = gameSession.structureMap.get((x, y, direction))
-        
-        if not structure:
-            return 0.0
+        def evaluateMeeplePlacement():
+            score = 0.0
+            structure = gameSession.structureMap.get((x, y, direction))
             
-        if structure.getIsCompleted():
-            score += self._preset["completionBonus"] * 1.5
-        else:
-            totalSides = len(structure.cardSides)
-            completedSides = sum(1 for card, _ in structure.cardSides if card.getPosition())
-            completionRatio = completedSides / totalSides if totalSides > 0 else 0
-            score += completionRatio * self._preset["meepleOpportunity"]
-        
-        if not structure.getFigures():
-            score += 30.0
-        
-        structureType = structure.getStructureType()
-        if structureType == "City":
-            score += self._evaluateCityMeeplePlacement(structure)
-        elif structureType == "Road":
-            score += self._evaluateRoadMeeplePlacement(structure)
-        elif structureType == "Monastery":
-            score += self._evaluateMonasteryMeeplePlacement(structure)
-        elif structureType == "Field":
-            score += self._evaluateFieldMeeplePlacement(gameSession, structure)
+            if not structure:
+                return 0.0
+                
+            if structure.getIsCompleted():
+                score += self._preset["completionBonus"] * 1.5
+            else:
+                totalSides = len(structure.cardSides)
+                completedSides = sum(1 for card, _ in structure.cardSides if card.getPosition())
+                completionRatio = completedSides / totalSides if totalSides > 0 else 0
+                score += completionRatio * self._preset["meepleOpportunity"]
             
-        return score
+            if not structure.getFigures():
+                score += 30.0
+            
+            structureType = structure.getStructureType()
+            if structureType == "City":
+                score += self._evaluateCityMeeplePlacement(structure)
+            elif structureType == "Road":
+                score += self._evaluateRoadMeeplePlacement(structure)
+            elif structureType == "Monastery":
+                score += self._evaluateMonasteryMeeplePlacement(structure)
+            elif structureType == "Field":
+                score += self._evaluateFieldMeeplePlacement(gameSession, structure)
+                
+            return score
+        
+        return self._evaluateMeepleCached(x, y, direction, "advanced", evaluateMeeplePlacement)
 
     def _evaluateCityMeeplePlacement(self, structure: 'Structure') -> float:
         """Evaluate city meeple placement scoring."""

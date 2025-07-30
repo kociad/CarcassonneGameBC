@@ -29,6 +29,8 @@ class Card:
         self.neighbors = {"N": None, "E": None, "S": None, "W": None}
         self.position = {"X": None, "Y": None}
         self.rotation = 0
+        
+        self._rotationCache = {}
 
     def getPosition(self) -> dict:
         """Get the card's position on the board."""
@@ -47,6 +49,18 @@ class Card:
     def getImage(self) -> pygame.Surface:
         """Get the card's image."""
         return self.image
+
+    def getRotatedImage(self) -> pygame.Surface:
+        """Get the card's image rotated to current rotation with caching."""
+        if self.rotation == 0:
+            return self.image
+        
+        if self.rotation in self._rotationCache:
+            return self._rotationCache[self.rotation]
+        
+        rotatedImage = pygame.transform.rotate(self.image, -self.rotation)
+        self._rotationCache[self.rotation] = rotatedImage
+        return rotatedImage
 
     def getTerrains(self) -> dict:
         """Get the card's terrain information."""

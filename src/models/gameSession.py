@@ -38,6 +38,16 @@ class GameSession:
         self._candidatePositions = set()
         self._lastBoardState = None
         
+        self._structureCache = {}
+        self._structureCacheValid = False
+        self._lastBoardHash = None
+        
+        self._validationCache = {}
+        self._validationCacheValid = False
+        
+        self._neighborCache = {}  # (x, y) -> set of neighbor positions
+        self._neighborCacheValid = False
+        
         if not noInit:
             self.generatePlayerList(playerNames)
             self.cardsDeck = self.generateCardsDeck()
@@ -247,6 +257,19 @@ class GameSession:
             logger.info(f"Player {self.currentPlayer.getName()} placed a card at [{x - self.gameBoard.getCenter()},{self.gameBoard.getCenter() - y}]")
         logger.debug(f"Last played card set to card {card} at {x};{y}")
         self._invalidateCandidateCache()
+        self._invalidateStructureCache()
+        self._invalidateValidationCache()
+        self._invalidateNeighborCache()
+        
+        for player in self.players:
+            if hasattr(player, 'invalidateEvaluationCache'):
+                player.invalidateEvaluationCache()
+            if hasattr(player, 'invalidateMeepleCache'):
+                player.invalidateMeepleCache()
+        
+        if hasattr(self, 'onRenderCacheInvalidate'):
+            self.onRenderCacheInvalidate()
+        
         self.detectStructures()
         return True
 
@@ -363,19 +386,45 @@ class GameSession:
         if not self.lastPlacedCard:
             logger.debug("No card was placed. Skipping structure detection.")
             return
+        
+        currentBoardHash = self._getBoardStateHash()
+        if (self._structureCacheValid and 
+            self._lastBoardHash == currentBoardHash and 
+            self._structureCache):
+            logger.debug("Using cached structure detection results")
+            return
+        
         position = self.gameBoard.getCardPosition(self.lastPlacedCard)
         if not position:
             logger.debug("Last placed card position not found.")
             return
+        
         x, y = position
         self.visited = set()
+        
+        for direction in self.lastPlacedCard.getTerrains().keys():
+            cache_key = self._getStructureCacheKey(x, y, direction, "")
+            if cache_key in self._structureCache:
+                del self._structureCache[cache_key]
+        
         for direction, terrainType in self.lastPlacedCard.getTerrains().items():
             key = (x, y, direction)
             if not terrainType or key in self.structureMap:
                 continue
+            
+            cache_key = self._getStructureCacheKey(x, y, direction, terrainType)
+            if cache_key in self._structureCache:
+                logger.debug(f"Using cached structure for {cache_key}")
+                cached_structure = self._structureCache[cache_key]
+                if cached_structure:
+                    self.structureMap[key] = cached_structure
+                    cached_structure.addCardSide(self.lastPlacedCard, direction)
+                continue
+            
             connected_sides = self.scanConnectedSides(x, y, direction, terrainType)
             connected_structures = {self.structureMap.get(side) for side in connected_sides if self.structureMap.get(side)}
             connected_structures.discard(None)
+            
             if connected_structures:
                 mainStructure = connected_structures.pop()
                 for s in connected_structures:
@@ -384,9 +433,15 @@ class GameSession:
             else:
                 mainStructure = Structure(terrainType.capitalize())
                 self.structures.append(mainStructure)
+            
+            self._structureCache[cache_key] = mainStructure
+            
             for cx, cy, cdir in connected_sides:
                 self.structureMap[(cx, cy, cdir)] = mainStructure
                 mainStructure.addCardSide(self.gameBoard.getCard(cx, cy), cdir)
+        
+        self._structureCacheValid = True
+        self._lastBoardHash = currentBoardHash
 
     def findConnectedStructures(self, x: int, y: int, direction: str, terrainType: str, structureMap: dict) -> list:
         """Find existing structures connected to the given card side."""
@@ -491,6 +546,21 @@ class GameSession:
                 self.scoreStructure(structure)
         logger.debug("All meeples have been returned to players")
         self.placedFigures.clear()
+        
+        self._invalidateCandidateCache()
+        self._invalidateStructureCache()
+        self._invalidateValidationCache()
+        self._invalidateNeighborCache()
+        
+        for player in self.players:
+            if hasattr(player, 'invalidateEvaluationCache'):
+                player.invalidateEvaluationCache()
+            if hasattr(player, 'invalidateMeepleCache'):
+                player.invalidateMeepleCache()
+        
+        if hasattr(self, 'onRenderCacheInvalidate'):
+            self.onRenderCacheInvalidate()
+        
         self.showFinalResults()
         if self.onTurnEnded:
             self.onTurnEnded()
@@ -516,6 +586,14 @@ class GameSession:
                    for x in range(self.gameBoard.getGridSize()) 
                    if self.gameBoard.getCard(x, y)])
 
+    def _getStructureCacheKey(self, x: int, y: int, direction: str, terrainType: str) -> tuple:
+        """Get a cache key for structure detection."""
+        return (x, y, direction, terrainType)
+
+    def _getValidationCacheKey(self, card: typing.Any, x: int, y: int) -> tuple:
+        """Get a cache key for card validation."""
+        return (id(card), x, y, card.rotation)
+
     def _updateCandidatePositions(self) -> None:
         """Update the cached candidate positions based on current board state."""
         currentState = self._getBoardStateHash()
@@ -532,11 +610,9 @@ class GameSession:
                     occupiedPositions.add((x, y))
         
         for x, y in occupiedPositions:
-            for dx, dy in [(1, 0), (-1, 0), (0, 1), (0, -1)]:
-                nx, ny = x + dx, y + dy
-                if (0 <= nx < self.gameBoard.getGridSize() and 
-                    0 <= ny < self.gameBoard.getGridSize() and
-                    not self.gameBoard.getCard(nx, ny)):
+            neighbors = self._getNeighborsCached(x, y)
+            for nx, ny in neighbors:
+                if not self.gameBoard.getCard(nx, ny):
                     self._candidatePositions.add((nx, ny))
 
     def getCandidatePositions(self) -> set:
@@ -553,6 +629,63 @@ class GameSession:
         """Public method to invalidate the candidate positions cache."""
         self._invalidateCandidateCache()
 
+    def _invalidateStructureCache(self) -> None:
+        """Invalidate the structure detection cache."""
+        self._structureCache.clear()
+        self._structureCacheValid = False
+        self._lastBoardHash = None
+
+    def invalidateStructureCache(self) -> None:
+        """Public method to invalidate the structure detection cache."""
+        self._invalidateStructureCache()
+
+    def _invalidateValidationCache(self) -> None:
+        """Invalidate the card validation cache."""
+        self._validationCache.clear()
+        self._validationCacheValid = False
+
+    def invalidateValidationCache(self) -> None:
+        """Public method to invalidate the card validation cache."""
+        self._invalidateValidationCache()
+
+    def _getNeighborsCached(self, x: int, y: int) -> set:
+        """Get neighbor positions with caching."""
+        if (x, y) in self._neighborCache:
+            return self._neighborCache[(x, y)]
+        
+        neighbors = set()
+        for dx, dy in [(1, 0), (-1, 0), (0, 1), (0, -1)]:
+            nx, ny = x + dx, y + dy
+            if (0 <= nx < self.gameBoard.getGridSize() and 
+                0 <= ny < self.gameBoard.getGridSize()):
+                neighbors.add((nx, ny))
+        
+        self._neighborCache[(x, y)] = neighbors
+        return neighbors
+
+    def _invalidateNeighborCache(self) -> None:
+        """Invalidate the neighbor lookup cache."""
+        self._neighborCache.clear()
+        self._neighborCacheValid = False
+
+    def invalidateNeighborCache(self) -> None:
+        """Public method to invalidate the neighbor lookup cache."""
+        self._invalidateNeighborCache()
+
+    def validateCardPlacementCached(self, card: typing.Any, x: int, y: int) -> bool:
+        """Validate card placement with caching."""
+        if not card:
+            return False
+        
+        cache_key = self._getValidationCacheKey(card, x, y)
+        if cache_key in self._validationCache:
+            return self._validationCache[cache_key]
+        
+        result = self.gameBoard.validateCardPlacement(card, x, y)
+        
+        self._validationCache[cache_key] = result
+        return result
+
     def getValidPlacements(self, card: typing.Any) -> set:
         """Get all valid placements for a specific card."""
         if not card:
@@ -565,7 +698,7 @@ class GameSession:
         try:
             for x, y in candidates:
                 for rotation in range(4):
-                    if self.gameBoard.validateCardPlacement(card, x, y):
+                    if self.validateCardPlacementCached(card, x, y):
                         valid.add((x, y, card.rotation))
                     card.rotate()
         finally:

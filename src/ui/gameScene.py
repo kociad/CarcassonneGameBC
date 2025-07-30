@@ -53,6 +53,10 @@ class GameScene(Scene):
         self.lastAITurnTime = 0
         self.playerActionTime = 0
         self.aiTurnStartTime = None
+        
+        self._renderCache = {}
+        self._renderCacheValid = False
+        self._lastRenderState = None
 
         barWidth = sidebarWidth - 40
         barHeight = 20
@@ -70,6 +74,44 @@ class GameScene(Scene):
             showText=True,
             textColor=(255, 255, 255)
         )
+
+    def _getRenderStateHash(self) -> int:
+        """Get a hash of the current render state for caching."""
+        if not self.session:
+            return 0
+        
+        boardState = len([(x, y) for y in range(self.session.getGameBoard().getGridSize()) 
+                         for x in range(self.session.getGameBoard().getGridSize()) 
+                         if self.session.getGameBoard().getCard(x, y)])
+        currentCard = self.session.getCurrentCard()
+        cardState = id(currentCard) if currentCard else 0
+        validPlacements = len(self.validPlacements)
+        
+        return hash((boardState, cardState, validPlacements))
+
+    def _getRenderCacheKey(self, renderType: str) -> tuple:
+        """Get a cache key for rendering."""
+        return (renderType, self._getRenderStateHash())
+
+    def _invalidateRenderCache(self) -> None:
+        """Invalidate the rendering cache."""
+        self._renderCache.clear()
+        self._renderCacheValid = False
+        self._lastRenderState = None
+
+    def invalidateRenderCache(self) -> None:
+        """Public method to invalidate the rendering cache."""
+        self._invalidateRenderCache()
+
+    def _renderCached(self, renderType: str, renderFunc) -> pygame.Surface:
+        """Render with caching support."""
+        cache_key = self._getRenderCacheKey(renderType)
+        if cache_key in self._renderCache:
+            return self._renderCache[cache_key]
+        
+        result = renderFunc()
+        self._renderCache[cache_key] = result
+        return result
 
 
     def applySidebarScroll(self, events: list[pygame.event.Event]) -> None:
@@ -118,21 +160,31 @@ class GameScene(Scene):
         
         validPlacements = self.session.getValidPlacements(currentCard)
         self.validPlacements = {(x, y) for x, y, cardRotation in validPlacements if cardRotation == rotation}
+        
+        self._invalidateRenderCache()
 
     def drawBoard(self, gameBoard: typing.Any, placedFigures: list, detectedStructures: list, isFirstRound: bool, isGameOver: bool, players: list) -> None:
         """
         Draws the game board, including grid lines and placed cards.
         """
         self.updateValidPlacements()
-        self.screen.fill((25, 25, 25))
+        
+        def renderBoard():
+            surface = pygame.Surface((settingsManager.get("WINDOW_WIDTH"), settingsManager.get("WINDOW_HEIGHT")))
+            surface.fill((25, 25, 25))
 
-        if settingsManager.get("SHOW_VALID_PLACEMENTS", True):
-            tileSize = settingsManager.get("TILE_SIZE")
-            highlightColor = (255, 255, 0, 100)
-            for (x, y) in self.validPlacements:
-                rect = pygame.Surface((tileSize, tileSize), pygame.SRCALPHA)
-                rect.fill(highlightColor)
-                self.screen.blit(rect, (x * tileSize - self.offsetX, y * tileSize - self.offsetY))
+            if settingsManager.get("SHOW_VALID_PLACEMENTS", True):
+                tileSize = settingsManager.get("TILE_SIZE")
+                highlightColor = (255, 255, 0, 100)
+                for (x, y) in self.validPlacements:
+                    rect = pygame.Surface((tileSize, tileSize), pygame.SRCALPHA)
+                    rect.fill(highlightColor)
+                    surface.blit(rect, (x * tileSize - self.offsetX, y * tileSize - self.offsetY))
+            
+            return surface
+        
+        boardSurface = self._renderCached("board_background", renderBoard)
+        self.screen.blit(boardSurface, (0, 0))
         
         if isGameOver:
             winner = max(players, key=lambda p: p.getScore())
@@ -189,13 +241,7 @@ class GameScene(Scene):
             for x in range(gameBoard.gridSize):
                 card = gameBoard.getCard(x, y)
                 if card:
-                    imageToDraw = card.image
-                    if hasattr(card, "rotation") and card.rotation:
-                        try:
-                            imageToDraw = pygame.transform.rotate(card.image, -card.rotation)
-                        except Exception as e:
-                            logger.error(f"Rotation failed for card: {e}")
-                            imageToDraw = card.image
+                    imageToDraw = card.getRotatedImage()
                     self.screen.blit(imageToDraw, (x * tile_size - self.offsetX, y * tile_size - self.offsetY))
                     
                     if x == center_x and y == center_y:
@@ -290,13 +336,7 @@ class GameScene(Scene):
         scrollableContentStartY = currentY
 
         if selectedCard:
-            imageToDraw = selectedCard.getImage()
-            if hasattr(selectedCard, "rotation") and selectedCard.rotation:
-                try:
-                    imageToDraw = pygame.transform.rotate(imageToDraw, -selectedCard.rotation)
-                except Exception as e:
-                    logger.error(f"Rotation failed in side panel for selected card: {e}")
-                    imageToDraw = selectedCard.getImage()
+            imageToDraw = selectedCard.getRotatedImage()
             
             cardRect = imageToDraw.get_rect()
             cardRect.centerx = sidebarCenterX

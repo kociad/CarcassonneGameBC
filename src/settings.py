@@ -48,7 +48,7 @@ if FULLSCREEN:
 
 # Debug
 DEBUG = True
-LOG_TO_CONSOLE = True
+LOG_TO_CONSOLE = False
 GAME_LOG_MAX_ENTRIES = 10000
 
 # AI Settings
