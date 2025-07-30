@@ -31,7 +31,7 @@ PLAYER_INDEX = 0
 # General Game Settings
 WINDOW_WIDTH = 1920
 WINDOW_HEIGHT = 1080
-FULLSCREEN = False
+FULLSCREEN = True
 SHOW_VALID_PLACEMENTS = True
 
 # Apply dynamic fullscreen resolution override if needed
@@ -42,13 +42,13 @@ if FULLSCREEN:
         info = pygame.display.Info()
         WINDOW_WIDTH = info.current_w
         WINDOW_HEIGHT = info.current_h
-        pygame.display.quit()
+        #pygame.display.quit()
     except Exception as e:
         print(f"Failed to detect fullscreen resolution: {e}")
 
 # Debug
-DEBUG = False
-LOG_TO_CONSOLE = False
+DEBUG = True
+LOG_TO_CONSOLE = True
 GAME_LOG_MAX_ENTRIES = 10000
 
 # AI Settings

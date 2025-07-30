@@ -119,7 +119,7 @@ class GamePrepareScene(Scene):
         self.aiDifficultyDropdown = Dropdown(
             rect=(xCenter, currentY, 200, 40),
             font=self.dropdownFont,
-            options=["easy", "normal", "hard", "expert"],
+            options=["EASY", "NORMAL", "HARD", "EXPERT"],
             defaultIndex=1,
             onSelect=self.handleAIDifficultyChange
         )
