@@ -80,7 +80,10 @@ class InputField:
                 self.active = False
             else:
                 if self.numeric:
-                    if event.unicode.isdigit() or (event.unicode == '-' and len(self.text) == 0):
+                    if (event.unicode.isdigit() or 
+                        (event.unicode == '-' and len(self.text) == 0) or
+                        (event.unicode == '.' and '.' not in self.text) or
+                        (event.unicode == ',' and ',' not in self.text)):
                         self.text = self.text[:self.cursorPos] + event.unicode + self.text[self.cursorPos:]
                         self.cursorPos += 1
                 else:

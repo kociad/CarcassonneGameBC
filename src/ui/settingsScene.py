@@ -109,6 +109,18 @@ class SettingsScene(Scene):
         self.aiStrategicCandidatesField.setDisabled(not settingsManager.get("DEBUG"))
         currentY += 60
 
+        self.aiThinkingSpeedField = InputField(
+            rect=(xCenter, currentY, 80, 40),
+            font=self.inputFont,
+            initialText=str(settingsManager.get("AI_THINKING_SPEED", 0.5)),
+            onTextChange=None,
+            numeric=True,
+            minValue=-1,
+            maxValue=2.0
+        )
+        self.aiThinkingSpeedField.setDisabled(not settingsManager.get("DEBUG"))
+        currentY += 60
+
         self.fpsSlider = Slider(
             rect=(xCenter, currentY, 180, 20),
             font=self.dropdownFont,
@@ -214,7 +226,8 @@ class SettingsScene(Scene):
         self.aiTurnDelayField.setDisabled(not new_value)
         self.aiSimulationCheckbox.setDisabled(not new_value)
         self.aiStrategicCandidatesField.setDisabled(not new_value)
-        self.logToConsoleCheckbox.setDisabled(not new_value)        
+        self.aiThinkingSpeedField.setDisabled(not new_value)
+        self.logToConsoleCheckbox.setDisabled(not new_value)
 
     def handleEvents(self, events: list[pygame.event.Event]) -> None:
         self.applyScroll(events)
@@ -255,6 +268,7 @@ class SettingsScene(Scene):
             self.gameLogMaxEntriesField.handleEvent(event, yOffset=self.scrollOffset)
             self.aiTurnDelayField.handleEvent(event, yOffset=self.scrollOffset)
             self.aiStrategicCandidatesField.handleEvent(event, yOffset=self.scrollOffset)
+            self.aiThinkingSpeedField.handleEvent(event, yOffset=self.scrollOffset)
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if self.backButton.isClicked(event.pos, yOffset=self.scrollOffset):
                     self.switchScene(GameState.MENU)
@@ -342,6 +356,18 @@ class SettingsScene(Scene):
                     return
             except ValueError:
                 self.addToast(Toast("Invalid AI strategic candidates value", type="error"))
+                return
+
+        if not self.aiThinkingSpeedField.isDisabled():
+            try:
+                thinkingSpeed = float(self.aiThinkingSpeedField.getText())
+                if -1 <= thinkingSpeed <= 2.0:
+                    changes["AI_THINKING_SPEED"] = thinkingSpeed
+                else:
+                    self.addToast(Toast("AI thinking speed must be between -1 and 2.0 seconds", type="error"))
+                    return
+            except ValueError:
+                self.addToast(Toast("Invalid AI thinking speed value", type="error"))
                 return
 
         success = True
@@ -501,6 +527,15 @@ class SettingsScene(Scene):
         )
         self.screen.blit(aiCandidatesLabel, aiCandidatesLabelRect)
         self.aiStrategicCandidatesField.draw(self.screen, yOffset=offsetY)
+
+        labelColor = (120, 120, 120) if self.aiThinkingSpeedField.isDisabled() else (255, 255, 255)
+        thinkingSpeedLabel = labelFont.render("AI Thinking Speed (s):", True, labelColor)
+        thinkingSpeedLabelRect = thinkingSpeedLabel.get_rect(
+            right=self.aiThinkingSpeedField.rect.left - 10,
+            centery=self.aiThinkingSpeedField.rect.centery + offsetY
+        )
+        self.screen.blit(thinkingSpeedLabel, thinkingSpeedLabelRect)
+        self.aiThinkingSpeedField.draw(self.screen, yOffset=offsetY)
 
         self.applyButton.draw(self.screen, yOffset=offsetY)
         self.backButton.draw(self.screen, yOffset=offsetY)

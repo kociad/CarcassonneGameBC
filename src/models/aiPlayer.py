@@ -148,6 +148,11 @@ class AIPlayer(Player):
         self._consecutiveLowScores = 0
         self._difficulty = difficulty.upper()
         self._preset = self._getPreset()
+        
+        self._aiThinkingState = None
+        self._aiThinkingProgress = 0
+        self._aiThinkingStartTime = None
+        self._aiThinkingMaxTime = settingsManager.get("AI_THINKING_SPEED", 0.5)
 
     def _getPreset(self) -> Dict[str, Any]:
         """Get the AI preset configuration for the current difficulty."""
@@ -170,12 +175,16 @@ class AIPlayer(Player):
         Args:
             gameSession: The current game session
         """
+        if self._aiThinkingState is not None:
+            self._continueThinking(gameSession)
+            return
+            
         logger.info(f"Player {self.name} is thinking...")
         
         self._updateGamePhase(gameSession)
         
         if settingsManager.get("AI_USE_SIMULATION", False):
-            self._playTurnWithAdvancedSimulation(gameSession)
+            self._startAdvancedThinking(gameSession)
         else:
             self._playTurnSimple(gameSession)
 
@@ -218,66 +227,130 @@ class AIPlayer(Player):
             logger.error(f"Player {self.name} failed to place card at validated position [{x},{y}]")
             gameSession.skipCurrentAction()
 
-    def _playTurnWithAdvancedSimulation(self, gameSession: 'GameSession') -> None:
-        """
-        Execute AI logic using advanced strategic evaluation and multi-turn simulation.
+    def _startAdvancedThinking(self, gameSession: 'GameSession') -> None:
+        """Start the progressive AI thinking process."""
+        self._aiThinkingState = "evaluating_placements"
+        self._aiThinkingProgress = 0
+        self._aiThinkingStartTime = time.time()
+        self._aiThinkingData = {
+            'gameSession': gameSession,
+            'currentCard': gameSession.getCurrentCard(),
+            'possiblePlacements': None,
+            'strategicScores': [],
+            'topCandidates': [],
+            'bestMove': None,
+            'bestScore': float('-inf')
+        }
         
-        Evaluates multiple placement options with lookahead and opponent analysis
-        to choose the optimal move.
+
+        self._aiThinkingData['possiblePlacements'] = self._getMultipleValidPlacements(
+            gameSession, self._aiThinkingData['currentCard']
+        )
+        
+        if not self._aiThinkingData['possiblePlacements']:
+            logger.info(f"Player {self.name} couldn't place their card anywhere and discarded it")
+            gameSession.skipCurrentAction()
+            self._aiThinkingState = None
+            return
+
+    def _continueThinking(self, gameSession: 'GameSession') -> None:
+        """
+        Continue the progressive AI thinking process.
+        
+        This method implements a time-based yielding system that allows the AI to think
+        progressively while keeping the UI responsive.
+        
+        **Time-Based Yielding Process:**
+        
+        1. AI Thinking Phase: AI processes card placements, evaluations, and simulations
+        2. Time Limit Check: When AI_THINKING_SPEED time is reached, AI yields control to UI
+        3. Timer Reset: Timer resets to 0 for the next thinking step
+        4. UI Responsiveness: UI gets control back, renders smoothly
+        5. Continue Thinking: AI continues from where it left off in the next frame
+             
+        Settings:
+        - Fast (0.1s): Maximum UI responsiveness, slower AI completion
+        - Balanced (0.5s): Good balance of AI speed and UI responsiveness  
+        - Slow (2.0s): Faster AI completion, less UI responsiveness
+        - Unlimited (-1): AI completes each phase entirely, may cause brief UI pauses
         
         Args:
             gameSession: The current game session
         """
-        currentCard = gameSession.getCurrentCard()
+        currentTime = time.time()
         
-        logger.debug(f"AI {self.name} starting advanced evaluation with card: {currentCard.imagePath}")
-        
-        possiblePlacements = self._getMultipleValidPlacements(gameSession, currentCard)
-        if not possiblePlacements:
-            logger.info(f"Player {self.name} couldn't place their card anywhere and discarded it")
-            gameSession.skipCurrentAction()
+        if self._aiThinkingMaxTime != -1 and currentTime - self._aiThinkingStartTime > self._aiThinkingMaxTime:
+            self._aiThinkingStartTime = currentTime
             return
+            
+        if self._aiThinkingState == "evaluating_placements":
+            self._continueEvaluatingPlacements()
+        elif self._aiThinkingState == "simulating_candidates":
+            self._continueSimulatingCandidates()
+        elif self._aiThinkingState == "executing_move":
+            self._executeBestMove(gameSession)
+
+    def _continueEvaluatingPlacements(self) -> None:
+        """Continue evaluating strategic placements."""
+        data = self._aiThinkingData
+        possiblePlacements = data['possiblePlacements']
+        strategicScores = data['strategicScores']
         
-        logger.debug(f"AI {self.name} evaluating {len(possiblePlacements)} possible placements")
+        placementsPerStep = 3
+        startIdx = self._aiThinkingProgress
+        endIdx = min(startIdx + placementsPerStep, len(possiblePlacements))
         
-        strategicScores = []
-        for i, placement in enumerate(possiblePlacements):
+        for i in range(startIdx, endIdx):
+            placement = possiblePlacements[i]
             x, y, rotationsNeeded, cardCopy = placement
             
-            strategicScore = self._evaluateCardPlacementAdvanced(gameSession, x, y, cardCopy)
-            strategicScore += self._evaluateMeepleOpportunityAdvanced(gameSession, x, y, cardCopy)
-            strategicScore += self._evaluateOpponentBlocking(gameSession, x, y, cardCopy)
-            strategicScore += self._evaluateMultiTurnPotential(gameSession, x, y, cardCopy)
+            strategicScore = self._evaluateCardPlacementAdvanced(data['gameSession'], x, y, cardCopy)
+            strategicScore += self._evaluateMeepleOpportunityAdvanced(data['gameSession'], x, y, cardCopy)
+            strategicScore += self._evaluateOpponentBlocking(data['gameSession'], x, y, cardCopy)
+            strategicScore += self._evaluateMultiTurnPotential(data['gameSession'], x, y, cardCopy)
             
             strategicScores.append((strategicScore, placement))
-            logger.debug(f"AI {self.name} placement {i+1}: ({x},{y}) rotation {rotationsNeeded*90} strategic score: {strategicScore}")
+            
+        self._aiThinkingProgress = endIdx
         
-        strategicScores.sort(reverse=True, key=lambda x: x[0])
-        maxCandidates = settingsManager.get("AI_STRATEGIC_CANDIDATES", 5)
-        if maxCandidates == -1:
-            topCandidates = strategicScores
-        else:
-            topCandidates = strategicScores[:maxCandidates]
+        if endIdx >= len(possiblePlacements):
+            strategicScores.sort(reverse=True, key=lambda x: x[0])
+            maxCandidates = settingsManager.get("AI_STRATEGIC_CANDIDATES", 5)
+            if maxCandidates == -1:
+                data['topCandidates'] = strategicScores
+            else:
+                data['topCandidates'] = strategicScores[:maxCandidates]
+            
+            self._aiThinkingState = "simulating_candidates"
+            self._aiThinkingProgress = 0
+
+    def _continueSimulatingCandidates(self) -> None:
+        """Continue simulating top candidates."""
+        data = self._aiThinkingData
+        topCandidates = data['topCandidates']
         
-        logger.debug(f"AI {self.name} simulating top {len(topCandidates)} strategic candidates")
-        
-        bestCardMove = None
-        bestCardScore = float('-inf')
-        
-        for strategicScore, placement in topCandidates:
+        if self._aiThinkingProgress < len(topCandidates):
+            strategicScore, placement = topCandidates[self._aiThinkingProgress]
             x, y, rotationsNeeded, cardCopy = placement
             
-            cardScore = self._simulateCardPlacementAdvanced(gameSession, x, y, rotationsNeeded)
+            cardScore = self._simulateCardPlacementAdvanced(data['gameSession'], x, y, rotationsNeeded)
             
-            logger.debug(f"AI {self.name} card simulation: ({x},{y}) rotation {rotationsNeeded*90} strategic={strategicScore}, card score={cardScore}")
+            if cardScore > data['bestScore']:
+                data['bestScore'] = cardScore
+                data['bestMove'] = placement
             
-            if cardScore > bestCardScore:
-                bestCardScore = cardScore
-                bestCardMove = placement
+            self._aiThinkingProgress += 1
+        else:
+            self._aiThinkingState = "executing_move"
+
+    def _executeBestMove(self, gameSession: 'GameSession') -> None:
+        """Execute the best move found during thinking."""
+        data = self._aiThinkingData
+        bestMove = data['bestMove']
         
-        if bestCardMove:
-            x, y, rotationsNeeded, cardCopy = bestCardMove
-            logger.debug(f"AI {self.name} chose best card placement: ({x},{y}) rotation {rotationsNeeded*90} score: {bestCardScore}")
+        if bestMove:
+            x, y, rotationsNeeded, cardCopy = bestMove
+            currentCard = gameSession.getCurrentCard()
             
             for _ in range(rotationsNeeded):
                 currentCard.rotate()
@@ -291,6 +364,30 @@ class AIPlayer(Player):
         else:
             logger.info(f"Player {self.name} couldn't find any valid placements and will discard the card")
             gameSession.skipCurrentAction()
+        
+        self._aiThinkingState = None
+        self._aiThinkingData = None
+
+    def isThinking(self) -> bool:
+        """Check if the AI is currently in a thinking state."""
+        return self._aiThinkingState is not None
+
+    def getThinkingProgress(self) -> float:
+        """Get the current thinking progress as a percentage (0.0 to 1.0)."""
+        if not self.isThinking():
+            return 0.0
+            
+        if self._aiThinkingState == "evaluating_placements":
+            data = self._aiThinkingData
+            totalPlacements = len(data['possiblePlacements'])
+            return self._aiThinkingProgress / totalPlacements * 0.5  # First 50%
+        elif self._aiThinkingState == "simulating_candidates":
+            data = self._aiThinkingData
+            totalCandidates = len(data['topCandidates'])
+            progress = self._aiThinkingProgress / totalCandidates
+            return 0.5 + progress * 0.5  # Last 50%
+        else:
+            return 1.0
 
     def _getMultipleValidPlacements(self, gameSession: 'GameSession', card: Card) -> List[Tuple[int, int, int, Card]]:
         """

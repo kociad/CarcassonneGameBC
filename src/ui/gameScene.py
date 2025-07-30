@@ -404,6 +404,41 @@ class GameScene(Scene):
             if i < len(allPlayers) - 1:
                 currentY += sectionSpacing
 
+        if (currentPlayer.getIsAI() and hasattr(currentPlayer, 'isThinking') and 
+            currentPlayer.isThinking() and settingsManager.get("DEBUG", False)):
+            currentY += sectionSpacing
+            
+            thinkingText = f"{currentPlayer.getName()} is thinking..."
+            thinkingSurface = self.font.render(thinkingText, True, (255, 255, 100))
+            thinkingRect = thinkingSurface.get_rect()
+            thinkingRect.centerx = sidebarCenterX
+            thinkingRect.y = currentY - offsetY
+            if thinkingRect.bottom > scrollableContentStartY and thinkingRect.top < windowHeight:
+                self.screen.blit(thinkingSurface, thinkingRect)
+            currentY += thinkingRect.height + 10
+            
+            progress = currentPlayer.getThinkingProgress()
+            barWidth = sidebarWidth - 40
+            barHeight = 20
+            barX = panelX + 20
+            barY = currentY - offsetY
+            
+            if barY + barHeight > scrollableContentStartY and barY < windowHeight:
+                pygame.draw.rect(self.screen, (80, 80, 80), (barX, barY, barWidth, barHeight))
+                progressWidth = int(barWidth * progress)
+                if progressWidth > 0:
+                    pygame.draw.rect(self.screen, (100, 255, 100), (barX, barY, progressWidth, barHeight))
+                pygame.draw.rect(self.screen, (150, 150, 150), (barX, barY, barWidth, barHeight), 2)
+                
+                progressText = f"{int(progress * 100)}%"
+                progressSurface = self.font.render(progressText, True, (255, 255, 255))
+                progressRect = progressSurface.get_rect()
+                progressRect.centerx = barX + barWidth // 2
+                progressRect.centery = barY + barHeight // 2
+                self.screen.blit(progressSurface, progressRect)
+            
+            currentY += barHeight + 10
+
         if settingsManager.get("DEBUG"):
             currentY += sectionSpacing
             structureSurface = self.font.render(f"Structures: {len(detectedStructures)}", True, (255, 255, 255))
@@ -570,30 +605,16 @@ class GameScene(Scene):
             self.clock.tick(fps)
             return
 
-        currentTime = pygame.time.get_ticks() / 1000.0
-        
-        if not hasattr(self, 'aiTurnStartTime') or self.aiTurnStartTime is None:
-            extraDelay = 0.1 if currentTime - self.playerActionTime < 0.2 else 0
-            if currentTime - self.lastAITurnTime < extraDelay:
-                self.clock.tick(fps)
-                return
-            
-            self.aiTurnStartTime = currentTime
-            logger.debug(f"Starting AI turn delay for {currentPlayer.getName()}")
-        
-        aiTurnDelay = settingsManager.get("AI_TURN_DELAY", 1.0)
-        if currentTime - self.aiTurnStartTime < aiTurnDelay:
+        if hasattr(currentPlayer, 'isThinking') and currentPlayer.isThinking():
+            currentPlayer.playTurn(self.session)
             self.clock.tick(fps)
             return
-        
+
         if hasattr(currentPlayer, 'playTurn'):
-            logger.debug(f"Executing AI turn for {currentPlayer.getName()}")
+            logger.debug(f"Starting AI turn for {currentPlayer.getName()}")
             currentPlayer.playTurn(self.session)
-            self.lastAITurnTime = currentTime
-            self.aiTurnStartTime = None
         else:
             logger.warning(f"Player {currentPlayer.getName()} is marked as AI but doesn't have playTurn method")
-            self.aiTurnStartTime = None
         
         self.clock.tick(fps)
         
