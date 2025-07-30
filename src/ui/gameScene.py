@@ -426,7 +426,7 @@ class GameScene(Scene):
             currentPlayer.isThinking() and settingsManager.get("DEBUG", False)):
             currentY += sectionSpacing
             
-            thinkingText = f"{currentPlayer.getName()} is thinking..."
+            thinkingText = f"AI is thinking..."
             thinkingSurface = self.font.render(thinkingText, True, (255, 255, 100))
             thinkingRect = thinkingSurface.get_rect()
             thinkingRect.centerx = sidebarCenterX
