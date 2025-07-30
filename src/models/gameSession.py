@@ -32,6 +32,7 @@ class GameSession:
         self.structureMap = {}
         self.networkMode = networkMode
         self.lobbyCompleted = lobbyCompleted
+        self.gameMode = None
         self.onTurnEnded = None
         self.onShowNotification = None
         
