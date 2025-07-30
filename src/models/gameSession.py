@@ -1,6 +1,7 @@
 import random
 import logging
 import typing
+import utils.loggingConfig
 
 from models.gameBoard import GameBoard
 from models.card import Card
