@@ -225,7 +225,7 @@ class Game:
             logger.debug(f"Game started with {len(playerNames)} players")
             
             if networkMode == "host":
-                self.network.sendToAll(encodeMessage("start_game", {"player_names": playerNames}))
+                self.network.sendToAll(encodeMessage("start_game", {"game_session": self.gameSession.serialize()}))
         except Exception as e:
             logError("Failed to start game", e)
             raise
@@ -386,12 +386,17 @@ class Game:
         Handle start game message from host.
         
         Args:
-            data: Start game data with player names
+            data: Start game data with full game session
         """
         try:
-            playerNames = data.get("player_names", [])
             logger.debug("Client received start game message from host")
-            self.startGame(playerNames)
+            if "game_session" in data:
+                self.gameSession = GameSession.deserialize(data["game_session"])
+                self.gameSession.onTurnEnded = self.onTurnEnded
+                self.gameSession.onShowNotification = self.onShowNotification
+                if hasattr(self.currentScene, 'updateGameSession'):
+                    self.currentScene.updateGameSession(self.gameSession)
+            self.initScene(GameState.GAME)
         except Exception as e:
             logError("Failed to handle start game message", e)
 
