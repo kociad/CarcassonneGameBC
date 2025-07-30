@@ -224,6 +224,9 @@ class Game:
             self.initScene(GameState.GAME)
             logger.debug(f"Game started with {len(playerNames)} players")
             
+            if hasattr(self.currentScene, 'invalidateRenderCache'):
+                self.currentScene.invalidateRenderCache()
+            
             if networkMode == "host":
                 self.network.sendToAll(encodeMessage("start_game", {"player_names": playerNames}))
         except Exception as e:
@@ -380,6 +383,8 @@ class Game:
             playerNames = data.get("player_names", [])
             logger.debug("Client received start game message from host")
             self.startGame(playerNames)
+            if hasattr(self.currentScene, 'invalidateRenderCache'):
+                self.currentScene.invalidateRenderCache()
         except Exception as e:
             logError("Failed to handle start game message", e)
 
@@ -395,6 +400,9 @@ class Game:
             self.gameSession.onTurnEnded = self.onTurnEnded
             self.gameSession.onShowNotification = self.onShowNotification
             logger.debug("Client game session updated from host sync.")
+            
+            if hasattr(self.currentScene, 'invalidateRenderCache'):
+                self.currentScene.invalidateRenderCache()
         except Exception as e:
             logError("Failed to sync game state", e)
 
