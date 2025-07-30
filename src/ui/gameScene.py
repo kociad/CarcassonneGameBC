@@ -634,6 +634,14 @@ class GameScene(Scene):
         
         self.toastManager.addToast(toast)
     
+    def updateGameSession(self, newSession) -> None:
+        """
+        Update the game session and invalidate render cache.
+        Called when the game session is updated from network.
+        """
+        self.session = newSession
+        self._invalidateRenderCache()
+    
     def update(self) -> None:
         fps = settingsManager.get("FPS")
         if self.session.getGameOver():

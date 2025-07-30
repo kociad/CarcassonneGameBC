@@ -224,9 +224,6 @@ class Game:
             self.initScene(GameState.GAME)
             logger.debug(f"Game started with {len(playerNames)} players")
             
-            if hasattr(self.currentScene, 'invalidateRenderCache'):
-                self.currentScene.invalidateRenderCache()
-            
             if networkMode == "host":
                 self.network.sendToAll(encodeMessage("start_game", {"player_names": playerNames}))
         except Exception as e:
@@ -288,6 +285,9 @@ class Game:
             self.gameSession.onShowNotification = self.onShowNotification
             logger.debug("Game session replaced with synchronized state from host")
 
+            if hasattr(self.currentScene, 'updateGameSession'):
+                self.currentScene.updateGameSession(self.gameSession)
+
             if self.network.networkMode == "client":
                 assigned = False
                 for player in self.gameSession.getPlayers():
@@ -342,6 +342,10 @@ class Game:
             self.gameSession.onTurnEnded = self.onTurnEnded
             self.gameSession.onShowNotification = self.onShowNotification
             logger.debug("Host updated game session with client's claimed player")
+            
+            if hasattr(self.currentScene, 'updateGameSession'):
+                self.currentScene.updateGameSession(self.gameSession)
+                
             self.broadcastGameState()
         except Exception as e:
             logError("Failed to process player claim", e)
@@ -356,7 +360,12 @@ class Game:
         try:
             self.gameSession = GameSession.deserialize(data)
             self.gameSession.onTurnEnded = self.onTurnEnded
+            self.gameSession.onShowNotification = self.onShowNotification
             logger.debug("Host applied client-submitted game state")
+            
+            if hasattr(self.currentScene, 'updateGameSession'):
+                self.currentScene.updateGameSession(self.gameSession)
+                
             self.broadcastGameState()
         except Exception as e:
             logError("Failed to process client submitted turn", e)
@@ -383,8 +392,6 @@ class Game:
             playerNames = data.get("player_names", [])
             logger.debug("Client received start game message from host")
             self.startGame(playerNames)
-            if hasattr(self.currentScene, 'invalidateRenderCache'):
-                self.currentScene.invalidateRenderCache()
         except Exception as e:
             logError("Failed to handle start game message", e)
 
@@ -401,8 +408,8 @@ class Game:
             self.gameSession.onShowNotification = self.onShowNotification
             logger.debug("Client game session updated from host sync.")
             
-            if hasattr(self.currentScene, 'invalidateRenderCache'):
-                self.currentScene.invalidateRenderCache()
+            if hasattr(self.currentScene, 'updateGameSession'):
+                self.currentScene.updateGameSession(self.gameSession)
         except Exception as e:
             logError("Failed to sync game state", e)
 
