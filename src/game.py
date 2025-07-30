@@ -197,7 +197,10 @@ class Game:
         """
         try:
             logger.debug("Initializing new game session...")
-            self.network = NetworkConnection()
+            
+            if not self.network:
+                self.network = NetworkConnection()
+            
             networkMode = self.network.networkMode
             if networkMode in ("host", "local"):
                 lobbyCompleted = True
@@ -236,7 +239,10 @@ class Game:
         """
         try:
             logger.debug("Preparing to enter lobby...")
-            self.network = NetworkConnection()
+            
+            if not self.network:
+                self.network = NetworkConnection()
+                
             networkMode = self.network.networkMode
             if networkMode in ("host", "local"):
                 lobbyCompleted = networkMode == "local"
