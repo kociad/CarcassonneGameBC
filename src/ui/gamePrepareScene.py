@@ -37,7 +37,16 @@ class PlayerConfiguration:
         if isAI and not self.name.startswith("AI_"):
             self.name = f"AI_{self.name}"
         elif not isAI and self.name.startswith("AI_"):
-            self.name = self.name[3:]
+            if self.name.startswith("AI_EASY_"):
+                self.name = self.name[8:]
+            elif self.name.startswith("AI_HARD_"):
+                self.name = self.name[8:]
+            elif self.name.startswith("AI_EXPERT_"):
+                self.name = self.name[10:]
+            elif self.name.startswith("AI_NORMAL_"):
+                self.name = self.name[10:]
+            elif self.name.startswith("AI_"):
+                self.name = self.name[3:]
             
     def getDisplayName(self):
         """Get name for display purposes"""
@@ -238,8 +247,9 @@ class GamePrepareScene(Scene):
         nameField = self.playerFields[index][0]
         nameField.setText(self.players[index].getDisplayName())
         
+        player = self.players[index]
         if value:
-            player = self.players[index]
+            currentDifficulty = self.aiDifficultyDropdown.getSelected()
             baseName = player.name
             if baseName.startswith("AI_EASY_"):
                 baseName = baseName[8:]
@@ -252,7 +262,7 @@ class GamePrepareScene(Scene):
             elif baseName.startswith("AI_"):
                 baseName = baseName[3:]
             
-            player.name = f"AI_NORMAL_{baseName}"
+            player.name = f"AI_{currentDifficulty}_{baseName}"
             nameField.setText(player.getDisplayName())
         
     def handleAIDifficultyChange(self, difficulty: str) -> None:
