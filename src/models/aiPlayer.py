@@ -171,8 +171,6 @@ class AIPlayer(Player):
             gameSession: The current game session
         """
         logger.info(f"Player {self.name} is thinking...")
-        delay = settingsManager.get("AI_TURN_DELAY", 1.0)
-        time.sleep(delay)
         
         self._updateGamePhase(gameSession)
         
@@ -1029,7 +1027,6 @@ class AIPlayer(Player):
         if bestDirection and bestScore > 0:
             if gameSession.playFigure(self, targetX, targetY, bestDirection):
                 logger.debug(f"Player {self.name} placed meeple on {bestDirection} (score: {bestScore})")
-                # Check for completed structures and score them immediately
                 self._checkAndScoreCompletedStructures(gameSession)
                 gameSession.nextTurn()
                 return

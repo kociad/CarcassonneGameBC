@@ -278,7 +278,6 @@ class GameSession:
             meeplePlaced = self.playFigure(player, x, y, position)
             if meeplePlaced:
                 logger.debug("Figure placed.")
-                # Check for completed structures and end turn
                 logger.debug("Checking completed structures...")
                 for structure in self.structures:
                     structure.checkCompletion()
@@ -288,7 +287,6 @@ class GameSession:
                 self.nextTurn()
             else:
                 logger.debug("Figure not placed or skipped.")
-                # Don't end turn - wait for manual action
 
     def skipCurrentAction(self) -> None:
         """Skip the current phase action with official rules validation."""
@@ -461,6 +459,11 @@ class GameSession:
         for owner in owners:
             logger.scoring(f"Player {owner.getName()} scored {score} points from the {structure.structureType}")
             owner.addScore(score)
+            
+            if self.onShowNotification:
+                message = f"Player {owner.getName()} scored {score} points from {structure.structureType}!"
+                self.onShowNotification("success", message)
+        
         structure.setColor(owners[0].getColorWithAlpha())
         for figure in structure.getFigures()[:]:
             structure.removeFigure(figure)
@@ -472,6 +475,10 @@ class GameSession:
         logger.info("GAME OVER - No more cards in deck!")
         logger.scoring("Remaining incomplete structures will now be scored...")
         logger.debug("=== END OF GAME TRIGGERED ===")
+        
+        if self.onShowNotification:
+            self.onShowNotification("info", "Game Over! Scoring remaining structures...")
+        
         self.gameOver = True
         for structure in self.structures:
             if not structure.getIsCompleted():
@@ -487,6 +494,11 @@ class GameSession:
         """Display the final scores."""
         logger.scoring("=== FINAL SCORES ===")
         sortedPlayers = sorted(self.players, key=lambda p: p.getScore(), reverse=True)
+        
+        if sortedPlayers and self.onShowNotification:
+            winner = sortedPlayers[0]
+            self.onShowNotification("success", f"Player {winner.getName()} wins with {winner.getScore()} points!")
+        
         for i, player in enumerate(sortedPlayers):
             if i == 0:
                 logger.scoring(f"WINNER: {player.getName()}: {player.getScore()} points")

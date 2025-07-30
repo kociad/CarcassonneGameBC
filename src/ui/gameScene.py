@@ -1,6 +1,7 @@
 import pygame
 import logging
 import typing
+import settings
 
 from ui.scene import Scene
 from gameState import GameState
@@ -49,7 +50,8 @@ class GameScene(Scene):
         self.lastCardState = (None, None)
         
         self.lastAITurnTime = 0
-        self.aiTurnDelay = settingsManager.get("AI_TURN_DELAY", 1.0)
+        self.playerActionTime = 0
+        self.aiTurnStartTime = None
 
 
     def applySidebarScroll(self, events: list[pygame.event.Event]) -> None:
@@ -163,6 +165,8 @@ class GameScene(Scene):
                 pygame.draw.line(self.screen, (0, 0, 0), (0 - self.offsetX, y - self.offsetY), (gameBoard.getGridSize() * tile_size - self.offsetX, y - self.offsetY))
         
         tile_size = settingsManager.get("TILE_SIZE")
+        center_x, center_y = gameBoard.getCenterPosition()
+        
         for y in range(gameBoard.gridSize):
             for x in range(gameBoard.gridSize):
                 card = gameBoard.getCard(x, y)
@@ -175,6 +179,18 @@ class GameScene(Scene):
                             logger.error(f"Rotation failed for card: {e}")
                             imageToDraw = card.image
                     self.screen.blit(imageToDraw, (x * tile_size - self.offsetX, y * tile_size - self.offsetY))
+                    
+                    if x == center_x and y == center_y:
+                        try:
+                            compassImage = pygame.image.load(settings.ICONS_PATH + "compass.png")
+                            compassSize = tile_size // 4
+                            compassImage = pygame.transform.scale(compassImage, (compassSize, compassSize))
+                            compassX = x * tile_size - self.offsetX + tile_size - compassSize - 5
+                            compassY = y * tile_size - self.offsetY + 5
+                            self.screen.blit(compassImage, (compassX, compassY))
+                        except Exception as e:
+                            logger.error(f"Failed to load compass icon: {e}")
+                        
                 if settingsManager.get("DEBUG"):
                     textSurface = self.font.render(f"{x},{y}", True, (255, 255, 255))
                     textX = x * tile_size - self.offsetX + tile_size // 3
@@ -472,11 +488,13 @@ class GameScene(Scene):
         if event.button == 1:
             direction = self.detectClickDirection(x, y, gridX, gridY)
             self.session.playTurn(gridX, gridY, direction)
-            self.updateValidPlacements()  # Board updated, recalc
+            self.updateValidPlacements()
+            self.playerActionTime = pygame.time.get_ticks() / 1000.0
+            self.aiTurnStartTime = None
 
         if event.button == 3 and self.session.getCurrentCard():
             self.session.getCurrentCard().rotate()
-            self.updateValidPlacements()  # Card rotated, recalc
+            self.updateValidPlacements()
         
     def handleKeyHold(self) -> None:
         if self.keysPressed.get(pygame.K_w) or self.keysPressed.get(pygame.K_UP):
@@ -553,15 +571,29 @@ class GameScene(Scene):
             return
 
         currentTime = pygame.time.get_ticks() / 1000.0
-        if currentTime - self.lastAITurnTime < self.aiTurnDelay:
+        
+        if not hasattr(self, 'aiTurnStartTime') or self.aiTurnStartTime is None:
+            extraDelay = 0.1 if currentTime - self.playerActionTime < 0.2 else 0
+            if currentTime - self.lastAITurnTime < extraDelay:
+                self.clock.tick(fps)
+                return
+            
+            self.aiTurnStartTime = currentTime
+            logger.debug(f"Starting AI turn delay for {currentPlayer.getName()}")
+        
+        aiTurnDelay = settingsManager.get("AI_TURN_DELAY", 1.0)
+        if currentTime - self.aiTurnStartTime < aiTurnDelay:
             self.clock.tick(fps)
             return
-
+        
         if hasattr(currentPlayer, 'playTurn'):
+            logger.debug(f"Executing AI turn for {currentPlayer.getName()}")
             currentPlayer.playTurn(self.session)
             self.lastAITurnTime = currentTime
+            self.aiTurnStartTime = None
         else:
             logger.warning(f"Player {currentPlayer.getName()} is marked as AI but doesn't have playTurn method")
+            self.aiTurnStartTime = None
         
         self.clock.tick(fps)
         
