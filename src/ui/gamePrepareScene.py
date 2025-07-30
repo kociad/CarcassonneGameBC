@@ -18,6 +18,40 @@ FORBIDDEN_WORDS = [
     "expert"
 ]
 
+def getLocalIP():
+    """
+    Get the local IP address using multiple methods.
+    Falls back to default IP from settings if all methods fail.
+    """
+    defaultIP = settingsManager.get("HOST_IP", "0.0.0.0")
+    
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        localIP = s.getsockname()[0]
+        s.close()
+        return localIP
+    except Exception:
+        pass
+    
+    try:
+        hostname = socket.gethostname()
+        localIP = socket.gethostbyname(hostname)
+        if localIP != "127.0.0.1" and not localIP.startswith("127."):
+            return localIP
+    except Exception:
+        pass
+    
+    try:
+        for interface in socket.getaddrinfo(socket.gethostname(), None):
+            ip = interface[4][0]
+            if ip != "127.0.0.1" and not ip.startswith("127."):
+                return ip
+    except Exception:
+        pass
+    
+    return defaultIP
+
 class PlayerConfiguration:
     """Single source of truth for player data"""
     def __init__(self, name="", isAI=False, enabled=True):
@@ -90,7 +124,7 @@ class GamePrepareScene(Scene):
         networkMode = settingsManager.get("NETWORK_MODE", "local")
         hostIP = settingsManager.get("HOST_IP", "0.0.0.0")
         port = str(settingsManager.get("HOST_PORT", 222))
-        self.localIP = socket.gethostbyname(socket.gethostname())
+        self.localIP = getLocalIP()
         self.networkMode = networkMode
 
         xCenter = screen.get_width() // 2 - 100
