@@ -24,6 +24,7 @@ class NetworkConnection:
         self.onJoinFailed = None
         self.onJoinRejected = None
         self.onPlayerClaimed = None
+        self.onStartGame = None
         if self.networkMode == "local":
             logger.debug("Running in local mode. Networking is disabled.")
             return
@@ -112,6 +113,10 @@ class NetworkConnection:
             logger.debug("Received join_failed from client")
             if self.onJoinFailed:
                 self.onJoinFailed(payload, conn)
+        elif action == "start_game" and self.networkMode == "client":
+            logger.debug("Received start_game from host")
+            if self.onStartGame:
+                self.onStartGame(payload)
         elif action == "join_rejected" and self.networkMode == "client":
             logger.debug("Received join_rejected from host")
             if self.onJoinRejected:
@@ -175,4 +180,5 @@ class NetworkConnection:
             self.onJoinFailed = None
             self.onJoinRejected = None
             self.onPlayerClaimed = None
+            self.onStartGame = None
             self.socket = None

@@ -202,7 +202,6 @@ class Game:
             if networkMode in ("host", "local"):
                 lobbyCompleted = True
                 self.gameSession = GameSession(playerNames, lobbyCompleted=lobbyCompleted, networkMode=networkMode)
-                # Assign host as human player
                 playerIndex = settingsManager.get("PLAYER_INDEX", 0)
                 hostPlayer = self.gameSession.players[playerIndex]
                 hostPlayer.setIsHuman(True)
@@ -210,10 +209,10 @@ class Game:
                 logger.debug(f"Player name set to '{hostPlayer.getName()}' from host settings.")
                 self.gameSession.onTurnEnded = self.onTurnEnded
                 self.gameSession.onShowNotification = self.onShowNotification
-            # Set up network callbacks
             self.network.onInitialGameStateReceived = self.onGameStateReceived
             self.network.onSyncGameState = self.onSyncGameState
             self.network.onJoinRejected = self.onJoinRejected
+            self.network.onStartGame = self.onStartGame
             if networkMode == "host":
                 self.network.onClientConnected = self.onClientConnected
                 self.network.onClientSubmittedTurn = self.onClientSubmittedTurn
@@ -221,6 +220,9 @@ class Game:
                 self.network.onJoinFailed = self.onJoinFailed
             self.initScene(GameState.GAME)
             logger.debug(f"Game started with {len(playerNames)} players")
+            
+            if networkMode == "host":
+                self.network.sendToAll(encodeMessage("start_game", {"player_names": playerNames}))
         except Exception as e:
             logError("Failed to start game", e)
             raise
@@ -249,6 +251,7 @@ class Game:
             self.network.onInitialGameStateReceived = self.onGameStateReceived
             self.network.onSyncGameState = self.onSyncGameState
             self.network.onJoinRejected = self.onJoinRejected
+            self.network.onStartGame = self.onStartGame
             if networkMode == "host":
                 self.network.onClientConnected = self.onClientConnected
                 self.network.onClientSubmittedTurn = self.onClientSubmittedTurn
@@ -359,6 +362,20 @@ class Game:
                 logger.debug("Broadcasted updated game state to all clients.")
         except Exception as e:
             logError("Failed to broadcast game state", e)
+
+    def onStartGame(self, data: dict) -> None:
+        """
+        Handle start game message from host.
+        
+        Args:
+            data: Start game data with player names
+        """
+        try:
+            playerNames = data.get("player_names", [])
+            logger.debug("Client received start game message from host")
+            self.startGame(playerNames)
+        except Exception as e:
+            logError("Failed to handle start game message", e)
 
     def onSyncGameState(self, data: dict) -> None:
         """
