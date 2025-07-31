@@ -2,7 +2,9 @@ import socket
 import threading
 import logging
 import typing
-from network.message import decodeMessage
+import time
+from network.message import decodeMessage, encodeMessage
+from network.command import CommandManager, decode_command_message, encode_command_message
 from models.gameSession import GameSession
 from utils.settingsManager import settingsManager
 
@@ -17,6 +19,8 @@ class NetworkConnection:
         self.running = False
         self.connections = []
         self.socket = None
+        self.commandManager = CommandManager()
+        
         self.onClientConnected = None
         self.onClientSubmittedTurn = None
         self.onInitialGameStateReceived = None
@@ -27,6 +31,11 @@ class NetworkConnection:
         self.onStartGame = None
         self.onClientDisconnected = None
         self.onHostDisconnected = None
+        
+        self.onCommandReceived = None
+        self.onCommandAck = None
+        self.onSyncRequest = None
+        
         if self.networkMode == "local":
             logger.debug("Running in local mode. Networking is disabled.")
             return
@@ -40,6 +49,7 @@ class NetworkConnection:
                 self.socket.listen()
                 logger.debug(f"Host listening on {host_ip}:{host_port}...")
                 threading.Thread(target=self.acceptConnections, daemon=True).start()
+                threading.Thread(target=self._commandCleanupLoop, daemon=True).start()
             except Exception as e:
                 logger.exception(f"Failed to bind socket: {e}")
         elif self.networkMode == "client":
@@ -49,6 +59,7 @@ class NetworkConnection:
                 self.socket.connect((host_ip, host_port))
                 logger.debug(f"Connected to host at {host_ip}:{host_port}")
                 threading.Thread(target=self.receiveLoop, args=(self.socket,), daemon=True).start()
+                threading.Thread(target=self._commandCleanupLoop, daemon=True).start()
             except Exception as e:
                 logger.exception(f"Failed to connect to host: {e}")
 
@@ -96,7 +107,32 @@ class NetworkConnection:
             return
         action = parsed.get("action")
         payload = parsed.get("payload")
-        if action == "init_game_state":
+        
+        if action == "command":
+            logger.debug("Received command from network")
+            command = decode_command_message(message)
+            if command and self.onCommandReceived:
+                self.onCommandReceived(command, conn)
+            ack_message = encodeMessage("command_ack", {"command_id": command.command_id})
+            if conn:
+                try:
+                    conn.sendall((ack_message + "\n").encode())
+                except Exception as e:
+                    logger.exception(f"Failed to send command ack: {e}")
+            elif self.networkMode == "client":
+                self.sendToHost(ack_message)
+        elif action == "command_ack":
+            logger.debug("Received command acknowledgment")
+            command_id = payload.get("command_id")
+            if command_id:
+                self.commandManager.ack_command(command_id)
+                if self.onCommandAck:
+                    self.onCommandAck(command_id)
+        elif action == "sync_request":
+            logger.debug("Received sync request")
+            if self.onSyncRequest:
+                self.onSyncRequest(payload, conn)
+        elif action == "init_game_state":
             logger.debug("Received initial game state from host")
             if self.onInitialGameStateReceived:
                 self.onInitialGameStateReceived(payload)
@@ -153,6 +189,41 @@ class NetworkConnection:
             self.socket.sendall((message + "\n").encode())
         except Exception as e:
             logger.exception(f"Failed to send to host: {e}")
+
+    def sendCommand(self, command):
+        """Send a command to the network with acknowledgment tracking."""
+        if self.networkMode == "local":
+            return
+            
+        message = encode_command_message(command)
+        self.commandManager.mark_command_pending_ack(command.command_id)
+        
+        if self.networkMode == "host":
+            for conn in self.connections[:]:
+                try:
+                    conn.sendall((message + "\n").encode())
+                except Exception as e:
+                    logger.exception(f"Failed to send command to client: {e}")
+                    try:
+                        conn.close()
+                    except:
+                        pass
+                    if conn in self.connections:
+                        self.connections.remove(conn)
+        elif self.networkMode == "client":
+            self.sendToHost(message)
+            
+        logger.debug(f"Sent command {command.command_type} with ID {command.command_id}")
+
+    def _commandCleanupLoop(self):
+        """Background thread to clean up expired commands."""
+        while self.running:
+            try:
+                self.commandManager.clear_expired_commands()
+                time.sleep(1.0)
+            except Exception as e:
+                logger.exception(f"Error in command cleanup loop: {e}")
+                time.sleep(1.0)
 
     def close(self) -> None:
         """Close the network connection and clean up resources."""

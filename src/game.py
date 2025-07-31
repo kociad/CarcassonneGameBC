@@ -21,6 +21,7 @@ from utils.loggingConfig import configureLogging, logError
 from models.gameSession import GameSession
 from network.connection import NetworkConnection
 from network.message import encodeMessage
+from network.command import encode_command_message
 from utils.settingsManager import settingsManager
 from ui.components.gameLog import GameLog
 from utils.loggingConfig import setGameLogInstance
@@ -212,12 +213,16 @@ class Game:
                 logger.debug(f"Player name set to '{hostPlayer.getName()}' from host settings.")
                 self.gameSession.onTurnEnded = self.onTurnEnded
                 self.gameSession.onShowNotification = self.onShowNotification
+                self.gameSession.onCommandExecuted = self.onCommandExecuted
             self.network.onInitialGameStateReceived = self.onGameStateReceived
             self.network.onSyncGameState = self.onSyncGameState
             self.network.onJoinRejected = self.onJoinRejected
             self.network.onStartGame = self.onStartGame
             self.network.onClientDisconnected = self.onClientDisconnected
             self.network.onHostDisconnected = self.onHostDisconnected
+            self.network.onCommandReceived = self.onCommandReceived
+            self.network.onCommandAck = self.onCommandAck
+            self.network.onSyncRequest = self.onSyncRequest
             if networkMode == "host":
                 self.network.onClientConnected = self.onClientConnected
                 self.network.onClientSubmittedTurn = self.onClientSubmittedTurn
@@ -256,18 +261,21 @@ class Game:
                 logger.debug(f"Player name set to '{hostPlayer.getName()}' from host settings.")
                 self.gameSession.onTurnEnded = self.onTurnEnded
                 self.gameSession.onShowNotification = self.onShowNotification
+                self.gameSession.onCommandExecuted = self.onCommandExecuted
             self.network.onInitialGameStateReceived = self.onGameStateReceived
             self.network.onSyncGameState = self.onSyncGameState
             self.network.onJoinRejected = self.onJoinRejected
             self.network.onStartGame = self.onStartGame
             self.network.onClientDisconnected = self.onClientDisconnected
             self.network.onHostDisconnected = self.onHostDisconnected
+            self.network.onCommandReceived = self.onCommandReceived
+            self.network.onCommandAck = self.onCommandAck
+            self.network.onSyncRequest = self.onSyncRequest
             if networkMode == "host":
                 self.network.onClientConnected = self.onClientConnected
                 self.network.onClientSubmittedTurn = self.onClientSubmittedTurn
                 self.network.onPlayerClaimed = self.onPlayerClaimed
                 self.network.onJoinFailed = self.onJoinFailed
-            # Only go to lobby for network modes
             if networkMode != "local":
                 self.initScene(GameState.LOBBY)
             else:
@@ -287,6 +295,7 @@ class Game:
             self.gameSession = GameSession.deserialize(data)
             self.gameSession.onTurnEnded = self.onTurnEnded
             self.gameSession.onShowNotification = self.onShowNotification
+            self.gameSession.onCommandExecuted = self.onCommandExecuted
             logger.debug("Game session replaced with synchronized state from host")
 
             if hasattr(self.currentScene, 'updateGameSession'):
@@ -348,6 +357,7 @@ class Game:
             self.gameSession = GameSession.deserialize(data)
             self.gameSession.onTurnEnded = self.onTurnEnded
             self.gameSession.onShowNotification = self.onShowNotification
+            self.gameSession.onCommandExecuted = self.onCommandExecuted
             logger.debug("Host updated game session with client's claimed player")
             
             if hasattr(self.currentScene, 'updateGameSession'):
@@ -368,6 +378,7 @@ class Game:
             self.gameSession = GameSession.deserialize(data)
             self.gameSession.onTurnEnded = self.onTurnEnded
             self.gameSession.onShowNotification = self.onShowNotification
+            self.gameSession.onCommandExecuted = self.onCommandExecuted
             logger.debug("Host applied client-submitted game state")
             
             if hasattr(self.currentScene, 'updateGameSession'):
@@ -401,6 +412,7 @@ class Game:
                 self.gameSession = GameSession.deserialize(data["game_session"])
                 self.gameSession.onTurnEnded = self.onTurnEnded
                 self.gameSession.onShowNotification = self.onShowNotification
+                self.gameSession.onCommandExecuted = self.onCommandExecuted
                 if hasattr(self.currentScene, 'updateGameSession'):
                     self.currentScene.updateGameSession(self.gameSession)
             self.initScene(GameState.GAME)
@@ -418,6 +430,7 @@ class Game:
             self.gameSession = GameSession.deserialize(data)
             self.gameSession.onTurnEnded = self.onTurnEnded
             self.gameSession.onShowNotification = self.onShowNotification
+            self.gameSession.onCommandExecuted = self.onCommandExecuted
             logger.debug("Client game session updated from host sync.")
             
             if hasattr(self.currentScene, 'updateGameSession'):
@@ -432,23 +445,8 @@ class Game:
             if networkMode == "local":
                 return
 
-            logger.debug("Synchronizing game state after turn...")
+            logger.debug("Turn ended - command-based sync handles synchronization")
 
-            if self.gameSession.getIsFirstRound():
-                return
-
-            serialized = self.gameSession.serialize()
-
-            if networkMode == "host":
-                message = encodeMessage("sync_game_state", serialized)
-                self.network.sendToAll(message)
-                logger.debug("Host broadcasted updated game state after turn.")
-
-            elif networkMode == "client":
-                message = encodeMessage("submit_turn", serialized)
-                self.network.sendToHost(message)
-                logger.debug("Client submitted turn to host.")
-                
         except Exception as e:
             logError("Failed to handle turn ended", e)
 
@@ -542,6 +540,82 @@ class Game:
         except Exception as e:
             logError("Failed to handle host disconnection", e)
         
+    def onCommandReceived(self, command, conn=None) -> None:
+        """
+        Handle received command from network.
+        
+        Args:
+            command: The received command object
+            conn: Network connection (for host mode)
+        """
+        try:
+            logger.debug(f"Received command {command.command_type} from player {command.player_index}")
+            
+            success = self.gameSession.executeCommand(command)
+            if success:
+                logger.debug(f"Successfully executed command {command.command_type}")
+                
+                if hasattr(self.currentScene, 'updateGameSession'):
+                    self.currentScene.updateGameSession(self.gameSession)
+                    
+                if self.network.networkMode == "host" and conn:
+                    for other_conn in self.network.connections[:]:
+                        if other_conn != conn:
+                            try:
+                                from network.command import encode_command_message
+                                message = encode_command_message(command)
+                                other_conn.sendall((message + "\n").encode())
+                            except Exception as e:
+                                logger.exception(f"Failed to broadcast command to client: {e}")
+            else:
+                logger.warning(f"Failed to execute command {command.command_type}")
+                
+        except Exception as e:
+            logError("Failed to handle received command", e)
+
+    def onCommandAck(self, command_id: str) -> None:
+        """
+        Handle command acknowledgment.
+        
+        Args:
+            command_id: ID of the acknowledged command
+        """
+        try:
+            logger.debug(f"Command {command_id} acknowledged")
+        except Exception as e:
+            logError("Failed to handle command acknowledgment", e)
+
+    def onCommandExecuted(self, command) -> None:
+        """
+        Handle command execution completion.
+        
+        Args:
+            command: The executed command
+        """
+        try:
+            logger.debug(f"Command {command.command_type} executed successfully")
+            if hasattr(self.currentScene, 'updateGameSession'):
+                self.currentScene.updateGameSession(self.gameSession)
+        except Exception as e:
+            logError("Failed to handle command execution", e)
+
+    def onSyncRequest(self, data: dict, conn=None) -> None:
+        """
+        Handle sync request from client.
+        
+        Args:
+            data: Sync request data
+            conn: Network connection to the client
+        """
+        try:
+            logger.debug("Received sync request from client")
+            gameState = self.gameSession.serialize()
+            message = encodeMessage("sync_game_state", gameState)
+            if conn:
+                conn.sendall((message + "\n").encode())
+        except Exception as e:
+            logError("Failed to handle sync request", e)
+
     def onShowNotification(self, notificationType: str, message: str) -> None:
         """
         Handle notification requests from game session.

@@ -554,8 +554,8 @@ class GameScene(Scene):
                         self.handleMouseClick(event)
                 
                 if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_SPACE:
-                        self.session.skipCurrentAction()
+                                    if event.key == pygame.K_SPACE:
+                    self._executeLocalSkip()
                         
         self.handleKeyHold()
 
@@ -568,13 +568,76 @@ class GameScene(Scene):
 
         if event.button == 1:
             direction = self.detectClickDirection(x, y, gridX, gridY)
-            self.session.playTurn(gridX, gridY, direction)
+            self._executeLocalTurn(gridX, gridY, direction)
+
+        if event.button == 3 and self.session.getCurrentCard():
+            self._executeLocalRotate()
+
+    def _executeLocalTurn(self, x: int, y: int, direction: str) -> None:
+        """Execute a turn locally and send command to network."""
+        from network.command import PlaceCardCommand, PlaceFigureCommand
+        from utils.settingsManager import settingsManager
+        
+        player_index = settingsManager.get("PLAYER_INDEX", 0)
+        
+        if self.session.turnPhase == 1:
+            command = PlaceCardCommand(
+                player_index=player_index,
+                x=x, y=y,
+                card_rotation=self.session.getCurrentCard().rotation if self.session.getCurrentCard() else 0
+            )
+        else:
+            command = PlaceFigureCommand(
+                player_index=player_index,
+                x=x, y=y,
+                position=direction
+            )
+        
+        success = self.session.executeCommand(command)
+        if success:
+            if self.network and hasattr(self.network, 'sendCommand'):
+                self.network.sendCommand(command)
+            
             self.updateValidPlacements()
             self.playerActionTime = pygame.time.get_ticks() / 1000.0
             self.aiTurnStartTime = None
 
-        if event.button == 3 and self.session.getCurrentCard():
-            self.session.getCurrentCard().rotate()
+    def _executeLocalRotate(self) -> None:
+        """Execute a card rotation locally and send command to network."""
+        from network.command import RotateCardCommand
+        from utils.settingsManager import settingsManager
+        
+        if not self.session.getCurrentCard():
+            return
+            
+        player_index = settingsManager.get("PLAYER_INDEX", 0)
+        command = RotateCardCommand(player_index=player_index)
+        
+        success = self.session.executeCommand(command)
+        if success:
+            if self.network and hasattr(self.network, 'sendCommand'):
+                self.network.sendCommand(command)
+            
+            self.updateValidPlacements()
+        
+    def _executeLocalSkip(self) -> None:
+        """Execute a skip action locally and send command to network."""
+        from network.command import SkipActionCommand
+        from utils.settingsManager import settingsManager
+        
+        player_index = settingsManager.get("PLAYER_INDEX", 0)
+        action_type = "card" if self.session.turnPhase == 1 else "figure"
+        
+        command = SkipActionCommand(
+            player_index=player_index,
+            action_type=action_type
+        )
+        
+        success = self.session.executeCommand(command)
+        if success:
+            if self.network and hasattr(self.network, 'sendCommand'):
+                self.network.sendCommand(command)
+            
             self.updateValidPlacements()
         
     def handleKeyHold(self) -> None:

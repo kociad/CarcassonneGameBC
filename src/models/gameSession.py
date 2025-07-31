@@ -35,6 +35,7 @@ class GameSession:
         self.gameMode = None
         self.onTurnEnded = None
         self.onShowNotification = None
+        self.onCommandExecuted = None
         
         self._candidatePositions = set()
         self._lastBoardState = None
@@ -46,7 +47,7 @@ class GameSession:
         self._validationCache = {}
         self._validationCacheValid = False
         
-        self._neighborCache = {}  # (x, y) -> set of neighbor positions
+        self._neighborCache = {}
         self._neighborCacheValid = False
         
         if not noInit:
@@ -316,6 +317,64 @@ class GameSession:
                 self.nextTurn()
             else:
                 logger.debug("Figure not placed or skipped.")
+
+    def executeCommand(self, command) -> bool:
+        """Execute a command received from the network."""
+        try:
+            logger.debug(f"Executing command {command.command_type} for player {command.player_index}")
+            
+            if command.player_index != self.currentPlayer.getIndex():
+                logger.warning(f"Command from wrong player: {command.player_index} vs {self.currentPlayer.getIndex()}")
+                return False
+            
+            if command.command_type == "place_card":
+                if self.currentCard:
+                    while self.currentCard.rotation != command.card_rotation:
+                        self.currentCard.rotate()
+                return self.playCard(command.x, command.y)
+                
+            elif command.command_type == "place_figure":
+                if self.turnPhase != 2:
+                    logger.warning("Cannot place figure in phase 1")
+                    return False
+                meeplePlaced = self.playFigure(self.currentPlayer, command.x, command.y, command.position)
+                if meeplePlaced:
+                    for structure in self.structures:
+                        structure.checkCompletion()
+                        if structure.getIsCompleted():
+                            self.scoreStructure(structure)
+                    self.nextTurn()
+                return meeplePlaced
+                
+            elif command.command_type == "skip_action":
+                if command.action_type == "card" and self.turnPhase == 1:
+                    self.skipCurrentAction()
+                    return True
+                elif command.action_type == "figure" and self.turnPhase == 2:
+                    self.skipCurrentAction()
+                    return True
+                else:
+                    logger.warning(f"Cannot skip {command.action_type} in phase {self.turnPhase}")
+                    return False
+                    
+            elif command.command_type == "rotate_card":
+                if self.currentCard and self.turnPhase == 1:
+                    self.currentCard.rotate()
+                    return True
+                else:
+                    logger.warning("Cannot rotate card")
+                    return False
+                    
+            else:
+                logger.warning(f"Unknown command type: {command.command_type}")
+                return False
+                
+        except Exception as e:
+            logger.exception(f"Error executing command {command.command_type}: {e}")
+            return False
+        finally:
+            if self.onCommandExecuted:
+                self.onCommandExecuted(command)
 
     def skipCurrentAction(self) -> None:
         """Skip the current phase action with official rules validation."""
