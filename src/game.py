@@ -310,7 +310,9 @@ class Game:
                     updatedGameState = self.gameSession.serialize()
                     self.network.sendToHost(encodeMessage("player_claimed", updatedGameState))
                     logger.debug("Client claimed player and sent updated game state to host")
-                    self.initScene(GameState.GAME)
+                    
+                    if self.gameSession.lobbyCompleted:
+                        self.initScene(GameState.GAME)
                 else:
                     logger.debug("No available player slots for client")
                     self.network.sendToHost(encodeMessage("join_failed", {"reason": "no_slots"}))
