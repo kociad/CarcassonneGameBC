@@ -517,7 +517,7 @@ class Game:
         try:
             logger.debug("Client disconnected from host")
             
-            self.onShowNotification("warning", "A client disconnected, returning to main menu")
+            self.onShowNotification("warning", "Lost connection to one of the players, returning to main menu")
             
             pygame.time.delay(2000)
             self.cleanupPreviousGame()
