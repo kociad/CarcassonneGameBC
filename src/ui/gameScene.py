@@ -542,6 +542,10 @@ class GameScene(Scene):
                 player_index = settingsManager.get("PLAYER_INDEX")
                 if not currentPlayer or currentPlayer.getIndex() != player_index or self.session.getGameOver():
                     allowAction = False
+            elif network_mode == "local":
+                currentPlayer = self.session.getCurrentPlayer()
+                if currentPlayer and currentPlayer.getIsAI():
+                    allowAction = False
 
             if allowAction:
                 if event.type == pygame.MOUSEBUTTONDOWN:
@@ -578,7 +582,8 @@ class GameScene(Scene):
         from network.command import PlaceCardCommand, PlaceFigureCommand
         from utils.settingsManager import settingsManager
         
-        player_index = settingsManager.get("PLAYER_INDEX", 0)
+        currentPlayer = self.session.getCurrentPlayer()
+        player_index = currentPlayer.getIndex() if currentPlayer else 0
         
         if self.session.turnPhase == 1:
             command = PlaceCardCommand(
@@ -610,7 +615,8 @@ class GameScene(Scene):
         if not self.session.getCurrentCard():
             return
             
-        player_index = settingsManager.get("PLAYER_INDEX", 0)
+        currentPlayer = self.session.getCurrentPlayer()
+        player_index = currentPlayer.getIndex() if currentPlayer else 0
         command = RotateCardCommand(player_index=player_index)
         
         success = self.session.executeCommand(command)
@@ -625,7 +631,8 @@ class GameScene(Scene):
         from network.command import SkipActionCommand
         from utils.settingsManager import settingsManager
         
-        player_index = settingsManager.get("PLAYER_INDEX", 0)
+        currentPlayer = self.session.getCurrentPlayer()
+        player_index = currentPlayer.getIndex() if currentPlayer else 0
         action_type = "card" if self.session.turnPhase == 1 else "figure"
         
         command = SkipActionCommand(
