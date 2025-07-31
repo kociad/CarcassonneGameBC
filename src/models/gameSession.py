@@ -331,7 +331,10 @@ class GameSession:
                 if self.currentCard:
                     while self.currentCard.rotation != command.card_rotation:
                         self.currentCard.rotate()
-                return self.playCard(command.x, command.y)
+                success = self.playCard(command.x, command.y)
+                if success:
+                    self.turnPhase = 2
+                return success
                 
             elif command.command_type == "place_figure":
                 if self.turnPhase != 2:
