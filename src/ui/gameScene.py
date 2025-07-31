@@ -410,6 +410,10 @@ class GameScene(Scene):
                 
                 playerColor = colorMap.get(colorString, (255, 255, 255))
                 
+                networkMode = settingsManager.get("NETWORK_MODE", "local")
+                if networkMode in ("host", "client") and not player.isHuman and not player.getIsAI():
+                    playerColor = (128, 128, 128)
+                
             except Exception as e:
                 logger.error(f"Failed to get player color: {e}")
                 playerColor = (255, 255, 255)
@@ -423,7 +427,11 @@ class GameScene(Scene):
                 self.screen.blit(nameSurface, nameRect)
             currentY += nameRect.height + 5
 
-            scoreColor = (200, 200, 200)
+            networkMode = settingsManager.get("NETWORK_MODE", "local")
+            if networkMode in ("host", "client") and not player.isHuman and not player.getIsAI():
+                scoreColor = (128, 128, 128)
+            else:
+                scoreColor = (200, 200, 200)
             scoreSurface = self.font.render(f"Score: {player.getScore()}", True, scoreColor)
             scoreRect = scoreSurface.get_rect()
             scoreRect.centerx = sidebarCenterX

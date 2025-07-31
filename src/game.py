@@ -517,22 +517,11 @@ class Game:
         try:
             logger.debug("Client disconnected from host")
             
-            playerIndex = None
-            for player in self.gameSession.getPlayers():
-                if player.isHuman and player.getIndex() != settingsManager.get("PLAYER_INDEX", 0):
-                    player.setIsHuman(False)
-                    player.name = f"Player {player.getIndex() + 1}"
-                    playerIndex = player.getIndex()
-                    logger.debug(f"Unclaimed player {playerIndex}")
-                    break
+            self.onShowNotification("warning", "A client disconnected, returning to main menu")
             
-            if playerIndex is not None:
-                self.onShowNotification("warning", f"Player {playerIndex + 1} disconnected and is available for rejoin")
-            else:
-                self.onShowNotification("warning", "A client disconnected")
-            
-            if hasattr(self.currentScene, 'updateGameSession'):
-                self.currentScene.updateGameSession(self.gameSession)
+            pygame.time.delay(2000)
+            self.cleanupPreviousGame()
+            self.initScene(GameState.MENU)
                 
         except Exception as e:
             logError("Failed to handle client disconnection", e)
@@ -544,9 +533,10 @@ class Game:
         try:
             logger.debug("Lost connection to host")
             
-            self.onShowNotification("error", "Lost connection to host")
+            self.onShowNotification("error", "Lost connection to host, returning to main menu")
             
             pygame.time.delay(2000)
+            self.cleanupPreviousGame()
             self.initScene(GameState.MENU)
             
         except Exception as e:
