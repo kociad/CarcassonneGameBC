@@ -515,7 +515,11 @@ class Game:
         try:
             logger.debug("Client disconnected from host")
             
-            self.onShowNotification("warning", "Lost connection to one of the players, returning to main menu")
+            # Show notification in current scene if it has showNotification method
+            if hasattr(self.currentScene, 'showNotification'):
+                self.currentScene.showNotification("warning", "Lost connection to one of the players")
+            else:
+                self.onShowNotification("warning", "Lost connection to one of the players, returning to main menu")
             
             pygame.time.delay(2000)
             self.cleanupPreviousGame()
@@ -531,7 +535,11 @@ class Game:
         try:
             logger.debug("Lost connection to host")
             
-            self.onShowNotification("error", "Lost connection to host, returning to main menu")
+            # Show notification in current scene if it has showNotification method
+            if hasattr(self.currentScene, 'showNotification'):
+                self.currentScene.showNotification("error", "Lost connection to host")
+            else:
+                self.onShowNotification("error", "Lost connection to host, returning to main menu")
             
             pygame.time.delay(2000)
             self.cleanupPreviousGame()

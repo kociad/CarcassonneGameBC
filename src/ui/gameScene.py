@@ -689,22 +689,6 @@ class GameScene(Scene):
 
         return min(distances, key=distances.get)
         
-    def showNotification(self, notificationType: str, message: str) -> None:
-        """
-        Show notification toast - called via callback from game session
-        """
-        toastTypeMap = {
-            "error": "error",
-            "warning": "warning", 
-            "info": "info",
-            "success": "success"
-        }
-        
-        toastType = toastTypeMap.get(notificationType, "info")
-        toast = Toast(message, type=toastType, duration=3)
-        
-        self.toastManager.addToast(toast)
-    
     def updateGameSession(self, newSession) -> None:
         """
         Update the game session and invalidate render cache.

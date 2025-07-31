@@ -85,22 +85,6 @@ class LobbyScene(Scene):
         """Update the lobby scene state."""
         self.updatePlayerStatus()
 
-    def showNotification(self, notificationType: str, message: str) -> None:
-        """
-        Show notification toast - called via callback from game session
-        """
-        toastTypeMap = {
-            "error": "error",
-            "warning": "warning",
-            "info": "info",
-            "success": "success"
-        }
-
-        toastType = toastTypeMap.get(notificationType, "info")
-        toast = Toast(message, type=toastType, duration=3)
-
-        self.toastManager.addToast(toast)
-
     def draw(self) -> None:
         """Draw the lobby scene, including player statuses and the start button."""
         self.screen.fill((30, 30, 30))

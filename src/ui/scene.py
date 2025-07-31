@@ -1,5 +1,6 @@
 import pygame
 import typing
+from ui.components.toast import Toast
 
 class Scene:
     """Base class for all scenes in the UI."""
@@ -21,6 +22,23 @@ class Scene:
     def draw(self) -> None:
         """Draw the scene."""
         raise NotImplementedError
+
+    def showNotification(self, notificationType: str, message: str) -> None:
+        """
+        Show notification toast - available to all scenes that have a toastManager
+        """
+        if hasattr(self, 'toastManager'):
+            toastTypeMap = {
+                "error": "error",
+                "warning": "warning",
+                "info": "info",
+                "success": "success"
+            }
+
+            toastType = toastTypeMap.get(notificationType, "info")
+            toast = Toast(message, type=toastType, duration=3)
+
+            self.toastManager.addToast(toast)
 
     def applyScroll(self, events: list[pygame.event.Event]) -> None:
         """Apply scroll events to the scene."""
