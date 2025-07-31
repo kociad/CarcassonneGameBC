@@ -216,6 +216,8 @@ class Game:
             self.network.onSyncGameState = self.onSyncGameState
             self.network.onJoinRejected = self.onJoinRejected
             self.network.onStartGame = self.onStartGame
+            self.network.onClientDisconnected = self.onClientDisconnected
+            self.network.onHostDisconnected = self.onHostDisconnected
             if networkMode == "host":
                 self.network.onClientConnected = self.onClientConnected
                 self.network.onClientSubmittedTurn = self.onClientSubmittedTurn
@@ -258,6 +260,8 @@ class Game:
             self.network.onSyncGameState = self.onSyncGameState
             self.network.onJoinRejected = self.onJoinRejected
             self.network.onStartGame = self.onStartGame
+            self.network.onClientDisconnected = self.onClientDisconnected
+            self.network.onHostDisconnected = self.onHostDisconnected
             if networkMode == "host":
                 self.network.onClientConnected = self.onClientConnected
                 self.network.onClientSubmittedTurn = self.onClientSubmittedTurn
@@ -499,6 +503,51 @@ class Game:
             Current game session or None if no session exists
         """
         return self.gameSession
+
+    def onClientDisconnected(self, conn) -> None:
+        """
+        Handle client disconnection (host mode).
+        
+        Args:
+            conn: Network connection to the disconnected client
+        """
+        try:
+            logger.debug("Client disconnected from host")
+            
+            playerIndex = None
+            for player in self.gameSession.getPlayers():
+                if player.isHuman and player.getIndex() != settingsManager.get("PLAYER_INDEX", 0):
+                    player.setIsHuman(False)
+                    player.name = f"Player {player.getIndex() + 1}"
+                    playerIndex = player.getIndex()
+                    logger.debug(f"Unclaimed player {playerIndex}")
+                    break
+            
+            if playerIndex is not None:
+                self.onShowNotification("warning", f"Player {playerIndex + 1} disconnected and is available for rejoin")
+            else:
+                self.onShowNotification("warning", "A client disconnected")
+            
+            if hasattr(self.currentScene, 'updateGameSession'):
+                self.currentScene.updateGameSession(self.gameSession)
+                
+        except Exception as e:
+            logError("Failed to handle client disconnection", e)
+
+    def onHostDisconnected(self) -> None:
+        """
+        Handle host disconnection (client mode).
+        """
+        try:
+            logger.debug("Lost connection to host")
+            
+            self.onShowNotification("error", "Lost connection to host")
+            
+            pygame.time.delay(2000)
+            self.initScene(GameState.MENU)
+            
+        except Exception as e:
+            logError("Failed to handle host disconnection", e)
         
     def onShowNotification(self, notificationType: str, message: str) -> None:
         """

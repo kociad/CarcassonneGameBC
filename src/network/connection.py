@@ -25,6 +25,8 @@ class NetworkConnection:
         self.onJoinRejected = None
         self.onPlayerClaimed = None
         self.onStartGame = None
+        self.onClientDisconnected = None
+        self.onHostDisconnected = None
         if self.networkMode == "local":
             logger.debug("Running in local mode. Networking is disabled.")
             return
@@ -72,6 +74,8 @@ class NetworkConnection:
             try:
                 data = conn.recv(BUFFER_SIZE).decode()
                 if not data:
+                    logger.debug("Connection closed by peer")
+                    self._handleConnectionDrop(conn)
                     break
                 buffer += data
                 while "\n" in buffer:
@@ -82,6 +86,7 @@ class NetworkConnection:
             except Exception as e:
                 if self.running:
                     logger.exception(f"Socket error: {e}")
+                self._handleConnectionDrop(conn)
                 break
 
     def onMessageReceived(self, message, conn=None):
@@ -181,4 +186,26 @@ class NetworkConnection:
             self.onJoinRejected = None
             self.onPlayerClaimed = None
             self.onStartGame = None
+            self.onClientDisconnected = None
+            self.onHostDisconnected = None
             self.socket = None
+
+    def _handleConnectionDrop(self, conn):
+        """Handle a dropped connection."""
+        try:
+            if conn in self.connections:
+                self.connections.remove(conn)
+                logger.debug("Client disconnected")
+                if self.onClientDisconnected:
+                    self.onClientDisconnected(conn)
+            else:
+                logger.debug("Lost connection to host")
+                if self.onHostDisconnected:
+                    self.onHostDisconnected()
+        except Exception as e:
+            logger.exception(f"Error handling connection drop: {e}")
+        finally:
+            try:
+                conn.close()
+            except:
+                pass
