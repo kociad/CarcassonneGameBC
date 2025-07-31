@@ -554,8 +554,8 @@ class GameScene(Scene):
                         self.handleMouseClick(event)
                 
                 if event.type == pygame.KEYDOWN:
-                                    if event.key == pygame.K_SPACE:
-                    self._executeLocalSkip()
+                    if event.key == pygame.K_SPACE:
+                        self._executeLocalSkip()
                         
         self.handleKeyHold()
 
