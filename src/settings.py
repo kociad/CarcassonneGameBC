@@ -22,7 +22,7 @@ PLAYERS = ["Adam", "Benedict", "Cecil", "David", "Ernest", "Francis"]
 NETWORK_MODE = "local"
 
 # If client, where to connect, if host, where to listen
-HOST_IP = "0.0.0.0"
+HOST_IP = "192.168.88.251"
 HOST_PORT = 2222  # TCP port to use
 
 # Player index to detect player turn correctly
