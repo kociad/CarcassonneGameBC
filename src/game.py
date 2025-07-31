@@ -296,7 +296,7 @@ class Game:
                 assigned = False
                 for player in self.gameSession.getPlayers():
                     if not player.getIsAI() and not player.isHuman:
-                        player.isHuman = True
+                        player.setIsHuman(True)
                         logger.debug(f"Player with index {player.getIndex()} marked as human.")
                         playersList = settingsManager.get("PLAYERS", ["Player 1"])
                         player.name = playersList[0]
@@ -310,6 +310,7 @@ class Game:
                     updatedGameState = self.gameSession.serialize()
                     self.network.sendToHost(encodeMessage("player_claimed", updatedGameState))
                     logger.debug("Client claimed player and sent updated game state to host")
+                    self.initScene(GameState.GAME)
                 else:
                     logger.debug("No available player slots for client")
                     self.network.sendToHost(encodeMessage("join_failed", {"reason": "no_slots"}))
