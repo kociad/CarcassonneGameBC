@@ -33,7 +33,7 @@ WINDOW_WIDTH = 1920
 WINDOW_HEIGHT = 1080
 FULLSCREEN = False
 SHOW_VALID_PLACEMENTS = True
-SELECTED_CARD_SETS = ['baseGame']
+SELECTED_CARD_SETS = ['baseGame', 'exampleExpansion']
 
 # Apply dynamic fullscreen resolution override if needed
 if FULLSCREEN:

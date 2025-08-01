@@ -521,13 +521,13 @@ class GamePrepareScene(Scene):
         titleRect = titleText.get_rect(center=(self.screen.get_width() // 2, self.titleY + offsetY))
         self.screen.blit(titleText, titleRect)
 
-        playerLabel = self.dropdownFont.render("Player Settings", True, (255, 215, 0))
+        playerLabel = self.dropdownFont.render("Players", True, (255, 215, 0))
         playerLabelRect = playerLabel.get_rect()
         playerLabelRect.centerx = self.screen.get_width() // 2
         playerLabelRect.y = self.playerLabelY + offsetY
         self.screen.blit(playerLabel, playerLabelRect)
 
-        gameLabel = self.dropdownFont.render("Game Settings", True, (255, 215, 0))
+        gameLabel = self.dropdownFont.render("Game", True, (255, 215, 0))
         gameLabelRect = gameLabel.get_rect()
         gameLabelRect.centerx = self.screen.get_width() // 2
         gameLabelRect.y = self.gameLabelY + offsetY
@@ -539,7 +539,7 @@ class GamePrepareScene(Scene):
         cardSetLabelRect.y = self.cardSetLabelY + offsetY
         self.screen.blit(cardSetLabel, cardSetLabelRect)
 
-        networkLabel = self.dropdownFont.render("Network Settings", True, (255, 215, 0))
+        networkLabel = self.dropdownFont.render("Network", True, (255, 215, 0))
         networkLabelRect = networkLabel.get_rect()
         networkLabelRect.centerx = self.screen.get_width() // 2
         networkLabelRect.y = self.networkLabelY + offsetY
