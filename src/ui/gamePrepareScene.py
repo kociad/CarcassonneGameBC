@@ -405,8 +405,7 @@ class GamePrepareScene(Scene):
         elif not checked and setName in self.selectedCardSets:
             self.selectedCardSets.remove(setName)
         
-        # Store selected card sets in settings
-        settingsManager.set("SELECTED_CARD_SETS", self.selectedCardSets)
+        settingsManager.set("SELECTED_CARD_SETS", self.selectedCardSets, temporary=True)
         
     def addPlayerField(self) -> None:
         """Add a new player"""
