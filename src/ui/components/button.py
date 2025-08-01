@@ -5,7 +5,12 @@ import typing
 class Button:
     """A clickable button UI component."""
 
-    def __init__(self, rect: pygame.Rect, text: str, font: pygame.font.Font, callback: typing.Optional[typing.Callable] = None, disabled: bool = False) -> None:
+    def __init__(self,
+                 rect: pygame.Rect,
+                 text: str,
+                 font: pygame.font.Font,
+                 callback: typing.Optional[typing.Callable] = None,
+                 disabled: bool = False) -> None:
         """
         Initialize the button.
         

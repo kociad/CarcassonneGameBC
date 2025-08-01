@@ -10,7 +10,12 @@ logger = logging.getLogger(__name__)
 class Player:
     """Represents a player in the game."""
 
-    def __init__(self, name: str, color: str, index: int, isAI: bool = False, isHuman: bool = False) -> None:
+    def __init__(self,
+                 name: str,
+                 color: str,
+                 index: int,
+                 isAI: bool = False,
+                 isHuman: bool = False) -> None:
         """
         Initialize a player.
         
@@ -140,10 +145,15 @@ class Player:
             figuresRemaining = int(data.get("figuresRemaining", 7))
             isHuman = bool(data.get("isHuman", False))
 
-            player = Player(name=name, color=color, index=index, isAI=isAI, isHuman=isHuman)
+            player = Player(name=name,
+                            color=color,
+                            index=index,
+                            isAI=isAI,
+                            isHuman=isHuman)
             player.score = score
             player.figures = [Figure(player) for _ in range(figuresRemaining)]
             return player
         except (KeyError, ValueError, TypeError) as e:
-            logger.error(f"Failed to deserialize Player object: {e}\nData: {data}")
+            logger.error(
+                f"Failed to deserialize Player object: {e}\nData: {data}")
             return None

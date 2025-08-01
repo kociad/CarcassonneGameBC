@@ -8,7 +8,10 @@ from utils.settingsManager import settingsManager
 class GameLogEntry:
     """Represents a single entry in the game log."""
 
-    def __init__(self, message: str, level: str = "INFO", timestamp: float = None) -> None:
+    def __init__(self,
+                 message: str,
+                 level: str = "INFO",
+                 timestamp: float = None) -> None:
         """
         Initialize a game log entry.
         
@@ -127,9 +130,12 @@ class GameLog:
         overlay = pygame.Surface((screenWidth, screenHeight), pygame.SRCALPHA)
         overlay.fill((0, 0, 0, 200))
         screen.blit(overlay, (0, 0))
-        titleText = self.titleFont.render("Game Log (Press TAB to close, Mouse Wheel to scroll)", True, (255, 255, 255))
+        titleText = self.titleFont.render(
+            "Game Log (Press TAB to close, Mouse Wheel to scroll)", True,
+            (255, 255, 255))
         titleRect = titleText.get_rect(center=(screenWidth // 2, 30))
-        titleBg = pygame.Surface((titleRect.width + 20, titleRect.height + 10), pygame.SRCALPHA)
+        titleBg = pygame.Surface((titleRect.width + 20, titleRect.height + 10),
+                                 pygame.SRCALPHA)
         titleBg.fill((50, 50, 50, 180))
         screen.blit(titleBg, (titleRect.x - 10, titleRect.y - 5))
         screen.blit(titleText, titleRect)
@@ -145,12 +151,16 @@ class GameLog:
         totalFilteredEntries = len(filteredEntries)
         if totalFilteredEntries == 0:
             return
-        startIndex = max(0, totalFilteredEntries - maxVisibleLines - self.scrollOffset)
-        endIndex = min(totalFilteredEntries, totalFilteredEntries - self.scrollOffset)
+        startIndex = max(
+            0, totalFilteredEntries - maxVisibleLines - self.scrollOffset)
+        endIndex = min(totalFilteredEntries,
+                       totalFilteredEntries - self.scrollOffset)
         maxScroll = max(0, totalFilteredEntries - maxVisibleLines)
         self.scrollOffset = max(0, min(self.scrollOffset, maxScroll))
-        startIndex = max(0, totalFilteredEntries - maxVisibleLines - self.scrollOffset)
-        endIndex = min(totalFilteredEntries, totalFilteredEntries - self.scrollOffset)
+        startIndex = max(
+            0, totalFilteredEntries - maxVisibleLines - self.scrollOffset)
+        endIndex = min(totalFilteredEntries,
+                       totalFilteredEntries - self.scrollOffset)
         yPos = 70
         entriesDrawn = 0
         for i in range(startIndex, endIndex):
@@ -165,7 +175,8 @@ class GameLog:
             textColor = self.levelColors.get(entry.level, (255, 255, 255))
             bgColor = self.levelBackgrounds.get(entry.level, (0, 0, 0, 0))
             if bgColor[3] > 0:
-                lineBg = pygame.Surface((screenWidth - 20, lineHeight), pygame.SRCALPHA)
+                lineBg = pygame.Surface((screenWidth - 20, lineHeight),
+                                        pygame.SRCALPHA)
                 lineBg.fill(bgColor)
                 screen.blit(lineBg, (10, yPos - 2))
             maxWidth = screenWidth - 40
@@ -196,12 +207,16 @@ class GameLog:
                 yPos += lineHeight
                 entriesDrawn += 1
         if totalFilteredEntries > maxVisibleLines:
-            visibleStart = max(1, totalFilteredEntries - self.scrollOffset - entriesDrawn + 1)
+            visibleStart = max(
+                1, totalFilteredEntries - self.scrollOffset - entriesDrawn + 1)
             visibleEnd = totalFilteredEntries - self.scrollOffset
             scrollInfo = f"Lines {visibleStart}-{visibleEnd} of {totalFilteredEntries}"
             scrollSurface = self.font.render(scrollInfo, True, (180, 180, 180))
-            scrollBg = pygame.Surface((scrollSurface.get_width() + 10, scrollSurface.get_height() + 6), pygame.SRCALPHA)
+            scrollBg = pygame.Surface((scrollSurface.get_width() + 10,
+                                       scrollSurface.get_height() + 6),
+                                      pygame.SRCALPHA)
             scrollBg.fill((0, 0, 0, 150))
-            scrollRect = (screenWidth - scrollSurface.get_width() - 25, screenHeight - 35)
+            scrollRect = (screenWidth - scrollSurface.get_width() - 25,
+                          screenHeight - 35)
             screen.blit(scrollBg, (scrollRect[0] - 5, scrollRect[1] - 3))
             screen.blit(scrollSurface, scrollRect)

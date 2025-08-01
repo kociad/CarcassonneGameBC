@@ -6,7 +6,19 @@ import typing
 class InputField:
     """A text input field UI component."""
 
-    def __init__(self, rect: pygame.Rect, font: pygame.font.Font, placeholder: str = "", text: str = "", initialText: str = "", textColor: tuple = (0, 0, 0), bgColor: tuple = (255, 255, 255), borderColor: tuple = (0, 0, 0), onTextChange: typing.Optional[typing.Callable] = None, numeric: bool = False, minValue: typing.Optional[float] = None, maxValue: typing.Optional[float] = None) -> None:
+    def __init__(self,
+                 rect: pygame.Rect,
+                 font: pygame.font.Font,
+                 placeholder: str = "",
+                 text: str = "",
+                 initialText: str = "",
+                 textColor: tuple = (0, 0, 0),
+                 bgColor: tuple = (255, 255, 255),
+                 borderColor: tuple = (0, 0, 0),
+                 onTextChange: typing.Optional[typing.Callable] = None,
+                 numeric: bool = False,
+                 minValue: typing.Optional[float] = None,
+                 maxValue: typing.Optional[float] = None) -> None:
         """
         Initialize the input field.
         
@@ -71,24 +83,31 @@ class InputField:
                 self.cursorPos = len(self.text)
             elif event.key == pygame.K_BACKSPACE:
                 if self.cursorPos > 0:
-                    self.text = self.text[:self.cursorPos-1] + self.text[self.cursorPos:]
+                    self.text = self.text[:self.cursorPos -
+                                          1] + self.text[self.cursorPos:]
                     self.cursorPos -= 1
             elif event.key == pygame.K_DELETE:
                 if self.cursorPos < len(self.text):
-                    self.text = self.text[:self.cursorPos] + self.text[self.cursorPos+1:]
+                    self.text = self.text[:self.cursorPos] + self.text[
+                        self.cursorPos + 1:]
             elif event.key == pygame.K_RETURN:
                 self.active = False
             else:
                 if self.numeric:
-                    if (event.unicode.isdigit() or 
-                        (event.unicode == '-' and len(self.text) == 0) or
-                        (event.unicode == '.' and '.' not in self.text) or
+                    if (event.unicode.isdigit()
+                            or (event.unicode == '-' and len(self.text) == 0)
+                            or (event.unicode == '.' and '.' not in self.text)
+                            or
                         (event.unicode == ',' and ',' not in self.text)):
-                        self.text = self.text[:self.cursorPos] + event.unicode + self.text[self.cursorPos:]
+                        self.text = self.text[:self.
+                                              cursorPos] + event.unicode + self.text[
+                                                  self.cursorPos:]
                         self.cursorPos += 1
                 else:
                     if event.unicode and event.unicode.isprintable():
-                        self.text = self.text[:self.cursorPos] + event.unicode + self.text[self.cursorPos:]
+                        self.text = self.text[:self.
+                                              cursorPos] + event.unicode + self.text[
+                                                  self.cursorPos:]
                         self.cursorPos += 1
             self.cursorPos = max(0, min(self.cursorPos, len(self.text)))
             if self.onTextChange and self.text != oldText:
@@ -119,22 +138,28 @@ class InputField:
         drawRect = self.rect.move(0, yOffset)
         bgColor = (200, 200, 200) if self.disabled else self.bgColor
         borderColor = (100, 100, 100) if self.disabled else self.borderColor
-        textColor = (150, 150, 150) if self.disabled else (self.textColor if self.text or self.active else (150, 150, 150))
+        textColor = (150, 150, 150) if self.disabled else (
+            self.textColor if self.text or self.active else (150, 150, 150))
         pygame.draw.rect(surface, bgColor, drawRect)
         pygame.draw.rect(surface, borderColor, drawRect, 2)
         displayText = self.text if self.text or self.active else self.placeholder
         textSurface = self.font.render(displayText, True, textColor)
-        clampedWidth = max(0, min(self.rect.width - 10, textSurface.get_width() - self.scrollOffset))
-        visibleRect = pygame.Rect(self.scrollOffset, 0, clampedWidth, textSurface.get_height())
-        surface.blit(
-            textSurface.subsurface(visibleRect),
-            (drawRect.x + 5, drawRect.y + (drawRect.height - textSurface.get_height()) // 2)
-        )
+        clampedWidth = max(
+            0,
+            min(self.rect.width - 10,
+                textSurface.get_width() - self.scrollOffset))
+        visibleRect = pygame.Rect(self.scrollOffset, 0, clampedWidth,
+                                  textSurface.get_height())
+        surface.blit(textSurface.subsurface(visibleRect),
+                     (drawRect.x + 5, drawRect.y +
+                      (drawRect.height - textSurface.get_height()) // 2))
         if self.active and not self.disabled and self.cursorVisible:
-            cursorX = drawRect.x + 5 + self.font.size(self.text[:self.cursorPos])[0] - self.scrollOffset
+            cursorX = drawRect.x + 5 + self.font.size(
+                self.text[:self.cursorPos])[0] - self.scrollOffset
             cursorY = drawRect.y + 5
             cursorHeight = drawRect.height - 10
-            pygame.draw.line(surface, textColor, (cursorX, cursorY), (cursorX, cursorY + cursorHeight), 2)
+            pygame.draw.line(surface, textColor, (cursorX, cursorY),
+                             (cursorX, cursorY + cursorHeight), 2)
 
     def getText(self) -> str:
         """Get the current text value."""

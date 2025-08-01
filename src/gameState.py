@@ -1,5 +1,6 @@
 from enum import Enum, auto
 
+
 class GameState(Enum):
     MENU: int = auto()
     GAME: int = auto()

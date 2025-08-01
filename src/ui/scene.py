@@ -2,9 +2,12 @@ import pygame
 import typing
 from ui.components.toast import Toast
 
+
 class Scene:
     """Base class for all scenes in the UI."""
-    def __init__(self, screen: pygame.Surface, switchSceneCallback: typing.Callable) -> None:
+
+    def __init__(self, screen: pygame.Surface,
+                 switchSceneCallback: typing.Callable) -> None:
         self.screen = screen
         self.switchScene = switchSceneCallback
         self.scrollOffset = 0
@@ -52,8 +55,8 @@ class Scene:
                     self.scrollOffset += self.scrollSpeed
         self.scrollOffset = max(
             min(0, self.scrollOffset),
-            min(0, self.screen.get_height() - self.maxScroll)
-        )
+            min(0,
+                self.screen.get_height() - self.maxScroll))
 
     def getScrollOffset(self) -> int:
         """Return the current scroll offset."""

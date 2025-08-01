@@ -5,7 +5,18 @@ import typing
 class Dropdown:
     """A dropdown selection UI component."""
 
-    def __init__(self, rect: pygame.Rect, font: pygame.font.Font, options: list[str], onSelect: typing.Optional[typing.Callable] = None, defaultIndex: int = 0, textColor: tuple = (0, 0, 0), bgColor: tuple = (255, 255, 255), borderColor: tuple = (0, 0, 0), highlightColor: tuple = (200, 200, 200)) -> None:
+    def __init__(
+        self,
+        rect: pygame.Rect,
+        font: pygame.font.Font,
+        options: list[str],
+        onSelect: typing.Optional[typing.Callable] = None,
+        defaultIndex: int = 0,
+        textColor: tuple = (0, 0, 0),
+        bgColor: tuple = (255, 255, 255),
+        borderColor: tuple = (0, 0, 0),
+        highlightColor: tuple = (200, 200, 200)
+    ) -> None:
         """
         Initialize the dropdown.
         
@@ -55,9 +66,7 @@ class Dropdown:
                     optionRect = pygame.Rect(
                         shiftedRect.x,
                         shiftedRect.y + (i + 1) * self.rect.height,
-                        self.rect.width,
-                        self.rect.height
-                    )
+                        self.rect.width, self.rect.height)
                     if optionRect.collidepoint(event.pos):
                         self.selectedIndex = i
                         self.expanded = False
@@ -76,25 +85,37 @@ class Dropdown:
             yOffset: Vertical offset for drawing
         """
         drawRect = self.rect.move(0, yOffset)
-        fullHeight = self.rect.height + (len(self.options) * self.rect.height if self.expanded else 0)
-        drawSurface = pygame.Surface((self.rect.width, fullHeight), pygame.SRCALPHA)
+        fullHeight = self.rect.height + (len(self.options) * self.rect.height
+                                         if self.expanded else 0)
+        drawSurface = pygame.Surface((self.rect.width, fullHeight),
+                                     pygame.SRCALPHA)
         alpha = 150 if self.disabled else 255
         bg = (*self.bgColor, alpha)
         border = (*self.borderColor, alpha)
-        textCol = (*((150, 150, 150) if self.disabled else self.textColor), alpha)
+        textCol = (*((150, 150, 150) if self.disabled else self.textColor),
+                   alpha)
         highlight = (*self.highlightColor, alpha)
         localRect = pygame.Rect(0, 0, self.rect.width, self.rect.height)
         pygame.draw.rect(drawSurface, bg, localRect)
         pygame.draw.rect(drawSurface, border, localRect, 2)
-        selectedText = self.font.render(self.options[self.selectedIndex], True, textCol)
-        drawSurface.blit(selectedText, (5, (self.rect.height - selectedText.get_height()) // 2))
+        selectedText = self.font.render(self.options[self.selectedIndex], True,
+                                        textCol)
+        drawSurface.blit(selectedText,
+                         (5,
+                          (self.rect.height - selectedText.get_height()) // 2))
         if self.expanded:
             for i, option in enumerate(self.options):
-                optionRect = pygame.Rect(0, (i + 1) * self.rect.height, self.rect.width, self.rect.height)
-                pygame.draw.rect(drawSurface, highlight if i == self.selectedIndex else bg, optionRect)
+                optionRect = pygame.Rect(0, (i + 1) * self.rect.height,
+                                         self.rect.width, self.rect.height)
+                pygame.draw.rect(drawSurface,
+                                 highlight if i == self.selectedIndex else bg,
+                                 optionRect)
                 pygame.draw.rect(drawSurface, border, optionRect, 1)
                 optionText = self.font.render(option, True, textCol)
-                drawSurface.blit(optionText, (5, optionRect.y + (self.rect.height - optionText.get_height()) // 2))
+                drawSurface.blit(
+                    optionText,
+                    (5, optionRect.y +
+                     (self.rect.height - optionText.get_height()) // 2))
         surface.blit(drawSurface, drawRect.topleft)
 
     def getSelected(self) -> str:

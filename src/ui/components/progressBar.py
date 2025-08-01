@@ -18,8 +18,8 @@ class ProgressBar:
         showText: Whether to display the percentage text
         textColor: Color of the text
     """
-    
-    def __init__(self, 
+
+    def __init__(self,
                  rect: Tuple[int, int, int, int],
                  font: pygame.font.Font,
                  minValue: float = 0.0,
@@ -55,7 +55,7 @@ class ProgressBar:
         self.borderColor = borderColor
         self.showText = showText
         self.textColor = textColor
-        
+
     def setValue(self, value: float) -> None:
         """
         Set the current progress value.
@@ -64,7 +64,7 @@ class ProgressBar:
             value: New progress value (will be clamped to min/max range)
         """
         self.value = max(self.minValue, min(self.maxValue, value))
-        
+
     def getValue(self) -> float:
         """
         Get the current progress value.
@@ -73,7 +73,7 @@ class ProgressBar:
             Current progress value
         """
         return self.value
-        
+
     def getProgress(self) -> float:
         """
         Get the progress as a percentage (0.0 to 1.0).
@@ -84,7 +84,7 @@ class ProgressBar:
         if self.maxValue == self.minValue:
             return 0.0
         return (self.value - self.minValue) / (self.maxValue - self.minValue)
-        
+
     def setProgress(self, progress: float) -> None:
         """
         Set the progress as a percentage (0.0 to 1.0).
@@ -94,7 +94,7 @@ class ProgressBar:
         """
         progress = max(0.0, min(1.0, progress))
         self.value = self.minValue + progress * (self.maxValue - self.minValue)
-        
+
     def draw(self, screen: pygame.Surface, yOffset: int = 0) -> None:
         """
         Draw the progress bar on the screen.
@@ -104,22 +104,24 @@ class ProgressBar:
             yOffset: Vertical offset for scrolling
         """
         x, y = self.rect.x, self.rect.y + yOffset
-        
-        pygame.draw.rect(screen, self.backgroundColor, (x, y, self.rect.width, self.rect.height))
-        
+
+        pygame.draw.rect(screen, self.backgroundColor,
+                         (x, y, self.rect.width, self.rect.height))
+
         progress = self.getProgress()
         if progress > 0:
             progressWidth = int(self.rect.width * progress)
             if progressWidth > 0:
-                pygame.draw.rect(screen, self.progressColor, 
-                               (x, y, progressWidth, self.rect.height))
-        
-        pygame.draw.rect(screen, self.borderColor, (x, y, self.rect.width, self.rect.height), 2)
-        
+                pygame.draw.rect(screen, self.progressColor,
+                                 (x, y, progressWidth, self.rect.height))
+
+        pygame.draw.rect(screen, self.borderColor,
+                         (x, y, self.rect.width, self.rect.height), 2)
+
         if self.showText:
             progressText = f"{int(progress * 100)}%"
             textSurface = self.font.render(progressText, True, self.textColor)
             textRect = textSurface.get_rect()
             textRect.centerx = x + self.rect.width // 2
             textRect.centery = y + self.rect.height // 2
-            screen.blit(textSurface, textRect) 
+            screen.blit(textSurface, textRect)

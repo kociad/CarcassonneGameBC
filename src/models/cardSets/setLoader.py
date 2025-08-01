@@ -10,6 +10,7 @@ from typing import Dict, List, Any
 
 logger = logging.getLogger(__name__)
 
+
 def discoverCardSets() -> List[str]:
     """
     Discover all available card set modules in the cardSets directory.
@@ -17,14 +18,16 @@ def discoverCardSets() -> List[str]:
     """
     currentDir = os.path.dirname(os.path.abspath(__file__))
     cardSets = []
-    
+
     for filename in os.listdir(currentDir):
-        if filename.endswith('.py') and not filename.startswith('__') and filename != 'setLoader.py':
+        if filename.endswith('.py') and not filename.startswith(
+                '__') and filename != 'setLoader.py':
             moduleName = filename[:-3]  # Remove .py extension
             cardSets.append(moduleName)
-    
+
     logger.debug(f"Discovered card sets: {cardSets}")
     return cardSets
+
 
 def loadCardSet(setName: str) -> Dict[str, Any]:
     """
@@ -33,7 +36,7 @@ def loadCardSet(setName: str) -> Dict[str, Any]:
     """
     try:
         module = importlib.import_module(f'models.cardSets.{setName}')
-        
+
         # Get card definitions
         if hasattr(module, 'getCardDefinitions'):
             definitions = module.getCardDefinitions()
@@ -42,7 +45,7 @@ def loadCardSet(setName: str) -> Dict[str, Any]:
         else:
             logger.warning(f"Card set {setName} has no card definitions")
             definitions = []
-        
+
         # Get card distributions
         if hasattr(module, 'getCardDistributions'):
             distributions = module.getCardDistributions()
@@ -51,19 +54,20 @@ def loadCardSet(setName: str) -> Dict[str, Any]:
         else:
             logger.warning(f"Card set {setName} has no card distributions")
             distributions = {}
-        
+
         return {
             'definitions': definitions,
             'distributions': distributions,
             'name': setName
         }
-        
+
     except ImportError as e:
         logger.error(f"Failed to load card set {setName}: {e}")
         return {'definitions': [], 'distributions': {}, 'name': setName}
     except Exception as e:
         logger.error(f"Error loading card set {setName}: {e}")
         return {'definitions': [], 'distributions': {}, 'name': setName}
+
 
 def loadAllCardSets() -> Dict[str, Any]:
     """
@@ -73,21 +77,21 @@ def loadAllCardSets() -> Dict[str, Any]:
     cardSets = discoverCardSets()
     allDefinitions = []
     allDistributions = {}
-    
+
     for setName in cardSets:
         setData = loadCardSet(setName)
         if setData['definitions']:
             allDefinitions.extend(setData['definitions'])
             allDistributions.update(setData['distributions'])
-            logger.info(f"Loaded card set: {setName} with {len(setData['definitions'])} card definitions")
-    
+            logger.info(
+                f"Loaded card set: {setName} with {len(setData['definitions'])} card definitions"
+            )
+
     logger.info(f"Total card definitions loaded: {len(allDefinitions)}")
     logger.info(f"Total card distributions: {len(allDistributions)}")
-    
-    return {
-        'definitions': allDefinitions,
-        'distributions': allDistributions
-    }
+
+    return {'definitions': allDefinitions, 'distributions': allDistributions}
+
 
 def getAvailableCardSets() -> List[Dict[str, Any]]:
     """
@@ -96,7 +100,7 @@ def getAvailableCardSets() -> List[Dict[str, Any]]:
     """
     cardSets = discoverCardSets()
     availableSets = []
-    
+
     for setName in cardSets:
         setData = loadCardSet(setName)
         if setData['definitions']:
@@ -107,7 +111,7 @@ def getAvailableCardSets() -> List[Dict[str, Any]]:
                     displayName = module.CARD_SET_NAME
             except:
                 pass
-            
+
             description = f"{len(setData['definitions'])} cards"
             try:
                 module = importlib.import_module(f'models.cardSets.{setName}')
@@ -115,12 +119,12 @@ def getAvailableCardSets() -> List[Dict[str, Any]]:
                     description = module.__doc__.strip().split('\n')[0]
             except:
                 pass
-            
+
             availableSets.append({
                 'name': setName,
                 'displayName': displayName,
                 'description': description,
                 'cardCount': len(setData['definitions'])
             })
-    
-    return availableSets 
+
+    return availableSets

@@ -7,7 +7,14 @@ import typing
 class Slider:
     """A slider UI component for selecting a numeric value."""
 
-    def __init__(self, rect: pygame.Rect, font, minValue: float, maxValue: float, initialValue: float = None, value: float = None, onChange: typing.Callable = None) -> None:
+    def __init__(self,
+                 rect: pygame.Rect,
+                 font,
+                 minValue: float,
+                 maxValue: float,
+                 initialValue: float = None,
+                 value: float = None,
+                 onChange: typing.Callable = None) -> None:
         """
         Initialize the slider.
         
@@ -24,7 +31,8 @@ class Slider:
         self.font = font
         self.minValue = minValue
         self.maxValue = maxValue
-        self.value = value if value is not None else (initialValue if initialValue is not None else minValue)
+        self.value = value if value is not None else (
+            initialValue if initialValue is not None else minValue)
         self.onChange = onChange
         self.lastReportedValue = self.value
         self.disabled = False
@@ -62,10 +70,12 @@ class Slider:
         try:
             newValue = int(inputText)
             if newValue < self.minValue:
-                self._showToast(f"Value must be at least {self.minValue}", "error")
+                self._showToast(f"Value must be at least {self.minValue}",
+                                "error")
                 self.inputField.setText(str(self.value))
             elif newValue > self.maxValue:
-                self._showToast(f"Value must be at most {self.maxValue}", "error")
+                self._showToast(f"Value must be at most {self.maxValue}",
+                                "error")
                 self.inputField.setText(str(self.value))
             else:
                 if newValue != self.value:
@@ -120,7 +130,8 @@ class Slider:
         self.inputField.handleEvent(event, yOffset=yOffset)
         if wasActive and not self.inputField.active:
             self._validateAndApplyInput()
-        if (self.inputField.active and event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN):
+        if (self.inputField.active and event.type == pygame.KEYDOWN
+                and event.key == pygame.K_RETURN):
             self._validateAndApplyInput()
         if self.disabled:
             return
@@ -130,9 +141,11 @@ class Slider:
             if handleRect.collidepoint(event.pos):
                 self.dragging = True
             elif shiftedRect.collidepoint(event.pos):
-                relX = min(max(event.pos[0], shiftedRect.left), shiftedRect.right)
+                relX = min(max(event.pos[0], shiftedRect.left),
+                           shiftedRect.right)
                 ratio = (relX - shiftedRect.left) / shiftedRect.width
-                newValue = int(self.minValue + ratio * (self.maxValue - self.minValue))
+                newValue = int(self.minValue + ratio *
+                               (self.maxValue - self.minValue))
                 if newValue != self.value:
                     self.value = newValue
                     self.inputField.setText(str(newValue))
@@ -145,7 +158,8 @@ class Slider:
         elif event.type == pygame.MOUSEMOTION and self.dragging:
             relX = min(max(event.pos[0], shiftedRect.left), shiftedRect.right)
             ratio = (relX - shiftedRect.left) / shiftedRect.width
-            newValue = int(self.minValue + ratio * (self.maxValue - self.minValue))
+            newValue = int(self.minValue + ratio *
+                           (self.maxValue - self.minValue))
             if newValue != self.value:
                 self.value = newValue
                 self.inputField.setText(str(newValue))
@@ -164,14 +178,13 @@ class Slider:
         Returns:
             Rectangle for the slider handle
         """
-        handleX = self.rect.left + ((self.value - self.minValue) / (self.maxValue - self.minValue)) * self.rect.width
+        handleX = self.rect.left + (
+            (self.value - self.minValue) /
+            (self.maxValue - self.minValue)) * self.rect.width
         handleY = self.rect.centery + yOffset
-        return pygame.Rect(
-            handleX - self.handleRadius,
-            handleY - self.handleRadius,
-            self.handleRadius * 2,
-            self.handleRadius * 2
-        )
+        return pygame.Rect(handleX - self.handleRadius,
+                           handleY - self.handleRadius, self.handleRadius * 2,
+                           self.handleRadius * 2)
 
     def draw(self, surface: pygame.Surface, yOffset: int = 0) -> None:
         """
@@ -194,11 +207,17 @@ class Slider:
             borderColor = self.borderColor
         pygame.draw.rect(surface, bgColor, shiftedRect)
         pygame.draw.rect(surface, borderColor, shiftedRect, 1)
-        fillWidth = ((self.value - self.minValue) / (self.maxValue - self.minValue)) * shiftedRect.width
-        pygame.draw.rect(surface, fgColor, pygame.Rect(shiftedRect.left, shiftedRect.top, fillWidth, shiftedRect.height))
+        fillWidth = ((self.value - self.minValue) /
+                     (self.maxValue - self.minValue)) * shiftedRect.width
+        pygame.draw.rect(
+            surface, fgColor,
+            pygame.Rect(shiftedRect.left, shiftedRect.top, fillWidth,
+                        shiftedRect.height))
         handleRect = self._handleRect(yOffset)
-        pygame.draw.circle(surface, handleColor, handleRect.center, self.handleRadius)
-        pygame.draw.circle(surface, borderColor, handleRect.center, self.handleRadius, 1)
+        pygame.draw.circle(surface, handleColor, handleRect.center,
+                           self.handleRadius)
+        pygame.draw.circle(surface, borderColor, handleRect.center,
+                           self.handleRadius, 1)
         self.inputField.draw(surface, yOffset=yOffset)
         if not self.activeToast and self.toastQueue:
             self.activeToast = self.toastQueue.pop(0)

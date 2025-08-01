@@ -12,15 +12,17 @@ logger = logging.getLogger(__name__)
 
 BUFFER_SIZE = 4096
 
+
 class NetworkConnection:
     """Handles network connections for host and client modes."""
+
     def __init__(self) -> None:
         self.networkMode = settingsManager.get("NETWORK_MODE", "local")
         self.running = False
         self.connections = []
         self.socket = None
         self.commandManager = CommandManager()
-        
+
         self.onClientConnected = None
         self.onClientSubmittedTurn = None
         self.onInitialGameStateReceived = None
@@ -31,11 +33,11 @@ class NetworkConnection:
         self.onStartGame = None
         self.onClientDisconnected = None
         self.onHostDisconnected = None
-        
+
         self.onCommandReceived = None
         self.onCommandAck = None
         self.onSyncRequest = None
-        
+
         if self.networkMode == "local":
             logger.debug("Running in local mode. Networking is disabled.")
             return
@@ -48,8 +50,10 @@ class NetworkConnection:
                 self.socket.bind((hostIp, hostPort))
                 self.socket.listen()
                 logger.debug(f"Host listening on {hostIp}:{hostPort}...")
-                threading.Thread(target=self.acceptConnections, daemon=True).start()
-                threading.Thread(target=self._commandCleanupLoop, daemon=True).start()
+                threading.Thread(target=self.acceptConnections,
+                                 daemon=True).start()
+                threading.Thread(target=self._commandCleanupLoop,
+                                 daemon=True).start()
             except Exception as e:
                 logger.exception(f"Failed to bind socket: {e}")
         elif self.networkMode == "client":
@@ -58,8 +62,11 @@ class NetworkConnection:
                 hostPort = settingsManager.get("HOST_PORT", 222)
                 self.socket.connect((hostIp, hostPort))
                 logger.debug(f"Connected to host at {hostIp}:{hostPort}")
-                threading.Thread(target=self.receiveLoop, args=(self.socket,), daemon=True).start()
-                threading.Thread(target=self._commandCleanupLoop, daemon=True).start()
+                threading.Thread(target=self.receiveLoop,
+                                 args=(self.socket, ),
+                                 daemon=True).start()
+                threading.Thread(target=self._commandCleanupLoop,
+                                 daemon=True).start()
             except Exception as e:
                 logger.exception(f"Failed to connect to host: {e}")
 
@@ -69,10 +76,13 @@ class NetworkConnection:
             try:
                 conn, addr = self.socket.accept()
                 self.connections.append(conn)
-                logger.debug(f"Connection received and established with {addr}")
+                logger.debug(
+                    f"Connection received and established with {addr}")
                 if self.onClientConnected:
                     self.onClientConnected(conn)
-                threading.Thread(target=self.receiveLoop, args=(conn,), daemon=True).start()
+                threading.Thread(target=self.receiveLoop,
+                                 args=(conn, ),
+                                 daemon=True).start()
             except Exception as e:
                 if self.running:
                     logger.exception(f"Failed to accept connection: {e}")
@@ -107,13 +117,14 @@ class NetworkConnection:
             return
         action = parsed.get("action")
         payload = parsed.get("payload")
-        
+
         if action == "command":
             logger.debug("Received command from network")
             command = decodeCommandMessage(message)
             if command and self.onCommandReceived:
                 self.onCommandReceived(command, conn)
-            ackMessage = encodeMessage("command_ack", {"command_id": command.commandId})
+            ackMessage = encodeMessage("command_ack",
+                                       {"command_id": command.commandId})
             if conn:
                 try:
                     conn.sendall((ackMessage + "\n").encode())
@@ -172,7 +183,9 @@ class NetworkConnection:
             try:
                 conn.sendall((message + "\n").encode())
             except Exception as e:
-                logger.exception(f"Failed to send message to client, removing connection: {e}")
+                logger.exception(
+                    f"Failed to send message to client, removing connection: {e}"
+                )
                 try:
                     conn.close()
                 except:
@@ -194,10 +207,10 @@ class NetworkConnection:
         """Send a command to the network with acknowledgment tracking."""
         if self.networkMode == "local":
             return
-            
+
         message = encodeCommandMessage(command)
         self.commandManager.markCommandPendingAck(command.commandId)
-        
+
         if self.networkMode == "host":
             for conn in self.connections[:]:
                 try:
@@ -212,8 +225,9 @@ class NetworkConnection:
                         self.connections.remove(conn)
         elif self.networkMode == "client":
             self.sendToHost(message)
-            
-        logger.debug(f"Sent command {command.commandType} with ID {command.commandId}")
+
+        logger.debug(
+            f"Sent command {command.commandType} with ID {command.commandId}")
 
     def _commandCleanupLoop(self):
         """Background thread to clean up expired commands."""

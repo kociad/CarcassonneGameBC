@@ -42,9 +42,11 @@ class GameBoard:
             y: Y coordinate
         """
         if not (0 <= x < self.gridSize):
-            raise ValueError(f"x must be between 1 and {self.gridSize - 1}, got {x}")
+            raise ValueError(
+                f"x must be between 1 and {self.gridSize - 1}, got {x}")
         if not (0 <= y < self.gridSize):
-            raise ValueError(f"y must be between 1 and {self.gridSize - 1}, got {y}")
+            raise ValueError(
+                f"y must be between 1 and {self.gridSize - 1}, got {y}")
         if 0 <= x < self.gridSize and 0 <= y < self.gridSize:
             card.setPosition(x, y)
             self.grid[y][x] = card
@@ -62,16 +64,22 @@ class GameBoard:
             Card at the position or None if not found
         """
         if not (0 <= x < self.gridSize):
-            logger.debug(f"Error getting card: x must be between 1 and {self.gridSize - 1}, got {x}")
+            logger.debug(
+                f"Error getting card: x must be between 1 and {self.gridSize - 1}, got {x}"
+            )
             return None
         if not (0 <= y < self.gridSize):
-            logger.debug(f"Error getting card: y must be between 1 and {self.gridSize - 1}, got {y}")
+            logger.debug(
+                f"Error getting card: y must be between 1 and {self.gridSize - 1}, got {y}"
+            )
             return None
         if 0 <= x < self.gridSize and 0 <= y < self.gridSize:
             return self.grid[y][x]
         return None
 
-    def getCardPosition(self, card: 'Card') -> tuple[typing.Optional[int], typing.Optional[int]]:
+    def getCardPosition(
+            self,
+            card: 'Card') -> tuple[typing.Optional[int], typing.Optional[int]]:
         """
         Get the (x, y) position of a card based on its internal position attribute.
         
@@ -103,13 +111,16 @@ class GameBoard:
         """
         logger.debug("Validating card placement...")
         if not (0 <= x < self.gridSize) or not (0 <= y < self.gridSize):
-            logger.debug(f"Cannot place card at ({x}, {y}) - position out of bounds")
+            logger.debug(
+                f"Cannot place card at ({x}, {y}) - position out of bounds")
             return False
         if self.getCard(x, y) is not None:
-            logger.debug(f"Cannot place card at ({x}, {y}) - position already occupied")
+            logger.debug(
+                f"Cannot place card at ({x}, {y}) - position already occupied")
             return False
         if not self.hasNeighbor(x, y):
-            logger.debug(f"Cannot place card at ({x}, {y}) - no adjacent cards found")
+            logger.debug(
+                f"Cannot place card at ({x}, {y}) - no adjacent cards found")
             return False
         neighbors = {
             "N": (x, y - 1),
@@ -122,9 +133,12 @@ class GameBoard:
                 neighbor = self.getCard(nx, ny)
                 if neighbor:
                     cardTerrain = card.getTerrains()[direction]
-                    neighborTerrain = neighbor.getTerrains()[self.getOppositeDirection(direction)]
+                    neighborTerrain = neighbor.getTerrains()[
+                        self.getOppositeDirection(direction)]
                     if cardTerrain != neighborTerrain:
-                        logger.debug(f"Cannot place card at ({x}, {y}) - {cardTerrain} doesn't match neighbor's {neighborTerrain}")
+                        logger.debug(
+                            f"Cannot place card at ({x}, {y}) - {cardTerrain} doesn't match neighbor's {neighborTerrain}"
+                        )
                         return False
         return True
 
@@ -201,11 +215,7 @@ class GameBoard:
             for x in range(self.gridSize):
                 card = self.grid[y][x]
                 if card:
-                    placed.append({
-                        "x": x,
-                        "y": y,
-                        "card": card.serialize()
-                    })
+                    placed.append({"x": x, "y": y, "card": card.serialize()})
         return {
             "gridSize": self.gridSize,
             "center": self.center,
@@ -226,13 +236,16 @@ class GameBoard:
         try:
             gridSize = int(data.get("gridSize", settings.GRID_SIZE))
         except (ValueError, TypeError) as e:
-            logger.error(f"Invalid gridSize in GameBoard data: {data.get('gridSize')} - {e}")
+            logger.error(
+                f"Invalid gridSize in GameBoard data: {data.get('gridSize')} - {e}"
+            )
             gridSize = int(settings.GRID_SIZE)
         board = GameBoard(gridSize=gridSize)
         try:
             board.center = int(data.get("center", board.gridSize // 2))
         except (ValueError, TypeError) as e:
-            logger.warning(f"Invalid center value, defaulting to center of grid - {e}")
+            logger.warning(
+                f"Invalid center value, defaulting to center of grid - {e}")
             board.center = board.gridSize // 2
         for item in data.get("placedCards", []):
             try:
@@ -246,5 +259,6 @@ class GameBoard:
             except (KeyError, ValueError, TypeError) as e:
                 logger.warning(f"Failed to place card at {item}: {e}")
             except Exception as e:
-                logger.error(f"Unexpected error while placing card at {item}: {e}")
+                logger.error(
+                    f"Unexpected error while placing card at {item}: {e}")
         return board

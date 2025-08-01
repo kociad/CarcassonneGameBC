@@ -92,7 +92,8 @@ class Structure:
         Args:
             figure: Figure to remove
         """
-        logger.debug(f"Removing figure {figure} belonging to {figure.getOwner()}")
+        logger.debug(
+            f"Removing figure {figure} belonging to {figure.getOwner()}")
         self.figures.remove(figure)
         figure.remove()
 
@@ -130,7 +131,10 @@ class Structure:
             for direction in neighbors:
                 if not neighbors[direction]:
                     return False
-                if direction in ["N", "S"] and not (neighbors[direction].getNeighbor("W") and neighbors[direction].getNeighbor("E")):
+                if direction in [
+                        "N", "S"
+                ] and not (neighbors[direction].getNeighbor("W")
+                           and neighbors[direction].getNeighbor("E")):
                     return False
         return True
 
@@ -150,7 +154,9 @@ class Structure:
             return []
         maxCount = max(ownerCounts.values())
         logger.debug(f"Retrieved owners: {ownerCounts}")
-        return [owner for owner, count in ownerCounts.items() if count == maxCount]
+        return [
+            owner for owner, count in ownerCounts.items() if count == maxCount
+        ]
 
     def merge(self, otherStructure: 'Structure') -> None:
         """
@@ -225,25 +231,32 @@ class Structure:
     def serialize(self) -> dict:
         """Serialize the structure to a dictionary."""
         return {
-            "structureType": self.structureType,
-            "cardSides": [
-                {"x": cardPosition["X"], "y": cardPosition["Y"], "direction": direction}
-                for (card, direction) in self.cardSides
-                if (cardPosition := card.getPosition())
-            ],
-            "figures": [
-                {
-                    "ownerIndex": f.getOwner().getIndex(),
-                    "positionOnCard": f.positionOnCard,
-                    "cardPosition": f.card.getPosition() if f.card else None
-                } for f in self.figures
-            ],
-            "isCompleted": self.isCompleted,
-            "color": tuple(self.color) if hasattr(self.color, "__iter__") else (255, 255, 255, 150)
+            "structureType":
+            self.structureType,
+            "cardSides": [{
+                "x": cardPosition["X"],
+                "y": cardPosition["Y"],
+                "direction": direction
+            } for (card, direction) in self.cardSides
+                          if (cardPosition := card.getPosition())],
+            "figures": [{
+                "ownerIndex":
+                f.getOwner().getIndex(),
+                "positionOnCard":
+                f.positionOnCard,
+                "cardPosition":
+                f.card.getPosition() if f.card else None
+            } for f in self.figures],
+            "isCompleted":
+            self.isCompleted,
+            "color":
+            tuple(self.color) if hasattr(self.color, "__iter__") else
+            (255, 255, 255, 150)
         }
 
     @staticmethod
-    def deserialize(data: dict, gameBoard: typing.Any, playerMap: dict, placedFigures: list) -> 'Structure':
+    def deserialize(data: dict, gameBoard: typing.Any, playerMap: dict,
+                    placedFigures: list) -> 'Structure':
         """
         Create a Structure instance from serialized data.
         
@@ -288,16 +301,17 @@ class Structure:
                     card = gameBoard.getCard(x, y)
                 owner = playerMap.get(ownerIndex)
                 if not owner:
-                    raise ValueError(f"Owner with index {ownerIndex} not found")
+                    raise ValueError(
+                        f"Owner with index {ownerIndex} not found")
                 matched = next(
-                    (fig for fig in placedFigures
-                     if fig.owner == owner and fig.card == card and fig.positionOnCard == position),
-                    None
-                )
+                    (fig for fig in placedFigures if fig.owner == owner
+                     and fig.card == card and fig.positionOnCard == position),
+                    None)
                 if matched:
                     s.figures.append(matched)
                 else:
-                    logger.warning(f"No matching figure found in placedFigures for: {f}")
+                    logger.warning(
+                        f"No matching figure found in placedFigures for: {f}")
             except (KeyError, ValueError, TypeError) as e:
                 logger.warning(f"Skipping malformed figure: {f} - {e}")
         return s

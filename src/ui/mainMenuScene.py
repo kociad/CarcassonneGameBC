@@ -9,9 +9,14 @@ import typing
 
 logger = logging.getLogger(__name__)
 
+
 class MainMenuScene(Scene):
     """Scene for the main menu of the game."""
-    def __init__(self, screen: pygame.Surface, switchSceneCallback: typing.Callable, getGameSession: typing.Callable, cleanupPreviousGame: typing.Callable) -> None:
+
+    def __init__(self, screen: pygame.Surface,
+                 switchSceneCallback: typing.Callable,
+                 getGameSession: typing.Callable,
+                 cleanupPreviousGame: typing.Callable) -> None:
         super().__init__(screen, switchSceneCallback)
         self.font = pygame.font.Font(None, 100)
         self.buttonFont = pygame.font.Font(None, 48)
@@ -24,45 +29,27 @@ class MainMenuScene(Scene):
         self.showConfirmDialog = False
         centerX = screen.get_width() // 2 - 100
         centerY = screen.get_height() // 2
-        self.continueButton = Button(
-            (centerX, centerY - 80, 200, 60),
-            "Continue",
-            self.buttonFont,
-            None,
-            disabled=(self.getGameSession() is None)
-        )
-        self.startButton = Button(
-            (centerX, centerY, 200, 60),
-            "New Game",
-            self.buttonFont
-        )
-        self.howToPlayButton = Button(
-            (centerX, centerY + 80, 200, 60),
-            "How to play",
-            self.buttonFont
-        )
-        self.settingsButton = Button(
-            (centerX, centerY + 160, 200, 60),
-            "Settings",
-            self.buttonFont
-        )
-        self.quitButton = Button(
-            (centerX, centerY + 240, 200, 60),
-            "Quit",
-            self.buttonFont
-        )
+        self.continueButton = Button((centerX, centerY - 80, 200, 60),
+                                     "Continue",
+                                     self.buttonFont,
+                                     None,
+                                     disabled=(self.getGameSession() is None))
+        self.startButton = Button((centerX, centerY, 200, 60), "New Game",
+                                  self.buttonFont)
+        self.howToPlayButton = Button((centerX, centerY + 80, 200, 60),
+                                      "How to play", self.buttonFont)
+        self.settingsButton = Button((centerX, centerY + 160, 200, 60),
+                                     "Settings", self.buttonFont)
+        self.quitButton = Button((centerX, centerY + 240, 200, 60), "Quit",
+                                 self.buttonFont)
         dialogCenterX = screen.get_width() // 2
         dialogCenterY = screen.get_height() // 2
         self.confirmYesButton = Button(
-            (dialogCenterX - 120, dialogCenterY + 40, 100, 40),
-            "Yes",
-            self.dialogFont
-        )
+            (dialogCenterX - 120, dialogCenterY + 40, 100, 40), "Yes",
+            self.dialogFont)
         self.confirmNoButton = Button(
-            (dialogCenterX + 20, dialogCenterY + 40, 100, 40),
-            "No",
-            self.dialogFont
-        )
+            (dialogCenterX + 20, dialogCenterY + 40, 100, 40), "No",
+            self.dialogFont)
 
     def cleanupPreviousGame(self):
         """Clean up resources from previous game session."""
@@ -86,7 +73,8 @@ class MainMenuScene(Scene):
                 elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     if self.confirmYesButton.isClicked(event.pos):
                         self.showConfirmDialog = False
-                        logger.info("Starting new game - cleaning up previous session")
+                        logger.info(
+                            "Starting new game - cleaning up previous session")
                         self.cleanupPreviousGame()
                         self.switchScene(GameState.PREPARE)
                     elif self.confirmNoButton.isClicked(event.pos):
@@ -98,30 +86,38 @@ class MainMenuScene(Scene):
                 pygame.quit()
                 exit()
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                if self.continueButton.isClicked(event.pos, yOffset=self.scrollOffset) and not self.continueButton.disabled:
+                if self.continueButton.isClicked(
+                        event.pos, yOffset=self.scrollOffset
+                ) and not self.continueButton.disabled:
                     session = self.getGameSession()
                     networkMode = getattr(session, 'networkMode', 'local')
-                    if hasattr(session, 'lobbyCompleted') and networkMode in ("host", "client") and not session.lobbyCompleted:
+                    if hasattr(session, 'lobbyCompleted') and networkMode in (
+                            "host", "client") and not session.lobbyCompleted:
                         self.switchScene(GameState.LOBBY)
                     else:
                         self.switchScene(GameState.GAME)
-                elif self.startButton.isClicked(event.pos, yOffset=self.scrollOffset):
+                elif self.startButton.isClicked(event.pos,
+                                                yOffset=self.scrollOffset):
                     if self.getGameSession():
                         self.showConfirmDialog = True
                     else:
                         logger.info("Starting new game")
                         self.switchScene(GameState.PREPARE)
-                elif self.settingsButton.isClicked(event.pos, yOffset=self.scrollOffset):
+                elif self.settingsButton.isClicked(event.pos,
+                                                   yOffset=self.scrollOffset):
                     self.switchScene(GameState.SETTINGS)
-                elif self.quitButton.isClicked(event.pos, yOffset=self.scrollOffset):
+                elif self.quitButton.isClicked(event.pos,
+                                               yOffset=self.scrollOffset):
                     pygame.quit()
                     exit()
-                elif self.howToPlayButton.isClicked(event.pos, yOffset=self.scrollOffset):
+                elif self.howToPlayButton.isClicked(event.pos,
+                                                    yOffset=self.scrollOffset):
                     self.switchScene(GameState.HELP)
 
     def drawConfirmDialog(self) -> None:
         """Draw the confirmation dialog overlay."""
-        overlay = pygame.Surface((self.screen.get_width(), self.screen.get_height()))
+        overlay = pygame.Surface(
+            (self.screen.get_width(), self.screen.get_height()))
         overlay.set_alpha(128)
         overlay.fill((0, 0, 0))
         self.screen.blit(overlay, (0, 0))
@@ -132,11 +128,16 @@ class MainMenuScene(Scene):
         dialogRect = pygame.Rect(dialogX, dialogY, dialogWidth, dialogHeight)
         pygame.draw.rect(self.screen, (60, 60, 60), dialogRect)
         pygame.draw.rect(self.screen, (200, 200, 200), dialogRect, 2)
-        messageText = self.dialogFont.render("Starting a new game will end the current game.", True, (255, 255, 255))
-        messageRect = messageText.get_rect(center=(self.screen.get_width() // 2, dialogY + 35))
+        messageText = self.dialogFont.render(
+            "Starting a new game will end the current game.", True,
+            (255, 255, 255))
+        messageRect = messageText.get_rect(center=(self.screen.get_width() //
+                                                   2, dialogY + 35))
         self.screen.blit(messageText, messageRect)
-        confirmText = self.dialogFont.render("Do you want to continue?", True, (255, 255, 255))
-        confirmRect = confirmText.get_rect(center=(self.screen.get_width() // 2, dialogY + 70))
+        confirmText = self.dialogFont.render("Do you want to continue?", True,
+                                             (255, 255, 255))
+        confirmRect = confirmText.get_rect(center=(self.screen.get_width() //
+                                                   2, dialogY + 70))
         self.screen.blit(confirmText, confirmRect)
         self.confirmYesButton.draw(self.screen)
         self.confirmNoButton.draw(self.screen)
@@ -146,7 +147,9 @@ class MainMenuScene(Scene):
         self.screen.fill((30, 30, 30))
         offsetY = self.scrollOffset
         titleText = self.font.render("Carcassonne", True, (255, 255, 255))
-        titleRect = titleText.get_rect(center=(self.screen.get_width() // 2, self.screen.get_height() // 3 - 60 + offsetY))
+        titleRect = titleText.get_rect(center=(self.screen.get_width() // 2,
+                                               self.screen.get_height() // 3 -
+                                               60 + offsetY))
         self.screen.blit(titleText, titleRect)
         self.continueButton.disabled = self.getGameSession() is None
         self.continueButton.draw(self.screen, yOffset=offsetY)
@@ -154,10 +157,8 @@ class MainMenuScene(Scene):
         self.settingsButton.draw(self.screen, yOffset=offsetY)
         self.quitButton.draw(self.screen, yOffset=offsetY)
         self.howToPlayButton.draw(self.screen, yOffset=offsetY)
-        self.maxScroll = max(
-            self.screen.get_height(),
-            self.quitButton.rect.bottom + 100
-        )
+        self.maxScroll = max(self.screen.get_height(),
+                             self.quitButton.rect.bottom + 100)
         if self.showConfirmDialog:
             self.drawConfirmDialog()
         pygame.display.flip()

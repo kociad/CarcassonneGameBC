@@ -10,7 +10,9 @@ logger = logging.getLogger(__name__)
 class Figure:
     """Represents a figure (meeple) belonging to a player."""
 
-    def __init__(self, owner: 'Player', imagePath: str = settings.MEEPLE_IMAGES_PATH) -> None:
+    def __init__(self,
+                 owner: 'Player',
+                 imagePath: str = settings.MEEPLE_IMAGES_PATH) -> None:
         """
         Initialize a figure for a specific player.
         
@@ -19,8 +21,10 @@ class Figure:
             imagePath: Path to the meeple image
         """
         self.owner = owner
-        originalImage = pygame.image.load(imagePath + f"{owner.getColor()}.png")
-        self.image = pygame.transform.scale(originalImage, (settings.FIGURE_SIZE, settings.FIGURE_SIZE))
+        originalImage = pygame.image.load(imagePath +
+                                          f"{owner.getColor()}.png")
+        self.image = pygame.transform.scale(
+            originalImage, (settings.FIGURE_SIZE, settings.FIGURE_SIZE))
         self.card = None
         self.positionOnCard = None
 
@@ -65,7 +69,8 @@ class Figure:
         }
 
     @staticmethod
-    def deserialize(data: dict, playerMap: dict, gameBoard: typing.Any) -> typing.Optional['Figure']:
+    def deserialize(data: dict, playerMap: dict,
+                    gameBoard: typing.Any) -> typing.Optional['Figure']:
         """
         Create a Figure instance from serialized data.
         
@@ -86,7 +91,9 @@ class Figure:
         try:
             figure = Figure(owner)
         except Exception as e:
-            logger.error(f"Failed to initialize Figure for owner {owner.getName()} - {e}")
+            logger.error(
+                f"Failed to initialize Figure for owner {owner.getName()} - {e}"
+            )
             return None
         try:
             posData = data.get("cardPosition")
@@ -100,7 +107,8 @@ class Figure:
                 card = gameBoard.getCard(x, y)
                 figure.card = card
         except Exception as e:
-            logger.warning(f"Failed to set card position for figure: {data} - {e}")
+            logger.warning(
+                f"Failed to set card position for figure: {data} - {e}")
             figure.card = None
         try:
             position = data.get("positionOnCard")
@@ -109,6 +117,7 @@ class Figure:
             else:
                 figure.positionOnCard = None
         except Exception as e:
-            logger.warning(f"Failed to set figure positionOnCard: {data} - {e}")
+            logger.warning(
+                f"Failed to set figure positionOnCard: {data} - {e}")
             figure.positionOnCard = None
         return figure

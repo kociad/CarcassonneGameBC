@@ -9,12 +9,15 @@ import typing
 SCORING_LEVEL = 26
 logging.addLevelName(SCORING_LEVEL, "SCORING")
 
+
 def scoring(self, message, *args, **kwargs):
     """Log 'message % args' with severity 'SCORING'."""
     if self.isEnabledFor(SCORING_LEVEL):
         self._log(SCORING_LEVEL, message, args, **kwargs)
 
+
 logging.Logger.scoring = scoring
+
 
 def configureLogging() -> None:
     """Configure logging for the application with file and console output and global exception handling."""
@@ -34,8 +37,7 @@ def configureLogging() -> None:
     logging.basicConfig(
         level=logging.DEBUG,
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        handlers=handlers
-    )
+        handlers=handlers)
     updateLoggingLevel()
     setupExceptionLogging()
     logger = logging.getLogger(__name__)
@@ -49,6 +51,7 @@ def configureLogging() -> None:
         logger.info("Logging configured (no console output - DEBUG disabled)")
     """
 
+
 def updateLoggingLevel() -> None:
     """Update logging level based on current DEBUG setting."""
     from utils.settingsManager import settingsManager
@@ -56,20 +59,26 @@ def updateLoggingLevel() -> None:
     if debugEnabled:
         logging.disable(logging.NOTSET)
         for handler in logging.getLogger().handlers:
-            if isinstance(handler, logging.StreamHandler) and handler.stream == sys.stdout:
+            if isinstance(
+                    handler,
+                    logging.StreamHandler) and handler.stream == sys.stdout:
                 handler.setLevel(logging.DEBUG)
         logger = logging.getLogger(__name__)
         logger.debug("Debug logging enabled - all messages visible")
     else:
         logging.disable(logging.NOTSET)
         for handler in logging.getLogger().handlers:
-            if isinstance(handler, logging.StreamHandler) and handler.stream == sys.stdout:
+            if isinstance(
+                    handler,
+                    logging.StreamHandler) and handler.stream == sys.stdout:
                 handler.setLevel(logging.INFO)
         logger = logging.getLogger(__name__)
         logger.info("Debug logging disabled - INFO and above messages visible")
 
+
 def setupExceptionLogging():
     """Set up global exception handling to log all unhandled exceptions."""
+
     def handleException(excType, excValue, excTraceback):
         if issubclass(excType, KeyboardInterrupt):
             sys.__excepthook__(excType, excValue, excTraceback)
@@ -83,7 +92,9 @@ def setupExceptionLogging():
         logger.critical("Full Traceback:")
         logger.critical(tbText)
         sys.__excepthook__(excType, excValue, excTraceback)
+
     sys.excepthook = handleException
+
 
 def logError(message: str, exception: Exception) -> None:
     """Log an error with optional exception details."""
@@ -94,8 +105,10 @@ def logError(message: str, exception: Exception) -> None:
         logger.error(f"Exception message: {str(exception)}")
         logger.error("Full traceback:", exc_info=True)
 
+
 gameLogInstance = None
 gameLogHandler = None
+
 
 def setGameLogInstance(gameLog: typing.Any) -> None:
     """Set the game log instance for UI logging."""
@@ -109,8 +122,10 @@ def setGameLogInstance(gameLog: typing.Any) -> None:
         logger = logging.getLogger(__name__)
         logger.debug("Game log handler added to root logger")
 
+
 class GameLogHandler(logging.Handler):
     """Custom logging handler that sends messages to the game log UI."""
+
     def emit(self, record):
         global gameLogInstance
         if gameLogInstance is None:

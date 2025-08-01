@@ -5,6 +5,7 @@ import typing
 
 logger = logging.getLogger(__name__)
 
+
 class SettingsManager:
     """Manages settings loaded from settings.py with runtime modifications and change notifications."""
     _instance = None
@@ -31,9 +32,12 @@ class SettingsManager:
             for attr_name in dir(settings):
                 if not attr_name.startswith('_'):
                     value = getattr(settings, attr_name)
-                    if isinstance(value, (int, float, str, bool, list, dict, tuple)):
+                    if isinstance(value,
+                                  (int, float, str, bool, list, dict, tuple)):
                         self._original_settings[attr_name] = value
-            logger.debug(f"Loaded {len(self._original_settings)} settings from settings.py")
+            logger.debug(
+                f"Loaded {len(self._original_settings)} settings from settings.py"
+            )
         except Exception as e:
             logger.error(f"Failed to load settings.py: {e}")
             self._original_settings = {
@@ -61,17 +65,23 @@ class SettingsManager:
             logger.warning(f"Unknown setting requested: {key}")
             return default
 
-    def set(self, key: str, value: typing.Any, temporary: bool = False) -> bool:
+    def set(self,
+            key: str,
+            value: typing.Any,
+            temporary: bool = False) -> bool:
         """Set a setting value, optionally only for runtime."""
         old_value = self.get(key)
         if temporary:
             self._runtime_overrides[key] = value
-            logger.debug(f"Runtime setting {key} changed from {old_value} to {value}")
+            logger.debug(
+                f"Runtime setting {key} changed from {old_value} to {value}")
         else:
             if self._updateSettingsFile(key, value):
                 self._original_settings[key] = value
                 self._runtime_overrides.pop(key, None)
-                logger.debug(f"Permanent setting {key} changed from {old_value} to {value}")
+                logger.debug(
+                    f"Permanent setting {key} changed from {old_value} to {value}"
+                )
             else:
                 return False
         self._notifyObservers(key, old_value, value)
@@ -121,7 +131,9 @@ class SettingsManager:
         """Make runtime changes permanent by writing to settings.py."""
         if key:
             if key in self._runtime_overrides:
-                return self.set(key, self._runtime_overrides[key], temporary=False)
+                return self.set(key,
+                                self._runtime_overrides[key],
+                                temporary=False)
             return True
         else:
             success = True
@@ -149,5 +161,6 @@ class SettingsManager:
                     callback(key, oldValue, newValue)
                 except Exception as e:
                     logger.error(f"Observer callback failed for {key}: {e}")
+
 
 settingsManager = SettingsManager()

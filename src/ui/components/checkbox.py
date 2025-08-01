@@ -5,9 +5,16 @@ import typing
 class Checkbox:
     """A checkbox UI component."""
 
-    def __init__(self, rect: pygame.Rect, checked: bool = False, onToggle: typing.Optional[typing.Callable] = None,
-                 boxColor: tuple = (255, 255, 255), checkColor: tuple = (0, 200, 0),
-                 borderColor: tuple = (255, 255, 255), disabledColor: tuple = (100, 100, 100)) -> None:
+    def __init__(
+        self,
+        rect: pygame.Rect,
+        checked: bool = False,
+        onToggle: typing.Optional[typing.Callable] = None,
+        boxColor: tuple = (255, 255, 255),
+        checkColor: tuple = (0, 200, 0),
+        borderColor: tuple = (255, 255, 255),
+        disabledColor: tuple = (100, 100, 100)
+    ) -> None:
         """
         Initialize the checkbox.
         

@@ -9,7 +9,9 @@ logger = logging.getLogger(__name__)
 class Card:
     """Represents a tile (card) in the game with an image and terrain properties."""
 
-    def __init__(self, imagePath: str, terrains: dict, connections: typing.Optional[dict], features: typing.Any) -> None:
+    def __init__(self, imagePath: str, terrains: dict,
+                 connections: typing.Optional[dict],
+                 features: typing.Any) -> None:
         """
         Initialize a tile with an image and terrain data.
         
@@ -21,7 +23,8 @@ class Card:
         """
         self.imagePath = imagePath
         originalImage = pygame.image.load(imagePath)
-        self.image = pygame.transform.scale(originalImage, (settings.TILE_SIZE, settings.TILE_SIZE))
+        self.image = pygame.transform.scale(
+            originalImage, (settings.TILE_SIZE, settings.TILE_SIZE))
         self.terrains = terrains
         self.connections = connections
         self.occupied = {}
@@ -29,7 +32,7 @@ class Card:
         self.neighbors = {"N": None, "E": None, "S": None, "W": None}
         self.position = {"X": None, "Y": None}
         self.rotation = 0
-        
+
         self._rotationCache = {}
 
     def getPosition(self) -> dict:
@@ -54,10 +57,10 @@ class Card:
         """Get the card's image rotated to current rotation with caching."""
         if self.rotation == 0:
             return self.image
-        
+
         if self.rotation in self._rotationCache:
             return self._rotationCache[self.rotation]
-        
+
         rotatedImage = pygame.transform.rotate(self.image, -self.rotation)
         self._rotationCache[self.rotation] = rotatedImage
         return rotatedImage
@@ -122,7 +125,9 @@ class Card:
             newConnections = {}
             for dir, connectedList in self.connections.items():
                 newDir = directionMap[dir]
-                newConnections[newDir] = [directionMap[conn] for conn in connectedList]
+                newConnections[newDir] = [
+                    directionMap[conn] for conn in connectedList
+                ]
 
             self.connections = newConnections
 
@@ -167,12 +172,10 @@ class Card:
             raise
 
         try:
-            card = Card(
-                imagePath=imagePath,
-                terrains=terrains,
-                connections=connections,
-                features=features
-            )
+            card = Card(imagePath=imagePath,
+                        terrains=terrains,
+                        connections=connections,
+                        features=features)
         except Exception as e:
             logger.error(f"Failed to initialize Card from data: {data} - {e}")
             raise
@@ -180,7 +183,9 @@ class Card:
         try:
             card.occupied = data.get("occupied", {})
             if not isinstance(card.occupied, dict):
-                logger.warning(f"Invalid 'occupied' field type, resetting to empty dict: {card.occupied}")
+                logger.warning(
+                    f"Invalid 'occupied' field type, resetting to empty dict: {card.occupied}"
+                )
                 card.occupied = {}
 
             card.neighbors = {dir: None for dir in ["N", "E", "S", "W"]}
@@ -194,14 +199,17 @@ class Card:
                     "Y": int(y) if y is not None else None
                 }
             else:
-                logger.warning(f"Invalid 'position' format: {pos}, defaulting to None")
+                logger.warning(
+                    f"Invalid 'position' format: {pos}, defaulting to None")
                 card.position = {"X": None, "Y": None}
 
             rawRotation = data.get("rotation", 0)
             try:
                 card.rotation = int(rawRotation)
             except Exception as e:
-                logger.warning(f"Invalid rotation value: {rawRotation}, defaulting to 0 - {e}")
+                logger.warning(
+                    f"Invalid rotation value: {rawRotation}, defaulting to 0 - {e}"
+                )
                 card.rotation = 0
 
         except Exception as e:
