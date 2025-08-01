@@ -226,6 +226,12 @@ class GameScene(Scene):
                 self.screen.blit(scoreSurface, scoreSurface.get_rect(center=(col2X, rowY)))
                 if i < len(sortedPlayers) - 1:
                     pygame.draw.line(self.screen, (70, 70, 70), (tableX + 10, tableY + rowHeight * (i + 2)), (tableX + tableWidth - 10, tableY + rowHeight * (i + 2)), 1)
+            
+            escMessageFont = pygame.font.Font(None, 36)
+            escMessage = "Press ESC to return to menu"
+            escMessageSurface = escMessageFont.render(escMessage, True, (180, 180, 180))
+            escMessageRect = escMessageSurface.get_rect(center=(window_width // 2, tableY + tableHeight + 50))
+            self.screen.blit(escMessageSurface, escMessageRect)
             return
                 
         if settingsManager.get("DEBUG"):

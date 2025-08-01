@@ -31,7 +31,7 @@ PLAYER_INDEX = 0
 # General Game Settings
 WINDOW_WIDTH = 1920
 WINDOW_HEIGHT = 1080
-FULLSCREEN = True
+FULLSCREEN = False
 SHOW_VALID_PLACEMENTS = True
 
 # Apply dynamic fullscreen resolution override if needed
