@@ -149,18 +149,8 @@ class GamePrepareScene(Scene):
 
         self.playerListY = currentY
 
-        self.networkModes = ["local", "host", "client"]
-        defaultIndex = self.networkModes.index(networkMode)
-        self.networkModeDropdown = Dropdown(
-            rect=(xCenter, currentY + (6 * 50) + 20, 200, 40),
-            font=self.dropdownFont,
-            options=self.networkModes,
-            defaultIndex=defaultIndex,
-            onSelect=self.handleNetworkModeChange
-        )
-
         self.buildPlayerFields()
-        currentY += (6 * 50) + 20 + 80
+        currentY += 300 + 40
 
         self.gameLabelY = currentY
         currentY += 50
@@ -202,12 +192,23 @@ class GamePrepareScene(Scene):
         self.networkLabelY = currentY
         currentY += 50
 
+        self.networkModes = ["local", "host", "client"]
+        defaultIndex = self.networkModes.index(networkMode)
+        self.networkModeDropdown = Dropdown(
+            rect=(xCenter, currentY, 200, 40),
+            font=self.dropdownFont,
+            options=self.networkModes,
+            defaultIndex=defaultIndex,
+            onSelect=self.handleNetworkModeChange
+        )
+        currentY += 60
+
         self.hostIPField = InputField(
-            rect=(xCenter, currentY + 20, 200, 40),
+            rect=(xCenter, currentY, 200, 40),
             font=self.inputFont
         )
         self.hostIPField.setText(hostIP)
-        currentY += 80
+        currentY += 60
 
         self.portField = InputField(
             rect=(xCenter, currentY, 200, 40),
