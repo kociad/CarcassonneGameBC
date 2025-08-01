@@ -40,7 +40,7 @@ class LobbyScene(Scene):
         session = self.getGameSession()
         self.players = session.getPlayers() if session else []
         self.statusList = []
-        for i, orig_name in enumerate(self.originalPlayerNames):
+        for i, origName in enumerate(self.originalPlayerNames):
             player = next((p for p in self.players if p.getIndex() == i), None)
             if player is not None and player.getIsAI():
                 status = "AI"
@@ -53,7 +53,7 @@ class LobbyScene(Scene):
             else:
                 status = "Waiting..."
                 color = (200, 200, 0)
-                name = orig_name
+                name = origName
             self.statusList.append({"name": name, "status": status, "color": color})
         self.requiredHumans = sum(1 for s in self.statusList if s["status"] != "AI")
         self.connectedHumans = sum(1 for s in self.statusList if s["status"] == "Connected")

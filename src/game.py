@@ -21,7 +21,7 @@ from utils.loggingConfig import configureLogging, logError
 from models.gameSession import GameSession
 from network.connection import NetworkConnection
 from network.message import encodeMessage
-from network.command import encode_command_message
+from network.command import encodeCommandMessage
 from utils.settingsManager import settingsManager
 from ui.components.gameLog import GameLog
 from utils.loggingConfig import setGameLogInstance
@@ -557,11 +557,11 @@ class Game:
             conn: Network connection (for host mode)
         """
         try:
-            logger.debug(f"Received command {command.command_type} from player {command.player_index}")
+            logger.debug(f"Received command {command.commandType} from player {command.playerIndex}")
             
             success = self.gameSession.executeCommand(command)
             if success:
-                logger.debug(f"Successfully executed command {command.command_type}")
+                logger.debug(f"Successfully executed command {command.commandType}")
                 
                 if hasattr(self.currentScene, 'updateGameSession'):
                     self.currentScene.updateGameSession(self.gameSession)
@@ -570,26 +570,26 @@ class Game:
                     for other_conn in self.network.connections[:]:
                         if other_conn != conn:
                             try:
-                                from network.command import encode_command_message
-                                message = encode_command_message(command)
+                                from network.command import encodeCommandMessage
+                                message = encodeCommandMessage(command)
                                 other_conn.sendall((message + "\n").encode())
                             except Exception as e:
                                 logger.exception(f"Failed to broadcast command to client: {e}")
             else:
-                logger.warning(f"Failed to execute command {command.command_type}")
+                logger.warning(f"Failed to execute command {command.commandType}")
                 
         except Exception as e:
             logError("Failed to handle received command", e)
 
-    def onCommandAck(self, command_id: str) -> None:
+    def onCommandAck(self, commandId: str) -> None:
         """
         Handle command acknowledgment.
         
         Args:
-            command_id: ID of the acknowledged command
+            commandId: ID of the acknowledged command
         """
         try:
-            logger.debug(f"Command {command_id} acknowledged")
+            logger.debug(f"Command {commandId} acknowledged")
         except Exception as e:
             logError("Failed to handle command acknowledgment", e)
 
@@ -601,7 +601,7 @@ class Game:
             command: The executed command
         """
         try:
-            logger.debug(f"Command {command.command_type} executed successfully")
+            logger.debug(f"Command {command.commandType} executed successfully")
             if hasattr(self.currentScene, 'updateGameSession'):
                 self.currentScene.updateGameSession(self.gameSession)
         except Exception as e:

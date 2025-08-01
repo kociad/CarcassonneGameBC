@@ -161,9 +161,9 @@ class GameSession:
     def placeStartingCard(self) -> None:
         """Place the first card automatically at the center of the board."""
         logger.debug("Playing first turn...")
-        center_x, center_y = self.gameBoard.getCenterPosition()
+        centerX, centerY = self.gameBoard.getCenterPosition()
         if self.cardsDeck:
-            if self.playCard(center_x, center_y):
+            if self.playCard(centerX, centerY):
                 self.isFirstRound = False
                 logger.debug("First turn played - starting card placed, moving to next player")
                 self.nextTurn()
@@ -284,22 +284,22 @@ class GameSession:
     def executeCommand(self, command) -> bool:
         """Execute a command received from the network."""
         try:
-            logger.debug(f"Executing command {command.command_type} for player {command.player_index}")
+            logger.debug(f"Executing command {command.commandType} for player {command.playerIndex}")
             
-            if command.player_index != self.currentPlayer.getIndex():
-                logger.warning(f"Command from wrong player: {command.player_index} vs {self.currentPlayer.getIndex()}")
+            if command.playerIndex != self.currentPlayer.getIndex():
+                logger.warning(f"Command from wrong player: {command.playerIndex} vs {self.currentPlayer.getIndex()}")
                 return False
             
-            if command.command_type == "place_card":
+            if command.commandType == "place_card":
                 if self.currentCard:
-                    while self.currentCard.rotation != command.card_rotation:
+                    while self.currentCard.rotation != command.cardRotation:
                         self.currentCard.rotate()
                 success = self.playCard(command.x, command.y)
                 if success:
                     self.turnPhase = 2
                 return success
                 
-            elif command.command_type == "place_figure":
+            elif command.commandType == "place_figure":
                 if self.turnPhase != 2:
                     logger.warning("Cannot place figure in phase 1")
                     return False
@@ -312,18 +312,18 @@ class GameSession:
                     self.nextTurn()
                 return meeplePlaced
                 
-            elif command.command_type == "skip_action":
-                if command.action_type == "card" and self.turnPhase == 1:
+            elif command.commandType == "skip_action":
+                if command.actionType == "card" and self.turnPhase == 1:
                     self.skipCurrentAction()
                     return True
-                elif command.action_type == "figure" and self.turnPhase == 2:
+                elif command.actionType == "figure" and self.turnPhase == 2:
                     self.skipCurrentAction()
                     return True
                 else:
-                    logger.warning(f"Cannot skip {command.action_type} in phase {self.turnPhase}")
+                    logger.warning(f"Cannot skip {command.actionType} in phase {self.turnPhase}")
                     return False
                     
-            elif command.command_type == "rotate_card":
+            elif command.commandType == "rotate_card":
                 if self.currentCard and self.turnPhase == 1:
                     self.currentCard.rotate()
                     return True
@@ -332,11 +332,11 @@ class GameSession:
                     return False
                     
             else:
-                logger.warning(f"Unknown command type: {command.command_type}")
+                logger.warning(f"Unknown command type: {command.commandType}")
                 return False
                 
         except Exception as e:
-            logger.exception(f"Error executing command {command.command_type}: {e}")
+            logger.exception(f"Error executing command {command.commandType}: {e}")
             return False
         finally:
             if self.onCommandExecuted:
@@ -429,40 +429,40 @@ class GameSession:
         self.visited = set()
         
         for direction in self.lastPlacedCard.getTerrains().keys():
-            cache_key = self._getStructureCacheKey(x, y, direction, "")
-            if cache_key in self._structureCache:
-                del self._structureCache[cache_key]
+            cacheKey = self._getStructureCacheKey(x, y, direction, "")
+            if cacheKey in self._structureCache:
+                del self._structureCache[cacheKey]
         
         for direction, terrainType in self.lastPlacedCard.getTerrains().items():
             key = (x, y, direction)
             if not terrainType or key in self.structureMap:
                 continue
             
-            cache_key = self._getStructureCacheKey(x, y, direction, terrainType)
-            if cache_key in self._structureCache:
-                logger.debug(f"Using cached structure for {cache_key}")
-                cached_structure = self._structureCache[cache_key]
-                if cached_structure:
-                    self.structureMap[key] = cached_structure
-                    cached_structure.addCardSide(self.lastPlacedCard, direction)
+            cacheKey = self._getStructureCacheKey(x, y, direction, terrainType)
+            if cacheKey in self._structureCache:
+                logger.debug(f"Using cached structure for {cacheKey}")
+                cachedStructure = self._structureCache[cacheKey]
+                if cachedStructure:
+                    self.structureMap[key] = cachedStructure
+                    cachedStructure.addCardSide(self.lastPlacedCard, direction)
                 continue
             
-            connected_sides = self.scanConnectedSides(x, y, direction, terrainType)
-            connected_structures = {self.structureMap.get(side) for side in connected_sides if self.structureMap.get(side)}
-            connected_structures.discard(None)
+            connectedSides = self.scanConnectedSides(x, y, direction, terrainType)
+            connectedStructures = {self.structureMap.get(side) for side in connectedSides if self.structureMap.get(side)}
+            connectedStructures.discard(None)
             
-            if connected_structures:
-                mainStructure = connected_structures.pop()
-                for s in connected_structures:
+            if connectedStructures:
+                mainStructure = connectedStructures.pop()
+                for s in connectedStructures:
                     mainStructure.merge(s)
                     self.structures.remove(s)
             else:
                 mainStructure = Structure(terrainType.capitalize())
                 self.structures.append(mainStructure)
             
-            self._structureCache[cache_key] = mainStructure
+            self._structureCache[cacheKey] = mainStructure
             
-            for cx, cy, cdir in connected_sides:
+            for cx, cy, cdir in connectedSides:
                 self.structureMap[(cx, cy, cdir)] = mainStructure
                 mainStructure.addCardSide(self.gameBoard.getCard(cx, cy), cdir)
         
@@ -703,13 +703,13 @@ class GameSession:
         if not card:
             return False
         
-        cache_key = self._getValidationCacheKey(card, x, y)
-        if cache_key in self._validationCache:
-            return self._validationCache[cache_key]
+        cacheKey = self._getValidationCacheKey(card, x, y)
+        if cacheKey in self._validationCache:
+            return self._validationCache[cacheKey]
         
         result = self.gameBoard.validateCardPlacement(card, x, y)
         
-        self._validationCache[cache_key] = result
+        self._validationCache[cacheKey] = result
         return result
 
     def getValidPlacements(self, card: typing.Any) -> set:
@@ -863,24 +863,24 @@ class GameSession:
             except Exception as e:
                 logger.warning(f"Skipping malformed structure: {s} - {e}")
         session.structureMap = {}
-        seen_keys = set()
+        seenKeys = set()
         for structure in session.structures:
             for card, direction in structure.cardSides:
                 pos = card.getPosition()
                 if pos and pos["X"] is not None and pos["Y"] is not None:
                     key = (pos["X"], pos["Y"], direction)
-                    if key in seen_keys:
+                    if key in seenKeys:
                         logger.warning(f"Duplicate structure mapping detected during rebuild: {key}")
                     session.structureMap[key] = structure
-                    seen_keys.add(key)
-        fig_lookup = {
+                    seenKeys.add(key)
+        figLookup = {
             (f.card, f.positionOnCard): f
             for f in session.placedFigures
         }
         for structure in session.structures:
-            updated_figures = []
+            updatedFigures = []
             for fig in structure.getFigures():
                 key = (fig.card, fig.positionOnCard)
-                updated_figures.append(fig_lookup.get(key, fig))
-            structure.setFigures(updated_figures)
+                updatedFigures.append(figLookup.get(key, fig))
+            structure.setFigures(updatedFigures)
         return session

@@ -141,12 +141,12 @@ class SettingsManager:
         if key in self.observers and callback in self.observers[key]:
             self.observers[key].remove(callback)
 
-    def _notifyObservers(self, key: str, old_value: Any, new_value: Any):
+    def _notifyObservers(self, key: str, oldValue: Any, newValue: Any):
         """Notify all observers of a setting change."""
         if key in self.observers:
             for callback in self.observers[key]:
                 try:
-                    callback(key, old_value, new_value)
+                    callback(key, oldValue, newValue)
                 except Exception as e:
                     logger.error(f"Observer callback failed for {key}: {e}")
 

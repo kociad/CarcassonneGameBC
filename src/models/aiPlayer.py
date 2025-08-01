@@ -431,22 +431,22 @@ class AIPlayer(Player):
 
     def _evaluateCached(self, card: Card, x: int, y: int, evaluationType: str, evaluationFunc) -> float:
         """Evaluate with caching support."""
-        cache_key = self._getEvaluationCacheKey(card, x, y, evaluationType)
-        if cache_key in self._evaluationCache:
-            return self._evaluationCache[cache_key]
+        cacheKey = self._getEvaluationCacheKey(card, x, y, evaluationType)
+        if cacheKey in self._evaluationCache:
+            return self._evaluationCache[cacheKey]
         
         result = evaluationFunc()
-        self._evaluationCache[cache_key] = result
+        self._evaluationCache[cacheKey] = result
         return result
 
     def _evaluateMeepleCached(self, x: int, y: int, direction: str, meepleType: str, evaluationFunc) -> float:
         """Evaluate meeple placement with caching support."""
-        cache_key = self._getMeepleCacheKey(x, y, direction, meepleType)
-        if cache_key in self._meepleCache:
-            return self._meepleCache[cache_key]
+        cacheKey = self._getMeepleCacheKey(x, y, direction, meepleType)
+        if cacheKey in self._meepleCache:
+            return self._meepleCache[cacheKey]
         
         result = evaluationFunc()
-        self._meepleCache[cache_key] = result
+        self._meepleCache[cacheKey] = result
         return result
 
     def _getMultipleValidPlacements(self, gameSession: 'GameSession', card: Card) -> List[Tuple[int, int, int, Card]]:

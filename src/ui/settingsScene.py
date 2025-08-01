@@ -216,10 +216,10 @@ class SettingsScene(Scene):
             self.addToast(Toast(f"Sidebar width adjusted to minimum ({newMinSidebarWidth}px)", type="info"))
         
 
-    def onFullscreenChanged(self, key, old_value, new_value):
-        self.resolutionDropdown.setDisabled(new_value)
+    def onFullscreenChanged(self, key, oldValue, newValue):
+        self.resolutionDropdown.setDisabled(newValue)
 
-    def onDebugChanged(self, key, old_value, new_value):
+    def onDebugChanged(self, key, oldValue, newValue):
         from utils.loggingConfig import updateLoggingLevel
         updateLoggingLevel()
         
