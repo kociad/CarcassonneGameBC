@@ -394,25 +394,25 @@ class SettingsScene(Scene):
         self.screen.blit(titleText, titleRect)
 
         # Draw section headers
-        displayLabel = self.dropdownFont.render("Display Settings", True, (255, 215, 0))
+        displayLabel = self.dropdownFont.render("Display", True, (255, 215, 0))
         displayLabelRect = displayLabel.get_rect()
         displayLabelRect.centerx = self.screen.get_width() // 2
         displayLabelRect.y = self.displayLabelY + offsetY
         self.screen.blit(displayLabel, displayLabelRect)
 
-        gameLabel = self.dropdownFont.render("Game Settings", True, (255, 215, 0))
+        gameLabel = self.dropdownFont.render("Game", True, (255, 215, 0))
         gameLabelRect = gameLabel.get_rect()
         gameLabelRect.centerx = self.screen.get_width() // 2
         gameLabelRect.y = self.gameLabelY + offsetY
         self.screen.blit(gameLabel, gameLabelRect)
 
-        debugLabel = self.dropdownFont.render("Debug Settings", True, (255, 215, 0))
+        debugLabel = self.dropdownFont.render("Debug", True, (255, 215, 0))
         debugLabelRect = debugLabel.get_rect()
         debugLabelRect.centerx = self.screen.get_width() // 2
         debugLabelRect.y = self.debugLabelY + offsetY
         self.screen.blit(debugLabel, debugLabelRect)
 
-        aiLabel = self.dropdownFont.render("AI Settings", True, (255, 215, 0))
+        aiLabel = self.dropdownFont.render("AI", True, (255, 215, 0))
         aiLabelRect = aiLabel.get_rect()
         aiLabelRect.centerx = self.screen.get_width() // 2
         aiLabelRect.y = self.aiLabelY + offsetY
