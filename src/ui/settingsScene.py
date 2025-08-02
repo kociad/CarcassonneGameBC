@@ -236,16 +236,16 @@ class SettingsScene(Scene):
         from utils.loggingConfig import updateLoggingLevel
         updateLoggingLevel()
 
-        self.fpsSlider.setDisabled(not new_value)
-        self.gridSizeSlider.setDisabled(not new_value)
-        self.sidebarWidthSlider.setDisabled(not new_value)
-        self.tileSizeSlider.setDisabled(not new_value)
-        self.figureSizeSlider.setDisabled(not new_value)
-        self.gameLogMaxEntriesField.setDisabled(not new_value)
-        self.aiSimulationCheckbox.setDisabled(not new_value)
-        self.aiStrategicCandidatesField.setDisabled(not new_value)
-        self.aiThinkingSpeedField.setDisabled(not new_value)
-        self.logToConsoleCheckbox.setDisabled(not new_value)
+        self.fpsSlider.setDisabled(not newValue)
+        self.gridSizeSlider.setDisabled(not newValue)
+        self.sidebarWidthSlider.setDisabled(not newValue)
+        self.tileSizeSlider.setDisabled(not newValue)
+        self.figureSizeSlider.setDisabled(not newValue)
+        self.gameLogMaxEntriesField.setDisabled(not newValue)
+        self.aiSimulationCheckbox.setDisabled(not newValue)
+        self.aiStrategicCandidatesField.setDisabled(not newValue)
+        self.aiThinkingSpeedField.setDisabled(not newValue)
+        self.logToConsoleCheckbox.setDisabled(not newValue)
 
     def handleEvents(self, events: list[pygame.event.Event]) -> None:
         self.applyScroll(events)
