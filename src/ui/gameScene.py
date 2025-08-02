@@ -685,13 +685,13 @@ class GameScene(Scene):
 
         if self.session.turnPhase == 1:
             command = PlaceCardCommand(
-                player_index=player_index,
+                playerIndex=player_index,
                 x=x,
                 y=y,
-                card_rotation=self.session.getCurrentCard().rotation
+                cardRotation=self.session.getCurrentCard().rotation
                 if self.session.getCurrentCard() else 0)
         else:
-            command = PlaceFigureCommand(player_index=player_index,
+            command = PlaceFigureCommand(playerIndex=player_index,
                                          x=x,
                                          y=y,
                                          position=direction)
@@ -715,7 +715,7 @@ class GameScene(Scene):
 
         currentPlayer = self.session.getCurrentPlayer()
         player_index = currentPlayer.getIndex() if currentPlayer else 0
-        command = RotateCardCommand(player_index=player_index)
+        command = RotateCardCommand(playerIndex=player_index)
 
         success = self.session.executeCommand(command)
         if success:
@@ -733,8 +733,8 @@ class GameScene(Scene):
         player_index = currentPlayer.getIndex() if currentPlayer else 0
         action_type = "card" if self.session.turnPhase == 1 else "figure"
 
-        command = SkipActionCommand(player_index=player_index,
-                                    action_type=action_type)
+        command = SkipActionCommand(playerIndex=player_index,
+                                    actionType=action_type)
 
         success = self.session.executeCommand(command)
         if success:
