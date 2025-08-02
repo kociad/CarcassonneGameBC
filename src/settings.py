@@ -16,7 +16,7 @@ SIDEBAR_WIDTH = 300
 
 #Session defaults
 #Player settings (valid for host only)
-PLAYERS = ["Adam", "Benedict", "Cecil", "David", "Ernest", "Francis"]
+PLAYERS = ["Player 1", "Player 2", "Player 3", "Player 4", "Player 5", "Player 6"]
 
 # Network Mode: "host" or "client" or "local"
 NETWORK_MODE = "local"
