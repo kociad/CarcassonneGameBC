@@ -43,7 +43,7 @@ class Scene:
 
             self.toastManager.addToast(toast)
 
-    def applyScroll(self, events: list[pygame.event.Event]) -> None:
+    def _applyScroll(self, events: list[pygame.event.Event]) -> None:
         """Apply scroll events to the scene."""
         for event in events:
             if event.type == pygame.MOUSEWHEEL:
@@ -58,6 +58,6 @@ class Scene:
             min(0,
                 self.screen.get_height() - self.maxScroll))
 
-    def getScrollOffset(self) -> int:
+    def _getScrollOffset(self) -> int:
         """Return the current scroll offset."""
         return self.scrollOffset

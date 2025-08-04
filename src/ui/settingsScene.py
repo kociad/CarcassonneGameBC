@@ -25,8 +25,8 @@ class SettingsScene(Scene):
         self.maxScroll = 0
         self.scrollSpeed = 30
 
-        settingsManager.subscribe("FULLSCREEN", self.onFullscreenChanged)
-        settingsManager.subscribe("DEBUG", self.onDebugChanged)
+        settingsManager.subscribe("FULLSCREEN", self._onFullscreenChanged)
+        settingsManager.subscribe("DEBUG", self._onDebugChanged)
 
         currentResolution = f"{settingsManager.get('WINDOW_WIDTH')}x{settingsManager.get('WINDOW_HEIGHT')}"
         xCenter = screen.get_width() // 2 - 100
@@ -62,7 +62,7 @@ class SettingsScene(Scene):
             rect=(xCenter, currentY, 20, 20),
             checked=settingsManager.get("FULLSCREEN"),
             onToggle=lambda value: [
-                self.handleFullscreenToggle(value),
+                self._handleFullscreenToggle(value),
                 self.addToast(
                     Toast(
                         "In order to apply fullscreen setting, restart the game",
@@ -77,7 +77,7 @@ class SettingsScene(Scene):
         self.validPlacementCheckbox = Checkbox(
             rect=(xCenter, currentY, 20, 20),
             checked=settingsManager.get("SHOW_VALID_PLACEMENTS", True),
-            onToggle=lambda value: self.handleValidPlacementToggle(value))
+            onToggle=lambda value: self._handleValidPlacementToggle(value))
         currentY += 80
 
         # ===== DEBUG SETTINGS =====
@@ -88,7 +88,7 @@ class SettingsScene(Scene):
             rect=(xCenter, currentY, 20, 20),
             checked=settingsManager.get("DEBUG"),
             onToggle=lambda value: [
-                self.handleDebugToggle(value),
+                self._handleDebugToggle(value),
                 self.addToast(
                     Toast("In order to apply debug setting, restart the game",
                           type="warning"))
@@ -99,7 +99,7 @@ class SettingsScene(Scene):
             rect=(xCenter, currentY, 20, 20),
             checked=settingsManager.get("LOG_TO_CONSOLE", True),
             onToggle=lambda value: [
-                self.handleLogToConsoleToggle(value),
+                self._handleLogToConsoleToggle(value),
                 self.addToast(
                     Toast(
                         "In order to apply log to console setting, restart the game",
@@ -181,7 +181,7 @@ class SettingsScene(Scene):
         self.aiSimulationCheckbox = Checkbox(
             rect=(xCenter, currentY, 20, 20),
             checked=settingsManager.get("AI_USE_SIMULATION", False),
-            onToggle=lambda value: self.handleAISimulationToggle(value))
+            onToggle=lambda value: self._handleAISimulationToggle(value))
         self.aiSimulationCheckbox.setDisabled(not settingsManager.get("DEBUG"))
         currentY += 40
 
@@ -210,14 +210,14 @@ class SettingsScene(Scene):
 
         self.applyButton = Button((xCenter, currentY, 200, 60), "Apply",
                                   self.buttonFont,
-                                  lambda: self.applySettings())
+                                  lambda: self._applySettings())
         currentY += 80
 
         self.backButton = Button((xCenter, currentY, 200, 60), "Back",
                                  self.buttonFont,
                                  lambda: self.switchScene(GameState.MENU))
 
-    def onTileSizeChanged(self, newTileSize):
+    def _onTileSizeChanged(self, newTileSize):
         newMinSidebarWidth = newTileSize + 20
         self.sidebarWidthSlider.setMinValue(newMinSidebarWidth)
 
@@ -229,10 +229,10 @@ class SettingsScene(Scene):
                     f"Sidebar width adjusted to minimum ({newMinSidebarWidth}px)",
                     type="info"))
 
-    def onFullscreenChanged(self, key, oldValue, newValue):
+    def _onFullscreenChanged(self, key, oldValue, newValue):
         self.resolutionDropdown.setDisabled(newValue)
 
-    def onDebugChanged(self, key, oldValue, newValue):
+    def _onDebugChanged(self, key, oldValue, newValue):
         from utils.loggingConfig import updateLoggingLevel
         updateLoggingLevel()
 
@@ -248,7 +248,7 @@ class SettingsScene(Scene):
         self.logToConsoleCheckbox.setDisabled(not newValue)
 
     def handleEvents(self, events: list[pygame.event.Event]) -> None:
-        self.applyScroll(events)
+        self._applyScroll(events)
         for event in events:
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -311,26 +311,26 @@ class SettingsScene(Scene):
             self.aiThinkingSpeedField.handleEvent(event,
                                                   yOffset=self.scrollOffset)
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                if self.backButton.isClicked(event.pos,
+                if self.backButton._isClicked(event.pos,
                                              yOffset=self.scrollOffset):
                     self.switchScene(GameState.MENU)
-                elif self.applyButton.isClicked(event.pos,
+                elif self.applyButton._isClicked(event.pos,
                                                 yOffset=self.scrollOffset):
-                    self.applySettings()
+                    self._applySettings()
 
-    def handleDebugToggle(self, value):
+    def _handleDebugToggle(self, value):
         settingsManager.set("DEBUG", value, temporary=True)
 
-    def handleAISimulationToggle(self, value):
+    def _handleAISimulationToggle(self, value):
         settingsManager.set("AI_USE_SIMULATION", value, temporary=True)
 
-    def handleLogToConsoleToggle(self, value):
+    def _handleLogToConsoleToggle(self, value):
         settingsManager.set("LOG_TO_CONSOLE", value, temporary=True)
 
-    def handleValidPlacementToggle(self, value):
+    def _handleValidPlacementToggle(self, value):
         settingsManager.set("SHOW_VALID_PLACEMENTS", value, temporary=True)
 
-    def applySettings(self):
+    def _applySettings(self):
         changes = {}
 
         selected_resolution = self.resolutionDropdown.getSelected()
@@ -436,7 +436,7 @@ class SettingsScene(Scene):
         else:
             self.addToast(Toast("Failed to save some settings", type="error"))
 
-    def handleFullscreenToggle(self, value):
+    def _handleFullscreenToggle(self, value):
         self.resolutionDropdown.setDisabled(value)
 
     def draw(self) -> None:

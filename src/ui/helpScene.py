@@ -52,7 +52,7 @@ class HelpScene(Scene):
 
     def handleEvents(self, events: list[pygame.event.Event]) -> None:
         """Handle events for the help scene."""
-        self.applyScroll(events)
+        self._applyScroll(events)
         for event in events:
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -61,10 +61,10 @@ class HelpScene(Scene):
                 if event.key == pygame.K_ESCAPE:
                     self.switchScene(GameState.MENU)
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                if self.backButton.isClicked(event.pos,
+                if self.backButton._isClicked(event.pos,
                                              yOffset=self.scrollOffset):
                     self.switchScene(GameState.MENU)
-                elif self.rulesButton.isClicked(event.pos,
+                elif self.rulesButton._isClicked(event.pos,
                                                 yOffset=self.scrollOffset):
                     webbrowser.open("https://wikicarpedia.com/car/Base_game")
 

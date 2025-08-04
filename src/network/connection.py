@@ -50,7 +50,7 @@ class NetworkConnection:
                 self.socket.bind((hostIp, hostPort))
                 self.socket.listen()
                 logger.debug(f"Host listening on {hostIp}:{hostPort}...")
-                threading.Thread(target=self.acceptConnections,
+                threading.Thread(target=self._acceptConnections,
                                  daemon=True).start()
                 threading.Thread(target=self._commandCleanupLoop,
                                  daemon=True).start()
@@ -62,7 +62,7 @@ class NetworkConnection:
                 hostPort = settingsManager.get("HOST_PORT", 222)
                 self.socket.connect((hostIp, hostPort))
                 logger.debug(f"Connected to host at {hostIp}:{hostPort}")
-                threading.Thread(target=self.receiveLoop,
+                threading.Thread(target=self._receiveLoop,
                                  args=(self.socket, ),
                                  daemon=True).start()
                 threading.Thread(target=self._commandCleanupLoop,
@@ -70,7 +70,7 @@ class NetworkConnection:
             except Exception as e:
                 logger.exception(f"Failed to connect to host: {e}")
 
-    def acceptConnections(self):
+    def _acceptConnections(self):
         """Accept incoming client connections (host mode)."""
         while self.running:
             try:
@@ -80,7 +80,7 @@ class NetworkConnection:
                     f"Connection received and established with {addr}")
                 if self.onClientConnected:
                     self.onClientConnected(conn)
-                threading.Thread(target=self.receiveLoop,
+                threading.Thread(target=self._receiveLoop,
                                  args=(conn, ),
                                  daemon=True).start()
             except Exception as e:
@@ -88,7 +88,7 @@ class NetworkConnection:
                     logger.exception(f"Failed to accept connection: {e}")
                 break
 
-    def receiveLoop(self, conn):
+    def _receiveLoop(self, conn):
         """Receive and process messages from a connection."""
         buffer = ""
         while self.running:
@@ -103,14 +103,14 @@ class NetworkConnection:
                     line, buffer = buffer.split("\n", 1)
                     if line.strip():
                         logger.debug(f"Receiving message: {line}")
-                        self.onMessageReceived(line, conn)
+                        self._onMessageReceived(line, conn)
             except Exception as e:
                 if self.running:
                     logger.exception(f"Socket error: {e}")
                 self._handleConnectionDrop(conn)
                 break
 
-    def onMessageReceived(self, message, conn=None):
+    def _onMessageReceived(self, message, conn=None):
         """Handle a received message and dispatch to the appropriate handler."""
         parsed = decodeMessage(message)
         if not parsed:

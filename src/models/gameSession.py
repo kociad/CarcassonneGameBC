@@ -58,10 +58,10 @@ class GameSession:
         self._neighborCacheValid = False
 
         if not noInit:
-            self.generatePlayerList(playerNames)
-            self.cardsDeck = self.generateCardsDeck()
-            self.shuffleCardsDeck(self.cardsDeck)
-            self.placeStartingCard()
+            self._generatePlayerList(playerNames)
+            self.cardsDeck = self._generateCardsDeck()
+            self._shuffleCardsDeck(self.cardsDeck)
+            self._placeStartingCard()
 
     def getPlayers(self) -> list:
         """Return the list of player objects."""
@@ -103,7 +103,7 @@ class GameSession:
         """Return True if this is the first round."""
         return self.isFirstRound
 
-    def generatePlayerList(self, playerNames: list[str]) -> None:
+    def _generatePlayerList(self, playerNames: list[str]) -> None:
         """Generate a list of indexed players for the game."""
         logger.debug("Generating a list of players...")
         colors = ["blue", "red", "green", "pink", "yellow", "black"]
@@ -131,7 +131,7 @@ class GameSession:
             self.currentPlayer = self.players[len(self.players) - 1]
         logger.debug("Player list generated")
 
-    def generateCardsDeck(self) -> list:
+    def _generateCardsDeck(self) -> list:
         """Generate a deck of cards for the game by loading selected card sets."""
         logger.debug("Generating deck...")
 
@@ -167,13 +167,13 @@ class GameSession:
         )
         return cards
 
-    def shuffleCardsDeck(self, deck: list) -> None:
+    def _shuffleCardsDeck(self, deck: list) -> None:
         """Shuffle an existing deck of cards."""
         logger.debug("Shuffling deck...")
         random.shuffle(deck)
         logger.debug("Deck shuffled")
 
-    def placeStartingCard(self) -> None:
+    def _placeStartingCard(self) -> None:
         """Place the first card automatically at the center of the board."""
         logger.debug("Playing first turn...")
         centerX, centerY = self.gameBoard.getCenterPosition()
@@ -187,7 +187,7 @@ class GameSession:
         else:
             logger.debug("Unable to play first round, no cardsDeck available")
 
-    def drawCard(self) -> typing.Any:
+    def _drawCard(self) -> typing.Any:
         """Draw a card from the deck for the current player."""
         logger.debug("Drawing card...")
         if self.cardsDeck:
@@ -208,7 +208,7 @@ class GameSession:
             logger.info(
                 f"{self.currentPlayer.getName()}'s turn (Player {self.currentPlayer.getIndex() + 1})"
             )
-            self.currentCard = self.drawCard()
+            self.currentCard = self._drawCard()
             if self.currentCard:
                 logger.info(
                     f"New card drawn - {len(self.cardsDeck)} cards remaining")
@@ -231,7 +231,7 @@ class GameSession:
                     "Unable to play turn, no card is selected and no cardsDeck is available"
                 )
                 return False
-            card = self.drawCard()
+            card = self._drawCard()
         if not self.gameBoard.validateCardPlacement(
                 card, x, y) and not self.isFirstRound:
             logger.debug(
@@ -271,7 +271,7 @@ class GameSession:
     def discardCurrentCard(self) -> None:
         """Discard the currently selected card and select a new one."""
         if self.currentCard:
-            self.currentCard = self.drawCard()
+            self.currentCard = self._drawCard()
 
     def playAITurn(self, player: typing.Any = None) -> None:
         """If the current player is AI, trigger their turn."""

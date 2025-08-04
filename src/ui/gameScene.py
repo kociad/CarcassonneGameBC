@@ -127,7 +127,7 @@ class GameScene(Scene):
         self._renderCache[cache_key] = result
         return result
 
-    def applySidebarScroll(self, events: list[pygame.event.Event]) -> None:
+    def _applySidebarScroll(self, events: list[pygame.event.Event]) -> None:
         """Handle sidebar scrolling events"""
         for event in events:
             if event.type == pygame.MOUSEWHEEL:
@@ -154,7 +154,7 @@ class GameScene(Scene):
         """
         return self.offsetY
 
-    def updateValidPlacements(self):
+    def _updateValidPlacements(self):
         """Update the set of valid placements for the current card and board state."""
         currentCard = self.session.getCurrentCard()
         if not currentCard:
@@ -184,7 +184,7 @@ class GameScene(Scene):
         """
         Draws the game board, including grid lines and placed cards.
         """
-        self.updateValidPlacements()
+        self._updateValidPlacements()
 
         def renderBoard():
             surface = pygame.Surface((settingsManager.get("WINDOW_WIDTH"),
@@ -615,7 +615,7 @@ class GameScene(Scene):
                 return
 
         if not (hasattr(self, 'gameLog') and self.gameLog.visible):
-            self.applySidebarScroll(events)
+            self._applySidebarScroll(events)
 
         for event in events:
             if event.type == pygame.QUIT:
@@ -652,15 +652,15 @@ class GameScene(Scene):
                     panelX = windowWidth - sidebarWidth
 
                     if mouseX < panelX:
-                        self.handleMouseClick(event)
+                        self._handleMouseClick(event)
 
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_SPACE:
                         self._executeLocalSkip()
 
-        self.handleKeyHold()
+        self._handleKeyHold()
 
-    def handleMouseClick(self, event: pygame.event.Event) -> None:
+    def _handleMouseClick(self, event: pygame.event.Event) -> None:
         x, y = event.pos
         tile_size = settingsManager.get("TILE_SIZE")
         gridX, gridY = (x + self.getOffsetX()) // tile_size, (
@@ -669,7 +669,7 @@ class GameScene(Scene):
         logger.debug(f"Registered {event.button}")
 
         if event.button == 1:
-            direction = self.detectClickDirection(x, y, gridX, gridY)
+            direction = self._detectClickDirection(x, y, gridX, gridY)
             self._executeLocalTurn(gridX, gridY, direction)
 
         if event.button == 3 and self.session.getCurrentCard():
@@ -701,7 +701,7 @@ class GameScene(Scene):
             if self.network and hasattr(self.network, 'sendCommand'):
                 self.network.sendCommand(command)
 
-            self.updateValidPlacements()
+            self._updateValidPlacements()
             self.playerActionTime = pygame.time.get_ticks() / 1000.0
             self.aiTurnStartTime = None
 
@@ -722,7 +722,7 @@ class GameScene(Scene):
             if self.network and hasattr(self.network, 'sendCommand'):
                 self.network.sendCommand(command)
 
-            self.updateValidPlacements()
+            self._updateValidPlacements()
 
     def _executeLocalSkip(self) -> None:
         """Execute a skip action locally and send command to network."""
@@ -741,9 +741,9 @@ class GameScene(Scene):
             if self.network and hasattr(self.network, 'sendCommand'):
                 self.network.sendCommand(command)
 
-            self.updateValidPlacements()
+            self._updateValidPlacements()
 
-    def handleKeyHold(self) -> None:
+    def _handleKeyHold(self) -> None:
         if self.keysPressed.get(pygame.K_w) or self.keysPressed.get(
                 pygame.K_UP):
             self.scroll("up")
@@ -757,7 +757,7 @@ class GameScene(Scene):
                 pygame.K_RIGHT):
             self.scroll("right")
 
-    def detectClickDirection(self, mouseX: int, mouseY: int, gridX: int,
+    def _detectClickDirection(self, mouseX: int, mouseY: int, gridX: int,
                              gridY: int) -> typing.Optional[str]:
         tile_size = settingsManager.get("TILE_SIZE")
         tileScreenX = gridX * tile_size - self.getOffsetX()
@@ -790,7 +790,7 @@ class GameScene(Scene):
 
         return min(distances, key=distances.get)
 
-    def updateGameSession(self, newSession) -> None:
+    def _updateGameSession(self, newSession) -> None:
         """
         Update the game session and invalidate render cache.
         Called when the game session is updated from network.
@@ -830,7 +830,7 @@ class GameScene(Scene):
         self.clock.tick(fps)
 
     def draw(self) -> None:
-        self.updateValidPlacements()
+        self._updateValidPlacements()
         self.drawBoard(self.session.getGameBoard(),
                        self.session.getPlacedFigures(),
                        self.session.getStructures(),

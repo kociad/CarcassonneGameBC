@@ -53,28 +53,28 @@ class Game:
 
             if settingsManager.get("FULLSCREEN", False):
                 info = pygame.display.Info()
-                self.screen = pygame.display.set_mode(
+                self._screen = pygame.display.set_mode(
                     (info.current_w, info.current_h), pygame.FULLSCREEN)
             else:
                 width = settingsManager.get("WINDOW_WIDTH", 1920)
                 height = settingsManager.get("WINDOW_HEIGHT", 1080)
-                self.screen = pygame.display.set_mode((width, height))
+                self._screen = pygame.display.set_mode((width, height))
 
             pygame.display.set_caption("Carcassonne")
 
-            self.clock = pygame.time.Clock()
-            self.running = True
+            self._clock = pygame.time.Clock()
+            self._running = True
 
             # Initialize persistent game log
-            self.gameLog = GameLog()
-            setGameLogInstance(self.gameLog)
+            self._gameLog = GameLog()
+            setGameLogInstance(self._gameLog)
 
             # Game-related attributes (deferred until game starts)
-            self.gameSession = None
-            self.network = None
+            self._gameSession = None
+            self._network = None
 
-            self.currentScene = None
-            self.initScene(GameState.MENU)
+            self._currentScene = None
+            self._initScene(GameState.MENU)
 
             logger.debug("Game initialized successfully")
 
@@ -91,11 +91,11 @@ class Game:
         """
         logger.debug("Starting main game loop")
         try:
-            while self.running:
+            while self._running:
                 events = pygame.event.get()
-                self.currentScene.handleEvents(events)
-                self.currentScene.update()
-                self.currentScene.draw()
+                self._currentScene.handleEvents(events)
+                self._currentScene.update()
+                self._currentScene.draw()
         except Exception as e:
             logError("Error in main game loop", e)
             raise
@@ -110,7 +110,7 @@ class Game:
         and exits the application.
         """
         try:
-            self.cleanupPreviousGame()
+            self._cleanupPreviousGame()
             pygame.quit()
             logger.debug("Game quit successfully")
             exit()
@@ -118,7 +118,7 @@ class Game:
             logError("Error during game quit", e)
             exit()
 
-    def cleanupPreviousGame(self) -> None:
+    def _cleanupPreviousGame(self) -> None:
         """
         Clean up resources from previous game session.
         
@@ -128,31 +128,31 @@ class Game:
         try:
             logger.debug("Cleaning up previous game resources...")
 
-            if self.network:
+            if self._network:
                 logger.debug("Closing network connection...")
-                self.network.close()
-                self.network = None
+                self._network.close()
+                self._network = None
 
-            if self.gameSession:
+            if self._gameSession:
                 logger.debug("Clearing game session...")
-                self.gameSession.onTurnEnded = None
-                self.gameSession = None
+                self._gameSession.onTurnEnded = None
+                self._gameSession = None
 
             logger.debug("Clearing temporary settings...")
             settingsManager.reloadFromFile()
 
             # Reset game log for new session
-            if hasattr(self, 'gameLog'):
-                self.gameLog.entries.clear()
-                self.gameLog.scrollOffset = 0
-                self.gameLog.addEntry("New game session started", "INFO")
+            if hasattr(self, '_gameLog'):
+                self._gameLog.entries.clear()
+                self._gameLog.scrollOffset = 0
+                self._gameLog.addEntry("New game session started", "INFO")
 
             logger.debug("Previous game cleanup completed")
 
         except Exception as e:
             logError("Error during previous game cleanup", e)
 
-    def initScene(self, state: GameState, *args: typing.Any) -> None:
+    def _initScene(self, state: GameState, *args: typing.Any) -> None:
         """
         Initialize a new scene based on the game state.
         
@@ -162,39 +162,39 @@ class Game:
         """
         try:
             if state == GameState.MENU:
-                self.currentScene = MainMenuScene(self.screen, self.initScene,
-                                                  self.getGameSession,
-                                                  self.cleanupPreviousGame)
+                self._currentScene = MainMenuScene(self._screen, self._initScene,
+                                                  self._getGameSession,
+                                                  self._cleanupPreviousGame)
             elif state == GameState.GAME:
-                self.currentScene = GameScene(self.screen, self.initScene,
-                                              self.gameSession, self.clock,
-                                              self.network, self.gameLog)
+                self._currentScene = GameScene(self._screen, self._initScene,
+                                              self._gameSession, self._clock,
+                                              self._network, self._gameLog)
             elif state == GameState.SETTINGS:
-                self.currentScene = SettingsScene(self.screen, self.initScene)
+                self._currentScene = SettingsScene(self._screen, self._initScene)
             elif state == GameState.PREPARE:
-                self.currentScene = GamePrepareScene(self.screen,
-                                                     self.initScene)
+                self._currentScene = GamePrepareScene(self._screen,
+                                                     self._initScene)
             elif state == GameState.LOBBY:
-                self.currentScene = LobbyScene(self.screen, self.initScene,
-                                               self.startGame,
-                                               self.getGameSession,
-                                               self.network, self.gameLog)
+                self._currentScene = LobbyScene(self._screen, self._initScene,
+                                               self._startGame,
+                                               self._getGameSession,
+                                               self._network, self._gameLog)
             elif state == GameState.HELP:
-                self.currentScene = HelpScene(self.screen, self.initScene)
+                self._currentScene = HelpScene(self._screen, self._initScene)
             # Handle dynamic callback from GamePrepareScene
             elif isinstance(state,
                             str) and state in ("startGame", "startLobby"):
                 playerNames = args[0] if args else []
                 if state == "startGame":
-                    self.startGame(playerNames)
+                    self._startGame(playerNames)
                 else:
-                    self.startLobby(playerNames)
+                    self._startLobby(playerNames)
             logger.debug(f"Scene initialized: {state}")
         except Exception as e:
             logError(f"Failed to initialize scene: {state}", e)
             raise
 
-    def startGame(self, playerNames: list[str]) -> None:
+    def _startGame(self, playerNames: list[str]) -> None:
         """
         Start a new game session.
         
@@ -204,17 +204,17 @@ class Game:
         try:
             logger.debug("Initializing new game session...")
 
-            if not self.network:
-                self.network = NetworkConnection()
+            if not self._network:
+                self._network = NetworkConnection()
 
-            networkMode = self.network.networkMode
+            networkMode = self._network.networkMode
             if networkMode in ("host", "local"):
                 lobbyCompleted = True
-                self.gameSession = GameSession(playerNames,
+                self._gameSession = GameSession(playerNames,
                                                lobbyCompleted=lobbyCompleted,
                                                networkMode=networkMode)
                 playerIndex = settingsManager.get("PLAYER_INDEX", 0)
-                hostPlayer = self.gameSession.players[playerIndex]
+                hostPlayer = self._gameSession.players[playerIndex]
                 hostPlayer.setIsHuman(True)
                 logger.debug(
                     f"Player with index {hostPlayer.getIndex()} marked as human."
@@ -222,36 +222,36 @@ class Game:
                 logger.debug(
                     f"Player name set to '{hostPlayer.getName()}' from host settings."
                 )
-                self.gameSession.onTurnEnded = self.onTurnEnded
-                self.gameSession.onShowNotification = self.onShowNotification
-                self.gameSession.onCommandExecuted = self.onCommandExecuted
-            self.network.onInitialGameStateReceived = self.onGameStateReceived
-            self.network.onSyncGameState = self.onSyncGameState
-            self.network.onJoinRejected = self.onJoinRejected
-            self.network.onStartGame = self.onStartGame
-            self.network.onClientDisconnected = self.onClientDisconnected
-            self.network.onHostDisconnected = self.onHostDisconnected
-            self.network.onCommandReceived = self.onCommandReceived
-            self.network.onCommandAck = self.onCommandAck
-            self.network.onSyncRequest = self.onSyncRequest
+                self._gameSession.onTurnEnded = self._onTurnEnded
+                self._gameSession.onShowNotification = self._onShowNotification
+                self._gameSession.onCommandExecuted = self._onCommandExecuted
+            self._network.onInitialGameStateReceived = self._onGameStateReceived
+            self._network.onSyncGameState = self._onSyncGameState
+            self._network.onJoinRejected = self._onJoinRejected
+            self._network.onStartGame = self._onStartGame
+            self._network.onClientDisconnected = self._onClientDisconnected
+            self._network.onHostDisconnected = self._onHostDisconnected
+            self._network.onCommandReceived = self._onCommandReceived
+            self._network.onCommandAck = self._onCommandAck
+            self._network.onSyncRequest = self._onSyncRequest
             if networkMode == "host":
-                self.network.onClientConnected = self.onClientConnected
-                self.network.onClientSubmittedTurn = self.onClientSubmittedTurn
-                self.network.onPlayerClaimed = self.onPlayerClaimed
-                self.network.onJoinFailed = self.onJoinFailed
-            self.initScene(GameState.GAME)
+                self._network.onClientConnected = self._onClientConnected
+                self._network.onClientSubmittedTurn = self._onClientSubmittedTurn
+                self._network.onPlayerClaimed = self._onPlayerClaimed
+                self._network.onJoinFailed = self._onJoinFailed
+            self._initScene(GameState.GAME)
             logger.debug(f"Game started with {len(playerNames)} players")
 
             if networkMode == "host":
-                self.network.sendToAll(
+                self._network.sendToAll(
                     encodeMessage(
                         "start_game",
-                        {"game_session": self.gameSession.serialize()}))
+                        {"game_session": self._gameSession.serialize()}))
         except Exception as e:
             logError("Failed to start game", e)
             raise
 
-    def startLobby(self, playerNames: list[str]) -> None:
+    def _startLobby(self, playerNames: list[str]) -> None:
         """
         Start a lobby for network games.
         
@@ -261,17 +261,17 @@ class Game:
         try:
             logger.debug("Preparing to enter lobby...")
 
-            if not self.network:
-                self.network = NetworkConnection()
+            if not self._network:
+                self._network = NetworkConnection()
 
-            networkMode = self.network.networkMode
+            networkMode = self._network.networkMode
             if networkMode in ("host", "local"):
                 lobbyCompleted = networkMode == "local"
-                self.gameSession = GameSession(playerNames,
+                self._gameSession = GameSession(playerNames,
                                                lobbyCompleted=lobbyCompleted,
                                                networkMode=networkMode)
                 playerIndex = settingsManager.get("PLAYER_INDEX", 0)
-                hostPlayer = self.gameSession.players[playerIndex]
+                hostPlayer = self._gameSession.players[playerIndex]
                 hostPlayer.setIsHuman(True)
                 logger.debug(
                     f"Player with index {hostPlayer.getIndex()} marked as human."
@@ -279,32 +279,32 @@ class Game:
                 logger.debug(
                     f"Player name set to '{hostPlayer.getName()}' from host settings."
                 )
-                self.gameSession.onTurnEnded = self.onTurnEnded
-                self.gameSession.onShowNotification = self.onShowNotification
-                self.gameSession.onCommandExecuted = self.onCommandExecuted
-            self.network.onInitialGameStateReceived = self.onGameStateReceived
-            self.network.onSyncGameState = self.onSyncGameState
-            self.network.onJoinRejected = self.onJoinRejected
-            self.network.onStartGame = self.onStartGame
-            self.network.onClientDisconnected = self.onClientDisconnected
-            self.network.onHostDisconnected = self.onHostDisconnected
-            self.network.onCommandReceived = self.onCommandReceived
-            self.network.onCommandAck = self.onCommandAck
-            self.network.onSyncRequest = self.onSyncRequest
+                self._gameSession.onTurnEnded = self._onTurnEnded
+                self._gameSession.onShowNotification = self._onShowNotification
+                self._gameSession.onCommandExecuted = self._onCommandExecuted
+            self._network.onInitialGameStateReceived = self._onGameStateReceived
+            self._network.onSyncGameState = self._onSyncGameState
+            self._network.onJoinRejected = self._onJoinRejected
+            self._network.onStartGame = self._onStartGame
+            self._network.onClientDisconnected = self._onClientDisconnected
+            self._network.onHostDisconnected = self._onHostDisconnected
+            self._network.onCommandReceived = self._onCommandReceived
+            self._network.onCommandAck = self._onCommandAck
+            self._network.onSyncRequest = self._onSyncRequest
             if networkMode == "host":
-                self.network.onClientConnected = self.onClientConnected
-                self.network.onClientSubmittedTurn = self.onClientSubmittedTurn
-                self.network.onPlayerClaimed = self.onPlayerClaimed
-                self.network.onJoinFailed = self.onJoinFailed
+                self._network.onClientConnected = self._onClientConnected
+                self._network.onClientSubmittedTurn = self._onClientSubmittedTurn
+                self._network.onPlayerClaimed = self._onPlayerClaimed
+                self._network.onJoinFailed = self._onJoinFailed
             if networkMode != "local":
-                self.initScene(GameState.LOBBY)
+                self._initScene(GameState.LOBBY)
             else:
-                self.initScene(GameState.GAME)
+                self._initScene(GameState.GAME)
         except Exception as e:
             logError("Failed to start lobby", e)
             raise
 
-    def onGameStateReceived(self, data: dict) -> None:
+    def _onGameStateReceived(self, data: dict) -> None:
         """
         Handle received game state from network.
         
@@ -312,19 +312,19 @@ class Game:
             data: Serialized game state data
         """
         try:
-            self.gameSession = GameSession.deserialize(data)
-            self.gameSession.onTurnEnded = self.onTurnEnded
-            self.gameSession.onShowNotification = self.onShowNotification
-            self.gameSession.onCommandExecuted = self.onCommandExecuted
+            self._gameSession = GameSession.deserialize(data)
+            self._gameSession.onTurnEnded = self._onTurnEnded
+            self._gameSession.onShowNotification = self._onShowNotification
+            self._gameSession.onCommandExecuted = self._onCommandExecuted
             logger.debug(
                 "Game session replaced with synchronized state from host")
 
-            if hasattr(self.currentScene, 'updateGameSession'):
-                self.currentScene.updateGameSession(self.gameSession)
+            if hasattr(self._currentScene, 'updateGameSession'):
+                self._currentScene.updateGameSession(self._gameSession)
 
-            if self.network.networkMode == "client":
+            if self._network.networkMode == "client":
                 assigned = False
-                for player in self.gameSession.getPlayers():
+                for player in self._gameSession.getPlayers():
                     if not player.getIsAI() and not player.isHuman:
                         player.setIsHuman(True)
                         logger.debug(
@@ -346,24 +346,24 @@ class Game:
                         break
 
                 if assigned:
-                    updatedGameState = self.gameSession.serialize()
-                    self.network.sendToHost(
+                    updatedGameState = self._gameSession.serialize()
+                    self._network.sendToHost(
                         encodeMessage("player_claimed", updatedGameState))
                     logger.debug(
                         "Client claimed player and sent updated game state to host"
                     )
 
-                    if self.gameSession.lobbyCompleted:
-                        self.initScene(GameState.GAME)
+                    if self._gameSession.lobbyCompleted:
+                        self._initScene(GameState.GAME)
                 else:
                     logger.debug("No available player slots for client")
-                    self.network.sendToHost(
+                    self._network.sendToHost(
                         encodeMessage("join_failed", {"reason": "no_slots"}))
 
         except Exception as e:
             logError("Failed to process received game state", e)
 
-    def onClientConnected(self, conn) -> None:
+    def _onClientConnected(self, conn) -> None:
         """
         Handle new client connection.
         
@@ -372,14 +372,14 @@ class Game:
         """
         try:
             logger.debug("Sending current game state to new client...")
-            gameState = self.gameSession.serialize()
+            gameState = self._gameSession.serialize()
             message = encodeMessage("init_game_state", gameState)
             conn.sendall((message + "\n").encode())
             logger.debug("Game state sent successfully.")
         except Exception as e:
             logError("Failed to send game state to client", e)
 
-    def onPlayerClaimed(self, data: dict, conn) -> None:
+    def _onPlayerClaimed(self, data: dict, conn) -> None:
         """
         Handle player claim from client.
         
@@ -388,21 +388,21 @@ class Game:
             conn: Network connection to the client
         """
         try:
-            self.gameSession = GameSession.deserialize(data)
-            self.gameSession.onTurnEnded = self.onTurnEnded
-            self.gameSession.onShowNotification = self.onShowNotification
-            self.gameSession.onCommandExecuted = self.onCommandExecuted
+            self._gameSession = GameSession.deserialize(data)
+            self._gameSession.onTurnEnded = self._onTurnEnded
+            self._gameSession.onShowNotification = self._onShowNotification
+            self._gameSession.onCommandExecuted = self._onCommandExecuted
             logger.debug(
                 "Host updated game session with client's claimed player")
 
-            if hasattr(self.currentScene, 'updateGameSession'):
-                self.currentScene.updateGameSession(self.gameSession)
+            if hasattr(self._currentScene, 'updateGameSession'):
+                self._currentScene.updateGameSession(self._gameSession)
 
-            self.broadcastGameState()
+            self._broadcastGameState()
         except Exception as e:
             logError("Failed to process player claim", e)
 
-    def onClientSubmittedTurn(self, data: dict) -> None:
+    def _onClientSubmittedTurn(self, data: dict) -> None:
         """
         Handle turn submission from client.
         
@@ -410,31 +410,31 @@ class Game:
             data: Serialized game state from client
         """
         try:
-            self.gameSession = GameSession.deserialize(data)
-            self.gameSession.onTurnEnded = self.onTurnEnded
-            self.gameSession.onShowNotification = self.onShowNotification
-            self.gameSession.onCommandExecuted = self.onCommandExecuted
+            self._gameSession = GameSession.deserialize(data)
+            self._gameSession.onTurnEnded = self._onTurnEnded
+            self._gameSession.onShowNotification = self._onShowNotification
+            self._gameSession.onCommandExecuted = self._onCommandExecuted
             logger.debug("Host applied client-submitted game state")
 
-            if hasattr(self.currentScene, 'updateGameSession'):
-                self.currentScene.updateGameSession(self.gameSession)
+            if hasattr(self._currentScene, 'updateGameSession'):
+                self._currentScene.updateGameSession(self._gameSession)
 
-            self.broadcastGameState()
+            self._broadcastGameState()
         except Exception as e:
             logError("Failed to process client submitted turn", e)
 
-    def broadcastGameState(self) -> None:
+    def _broadcastGameState(self) -> None:
         """Broadcast current game state to all connected clients."""
         try:
-            if self.network.networkMode == "host":
-                gameState = self.gameSession.serialize()
+            if self._network.networkMode == "host":
+                gameState = self._gameSession.serialize()
                 message = encodeMessage("sync_game_state", gameState)
-                self.network.sendToAll(message)
+                self._network.sendToAll(message)
                 logger.debug("Broadcasted updated game state to all clients.")
         except Exception as e:
             logError("Failed to broadcast game state", e)
 
-    def onStartGame(self, data: dict) -> None:
+    def _onStartGame(self, data: dict) -> None:
         """
         Handle start game message from host.
         
@@ -444,18 +444,18 @@ class Game:
         try:
             logger.debug("Client received start game message from host")
             if "game_session" in data:
-                self.gameSession = GameSession.deserialize(
+                self._gameSession = GameSession.deserialize(
                     data["game_session"])
-                self.gameSession.onTurnEnded = self.onTurnEnded
-                self.gameSession.onShowNotification = self.onShowNotification
-                self.gameSession.onCommandExecuted = self.onCommandExecuted
-                if hasattr(self.currentScene, 'updateGameSession'):
-                    self.currentScene.updateGameSession(self.gameSession)
-            self.initScene(GameState.GAME)
+                self._gameSession.onTurnEnded = self._onTurnEnded
+                self._gameSession.onShowNotification = self._onShowNotification
+                self._gameSession.onCommandExecuted = self._onCommandExecuted
+                if hasattr(self._currentScene, 'updateGameSession'):
+                    self._currentScene.updateGameSession(self._gameSession)
+            self._initScene(GameState.GAME)
         except Exception as e:
             logError("Failed to handle start game message", e)
 
-    def onSyncGameState(self, data: dict) -> None:
+    def _onSyncGameState(self, data: dict) -> None:
         """
         Handle game state synchronization from host.
         
@@ -463,18 +463,18 @@ class Game:
             data: Serialized game state data
         """
         try:
-            self.gameSession = GameSession.deserialize(data)
-            self.gameSession.onTurnEnded = self.onTurnEnded
-            self.gameSession.onShowNotification = self.onShowNotification
-            self.gameSession.onCommandExecuted = self.onCommandExecuted
+            self._gameSession = GameSession.deserialize(data)
+            self._gameSession.onTurnEnded = self._onTurnEnded
+            self._gameSession.onShowNotification = self._onShowNotification
+            self._gameSession.onCommandExecuted = self._onCommandExecuted
             logger.debug("Client game session updated from host sync.")
 
-            if hasattr(self.currentScene, 'updateGameSession'):
-                self.currentScene.updateGameSession(self.gameSession)
+            if hasattr(self._currentScene, 'updateGameSession'):
+                self._currentScene.updateGameSession(self._gameSession)
         except Exception as e:
             logError("Failed to sync game state", e)
 
-    def onTurnEnded(self) -> None:
+    def _onTurnEnded(self) -> None:
         """Handle turn completion and network synchronization."""
         try:
             networkMode = settingsManager.get("NETWORK_MODE", "local")
@@ -487,7 +487,7 @@ class Game:
         except Exception as e:
             logError("Failed to handle turn ended", e)
 
-    def onJoinFailed(self, data: dict, conn) -> None:
+    def _onJoinFailed(self, data: dict, conn) -> None:
         """
         Handle failed client join attempt.
         
@@ -504,7 +504,7 @@ class Game:
         except Exception as e:
             logError("Failed to handle join failure", e)
 
-    def onJoinRejected(self, data: dict) -> None:
+    def _onJoinRejected(self, data: dict) -> None:
         """
         Handle join rejection from host.
         
@@ -514,11 +514,11 @@ class Game:
         try:
             reason = data.get("reason", "unknown")
             logger.debug(f"Join rejected by host. Reason: {reason}")
-            self.handleJoinRejected(reason)
+            self._handleJoinRejected(reason)
         except Exception as e:
             logError("Failed to handle join rejection", e)
 
-    def handleJoinRejected(self, reason: str) -> None:
+    def _handleJoinRejected(self, reason: str) -> None:
         """
         Handle join rejection with user feedback.
         
@@ -533,16 +533,16 @@ class Game:
         except Exception as e:
             logError("Failed to handle join rejection", e)
 
-    def getGameSession(self) -> typing.Optional['GameSession']:
+    def _getGameSession(self) -> typing.Optional['GameSession']:
         """
         Get the current game session.
         
         Returns:
             Current game session or None if no session exists
         """
-        return self.gameSession
+        return self._gameSession
 
-    def onClientDisconnected(self, conn) -> None:
+    def _onClientDisconnected(self, conn) -> None:
         """
         Handle client disconnection (host mode).
         
@@ -553,8 +553,8 @@ class Game:
             logger.debug("Client disconnected from host")
 
             # Show notification in current scene if it has showNotification method
-            if hasattr(self.currentScene, 'showNotification'):
-                self.currentScene.showNotification(
+            if hasattr(self._currentScene, 'showNotification'):
+                self._currentScene.showNotification(
                     "warning", "Lost connection to one of the players")
             else:
                 self.onShowNotification(
@@ -563,13 +563,13 @@ class Game:
                 )
 
             pygame.time.delay(2000)
-            self.cleanupPreviousGame()
-            self.initScene(GameState.MENU)
+            self._cleanupPreviousGame()
+            self._initScene(GameState.MENU)
 
         except Exception as e:
             logError("Failed to handle client disconnection", e)
 
-    def onHostDisconnected(self) -> None:
+    def _onHostDisconnected(self) -> None:
         """
         Handle host disconnection (client mode).
         """
@@ -577,21 +577,21 @@ class Game:
             logger.debug("Lost connection to host")
 
             # Show notification in current scene if it has showNotification method
-            if hasattr(self.currentScene, 'showNotification'):
-                self.currentScene.showNotification("error",
+            if hasattr(self._currentScene, 'showNotification'):
+                self._currentScene.showNotification("error",
                                                    "Lost connection to host")
             else:
                 self.onShowNotification(
                     "error", "Lost connection to host, returning to main menu")
 
             pygame.time.delay(2000)
-            self.cleanupPreviousGame()
-            self.initScene(GameState.MENU)
+            self._cleanupPreviousGame()
+            self._initScene(GameState.MENU)
 
         except Exception as e:
             logError("Failed to handle host disconnection", e)
 
-    def onCommandReceived(self, command, conn=None) -> None:
+    def _onCommandReceived(self, command, conn=None) -> None:
         """
         Handle received command from network.
         
@@ -604,16 +604,16 @@ class Game:
                 f"Received command {command.commandType} from player {command.playerIndex}"
             )
 
-            success = self.gameSession.executeCommand(command)
+            success = self._gameSession.executeCommand(command)
             if success:
                 logger.debug(
                     f"Successfully executed command {command.commandType}")
 
-                if hasattr(self.currentScene, 'updateGameSession'):
-                    self.currentScene.updateGameSession(self.gameSession)
+                if hasattr(self._currentScene, 'updateGameSession'):
+                    self._currentScene.updateGameSession(self._gameSession)
 
-                if self.network.networkMode == "host" and conn:
-                    for other_conn in self.network.connections[:]:
+                if self._network.networkMode == "host" and conn:
+                    for other_conn in self._network.connections[:]:
                         if other_conn != conn:
                             try:
                                 from network.command import encodeCommandMessage
@@ -630,7 +630,7 @@ class Game:
         except Exception as e:
             logError("Failed to handle received command", e)
 
-    def onCommandAck(self, commandId: str) -> None:
+    def _onCommandAck(self, commandId: str) -> None:
         """
         Handle command acknowledgment.
         
@@ -642,7 +642,7 @@ class Game:
         except Exception as e:
             logError("Failed to handle command acknowledgment", e)
 
-    def onCommandExecuted(self, command) -> None:
+    def _onCommandExecuted(self, command) -> None:
         """
         Handle command execution completion.
         
@@ -652,12 +652,12 @@ class Game:
         try:
             logger.debug(
                 f"Command {command.commandType} executed successfully")
-            if hasattr(self.currentScene, 'updateGameSession'):
-                self.currentScene.updateGameSession(self.gameSession)
+            if hasattr(self._currentScene, 'updateGameSession'):
+                self._currentScene.updateGameSession(self._gameSession)
         except Exception as e:
             logError("Failed to handle command execution", e)
 
-    def onSyncRequest(self, data: dict, conn=None) -> None:
+    def _onSyncRequest(self, data: dict, conn=None) -> None:
         """
         Handle sync request from client.
         
@@ -667,14 +667,14 @@ class Game:
         """
         try:
             logger.debug("Received sync request from client")
-            gameState = self.gameSession.serialize()
+            gameState = self._gameSession.serialize()
             message = encodeMessage("sync_game_state", gameState)
             if conn:
                 conn.sendall((message + "\n").encode())
         except Exception as e:
             logError("Failed to handle sync request", e)
 
-    def onShowNotification(self, notificationType: str, message: str) -> None:
+    def _onShowNotification(self, notificationType: str, message: str) -> None:
         """
         Handle notification requests from game session.
         
@@ -687,9 +687,9 @@ class Game:
                 f"onShowNotification called: type={notificationType}, message={message}"
             )
 
-            if hasattr(self.currentScene, 'showNotification'):
+            if hasattr(self._currentScene, 'showNotification'):
                 logger.debug("Scene has showNotification method, calling it")
-                self.currentScene.showNotification(notificationType, message)
+                self._currentScene.showNotification(notificationType, message)
             else:
                 logger.debug(f"Scene doesn't support notifications: {message}")
         except Exception as e:

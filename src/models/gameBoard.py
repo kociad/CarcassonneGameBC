@@ -50,7 +50,7 @@ class GameBoard:
         if 0 <= x < self.gridSize and 0 <= y < self.gridSize:
             card.setPosition(x, y)
             self.grid[y][x] = card
-            self.updateNeighbors(x, y)
+            self._updateNeighbors(x, y)
 
     def getCard(self, x: int, y: int) -> typing.Optional['Card']:
         """
@@ -184,7 +184,7 @@ class GameBoard:
                     break
         return existsNeighbor
 
-    def updateNeighbors(self, x: int, y: int) -> None:
+    def _updateNeighbors(self, x: int, y: int) -> None:
         """
         Update the neighbors dictionary for the card at (x, y).
         

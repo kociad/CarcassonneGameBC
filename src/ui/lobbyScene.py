@@ -37,9 +37,9 @@ class LobbyScene(Scene):
         if self.networkMode == "local":
             self.switchScene(GameState.GAME)
             return
-        self.updatePlayerStatus()
+        self._updatePlayerStatus()
 
-    def updatePlayerStatus(self):
+    def _updatePlayerStatus(self):
         """Update the connection status of all players in the lobby."""
         session = self.getGameSession()
         self.players = session.getPlayers() if session else []
@@ -72,7 +72,7 @@ class LobbyScene(Scene):
 
     def handleEvents(self, events: list[pygame.event.Event]) -> None:
         """Handle user and network events in the lobby scene."""
-        self.applyScroll(events)
+        self._applyScroll(events)
         for event in events:
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -81,7 +81,7 @@ class LobbyScene(Scene):
                 if event.key == pygame.K_ESCAPE:
                     self.switchScene(GameState.MENU)
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                if self.isHost and self.startButton.isClicked(
+                if self.isHost and self.startButton._isClicked(
                         event.pos, yOffset=self.scrollOffset):
                     if self.allConnected:
                         session = self.getGameSession()
@@ -93,11 +93,11 @@ class LobbyScene(Scene):
                         self.toastManager.addToast(
                             Toast("Not all players are connected!",
                                   type="warning"))
-        self.updatePlayerStatus()
+        self._updatePlayerStatus()
 
     def update(self):
         """Update the lobby scene state."""
-        self.updatePlayerStatus()
+        self._updatePlayerStatus()
 
     def draw(self) -> None:
         """Draw the lobby scene, including player statuses and the start button."""

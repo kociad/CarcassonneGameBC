@@ -13,7 +13,7 @@ import typing
 FORBIDDEN_WORDS = ["ai", "easy", "normal", "hard", "expert"]
 
 
-def getLocalIP():
+def _getLocalIP():
     """
     Get the local IP address using multiple methods.
     Falls back to default IP from settings if all methods fail.
@@ -124,7 +124,7 @@ class GamePrepareScene(Scene):
         networkMode = settingsManager.get("NETWORK_MODE", "local")
         hostIP = settingsManager.get("HOST_IP", "0.0.0.0")
         port = str(settingsManager.get("HOST_PORT", 222))
-        self.localIP = getLocalIP()
+        self.localIP = _getLocalIP()
         self.networkMode = networkMode
 
         xCenter = screen.get_width() // 2 - 100
@@ -145,7 +145,7 @@ class GamePrepareScene(Scene):
 
         self.playerListY = currentY
 
-        self.buildPlayerFields()
+        self._buildPlayerFields()
         currentY += 300 + 40
 
         self.gameLabelY = currentY
@@ -156,7 +156,7 @@ class GamePrepareScene(Scene):
             font=self.dropdownFont,
             options=["EASY", "NORMAL", "HARD", "EXPERT"],
             defaultIndex=1,
-            onSelect=self.handleAIDifficultyChange)
+            onSelect=self._handleAIDifficultyChange)
         currentY += 80
 
         self.cardSetLabelY = currentY
@@ -177,7 +177,7 @@ class GamePrepareScene(Scene):
             checkbox = Checkbox(rect=(xCenter, 0, 20, 20),
                                 checked=isBaseGame,
                                 onToggle=lambda checked, name=cardSet['name']:
-                                self.toggleCardSet(name, checked))
+                                self._toggleCardSet(name, checked))
             if isBaseGame:
                 checkbox.setDisabled(True)
             self.cardSetCheckboxes.append((cardSet, checkbox))
@@ -195,7 +195,7 @@ class GamePrepareScene(Scene):
             font=self.dropdownFont,
             options=self.networkModes,
             defaultIndex=defaultIndex,
-            onSelect=self.handleNetworkModeChange)
+            onSelect=self._handleNetworkModeChange)
         currentY += 60
 
         self.hostIPField = InputField(rect=(xCenter, currentY, 200, 40),
@@ -214,22 +214,22 @@ class GamePrepareScene(Scene):
         self.backButton = Button((xCenter, currentY, 200, 60), "Back",
                                  self.buttonFont)
 
-        self.handleNetworkModeChange(networkMode)
+        self._handleNetworkModeChange(networkMode)
 
-    def getEnabledPlayersCount(self):
+    def _getEnabledPlayersCount(self):
         """Get count of enabled players"""
         return sum(1 for player in self.players if player.enabled)
 
-    def buildPlayerFields(self) -> None:
+    def _buildPlayerFields(self) -> None:
         """Build UI fields based on current player data (single source of truth)"""
         self.playerFields = []
 
         for i, player in enumerate(self.players):
             y = self.playerListY + (i * 50 if i == 0 else 60 + (i - 1) * 50)
 
-            def makeTextChangeHandler(index):
+            def _makeTextChangeHandler(index):
 
-                def handler(newText):
+                def _handler(newText):
                     lowered = newText.lower()
                     forbidden_found = None
                     for word in FORBIDDEN_WORDS:
@@ -263,12 +263,12 @@ class GamePrepareScene(Scene):
                         if aiCheckbox:
                             aiCheckbox.setChecked(self.players[index].isAI)
 
-                return handler
+                return _handler
 
             nameField = InputField(rect=(self.screen.get_width() // 2 - 100, y,
                                          200, 40),
                                    font=self.inputFont,
-                                   onTextChange=makeTextChangeHandler(i))
+                                   onTextChange=_makeTextChangeHandler(i))
 
             if self.networkMode == "client" and i > 0:
                 nameField.setText("")
@@ -286,7 +286,7 @@ class GamePrepareScene(Scene):
                 aiCheckbox = Checkbox(
                     rect=(self.screen.get_width() // 2 + 110, y + 10, 20, 20),
                     checked=player.isAI,
-                    onToggle=(lambda value, index=i: self.togglePlayerAI(
+                    onToggle=(lambda value, index=i: self._togglePlayerAI(
                         index, value)) if canToggleAI else None)
                 aiCheckbox.setDisabled(not player.enabled or not canToggleAI)
 
@@ -295,13 +295,13 @@ class GamePrepareScene(Scene):
                 aiCheckbox = Checkbox(
                     rect=(self.screen.get_width() // 2 + 110, y + 10, 20, 20),
                     checked=player.isAI,
-                    onToggle=(lambda value, index=i: self.togglePlayerAI(
+                    onToggle=(lambda value, index=i: self._togglePlayerAI(
                         index, value)) if canToggleAI else None)
                 aiCheckbox.setDisabled(not player.enabled or not canToggleAI)
 
             self.playerFields.append((nameField, aiCheckbox))
 
-    def togglePlayerAI(self, index: int, value: bool) -> None:
+    def _togglePlayerAI(self, index: int, value: bool) -> None:
         """Toggle AI status for a player"""
         self.players[index].setAI(value)
 
@@ -326,7 +326,7 @@ class GamePrepareScene(Scene):
             player.name = f"AI_{currentDifficulty}_{baseName}"
             nameField.setText(player.getDisplayName())
 
-    def handleAIDifficultyChange(self, difficulty: str) -> None:
+    def _handleAIDifficultyChange(self, difficulty: str) -> None:
         """Handle AI difficulty change for all AI players"""
         for i, player in enumerate(self.players):
             if player.isAI:
@@ -348,7 +348,7 @@ class GamePrepareScene(Scene):
                     nameField = self.playerFields[i][0]
                     nameField.setText(player.getDisplayName())
 
-    def handleNetworkModeChange(self, mode: str) -> None:
+    def _handleNetworkModeChange(self, mode: str) -> None:
         """Handle network mode change"""
         self.networkMode = mode
         isLocal = mode == "local"
@@ -389,9 +389,9 @@ class GamePrepareScene(Scene):
             if cardSet['name'] != 'baseGame':
                 checkbox.setDisabled(isClient)
 
-        self.buildPlayerFields()
+        self._buildPlayerFields()
 
-    def toggleCardSet(self, setName: str, checked: bool) -> None:
+    def _toggleCardSet(self, setName: str, checked: bool) -> None:
         """Handle card set selection toggle"""
         if checked and setName not in self.selectedCardSets:
             self.selectedCardSets.append(setName)
@@ -402,9 +402,9 @@ class GamePrepareScene(Scene):
                             self.selectedCardSets,
                             temporary=True)
 
-    def addPlayerField(self) -> None:
+    def _addPlayerField(self) -> None:
         """Add a new player"""
-        enabledCount = self.getEnabledPlayersCount()
+        enabledCount = self._getEnabledPlayersCount()
         if enabledCount >= 6:
             self.addToast(Toast("Maximum 6 players allowed", type="warning"))
             return
@@ -414,11 +414,11 @@ class GamePrepareScene(Scene):
                 player.enabled = True
                 break
 
-        self.buildPlayerFields()
+        self._buildPlayerFields()
 
-    def removePlayerField(self) -> None:
+    def _removePlayerField(self) -> None:
         """Remove a player"""
-        enabledCount = self.getEnabledPlayersCount()
+        enabledCount = self._getEnabledPlayersCount()
         if enabledCount <= 2:
             self.addToast(Toast("At least 2 players required", type="warning"))
             return
@@ -433,9 +433,9 @@ class GamePrepareScene(Scene):
                 self.players[i].isAI = False
                 break
 
-        self.buildPlayerFields()
+        self._buildPlayerFields()
 
-    def applySettingsAndStart(self) -> None:
+    def _applySettingsAndStart(self) -> None:
         """Apply settings and start the game"""
         playerNames = []
         for player in self.players:
@@ -474,7 +474,7 @@ class GamePrepareScene(Scene):
             self.switchScene("startLobby", playerNames)
 
     def handleEvents(self, events: list[pygame.event.Event]) -> None:
-        self.applyScroll(events)
+        self._applyScroll(events)
 
         for event in events:
             if event.type == pygame.QUIT:
@@ -506,18 +506,18 @@ class GamePrepareScene(Scene):
                     aiCheckbox.handleEvent(event, yOffset=self.scrollOffset)
 
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                if self.backButton.isClicked(event.pos,
+                if self.backButton._isClicked(event.pos,
                                              yOffset=self.scrollOffset):
                     self.switchScene(GameState.MENU)
-                elif self.startButton.isClicked(event.pos,
+                elif self.startButton._isClicked(event.pos,
                                                 yOffset=self.scrollOffset):
-                    self.applySettingsAndStart()
-                elif self.addPlayerButton.isClicked(event.pos,
+                    self._applySettingsAndStart()
+                elif self.addPlayerButton._isClicked(event.pos,
                                                     yOffset=self.scrollOffset):
-                    self.addPlayerField()
-                elif self.removePlayerButton.isClicked(
+                    self._addPlayerField()
+                elif self.removePlayerButton._isClicked(
                         event.pos, yOffset=self.scrollOffset):
-                    self.removePlayerField()
+                    self._removePlayerField()
 
     def draw(self) -> None:
         self.screen.fill((30, 30, 30))

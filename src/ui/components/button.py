@@ -28,9 +28,9 @@ class Button:
         self.textColor = (0, 0, 0)
         self.disabled = disabled
         self.callback = callback
-        self.updateRender()
+        self._updateRender()
 
-    def updateRender(self) -> None:
+    def _updateRender(self) -> None:
         """Update the rendered text for the button."""
         color = (150, 150, 150) if self.disabled else self.textColor
         self.renderedText = self.font.render(self.text, True, color)
@@ -58,11 +58,11 @@ class Button:
             event: Pygame event to handle
         """
         if event.type == pygame.MOUSEBUTTONDOWN:
-            if self.isClicked(event.pos):
+            if self._isClicked(event.pos):
                 if self.callback:
                     self.callback()
 
-    def isClicked(self, pos: tuple[int, int], yOffset: int = 0) -> bool:
+    def _isClicked(self, pos: tuple[int, int], yOffset: int = 0) -> bool:
         """
         Check if the button was clicked at the given position.
         
@@ -84,4 +84,4 @@ class Button:
             disabled: Whether to disable the button
         """
         self.disabled = disabled
-        self.updateRender()
+        self._updateRender()

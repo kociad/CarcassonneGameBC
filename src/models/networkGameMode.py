@@ -16,15 +16,15 @@ class NetworkGameMode:
         self.running = True
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         if settings.NETWORK_MODE == "host":
-            self.initHost()
+            self._initHost()
         elif settings.NETWORK_MODE == "client":
-            self.initClient()
+            self._initClient()
         else:
             raise ValueError(
                 "Invalid settings.NETWORK_MODE in settings.py (must be 'host' or 'client')"
             )
 
-    def initHost(self) -> None:
+    def _initHost(self) -> None:
         """Initialize as host and wait for a client connection."""
         self.sock.bind((settings.HOST_IP, settings.HOST_PORT))
         self.sock.listen(1)
@@ -33,18 +33,18 @@ class NetworkGameMode:
         )
         self.conn, addr = self.sock.accept()
         logger.debug(f"[HOST] Connected by {addr}")
-        threading.Thread(target=self.listenThread, daemon=True).start()
+        threading.Thread(target=self._listenThread, daemon=True).start()
 
-    def initClient(self) -> None:
+    def _initClient(self) -> None:
         """Initialize as client and connect to host."""
         self.sock.connect((settings.HOST_IP, settings.HOST_PORT))
         logger.debug(
             f"[CLIENT] Connected to host at {settings.HOST_IP}:{settings.HOST_PORT}"
         )
         self.conn = self.sock
-        threading.Thread(target=self.listenThread, daemon=True).start()
+        threading.Thread(target=self._listenThread, daemon=True).start()
 
-    def listenThread(self) -> None:
+    def _listenThread(self) -> None:
         """Listen for incoming network actions."""
         while self.running:
             try:
@@ -52,12 +52,12 @@ class NetworkGameMode:
                 if not data:
                     continue
                 action = pickle.loads(data)
-                self.handleNetworkAction(action)
+                self._handleNetworkAction(action)
             except Exception as e:
                 logger.exception(f"Network thread exception: {e}")
                 self.running = False
 
-    def handleNetworkAction(self, action: dict) -> None:
+    def _handleNetworkAction(self, action: dict) -> None:
         """Execute actions sent from the remote peer."""
         actionType = action.get("type")
         if actionType == "playCard":

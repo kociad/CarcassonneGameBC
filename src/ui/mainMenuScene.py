@@ -71,22 +71,22 @@ class MainMenuScene(Scene):
                 elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                     self.showConfirmDialog = False
                 elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                    if self.confirmYesButton.isClicked(event.pos):
+                    if self.confirmYesButton._isClicked(event.pos):
                         self.showConfirmDialog = False
                         logger.info(
                             "Starting new game - cleaning up previous session")
                         self.cleanupPreviousGame()
                         self.switchScene(GameState.PREPARE)
-                    elif self.confirmNoButton.isClicked(event.pos):
+                    elif self.confirmNoButton._isClicked(event.pos):
                         self.showConfirmDialog = False
             return
-        self.applyScroll(events)
+        self._applyScroll(events)
         for event in events:
             if event.type == pygame.QUIT:
                 pygame.quit()
                 exit()
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                if self.continueButton.isClicked(
+                if self.continueButton._isClicked(
                         event.pos, yOffset=self.scrollOffset
                 ) and not self.continueButton.disabled:
                     session = self.getGameSession()
@@ -96,21 +96,21 @@ class MainMenuScene(Scene):
                         self.switchScene(GameState.LOBBY)
                     else:
                         self.switchScene(GameState.GAME)
-                elif self.startButton.isClicked(event.pos,
+                elif self.startButton._isClicked(event.pos,
                                                 yOffset=self.scrollOffset):
                     if self.getGameSession():
                         self.showConfirmDialog = True
                     else:
                         logger.info("Starting new game")
                         self.switchScene(GameState.PREPARE)
-                elif self.settingsButton.isClicked(event.pos,
+                elif self.settingsButton._isClicked(event.pos,
                                                    yOffset=self.scrollOffset):
                     self.switchScene(GameState.SETTINGS)
-                elif self.quitButton.isClicked(event.pos,
+                elif self.quitButton._isClicked(event.pos,
                                                yOffset=self.scrollOffset):
                     pygame.quit()
                     exit()
-                elif self.howToPlayButton.isClicked(event.pos,
+                elif self.howToPlayButton._isClicked(event.pos,
                                                     yOffset=self.scrollOffset):
                     self.switchScene(GameState.HELP)
 

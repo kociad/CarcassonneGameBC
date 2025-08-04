@@ -100,15 +100,15 @@ class Structure:
     def checkCompletion(self) -> None:
         """Check if the structure is completed and update its status."""
         if self.structureType == "City":
-            self.isCompleted = self.checkCityCompletion()
+            self.isCompleted = self._checkCityCompletion()
         elif self.structureType == "Road":
-            self.isCompleted = self.checkRoadCompletion()
+            self.isCompleted = self._checkRoadCompletion()
         elif self.structureType == "Monastery":
-            self.isCompleted = self.checkMonasteryCompletion()
+            self.isCompleted = self._checkMonasteryCompletion()
         elif self.structureType == "Field":
-            self.isCompleted = self.checkFieldCompletion()
+            self.isCompleted = self._checkFieldCompletion()
 
-    def checkCityCompletion(self) -> bool:
+    def _checkCityCompletion(self) -> bool:
         """Check if the city structure is completed."""
         for card, direction in self.cardSides:
             neighborCard = card.getNeighbors().get(direction)
@@ -116,7 +116,7 @@ class Structure:
                 return False
         return True
 
-    def checkRoadCompletion(self) -> bool:
+    def _checkRoadCompletion(self) -> bool:
         """Check if the road structure is completed."""
         for card, direction in self.cardSides:
             neighborCard = card.getNeighbors().get(direction)
@@ -124,7 +124,7 @@ class Structure:
                 return False
         return True
 
-    def checkMonasteryCompletion(self) -> bool:
+    def _checkMonasteryCompletion(self) -> bool:
         """Check if the monastery structure is completed."""
         for card, direction in self.cardSides:
             neighbors = card.getNeighbors()
@@ -138,7 +138,7 @@ class Structure:
                     return False
         return True
 
-    def checkFieldCompletion(self) -> bool:
+    def _checkFieldCompletion(self) -> bool:
         """Check if the field structure is completed (always False)."""
         return False
 
