@@ -758,8 +758,8 @@ class AIPlayer(Player):
 
                 structureType = structure.getStructureType()
                 if structureType == "Field":
-                                score += self._evaluateFieldFigureOpportunity(
-                gameSession, structure)
+                    score += self._evaluateFieldFigureOpportunity(
+                        gameSession, structure)
 
         return score
 
