@@ -12,7 +12,7 @@ class Figure:
 
     def __init__(self,
                  owner: 'Player',
-                 imagePath: str = settings.MEEPLE_IMAGES_PATH) -> None:
+                 imagePath: str = settings.FIGURE_IMAGES_PATH) -> None:
         """
         Initialize a figure for a specific player.
         

@@ -3,7 +3,7 @@ FPS = 120
 
 ASSETS_PATH = "src/assets/"
 TILE_IMAGES_PATH = ASSETS_PATH + "tiles/"
-MEEPLE_IMAGES_PATH = ASSETS_PATH + "meeples/"
+FIGURE_IMAGES_PATH = ASSETS_PATH + "meeples/"
 BACKGROUND_IMAGE_PATH = ASSETS_PATH + "backgrounds/"
 SOUND_PATH = ASSETS_PATH + "sounds/"
 ICONS_PATH = ASSETS_PATH + "icons/"
@@ -29,8 +29,8 @@ HOST_PORT = 2222  # TCP port to use
 PLAYER_INDEX = 0
 
 # General Game Settings
-WINDOW_WIDTH = 1920
-WINDOW_HEIGHT = 1080
+WINDOW_WIDTH = 1024
+WINDOW_HEIGHT = 768
 FULLSCREEN = False
 SHOW_VALID_PLACEMENTS = True
 SELECTED_CARD_SETS = ['baseGame']
@@ -48,8 +48,8 @@ if FULLSCREEN:
         print(f"Failed to detect fullscreen resolution: {e}")
 
 # Debug
-DEBUG = False
-LOG_TO_CONSOLE = False
+DEBUG = True
+LOG_TO_CONSOLE = True
 GAME_LOG_MAX_ENTRIES = 10000
 
 # AI Settings

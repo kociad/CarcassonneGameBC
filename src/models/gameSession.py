@@ -259,8 +259,8 @@ class GameSession:
         for player in self.players:
             if hasattr(player, 'invalidateEvaluationCache'):
                 player.invalidateEvaluationCache()
-            if hasattr(player, 'invalidateMeepleCache'):
-                player.invalidateMeepleCache()
+            if hasattr(player, 'invalidateFigureCache'):
+                player.invalidateFigureCache()
 
         if hasattr(self, 'onRenderCacheInvalidate'):
             self.onRenderCacheInvalidate()
@@ -304,8 +304,8 @@ class GameSession:
             return
         elif self.turnPhase == 2:
             logger.debug("Turn Phase 2: Attempting to place figure...")
-            meeplePlaced = self.playFigure(player, x, y, position)
-            if meeplePlaced:
+            figurePlaced = self.playFigure(player, x, y, position)
+            if figurePlaced:
                 logger.debug("Figure placed.")
                 logger.debug("Checking completed structures...")
                 for structure in self.structures:
@@ -345,15 +345,15 @@ class GameSession:
                 if self.turnPhase != 2:
                     logger.warning("Cannot place figure in phase 1")
                     return False
-                meeplePlaced = self.playFigure(self.currentPlayer, command.x,
+                figurePlaced = self.playFigure(self.currentPlayer, command.x,
                                                command.y, command.position)
-                if meeplePlaced:
+                if figurePlaced:
                     for structure in self.structures:
                         structure.checkCompletion()
                         if structure.getIsCompleted():
                             self.scoreStructure(structure)
                     self.nextTurn()
-                return meeplePlaced
+                return figurePlaced
 
             elif command.commandType == "skip_action":
                 if command.actionType == "card" and self.turnPhase == 1:
@@ -466,7 +466,7 @@ class GameSession:
             if figure.place(card, position):
                 self.placedFigures.append(figure)
                 logger.info(
-                    f"Player {player.getName()} placed a meeple on {position} position at [{x - self.gameBoard.getCenter()},{self.gameBoard.getCenter() - y}]"
+                    f"Player {player.getName()} placed a figure on {position} position at [{x - self.gameBoard.getCenter()},{self.gameBoard.getCenter() - y}]"
                 )
                 if structure:
                     structure.addFigure(figure)
@@ -650,7 +650,7 @@ class GameSession:
         for figure in structure.getFigures()[:]:
             structure.removeFigure(figure)
             figure.owner.addFigure(figure)
-            logger.info(f"{figure.owner.getName()}'s meeple was returned")
+            logger.info(f"{figure.owner.getName()}'s figure was returned")
 
     def endGame(self) -> None:
         """End the game and score all incomplete structures."""
@@ -679,8 +679,8 @@ class GameSession:
         for player in self.players:
             if hasattr(player, 'invalidateEvaluationCache'):
                 player.invalidateEvaluationCache()
-            if hasattr(player, 'invalidateMeepleCache'):
-                player.invalidateMeepleCache()
+            if hasattr(player, 'invalidateFigureCache'):
+                player.invalidateFigureCache()
 
         if hasattr(self, 'onRenderCacheInvalidate'):
             self.onRenderCacheInvalidate()
