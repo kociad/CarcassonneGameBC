@@ -14,8 +14,8 @@ class Player:
                  name: str,
                  color: str,
                  index: int,
-                 isAI: bool = False,
-                 isHuman: bool = False) -> None:
+                 is_ai: bool = False,
+                 is_human: bool = False) -> None:
         """
         Initialize a player.
         
@@ -23,42 +23,42 @@ class Player:
             name: The name of the player
             color: Color of player's figures (string like "blue", "red", etc.)
             index: Player's index in the game
-            isAI: Whether the player is AI-controlled
-            isHuman: Whether the player is human-controlled
+            is_ai: Whether the player is AI-controlled
+            is_human: Whether the player is human-controlled
         """
         self.name = name
         self.color = color
         self.score = 0
         self.index = index
         self.figures = [Figure(self) for _ in range(7)]
-        self.isAI = isAI
-        self.isHuman = isHuman
+        self.is_ai = is_ai
+        self.is_human = is_human
 
-    def getIsAI(self) -> bool:
+    def get_is_ai(self) -> bool:
         """Check if player is AI-controlled."""
-        return self.isAI
+        return self.is_ai
 
-    def getName(self) -> str:
+    def get_name(self) -> str:
         """Get the player's name."""
         return self.name
 
-    def getScore(self) -> int:
+    def get_score(self) -> int:
         """Get the player's score."""
         return self.score
 
-    def getFigures(self) -> list:
+    def get_figures(self) -> list:
         """Get the list of figures held by the player."""
         return self.figures
 
-    def getIndex(self) -> int:
+    def get_index(self) -> int:
         """Get the player's index."""
         return self.index
 
-    def getColor(self) -> str:
+    def get_color(self) -> str:
         """Get the color of the player's figures."""
         return self.color
 
-    def getColorWithAlpha(self, alpha: int = 150) -> pygame.Color:
+    def get_color_with_alpha(self, alpha: int = 150) -> pygame.Color:
         """
         Get the player's color as a pygame.Color with the given alpha.
         
@@ -72,7 +72,7 @@ class Player:
         color.a = alpha
         return color
 
-    def getFigure(self) -> typing.Union['Figure', bool]:
+    def get_figure(self) -> typing.Union['Figure', bool]:
         """
         Pop and return a figure if available.
         
@@ -86,7 +86,7 @@ class Player:
         logger.debug("Unable to retrieve figure")
         return False
 
-    def addFigure(self, figure: 'Figure') -> None:
+    def add_figure(self, figure: 'Figure') -> None:
         """
         Add a figure to the player's list.
         
@@ -95,7 +95,7 @@ class Player:
         """
         self.figures.append(figure)
 
-    def addScore(self, score: int) -> None:
+    def add_score(self, score: int) -> None:
         """
         Add points to the player's score.
         
@@ -104,14 +104,14 @@ class Player:
         """
         self.score += score
 
-    def setIsHuman(self, isHuman: bool) -> None:
+    def set_is_human(self, is_human: bool) -> None:
         """
         Set whether the player is human-controlled.
         
         Args:
-            isHuman: Whether the player is human
+            is_human: Whether the player is human
         """
-        self.isHuman = isHuman
+        self.is_human = is_human
 
     def serialize(self) -> dict:
         """Serialize the player to a dictionary."""
@@ -120,9 +120,9 @@ class Player:
             "score": self.score,
             "index": self.index,
             "color": self.color,
-            "isAI": self.isAI,
-            "figuresRemaining": len(self.figures),
-            "isHuman": self.isHuman
+            "is_ai": self.is_ai,
+            "figures_remaining": len(self.figures),
+            "is_human": self.is_human
         }
 
     @staticmethod
@@ -140,18 +140,18 @@ class Player:
             name = str(data["name"])
             index = int(data["index"])
             color = str(data["color"])
-            isAI = bool(data.get("isAI", False))
+            is_ai = bool(data.get("is_ai", False))
             score = int(data.get("score", 0))
-            figuresRemaining = int(data.get("figuresRemaining", 7))
-            isHuman = bool(data.get("isHuman", False))
+            figures_remaining = int(data.get("figures_remaining", 7))
+            is_human = bool(data.get("is_human", False))
 
             player = Player(name=name,
                             color=color,
                             index=index,
-                            isAI=isAI,
-                            isHuman=isHuman)
+                            is_ai=is_ai,
+                            is_human=is_human)
             player.score = score
-            player.figures = [Figure(player) for _ in range(figuresRemaining)]
+            player.figures = [Figure(player) for _ in range(figures_remaining)]
             return player
         except (KeyError, ValueError, TypeError) as e:
             logger.error(

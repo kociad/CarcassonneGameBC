@@ -3,10 +3,10 @@ import threading
 import logging
 import typing
 import time
-from network.message import decodeMessage, encodeMessage
-from network.command import CommandManager, decodeCommandMessage, encodeCommandMessage
+from network.message import decode_message, encode_message
+from network.command import CommandManager, decode_command_message, encode_command_message
 from models.gameSession import GameSession
-from utils.settingsManager import settingsManager
+from utils.settingsManager import settings_manager
 
 logger = logging.getLogger(__name__)
 
@@ -17,60 +17,60 @@ class NetworkConnection:
     """Handles network connections for host and client modes."""
 
     def __init__(self) -> None:
-        self.networkMode = settingsManager.get("NETWORK_MODE", "local")
+        self.network_mode = settings_manager.get("NETWORK_MODE", "local")
         self.running = False
         self.connections = []
         self.socket = None
-        self.commandManager = CommandManager()
+        self.command_manager = CommandManager()
 
-        self.onClientConnected = None
-        self.onClientSubmittedTurn = None
-        self.onInitialGameStateReceived = None
-        self.onSyncGameState = None
-        self.onJoinFailed = None
-        self.onJoinRejected = None
-        self.onPlayerClaimed = None
-        self.onStartGame = None
-        self.onClientDisconnected = None
-        self.onHostDisconnected = None
+        self.on_client_connected = None
+        self.on_client_submitted_turn = None
+        self.on_initial_game_state_received = None
+        self.on_sync_game_state = None
+        self.on_join_failed = None
+        self.on_join_rejected = None
+        self.on_player_claimed = None
+        self.on_start_game = None
+        self.on_client_disconnected = None
+        self.on_host_disconnected = None
 
-        self.onCommandReceived = None
-        self.onCommandAck = None
-        self.onSyncRequest = None
+        self.on_command_received = None
+        self.on_command_ack = None
+        self.on_sync_request = None
 
-        if self.networkMode == "local":
+        if self.network_mode == "local":
             logger.debug("Running in local mode. Networking is disabled.")
             return
         self.running = True
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        if self.networkMode == "host":
+        if self.network_mode == "host":
             try:
-                hostIp = settingsManager.get("HOST_IP", "0.0.0.0")
-                hostPort = settingsManager.get("HOST_PORT", 222)
-                self.socket.bind((hostIp, hostPort))
+                host_ip = settings_manager.get("HOST_IP", "0.0.0.0")
+                host_port = settings_manager.get("HOST_PORT", 222)
+                self.socket.bind((host_ip, host_port))
                 self.socket.listen()
-                logger.debug(f"Host listening on {hostIp}:{hostPort}...")
-                threading.Thread(target=self._acceptConnections,
+                logger.debug(f"Host listening on {host_ip}:{host_port}...")
+                threading.Thread(target=self._accept_connections,
                                  daemon=True).start()
-                threading.Thread(target=self._commandCleanupLoop,
+                threading.Thread(target=self._command_cleanup_loop,
                                  daemon=True).start()
             except Exception as e:
                 logger.exception(f"Failed to bind socket: {e}")
-        elif self.networkMode == "client":
+        elif self.network_mode == "client":
             try:
-                hostIp = settingsManager.get("HOST_IP", "0.0.0.0")
-                hostPort = settingsManager.get("HOST_PORT", 222)
-                self.socket.connect((hostIp, hostPort))
-                logger.debug(f"Connected to host at {hostIp}:{hostPort}")
-                threading.Thread(target=self._receiveLoop,
+                host_ip = settings_manager.get("HOST_IP", "0.0.0.0")
+                host_port = settings_manager.get("HOST_PORT", 222)
+                self.socket.connect((host_ip, host_port))
+                logger.debug(f"Connected to host at {host_ip}:{host_port}")
+                threading.Thread(target=self._receive_loop,
                                  args=(self.socket, ),
                                  daemon=True).start()
-                threading.Thread(target=self._commandCleanupLoop,
+                threading.Thread(target=self._command_cleanup_loop,
                                  daemon=True).start()
             except Exception as e:
                 logger.exception(f"Failed to connect to host: {e}")
 
-    def _acceptConnections(self):
+    def _accept_connections(self):
         """Accept incoming client connections (host mode)."""
         while self.running:
             try:
@@ -78,9 +78,9 @@ class NetworkConnection:
                 self.connections.append(conn)
                 logger.debug(
                     f"Connection received and established with {addr}")
-                if self.onClientConnected:
-                    self.onClientConnected(conn)
-                threading.Thread(target=self._receiveLoop,
+                if self.on_client_connected:
+                    self.on_client_connected(conn)
+                threading.Thread(target=self._receive_loop,
                                  args=(conn, ),
                                  daemon=True).start()
             except Exception as e:
@@ -88,7 +88,7 @@ class NetworkConnection:
                     logger.exception(f"Failed to accept connection: {e}")
                 break
 
-    def _receiveLoop(self, conn):
+    def _receive_loop(self, conn):
         """Receive and process messages from a connection."""
         buffer = ""
         while self.running:
@@ -96,23 +96,23 @@ class NetworkConnection:
                 data = conn.recv(BUFFER_SIZE).decode()
                 if not data:
                     logger.debug("Connection closed by peer")
-                    self._handleConnectionDrop(conn)
+                    self._handle_connection_drop(conn)
                     break
                 buffer += data
                 while "\n" in buffer:
                     line, buffer = buffer.split("\n", 1)
                     if line.strip():
                         logger.debug(f"Receiving message: {line}")
-                        self._onMessageReceived(line, conn)
+                        self._on_message_received(line, conn)
             except Exception as e:
                 if self.running:
                     logger.exception(f"Socket error: {e}")
-                self._handleConnectionDrop(conn)
+                self._handle_connection_drop(conn)
                 break
 
-    def _onMessageReceived(self, message, conn=None):
+    def _on_message_received(self, message, conn=None):
         """Handle a received message and dispatch to the appropriate handler."""
-        parsed = decodeMessage(message)
+        parsed = decode_message(message)
         if not parsed:
             return
         action = parsed.get("action")
@@ -120,63 +120,63 @@ class NetworkConnection:
 
         if action == "command":
             logger.debug("Received command from network")
-            command = decodeCommandMessage(message)
-            if command and self.onCommandReceived:
-                self.onCommandReceived(command, conn)
-            ackMessage = encodeMessage("command_ack",
-                                       {"command_id": command.commandId})
+            command = decode_command_message(message)
+            if command and self.on_command_received:
+                self.on_command_received(command, conn)
+            ack_message = encode_message("command_ack",
+                                       {"command_id": command.command_id})
             if conn:
                 try:
-                    conn.sendall((ackMessage + "\n").encode())
+                    conn.sendall((ack_message + "\n").encode())
                 except Exception as e:
                     logger.exception(f"Failed to send command ack: {e}")
-            elif self.networkMode == "client":
-                self.sendToHost(ackMessage)
+            elif self.network_mode == "client":
+                self.send_to_host(ack_message)
         elif action == "command_ack":
             logger.debug("Received command acknowledgment")
-            commandId = payload.get("command_id")
-            if commandId:
-                self.commandManager.ackCommand(commandId)
-                if self.onCommandAck:
-                    self.onCommandAck(commandId)
+            command_id = payload.get("command_id")
+            if command_id:
+                self.command_manager.ack_command(command_id)
+                if self.on_command_ack:
+                    self.on_command_ack(command_id)
         elif action == "sync_request":
             logger.debug("Received sync request")
-            if self.onSyncRequest:
-                self.onSyncRequest(payload, conn)
+            if self.on_sync_request:
+                self.on_sync_request(payload, conn)
         elif action == "init_game_state":
             logger.debug("Received initial game state from host")
-            if self.onInitialGameStateReceived:
-                self.onInitialGameStateReceived(payload)
+            if self.on_initial_game_state_received:
+                self.on_initial_game_state_received(payload)
         elif action == "ack_game_state":
             logger.debug("Client confirmed receiving game state: %s", payload)
-        elif action == "player_claimed" and self.networkMode == "host":
+        elif action == "player_claimed" and self.network_mode == "host":
             logger.debug("Received player claimed from client")
-            if self.onPlayerClaimed:
-                self.onPlayerClaimed(payload, conn)
-        elif action == "submit_turn" and self.networkMode == "host":
+            if self.on_player_claimed:
+                self.on_player_claimed(payload, conn)
+        elif action == "submit_turn" and self.network_mode == "host":
             logger.debug("Received submitted turn from client")
-            if self.onClientSubmittedTurn:
-                self.onClientSubmittedTurn(payload)
+            if self.on_client_submitted_turn:
+                self.on_client_submitted_turn(payload)
         elif action == "sync_game_state":
             logger.debug("Received updated game state from host")
-            if self.onSyncGameState:
-                self.onSyncGameState(payload)
-        elif action == "join_failed" and self.networkMode == "host":
+            if self.on_sync_game_state:
+                self.on_sync_game_state(payload)
+        elif action == "join_failed" and self.network_mode == "host":
             logger.debug("Received join_failed from client")
-            if self.onJoinFailed:
-                self.onJoinFailed(payload, conn)
-        elif action == "start_game" and self.networkMode == "client":
+            if self.on_join_failed:
+                self.on_join_failed(payload, conn)
+        elif action == "start_game" and self.network_mode == "client":
             logger.debug("Received start_game from host")
-            if self.onStartGame:
-                self.onStartGame(payload)
-        elif action == "join_rejected" and self.networkMode == "client":
+            if self.on_start_game:
+                self.on_start_game(payload)
+        elif action == "join_rejected" and self.network_mode == "client":
             logger.debug("Received join_rejected from host")
-            if self.onJoinRejected:
-                self.onJoinRejected(payload)
+            if self.on_join_rejected:
+                self.on_join_rejected(payload)
 
-    def sendToAll(self, message):
+    def send_to_all(self, message):
         """Send a message to all connected clients (host mode)."""
-        if self.networkMode != "host":
+        if self.network_mode != "host":
             return
         logger.debug(f"Sending message to all: {message}")
         for conn in self.connections[:]:
@@ -193,9 +193,9 @@ class NetworkConnection:
                 if conn in self.connections:
                     self.connections.remove(conn)
 
-    def sendToHost(self, message):
+    def send_to_host(self, message):
         """Send a message to the host (client mode)."""
-        if self.networkMode != "client":
+        if self.network_mode != "client":
             return
         try:
             logger.debug(f"Sending message to host: {message}")
@@ -203,15 +203,15 @@ class NetworkConnection:
         except Exception as e:
             logger.exception(f"Failed to send to host: {e}")
 
-    def sendCommand(self, command):
+    def send_command(self, command):
         """Send a command to the network with acknowledgment tracking."""
-        if self.networkMode == "local":
+        if self.network_mode == "local":
             return
 
-        message = encodeCommandMessage(command)
-        self.commandManager.markCommandPendingAck(command.commandId)
+        message = encode_command_message(command)
+        self.command_manager.mark_command_pending_ack(command.command_id)
 
-        if self.networkMode == "host":
+        if self.network_mode == "host":
             for conn in self.connections[:]:
                 try:
                     conn.sendall((message + "\n").encode())
@@ -223,17 +223,17 @@ class NetworkConnection:
                         pass
                     if conn in self.connections:
                         self.connections.remove(conn)
-        elif self.networkMode == "client":
-            self.sendToHost(message)
+        elif self.network_mode == "client":
+            self.send_to_host(message)
 
         logger.debug(
-            f"Sent command {command.commandType} with ID {command.commandId}")
+            f"Sent command {command.command_type} with ID {command.command_id}")
 
-    def _commandCleanupLoop(self):
+    def _command_cleanup_loop(self):
         """Background thread to clean up expired commands."""
         while self.running:
             try:
-                self.commandManager.clearExpiredCommands()
+                self.command_manager.clear_expired_commands()
                 time.sleep(1.0)
             except Exception as e:
                 logger.exception(f"Error in command cleanup loop: {e}")
@@ -241,7 +241,7 @@ class NetworkConnection:
 
     def close(self) -> None:
         """Close the network connection and clean up resources."""
-        if self.networkMode == "local":
+        if self.network_mode == "local":
             logger.debug("No network to close.")
             return
         logger.debug("Closing network connection...")
@@ -263,30 +263,30 @@ class NetworkConnection:
         except Exception as e:
             logger.exception(f"Error while closing network connection: {e}")
         finally:
-            self.onClientConnected = None
-            self.onClientSubmittedTurn = None
-            self.onInitialGameStateReceived = None
-            self.onSyncGameState = None
-            self.onJoinFailed = None
-            self.onJoinRejected = None
-            self.onPlayerClaimed = None
-            self.onStartGame = None
-            self.onClientDisconnected = None
-            self.onHostDisconnected = None
+            self.on_client_connected = None
+            self.on_client_submitted_turn = None
+            self.on_initial_game_state_received = None
+            self.on_sync_game_state = None
+            self.on_join_failed = None
+            self.on_join_rejected = None
+            self.on_player_claimed = None
+            self.on_start_game = None
+            self.on_client_disconnected = None
+            self.on_host_disconnected = None
             self.socket = None
 
-    def _handleConnectionDrop(self, conn):
+    def _handle_connection_drop(self, conn):
         """Handle a dropped connection."""
         try:
             if conn in self.connections:
                 self.connections.remove(conn)
                 logger.debug("Client disconnected")
-                if self.onClientDisconnected:
-                    self.onClientDisconnected(conn)
+                if self.on_client_disconnected:
+                    self.on_client_disconnected(conn)
             else:
                 logger.debug("Lost connection to host")
-                if self.onHostDisconnected:
-                    self.onHostDisconnected()
+                if self.on_host_disconnected:
+                    self.on_host_disconnected()
         except Exception as e:
             logger.exception(f"Error handling connection drop: {e}")
         finally:

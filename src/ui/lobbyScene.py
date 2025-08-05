@@ -3,7 +3,7 @@ from ui.scene import Scene
 from ui.components.button import Button
 from ui.components.toast import Toast, ToastManager
 from gameState import GameState
-from utils.settingsManager import settingsManager
+from utils.settingsManager import settings_manager
 import typing
 
 
@@ -11,129 +11,129 @@ class LobbyScene(Scene):
     """Scene for the game lobby, where players wait for all participants to connect before starting the game."""
 
     def __init__(self, screen: pygame.Surface,
-                 switchSceneCallback: typing.Callable,
-                 startGameCallback: typing.Callable,
-                 getGameSession: typing.Callable, network: typing.Any,
-                 gameLog: typing.Any) -> None:
+                 switch_scene_callback: typing.Callable,
+                 start_game_callback: typing.Callable,
+                 get_game_session: typing.Callable, network: typing.Any,
+                 game_log: typing.Any) -> None:
         """Initialize the lobby scene with UI components and network state."""
-        super().__init__(screen, switchSceneCallback)
-        self.startGameCallback = startGameCallback
-        self.getGameSession = getGameSession
+        super().__init__(screen, switch_scene_callback)
+        self.start_game_callback = start_game_callback
+        self.get_game_session = get_game_session
         self.network = network
-        self.gameLog = gameLog
+        self.game_log = game_log
         self.font = pygame.font.Font(None, 80)
-        self.buttonFont = pygame.font.Font(None, 48)
-        self.toastManager = ToastManager(maxToasts=5)
-        self.scrollOffset = 0
-        self.maxScroll = 0
-        self.scrollSpeed = 30
-        self.isHost = (getattr(self.network, 'networkMode', 'local') == 'host')
-        self.networkMode = getattr(self.network, 'networkMode', 'local')
-        self.startButton = Button((screen.get_width() // 2 - 100,
+        self.button_font = pygame.font.Font(None, 48)
+        self.toast_manager = ToastManager(max_toasts=5)
+        self.scroll_offset = 0
+        self.max_scroll = 0
+        self.scroll_speed = 30
+        self.is_host = (getattr(self.network, 'network_mode', 'local') == 'host')
+        self.network_mode = getattr(self.network, 'network_mode', 'local')
+        self.start_button = Button((screen.get_width() // 2 - 100,
                                    screen.get_height() - 120, 200, 60),
-                                  "Start Game", self.buttonFont)
-        self.waitingForHost = False
-        self.originalPlayerNames = settingsManager.get("PLAYERS", [])
-        if self.networkMode == "local":
-            self.switchScene(GameState.GAME)
+                                  "Start Game", self.button_font)
+        self.waiting_for_host = False
+        self.original_player_names = settings_manager.get("PLAYERS", [])
+        if self.network_mode == "local":
+            self.switch_scene(GameState.GAME)
             return
-        self._updatePlayerStatus()
+        self._update_player_status()
 
-    def _updatePlayerStatus(self):
+    def _update_player_status(self):
         """Update the connection status of all players in the lobby."""
-        session = self.getGameSession()
-        self.players = session.getPlayers() if session else []
-        self.statusList = []
-        for i, origName in enumerate(self.originalPlayerNames):
-            player = next((p for p in self.players if p.getIndex() == i), None)
-            if player is not None and player.getIsAI():
+        session = self.get_game_session()
+        self.players = session.get_players() if session else []
+        self.status_list = []
+        for i, origName in enumerate(self.original_player_names):
+            player = next((p for p in self.players if p.get_index() == i), None)
+            if player is not None and player.get_is_ai():
                 status = "AI"
                 color = (120, 120, 120)
-                name = player.getName()
-            elif player is not None and player.isHuman:
+                name = player.get_name()
+            elif player is not None and player.is_human:
                 status = "Connected"
                 color = (0, 200, 0)
-                name = player.getName()
+                name = player.get_name()
             else:
                 status = "Waiting..."
                 color = (200, 200, 0)
                 name = origName
-            self.statusList.append({
+            self.status_list.append({
                 "name": name,
                 "status": status,
                 "color": color
             })
-        self.requiredHumans = sum(1 for s in self.statusList
+        self.required_humans = sum(1 for s in self.status_list
                                   if s["status"] != "AI")
-        self.connectedHumans = sum(1 for s in self.statusList
+        self.connected_humans = sum(1 for s in self.status_list
                                    if s["status"] == "Connected")
-        self.allConnected = (self.connectedHumans == self.requiredHumans)
-        self.startButton.setDisabled(not (self.isHost and self.allConnected))
+        self.all_connected = (self.connected_humans == self.required_humans)
+        self.start_button.set_disabled(not (self.is_host and self.all_connected))
 
-    def handleEvents(self, events: list[pygame.event.Event]) -> None:
+    def handle_events(self, events: list[pygame.event.Event]) -> None:
         """Handle user and network events in the lobby scene."""
-        self._applyScroll(events)
+        self._apply_scroll(events)
         for event in events:
             if event.type == pygame.QUIT:
                 pygame.quit()
                 exit()
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
-                    self.switchScene(GameState.MENU)
+                    self.switch_scene(GameState.MENU)
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                if self.isHost and self.startButton._isClicked(
-                        event.pos, yOffset=self.scrollOffset):
-                    if self.allConnected:
-                        session = self.getGameSession()
-                        if hasattr(session, 'lobbyCompleted'):
-                            session.lobbyCompleted = True
-                        self.startGameCallback(
-                            [p.getName() for p in self.players])
+                if self.is_host and self.start_button._is_clicked(
+                        event.pos, y_offset=self.scroll_offset):
+                    if self.all_connected:
+                        session = self.get_game_session()
+                        if hasattr(session, 'lobby_completed'):
+                            session.lobby_completed = True
+                        self.start_game_callback(
+                            [p.get_name() for p in self.players])
                     else:
-                        self.toastManager.addToast(
+                        self.toast_manager.add_toast(
                             Toast("Not all players are connected!",
                                   type="warning"))
-        self._updatePlayerStatus()
+        self._update_player_status()
 
     def update(self):
         """Update the lobby scene state."""
-        self._updatePlayerStatus()
+        self._update_player_status()
 
     def draw(self) -> None:
         """Draw the lobby scene, including player statuses and the start button."""
         self.screen.fill((30, 30, 30))
-        offsetY = self.scrollOffset
-        titleText = self.font.render("Lobby", True, (255, 255, 255))
-        titleRect = titleText.get_rect(center=(self.screen.get_width() // 2,
-                                               60 + offsetY))
-        self.screen.blit(titleText, titleRect)
-        labelFont = pygame.font.Font(None, 48)
-        y = 160 + offsetY
-        if self.isHost:
-            for i, status in enumerate(self.statusList):
+        offset_y = self.scroll_offset
+        title_text = self.font.render("Lobby", True, (255, 255, 255))
+        title_rect = title_text.get_rect(center=(self.screen.get_width() // 2,
+                                               60 + offset_y))
+        self.screen.blit(title_text, title_rect)
+        label_font = pygame.font.Font(None, 48)
+        y = 160 + offset_y
+        if self.is_host:
+            for i, status in enumerate(self.status_list):
                 name = status["name"]
                 stat = status["status"]
                 color = status["color"]
-                nameSurf = labelFont.render(f"{name}", True, (255, 255, 255))
-                statusSurf = labelFont.render(stat, True, color)
+                name_surf = label_font.render(f"{name}", True, (255, 255, 255))
+                status_surf = label_font.render(stat, True, color)
                 spacing = 32
-                totalWidth = nameSurf.get_width(
-                ) + spacing + statusSurf.get_width()
-                startX = (self.screen.get_width() - totalWidth) // 2
-                self.screen.blit(nameSurf, (startX, y))
-                self.screen.blit(statusSurf,
-                                 (startX + nameSurf.get_width() + spacing, y))
+                total_width = name_surf.get_width(
+                ) + spacing + status_surf.get_width()
+                start_x = (self.screen.get_width() - total_width) // 2
+                self.screen.blit(name_surf, (start_x, y))
+                self.screen.blit(status_surf,
+                                 (start_x + name_surf.get_width() + spacing, y))
                 y += 60
-            self.startButton.draw(self.screen, yOffset=offsetY)
+            self.start_button.draw(self.screen, y_offset=offset_y)
         else:
-            waitFont = pygame.font.Font(None, 36)
-            waitText = waitFont.render("Waiting for host to start the game...",
+            wait_font = pygame.font.Font(None, 36)
+            wait_text = wait_font.render("Waiting for host to start the game...",
                                        True, (255, 255, 255))
-            waitRect = waitText.get_rect(
+            wait_rect = wait_text.get_rect(
                 center=(self.screen.get_width() // 2,
-                        self.screen.get_height() // 2 + 40 + offsetY))
-            self.screen.blit(waitText, waitRect)
-        self.toastManager.draw(self.screen)
-        if self.gameLog:
-            self.gameLog.draw(self.screen)
+                        self.screen.get_height() // 2 + 40 + offset_y))
+            self.screen.blit(wait_text, wait_rect)
+        self.toast_manager.draw(self.screen)
+        if self.game_log:
+            self.game_log.draw(self.screen)
         pygame.display.flip()

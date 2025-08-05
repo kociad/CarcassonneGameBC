@@ -10,99 +10,99 @@ class Slider:
     def __init__(self,
                  rect: pygame.Rect,
                  font,
-                 minValue: float,
-                 maxValue: float,
-                 initialValue: float = None,
+                 min_value: float,
+                 max_value: float,
+                 initial_value: float = None,
                  value: float = None,
-                 onChange: typing.Callable = None) -> None:
+                 on_change: typing.Callable = None) -> None:
         """
         Initialize the slider.
         
         Args:
             rect: Rectangle defining slider position and size
             font: Font to use for rendering
-            minValue: Minimum value of the slider
-            maxValue: Maximum value of the slider
-            initialValue: Initial value (alternative to value)
+            min_value: Minimum value of the slider
+            max_value: Maximum value of the slider
+            initial_value: Initial value (alternative to value)
             value: Initial value
-            onChange: Function to call when value changes
+            on_change: Function to call when value changes
         """
         self.rect = pygame.Rect(rect)
         self.font = font
-        self.minValue = minValue
-        self.maxValue = maxValue
+        self.min_value = min_value
+        self.max_value = max_value
         self.value = value if value is not None else (
-            initialValue if initialValue is not None else minValue)
-        self.onChange = onChange
-        self.lastReportedValue = self.value
+            initial_value if initial_value is not None else min_value)
+        self.on_change = on_change
+        self.last_reported_value = self.value
         self.disabled = False
-        self.handleRadius = 10
+        self.handle_radius = 10
         self.dragging = False
-        self.bgColor = (200, 200, 200)
-        self.fgColor = (100, 100, 255)
-        self.handleColor = (255, 255, 255)
-        self.borderColor = (0, 0, 0)
-        self.disabledBgColor = (100, 100, 100)
-        self.disabledFgColor = (60, 60, 60)
-        self.disabledHandleColor = (150, 150, 150)
-        self.disabledBorderColor = (80, 80, 80)
-        self.toastQueue = []
-        self.activeToast = None
-        inputFieldWidth = 60
-        inputFieldHeight = self.rect.height
-        inputX = self.rect.right + 10
-        inputY = self.rect.y
-        self.inputField = InputField(
-            rect=(inputX, inputY, inputFieldWidth, inputFieldHeight),
+        self.bg_color = (200, 200, 200)
+        self.fg_color = (100, 100, 255)
+        self.handle_color = (255, 255, 255)
+        self.border_color = (0, 0, 0)
+        self.disabled_bg_color = (100, 100, 100)
+        self.disabled_fg_color = (60, 60, 60)
+        self.disabled_handle_color = (150, 150, 150)
+        self.disabled_border_color = (80, 80, 80)
+        self.toast_queue = []
+        self.active_toast = None
+        input_field_width = 60
+        input_field_height = self.rect.height
+        input_x = self.rect.right + 10
+        input_y = self.rect.y
+        self.input_field = InputField(
+            rect=(input_x, input_y, input_field_width, input_field_height),
             font=font,
-            initialText=str(self.value),
-            onTextChange=None,
+            initial_text=str(self.value),
+            on_text_change=None,
             numeric=True,
-            minValue=minValue,
+            min_value=min_value,
         )
 
-    def _validateAndApplyInput(self) -> None:
+    def _validate_and_apply_input(self) -> None:
         """Validate input field value and apply if valid."""
-        inputText = self.inputField.getText().strip()
-        if not inputText:
-            self.inputField.setText(str(self.value))
+        input_text = self.input_field.get_text().strip()
+        if not input_text:
+            self.input_field.set_text(str(self.value))
             return
         try:
-            newValue = int(inputText)
-            if newValue < self.minValue:
-                self._showToast(f"Value must be at least {self.minValue}",
+            new_value = int(input_text)
+            if new_value < self.min_value:
+                self._show_toast(f"Value must be at least {self.min_value}",
                                 "error")
-                self.inputField.setText(str(self.value))
-            elif newValue > self.maxValue:
-                self._showToast(f"Value must be at most {self.maxValue}",
+                self.input_field.set_text(str(self.value))
+            elif new_value > self.max_value:
+                self._show_toast(f"Value must be at most {self.max_value}",
                                 "error")
-                self.inputField.setText(str(self.value))
+                self.input_field.set_text(str(self.value))
             else:
-                if newValue != self.value:
-                    self.value = newValue
-                    if newValue != self.lastReportedValue:
-                        self.lastReportedValue = newValue
-                        if self.onChange:
-                            self.onChange(newValue)
+                if new_value != self.value:
+                    self.value = new_value
+                    if new_value != self.last_reported_value:
+                        self.last_reported_value = new_value
+                        if self.on_change:
+                            self.on_change(new_value)
         except ValueError:
-            self.inputField.setText(str(self.value))
+            self.input_field.set_text(str(self.value))
 
-    def _showToast(self, message: str, toastType: str = "info") -> None:
+    def _show_toast(self, message: str, toast_type: str = "info") -> None:
         """
         Show toast notification.
         
         Args:
             message: Message to display
-            toastType: Type of toast notification
+            toast_type: Type of toast notification
         """
-        if self.activeToast and self.activeToast.message == message:
+        if self.active_toast and self.active_toast.message == message:
             return
-        if any(t.message == message for t in self.toastQueue):
+        if any(t.message == message for t in self.toast_queue):
             return
-        toast = Toast(message, type=toastType)
-        self.toastQueue.append(toast)
+        toast = Toast(message, type=toast_type)
+        self.toast_queue.append(toast)
 
-    def setDisabled(self, disabled: bool) -> None:
+    def set_disabled(self, disabled: bool) -> None:
         """
         Enable or disable the slider.
         
@@ -110,147 +110,147 @@ class Slider:
             disabled: Whether to disable the slider
         """
         self.disabled = disabled
-        self.inputField.setDisabled(disabled)
+        self.input_field.set_disabled(disabled)
         if disabled:
             self.dragging = False
 
-    def isDisabled(self) -> bool:
+    def is_disabled(self) -> bool:
         """Check if the slider is disabled."""
         return self.disabled
 
-    def handleEvent(self, event: pygame.event.Event, yOffset: int = 0) -> None:
+    def handle_event(self, event: pygame.event.Event, y_offset: int = 0) -> None:
         """
         Handle a pygame event for the slider.
         
         Args:
             event: Pygame event to handle
-            yOffset: Vertical offset for event detection
+            y_offset: Vertical offset for event detection
         """
-        wasActive = self.inputField.active
-        self.inputField.handleEvent(event, yOffset=yOffset)
-        if wasActive and not self.inputField.active:
-            self._validateAndApplyInput()
-        if (self.inputField.active and event.type == pygame.KEYDOWN
+        was_active = self.input_field.active
+        self.input_field.handle_event(event, y_offset=y_offset)
+        if was_active and not self.input_field.active:
+            self._validate_and_apply_input()
+        if (self.input_field.active and event.type == pygame.KEYDOWN
                 and event.key == pygame.K_RETURN):
-            self._validateAndApplyInput()
+            self._validate_and_apply_input()
         if self.disabled:
             return
-        shiftedRect = self.rect.move(0, yOffset)
-        handleRect = self._handleRect(yOffset)
+        shifted_rect = self.rect.move(0, y_offset)
+        handle_rect = self._handle_rect(y_offset)
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-            if handleRect.collidepoint(event.pos):
+            if handle_rect.collidepoint(event.pos):
                 self.dragging = True
-            elif shiftedRect.collidepoint(event.pos):
-                relX = min(max(event.pos[0], shiftedRect.left),
-                           shiftedRect.right)
-                ratio = (relX - shiftedRect.left) / shiftedRect.width
-                newValue = int(self.minValue + ratio *
-                               (self.maxValue - self.minValue))
-                if newValue != self.value:
-                    self.value = newValue
-                    self.inputField.setText(str(newValue))
-                    if newValue != self.lastReportedValue:
-                        self.lastReportedValue = newValue
-                        if self.onChange:
-                            self.onChange(newValue)
+            elif shifted_rect.collidepoint(event.pos):
+                rel_x = min(max(event.pos[0], shifted_rect.left),
+                           shifted_rect.right)
+                ratio = (rel_x - shifted_rect.left) / shifted_rect.width
+                new_value = int(self.min_value + ratio *
+                               (self.max_value - self.min_value))
+                if new_value != self.value:
+                    self.value = new_value
+                    self.input_field.set_text(str(new_value))
+                    if new_value != self.last_reported_value:
+                        self.last_reported_value = new_value
+                        if self.on_change:
+                            self.on_change(new_value)
         elif event.type == pygame.MOUSEBUTTONUP:
             self.dragging = False
         elif event.type == pygame.MOUSEMOTION and self.dragging:
-            relX = min(max(event.pos[0], shiftedRect.left), shiftedRect.right)
-            ratio = (relX - shiftedRect.left) / shiftedRect.width
-            newValue = int(self.minValue + ratio *
-                           (self.maxValue - self.minValue))
-            if newValue != self.value:
-                self.value = newValue
-                self.inputField.setText(str(newValue))
-                if newValue != self.lastReportedValue:
-                    self.lastReportedValue = newValue
-                    if self.onChange:
-                        self.onChange(newValue)
+            rel_x = min(max(event.pos[0], shifted_rect.left), shifted_rect.right)
+            ratio = (rel_x - shifted_rect.left) / shifted_rect.width
+            new_value = int(self.min_value + ratio *
+                           (self.max_value - self.min_value))
+            if new_value != self.value:
+                self.value = new_value
+                self.input_field.set_text(str(new_value))
+                if new_value != self.last_reported_value:
+                    self.last_reported_value = new_value
+                    if self.on_change:
+                        self.on_change(new_value)
 
-    def _handleRect(self, yOffset: int = 0) -> pygame.Rect:
+    def _handle_rect(self, y_offset: int = 0) -> pygame.Rect:
         """
         Get the rectangle for the slider handle.
         
         Args:
-            yOffset: Vertical offset
+            y_offset: Vertical offset
             
         Returns:
             Rectangle for the slider handle
         """
-        handleX = self.rect.left + (
-            (self.value - self.minValue) /
-            (self.maxValue - self.minValue)) * self.rect.width
-        handleY = self.rect.centery + yOffset
-        return pygame.Rect(handleX - self.handleRadius,
-                           handleY - self.handleRadius, self.handleRadius * 2,
-                           self.handleRadius * 2)
+        handle_x = self.rect.left + (
+            (self.value - self.min_value) /
+            (self.max_value - self.min_value)) * self.rect.width
+        handle_y = self.rect.centery + y_offset
+        return pygame.Rect(handle_x - self.handle_radius,
+                           handle_y - self.handle_radius, self.handle_radius * 2,
+                           self.handle_radius * 2)
 
-    def draw(self, surface: pygame.Surface, yOffset: int = 0) -> None:
+    def draw(self, surface: pygame.Surface, y_offset: int = 0) -> None:
         """
         Draw the slider on the given surface.
         
         Args:
             surface: Surface to draw on
-            yOffset: Vertical offset for drawing
+            y_offset: Vertical offset for drawing
         """
-        shiftedRect = self.rect.move(0, yOffset)
+        shifted_rect = self.rect.move(0, y_offset)
         if self.disabled:
-            bgColor = self.disabledBgColor
-            fgColor = self.disabledFgColor
-            handleColor = self.disabledHandleColor
-            borderColor = self.disabledBorderColor
+            bg_color = self.disabled_bg_color
+            fg_color = self.disabled_fg_color
+            handle_color = self.disabled_handle_color
+            border_color = self.disabled_border_color
         else:
-            bgColor = self.bgColor
-            fgColor = self.fgColor
-            handleColor = self.handleColor
-            borderColor = self.borderColor
-        pygame.draw.rect(surface, bgColor, shiftedRect)
-        pygame.draw.rect(surface, borderColor, shiftedRect, 1)
-        fillWidth = ((self.value - self.minValue) /
-                     (self.maxValue - self.minValue)) * shiftedRect.width
+            bg_color = self.bg_color
+            fg_color = self.fg_color
+            handle_color = self.handle_color
+            border_color = self.border_color
+        pygame.draw.rect(surface, bg_color, shifted_rect)
+        pygame.draw.rect(surface, border_color, shifted_rect, 1)
+        fill_width = ((self.value - self.min_value) /
+                     (self.max_value - self.min_value)) * shifted_rect.width
         pygame.draw.rect(
-            surface, fgColor,
-            pygame.Rect(shiftedRect.left, shiftedRect.top, fillWidth,
-                        shiftedRect.height))
-        handleRect = self._handleRect(yOffset)
-        pygame.draw.circle(surface, handleColor, handleRect.center,
-                           self.handleRadius)
-        pygame.draw.circle(surface, borderColor, handleRect.center,
-                           self.handleRadius, 1)
-        self.inputField.draw(surface, yOffset=yOffset)
-        if not self.activeToast and self.toastQueue:
-            self.activeToast = self.toastQueue.pop(0)
-            self.activeToast.start()
-        if self.activeToast:
-            self.activeToast.draw(surface)
-            if self.activeToast.isExpired():
-                self.activeToast = None
+            surface, fg_color,
+            pygame.Rect(shifted_rect.left, shifted_rect.top, fill_width,
+                        shifted_rect.height))
+        handle_rect = self._handle_rect(y_offset)
+        pygame.draw.circle(surface, handle_color, handle_rect.center,
+                           self.handle_radius)
+        pygame.draw.circle(surface, border_color, handle_rect.center,
+                           self.handle_radius, 1)
+        self.input_field.draw(surface, y_offset=y_offset)
+        if not self.active_toast and self.toast_queue:
+            self.active_toast = self.toast_queue.pop(0)
+            self.active_toast.start()
+        if self.active_toast:
+            self.active_toast.draw(surface)
+            if self.active_toast.is_expired():
+                self.active_toast = None
 
-    def getValue(self) -> float:
+    def get_value(self) -> float:
         """Get the current value of the slider."""
         return self.value
 
-    def setValue(self, newValue: float) -> None:
+    def set_value(self, new_value: float) -> None:
         """
         Set the slider value.
         
         Args:
-            newValue: New value to set
+            new_value: New value to set
         """
-        self.value = max(self.minValue, min(self.maxValue, newValue))
-        self.lastReportedValue = self.value
-        self.inputField.setText(str(self.value))
+        self.value = max(self.min_value, min(self.max_value, new_value))
+        self.last_reported_value = self.value
+        self.input_field.set_text(str(self.value))
 
-    def setMinValue(self, newMinValue: float) -> None:
+    def set_min_value(self, new_min_value: float) -> None:
         """
         Update the minimum value of the slider.
         
         Args:
-            newMinValue: New minimum value
+            new_min_value: New minimum value
         """
-        self.minValue = newMinValue
-        self.inputField.minValue = newMinValue
-        if self.value < self.minValue:
-            self.value = self.minValue
-            self.lastReportedValue = self.value
+        self.min_value = new_min_value
+        self.input_field.min_value = new_min_value
+        if self.value < self.min_value:
+            self.value = self.min_value
+            self.last_reported_value = self.value

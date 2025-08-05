@@ -10,37 +10,37 @@ logger = logging.getLogger(__name__)
 class Structure:
     """Represents a structure (city, road, monastery, or field) in the game."""
 
-    def __init__(self, structureType: str) -> None:
+    def __init__(self, structure_type: str) -> None:
         """
         Initialize a structure.
         
         Args:
-            structureType: Type of the structure ('City', 'Road', 'Monastery', 'Field')
+            structure_type: Type of the structure ('City', 'Road', 'Monastery', 'Field')
         """
-        self.structureType = structureType
+        self.structure_type = structure_type
         self.cards = []
-        self.cardSides = set()
+        self.card_sides = set()
         self.figures = []
-        self.isCompleted = False
+        self.is_completed = False
         self.color = (255, 255, 255, 150)
 
-    def getStructureType(self) -> str:
+    def get_structure_type(self) -> str:
         """Get the structure type."""
-        return self.structureType
+        return self.structure_type
 
-    def getColor(self) -> tuple:
+    def get_color(self) -> tuple:
         """Get the structure color."""
         return self.color
 
-    def getIsCompleted(self) -> bool:
+    def get_is_completed(self) -> bool:
         """Check if the structure is completed."""
-        return self.isCompleted
+        return self.is_completed
 
-    def getFigures(self) -> list:
+    def get_figures(self) -> list:
         """Get the list of figures assigned to this structure."""
         return self.figures
 
-    def setColor(self, color: tuple) -> None:
+    def set_color(self, color: tuple) -> None:
         """
         Set the color of the structure.
         
@@ -49,7 +49,7 @@ class Structure:
         """
         self.color = color
 
-    def setFigures(self, figures: list) -> None:
+    def set_figures(self, figures: list) -> None:
         """
         Set the figures for this structure.
         
@@ -58,7 +58,7 @@ class Structure:
         """
         self.figures = figures
 
-    def addCardSide(self, card: typing.Any, direction: str) -> None:
+    def add_card_side(self, card: typing.Any, direction: str) -> None:
         """
         Add a card and direction to the structure.
         
@@ -68,9 +68,9 @@ class Structure:
         """
         if not card in self.cards:
             self.cards.append(card)
-        self.cardSides.add((card, direction))
+        self.card_sides.add((card, direction))
 
-    def addFigure(self, figure: typing.Any) -> bool:
+    def add_figure(self, figure: typing.Any) -> bool:
         """
         Add a figure to the structure if not already claimed.
         
@@ -85,7 +85,7 @@ class Structure:
             return True
         return False
 
-    def removeFigure(self, figure: typing.Any) -> None:
+    def remove_figure(self, figure: typing.Any) -> None:
         """
         Remove a figure from the structure and clear its placement.
         
@@ -93,225 +93,225 @@ class Structure:
             figure: Figure to remove
         """
         logger.debug(
-            f"Removing figure {figure} belonging to {figure.getOwner()}")
+            f"Removing figure {figure} belonging to {figure.get_owner()}")
         self.figures.remove(figure)
         figure.remove()
 
-    def checkCompletion(self) -> None:
+    def check_completion(self) -> None:
         """Check if the structure is completed and update its status."""
-        if self.structureType == "City":
-            self.isCompleted = self._checkCityCompletion()
-        elif self.structureType == "Road":
-            self.isCompleted = self._checkRoadCompletion()
-        elif self.structureType == "Monastery":
-            self.isCompleted = self._checkMonasteryCompletion()
-        elif self.structureType == "Field":
-            self.isCompleted = self._checkFieldCompletion()
+        if self.structure_type == "City":
+            self.is_completed = self._check_city_completion()
+        elif self.structure_type == "Road":
+            self.is_completed = self._check_road_completion()
+        elif self.structure_type == "Monastery":
+            self.is_completed = self._check_monastery_completion()
+        elif self.structure_type == "Field":
+            self.is_completed = self._check_field_completion()
 
-    def _checkCityCompletion(self) -> bool:
+    def _check_city_completion(self) -> bool:
         """Check if the city structure is completed."""
-        for card, direction in self.cardSides:
-            neighborCard = card.getNeighbors().get(direction)
-            if not neighborCard:
+        for card, direction in self.card_sides:
+            neighbor_card = card.get_neighbors().get(direction)
+            if not neighbor_card:
                 return False
         return True
 
-    def _checkRoadCompletion(self) -> bool:
+    def _check_road_completion(self) -> bool:
         """Check if the road structure is completed."""
-        for card, direction in self.cardSides:
-            neighborCard = card.getNeighbors().get(direction)
-            if not neighborCard:
+        for card, direction in self.card_sides:
+            neighbor_card = card.get_neighbors().get(direction)
+            if not neighbor_card:
                 return False
         return True
 
-    def _checkMonasteryCompletion(self) -> bool:
+    def _check_monastery_completion(self) -> bool:
         """Check if the monastery structure is completed."""
-        for card, direction in self.cardSides:
-            neighbors = card.getNeighbors()
+        for card, direction in self.card_sides:
+            neighbors = card.get_neighbors()
             for direction in neighbors:
                 if not neighbors[direction]:
                     return False
                 if direction in [
                         "N", "S"
-                ] and not (neighbors[direction].getNeighbor("W")
-                           and neighbors[direction].getNeighbor("E")):
+                ] and not (neighbors[direction].get_neighbor("W")
+                           and neighbors[direction].get_neighbor("E")):
                     return False
         return True
 
-    def _checkFieldCompletion(self) -> bool:
+    def _check_field_completion(self) -> bool:
         """Check if the field structure is completed (always False)."""
         return False
 
-    def getMajorityOwners(self) -> list:
+    def get_majority_owners(self) -> list:
         """Get the player(s) with the most figures in this structure."""
         logger.debug("Retrieving structure owners...")
-        ownerCounts = {}
+        owner_counts = {}
         for figure in self.figures:
-            owner = figure.getOwner()
+            owner = figure.get_owner()
             logger.debug(f"Found figure with owner - {owner}")
-            ownerCounts[owner] = ownerCounts.get(owner, 0) + 1
-        if not ownerCounts:
+            owner_counts[owner] = owner_counts.get(owner, 0) + 1
+        if not owner_counts:
             return []
-        maxCount = max(ownerCounts.values())
-        logger.debug(f"Retrieved owners: {ownerCounts}")
+        max_count = max(owner_counts.values())
+        logger.debug(f"Retrieved owners: {owner_counts}")
         return [
-            owner for owner, count in ownerCounts.items() if count == maxCount
+            owner for owner, count in owner_counts.items() if count == max_count
         ]
 
-    def merge(self, otherStructure: 'Structure') -> None:
+    def merge(self, other_structure: 'Structure') -> None:
         """
         Merge another structure into this one.
         
         Args:
-            otherStructure: Structure to merge into this one
+            other_structure: Structure to merge into this one
         """
-        self.cardSides.update(otherStructure.cardSides)
-        for figure in otherStructure.figures:
+        self.card_sides.update(other_structure.card_sides)
+        for figure in other_structure.figures:
             self.figures.append(figure)
-        for card in otherStructure.cards:
+        for card in other_structure.cards:
             self.cards.append(card)
 
-    def getScore(self, gameSession: typing.Any = None) -> int:
+    def get_score(self, game_session: typing.Any = None) -> int:
         """
         Calculate and return the score for this structure.
         
         Args:
-            gameSession: Game session for scoring context
+            game_session: Game session for scoring context
             
         Returns:
             Score for this structure
         """
         score = 0
-        gameOver = gameSession.getGameOver()
-        if self.structureType == "City":
-            if not gameOver:
+        game_over = game_session.get_game_over()
+        if self.structure_type == "City":
+            if not game_over:
                 for card in self.cards:
-                    if card.getFeatures():
-                        score += 2 if "coat" in card.getFeatures() else 0
+                    if card.get_features():
+                        score += 2 if "coat" in card.get_features() else 0
                 score += len(self.cards) * 2
             else:
                 for card in self.cards:
-                    if card.getFeatures():
-                        score += 1 if "coat" in card.getFeatures() else 0
+                    if card.get_features():
+                        score += 1 if "coat" in card.get_features() else 0
                 score += len(self.cards)
-        elif self.structureType == "Road":
+        elif self.structure_type == "Road":
             score = len(self.cards)
-        elif self.structureType == "Monastery":
-            for card, direction in self.cardSides:
+        elif self.structure_type == "Monastery":
+            for card, direction in self.card_sides:
                 score += 1
-                neighbors = card.getNeighbors()
+                neighbors = card.get_neighbors()
                 for direction in neighbors:
                     if neighbors[direction]:
                         score += 1
                         if direction in ["N", "S"]:
-                            if neighbors[direction].getNeighbor("W"):
+                            if neighbors[direction].get_neighbor("W"):
                                 score += 1
-                            if neighbors[direction].getNeighbor("E"):
+                            if neighbors[direction].get_neighbor("E"):
                                 score += 1
-        elif self.structureType == "Field" and gameSession:
+        elif self.structure_type == "Field" and game_session:
             if settings.DEBUG:
-                self.isCompleted = True
-            scoredCities = set()
-            completedCities = [
-                s for s in gameSession.structures
-                if s.getStructureType() == "City" and s.getIsCompleted()
+                self.is_completed = True
+            scored_cities = set()
+            completed_cities = [
+                s for s in game_session.structures
+                if s.get_structure_type() == "City" and s.get_is_completed()
             ]
-            for card, _ in self.cardSides:
-                neighbors = card.getNeighbors().values()
-                touchedCards = set([card])
-                touchedCards.update([n for n in neighbors if n])
-                for cityStructure in completedCities:
-                    for cityCard, _ in cityStructure.cardSides:
-                        if cityCard in touchedCards:
-                            scoredCities.add(cityStructure)
+            for card, _ in self.card_sides:
+                neighbors = card.get_neighbors().values()
+                touched_cards = set([card])
+                touched_cards.update([n for n in neighbors if n])
+                for city_structure in completed_cities:
+                    for city_card, _ in city_structure.card_sides:
+                        if city_card in touched_cards:
+                            scored_cities.add(city_structure)
                             break
-            score = len(scoredCities) * 3
+            score = len(scored_cities) * 3
         return score
 
     def serialize(self) -> dict:
         """Serialize the structure to a dictionary."""
         return {
-            "structureType":
-            self.structureType,
-            "cardSides": [{
-                "x": cardPosition["X"],
-                "y": cardPosition["Y"],
+            "structure_type":
+            self.structure_type,
+            "card_sides": [{
+                "x": card_position["X"],
+                "y": card_position["Y"],
                 "direction": direction
-            } for (card, direction) in self.cardSides
-                          if (cardPosition := card.getPosition())],
+            } for (card, direction) in self.card_sides
+                          if (card_position := card.get_position())],
             "figures": [{
-                "ownerIndex":
-                f.getOwner().getIndex(),
-                "positionOnCard":
-                f.positionOnCard,
-                "cardPosition":
-                f.card.getPosition() if f.card else None
+                "owner_index":
+                f.get_owner().get_index(),
+                "position_on_card":
+                f.position_on_card,
+                "card_position":
+                f.card.get_position() if f.card else None
             } for f in self.figures],
-            "isCompleted":
-            self.isCompleted,
+            "is_completed":
+            self.is_completed,
             "color":
             tuple(self.color) if hasattr(self.color, "__iter__") else
             (255, 255, 255, 150)
         }
 
     @staticmethod
-    def deserialize(data: dict, gameBoard: typing.Any, playerMap: dict,
-                    placedFigures: list) -> 'Structure':
+    def deserialize(data: dict, game_board: typing.Any, player_map: dict,
+                    placed_figures: list) -> 'Structure':
         """
         Create a Structure instance from serialized data.
         
         Args:
             data: Serialized structure data
-            gameBoard: The game board
-            playerMap: Mapping of player indices to player objects
-            placedFigures: List of placed figures
+            game_board: The game board
+            player_map: Mapping of player indices to player objects
+            placed_figures: List of placed figures
             
         Returns:
             Structure instance with restored state
         """
-        s = Structure(data["structureType"])
-        s.isCompleted = bool(data.get("isCompleted", False))
-        rawColor = data.get("color", (255, 255, 255, 150))
+        s = Structure(data["structure_type"])
+        s.is_completed = bool(data.get("is_completed", False))
+        raw_color = data.get("color", (255, 255, 255, 150))
         try:
-            s.color = tuple(int(c) for c in rawColor)
+            s.color = tuple(int(c) for c in raw_color)
         except Exception as e:
-            logger.warning(f"Failed to parse color: {rawColor} - {e}")
+            logger.warning(f"Failed to parse color: {raw_color} - {e}")
             s.color = (255, 255, 255, 150)
-        for side in data.get("cardSides", []):
+        for side in data.get("card_sides", []):
             try:
                 x = int(side["x"])
                 y = int(side["y"])
                 direction = str(side["direction"])
-                card = gameBoard.getCard(x, y)
+                card = game_board.get_card(x, y)
                 if card:
-                    s.cardSides.add((card, direction))
+                    s.card_sides.add((card, direction))
                     if card not in s.cards:
                         s.cards.append(card)
             except (KeyError, ValueError, TypeError) as e:
                 logger.warning(f"Skipping malformed cardSide: {side} - {e}")
         for f in data.get("figures", []):
             try:
-                ownerIndex = int(f["ownerIndex"])
-                position = str(f["positionOnCard"])
-                posData = f.get("cardPosition")
+                owner_index = int(f["owner_index"])
+                position = str(f["position_on_card"])
+                pos_data = f.get("card_position")
                 card = None
-                if posData and isinstance(posData, dict):
-                    x = int(posData["X"])
-                    y = int(posData["Y"])
-                    card = gameBoard.getCard(x, y)
-                owner = playerMap.get(ownerIndex)
+                if pos_data and isinstance(pos_data, dict):
+                    x = int(pos_data["X"])
+                    y = int(pos_data["Y"])
+                    card = game_board.get_card(x, y)
+                owner = player_map.get(owner_index)
                 if not owner:
                     raise ValueError(
-                        f"Owner with index {ownerIndex} not found")
+                        f"Owner with index {owner_index} not found")
                 matched = next(
-                    (fig for fig in placedFigures if fig.owner == owner
-                     and fig.card == card and fig.positionOnCard == position),
+                    (fig for fig in placed_figures if fig.owner == owner
+                     and fig.card == card and fig.position_on_card == position),
                     None)
                 if matched:
                     s.figures.append(matched)
                 else:
                     logger.warning(
-                        f"No matching figure found in placedFigures for: {f}")
+                        f"No matching figure found in placed_figures for: {f}")
             except (KeyError, ValueError, TypeError) as e:
                 logger.warning(f"Skipping malformed figure: {f} - {e}")
         return s

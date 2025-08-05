@@ -382,11 +382,11 @@ CARD_DISTRIBUTIONS = {
 }
 
 
-def getCardDefinitions():
+def get_card_definitions():
     """Return the card definitions for the base game."""
     return CARD_DEFINITIONS
 
 
-def getCardDistributions():
+def get_card_distributions():
     """Return the card distributions for the base game."""
     return CARD_DISTRIBUTIONS

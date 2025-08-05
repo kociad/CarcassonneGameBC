@@ -1,5 +1,5 @@
 #Fixed variables
-FPS = 120
+FPS = 60
 
 ASSETS_PATH = "src/assets/"
 TILE_IMAGES_PATH = ASSETS_PATH + "tiles/"

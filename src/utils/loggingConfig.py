@@ -19,31 +19,31 @@ def scoring(self, message, *args, **kwargs):
 logging.Logger.scoring = scoring
 
 
-def configureLogging() -> None:
+def configure_logging() -> None:
     """Configure logging for the application with file and console output and global exception handling."""
-    from utils.settingsManager import settingsManager
-    debugEnabled = settingsManager.get("DEBUG", False)
-    logToConsole = settingsManager.get("LOG_TO_CONSOLE", True)
+    from utils.settingsManager import settings_manager
+    debug_enabled = settings_manager.get("DEBUG", False)
+    log_to_console = settings_manager.get("LOG_TO_CONSOLE", True)
     handlers = []
-    logFilename = None
-    if debugEnabled and logToConsole:
+    log_filename = None
+    if debug_enabled and log_to_console:
         handlers.append(logging.StreamHandler(sys.stdout))
-    if debugEnabled:
-        logsDir = Path("logs")
-        logsDir.mkdir(exist_ok=True)
+    if debug_enabled:
+        logs_dir = Path("logs")
+        logs_dir.mkdir(exist_ok=True)
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        logFilename = logsDir / f"carcassonne_{timestamp}.log"
-        handlers.append(logging.FileHandler(logFilename, encoding='utf-8'))
+        log_filename = logs_dir / f"carcassonne_{timestamp}.log"
+        handlers.append(logging.FileHandler(log_filename, encoding='utf-8'))
     logging.basicConfig(
         level=logging.DEBUG,
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
         handlers=handlers)
-    updateLoggingLevel()
-    setupExceptionLogging()
+    update_logging_level()
+    setup_exception_logging()
     logger = logging.getLogger(__name__)
-    if debugEnabled:
-        msg = f"Logging configured with file output: {logFilename}"
-        if logToConsole:
+    if debug_enabled:
+        msg = f"Logging configured with file output: {log_filename}"
+        if log_to_console:
             msg += " and console output"
         logger.debug(msg)
     """
@@ -52,11 +52,11 @@ def configureLogging() -> None:
     """
 
 
-def updateLoggingLevel() -> None:
+def update_logging_level() -> None:
     """Update logging level based on current DEBUG setting."""
-    from utils.settingsManager import settingsManager
-    debugEnabled = settingsManager.get("DEBUG", True)
-    if debugEnabled:
+    from utils.settingsManager import settings_manager
+    debug_enabled = settings_manager.get("DEBUG", True)
+    if debug_enabled:
         logging.disable(logging.NOTSET)
         for handler in logging.getLogger().handlers:
             if isinstance(
@@ -76,27 +76,27 @@ def updateLoggingLevel() -> None:
         logger.info("Debug logging disabled - INFO and above messages visible")
 
 
-def setupExceptionLogging():
+def setup_exception_logging():
     """Set up global exception handling to log all unhandled exceptions."""
 
-    def handleException(excType, excValue, excTraceback):
-        if issubclass(excType, KeyboardInterrupt):
-            sys.__excepthook__(excType, excValue, excTraceback)
+    def handle_exception(exc_type, exc_value, exc_traceback):
+        if issubclass(exc_type, KeyboardInterrupt):
+            sys.__excepthook__(exc_type, exc_value, exc_traceback)
             return
         logger = logging.getLogger("UNHANDLED_EXCEPTION")
-        tbLines = traceback.format_exception(excType, excValue, excTraceback)
-        tbText = ''.join(tbLines)
+        tb_lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
+        tb_text = ''.join(tb_lines)
         logger.critical("Unhandled exception occurred!")
-        logger.critical(f"Exception Type: {excType.__name__}")
-        logger.critical(f"Exception Message: {str(excValue)}")
+        logger.critical(f"Exception Type: {exc_type.__name__}")
+        logger.critical(f"Exception Message: {str(exc_value)}")
         logger.critical("Full Traceback:")
-        logger.critical(tbText)
-        sys.__excepthook__(excType, excValue, excTraceback)
+        logger.critical(tb_text)
+        sys.__excepthook__(exc_type, exc_value, exc_traceback)
 
-    sys.excepthook = handleException
+    sys.excepthook = handle_exception
 
 
-def logError(message: str, exception: Exception) -> None:
+def log_error(message: str, exception: Exception) -> None:
     """Log an error with optional exception details."""
     logger = logging.getLogger("ERROR_HANDLER")
     logger.error(message)
@@ -106,19 +106,19 @@ def logError(message: str, exception: Exception) -> None:
         logger.error("Full traceback:", exc_info=True)
 
 
-gameLogInstance = None
-gameLogHandler = None
+game_log_instance = None
+game_log_handler = None
 
 
-def setGameLogInstance(gameLog: typing.Any) -> None:
+def set_game_log_instance(game_log: typing.Any) -> None:
     """Set the game log instance for UI logging."""
-    global gameLogInstance, gameLogHandler
-    gameLogInstance = gameLog
-    if gameLogHandler is None:
-        gameLogHandler = GameLogHandler()
-        gameLogHandler.setLevel(logging.DEBUG)
-        rootLogger = logging.getLogger()
-        rootLogger.addHandler(gameLogHandler)
+    global game_log_instance, game_log_handler
+    game_log_instance = game_log
+    if game_log_handler is None:
+        game_log_handler = GameLogHandler()
+        game_log_handler.setLevel(logging.DEBUG)
+        root_logger = logging.getLogger()
+        root_logger.addHandler(game_log_handler)
         logger = logging.getLogger(__name__)
         logger.debug("Game log handler added to root logger")
 
@@ -127,11 +127,11 @@ class GameLogHandler(logging.Handler):
     """Custom logging handler that sends messages to the game log UI."""
 
     def emit(self, record):
-        global gameLogInstance
-        if gameLogInstance is None:
+        global game_log_instance
+        if game_log_instance is None:
             return
         try:
-            levelMapping = {
+            level_mapping = {
                 logging.DEBUG: "DEBUG",
                 logging.INFO: "INFO",
                 SCORING_LEVEL: "SCORING",
@@ -139,13 +139,13 @@ class GameLogHandler(logging.Handler):
                 logging.ERROR: "ERROR",
                 logging.CRITICAL: "ERROR"
             }
-            level = levelMapping.get(record.levelno, "INFO")
+            level = level_mapping.get(record.levelno, "INFO")
             if level not in ("INFO", "SCORING"):
                 return
-            cleanMessage = record.getMessage()
+            clean_message = record.getMessage()
             if level == "DEBUG":
-                loggerName = record.name.split('.')[-1]
-                cleanMessage = f"[{loggerName}] {cleanMessage}"
-            gameLogInstance.addEntry(cleanMessage, level)
+                logger_name = record.name.split('.')[-1]
+                clean_message = f"[{logger_name}] {clean_message}"
+            game_log_instance.add_entry(clean_message, level)
         except Exception:
             pass

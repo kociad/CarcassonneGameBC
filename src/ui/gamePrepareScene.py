@@ -7,33 +7,34 @@ from ui.components.dropdown import Dropdown
 from ui.components.toast import Toast, ToastManager
 from ui.components.checkbox import Checkbox
 from gameState import GameState
-from utils.settingsManager import settingsManager
+from utils.settingsManager import settings_manager
 import typing
+from models.cardSets.setLoader import get_available_card_sets
 
 FORBIDDEN_WORDS = ["ai", "easy", "normal", "hard", "expert"]
 
 
-def _getLocalIP():
+def _get_local_ip():
     """
     Get the local IP address using multiple methods.
     Falls back to default IP from settings if all methods fail.
     """
-    defaultIP = settingsManager.get("HOST_IP", "0.0.0.0")
+    default_ip = settings_manager.get("HOST_IP", "0.0.0.0")
 
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.connect(("8.8.8.8", 80))
-        localIP = s.getsockname()[0]
+        local_ip = s.getsockname()[0]
         s.close()
-        return localIP
+        return local_ip
     except Exception:
         pass
 
     try:
         hostname = socket.gethostname()
-        localIP = socket.gethostbyname(hostname)
-        if localIP != "127.0.0.1" and not localIP.startswith("127."):
-            return localIP
+        local_ip = socket.gethostbyname(hostname)
+        if local_ip != "127.0.0.1" and not local_ip.startswith("127."):
+            return local_ip
     except Exception:
         pass
 
@@ -45,29 +46,29 @@ def _getLocalIP():
     except Exception:
         pass
 
-    return defaultIP
+    return default_ip
 
 
 class PlayerConfiguration:
     """Single source of truth for player data"""
 
-    def __init__(self, name="", isAI=False, enabled=True):
+    def __init__(self, name="", is_ai=False, enabled=True):
         self.name = name
-        self.isAI = isAI
+        self.is_ai = is_ai
         self.enabled = enabled
 
-    def setName(self, name):
+    def set_name(self, name):
         """Update name and handle AI prefix logic"""
-        if self.isAI and not name.startswith("AI_"):
-            self.isAI = False
+        if self.is_ai and not name.startswith("AI_"):
+            self.is_ai = False
         self.name = name
 
-    def setAI(self, isAI):
+    def set_ai(self, is_ai):
         """Update AI status and handle name prefix"""
-        self.isAI = isAI
-        if isAI and not self.name.startswith("AI_"):
+        self.is_ai = is_ai
+        if is_ai and not self.name.startswith("AI_"):
             self.name = f"AI_{self.name}"
-        elif not isAI and self.name.startswith("AI_"):
+        elif not is_ai and self.name.startswith("AI_"):
             if self.name.startswith("AI_EASY_"):
                 self.name = self.name[8:]
             elif self.name.startswith("AI_HARD_"):
@@ -79,334 +80,333 @@ class PlayerConfiguration:
             elif self.name.startswith("AI_"):
                 self.name = self.name[3:]
 
-    def getDisplayName(self):
+    def get_display_name(self):
         """Get name for display purposes"""
         return self.name
 
     def copy(self):
         """Create a copy of this configuration"""
-        return PlayerConfiguration(self.name, self.isAI, self.enabled)
+        return PlayerConfiguration(self.name, self.is_ai, self.enabled)
 
 
 class GamePrepareScene(Scene):
 
     def __init__(self, screen: pygame.Surface,
-                 switchSceneCallback: typing.Callable) -> None:
-        super().__init__(screen, switchSceneCallback)
+                 switch_scene_callback: typing.Callable) -> None:
+        super().__init__(screen, switch_scene_callback)
 
-        settingsManager.reloadFromFile()
+        settings_manager.reload_from_file()
 
-        self.switchSceneCallback = switchSceneCallback
+        self.switch_scene_callback = switch_scene_callback
 
         self.font = pygame.font.Font(None, 80)
-        self.buttonFont = pygame.font.Font(None, 48)
-        self.inputFont = pygame.font.Font(None, 36)
-        self.dropdownFont = pygame.font.Font(None, 36)
+        self.button_font = pygame.font.Font(None, 48)
+        self.input_font = pygame.font.Font(None, 36)
+        self.dropdown_font = pygame.font.Font(None, 36)
 
-        self.toastManager = ToastManager(maxToasts=5)
+        self.toast_manager = ToastManager(max_toasts=5)
 
-        self.scrollOffset = 0
-        self.maxScroll = 0
-        self.scrollSpeed = 30
+        self.scroll_offset = 0
+        self.max_scroll = 0
+        self.scroll_speed = 30
 
-        self.originalPlayerNames = settingsManager.get("PLAYERS", []).copy()
+        self.original_player_names = settings_manager.get("PLAYERS", []).copy()
 
         self.players = []
         for i in range(6):
-            if i < len(self.originalPlayerNames):
-                name = self.originalPlayerNames[i]
+            if i < len(self.original_player_names):
+                name = self.original_player_names[i]
             else:
                 name = f"Player {i + 1}"
 
             enabled = i < 2
             self.players.append(PlayerConfiguration(name, False, enabled))
 
-        networkMode = settingsManager.get("NETWORK_MODE", "local")
-        hostIP = settingsManager.get("HOST_IP", "0.0.0.0")
-        port = str(settingsManager.get("HOST_PORT", 222))
-        self.localIP = _getLocalIP()
-        self.networkMode = networkMode
+        network_mode = settings_manager.get("NETWORK_MODE", "local")
+        host_ip = settings_manager.get("HOST_IP", "0.0.0.0")
+        port = str(settings_manager.get("HOST_PORT", 222))
+        self.local_ip = _get_local_ip()
+        self.network_mode = network_mode
 
-        xCenter = screen.get_width() // 2 - 100
-        currentY = 60
+        x_center = screen.get_width() // 2 - 100
+        current_y = 60
 
-        self.titleY = currentY
-        currentY += 60
+        self.title_y = current_y
+        current_y += 60
 
-        self.playerLabelY = currentY
-        currentY += 50
+        self.player_label_y = current_y
+        current_y += 50
 
-        self.addPlayerButton = Button(
-            (self.screen.get_width() // 2 + 180, currentY + 60, 40, 40), "+",
-            self.buttonFont)
-        self.removePlayerButton = Button(
-            (self.screen.get_width() // 2 + 230, currentY + 60, 40, 40), "−",
-            self.buttonFont)
+        self.add_player_button = Button(
+            (self.screen.get_width() // 2 + 180, current_y + 60, 40, 40), "+",
+            self.button_font)
+        self.remove_player_button = Button(
+            (self.screen.get_width() // 2 + 230, current_y + 60, 40, 40), "−",
+            self.button_font)
 
-        self.playerListY = currentY
+        self.player_list_y = current_y
 
-        self._buildPlayerFields()
-        currentY += 300 + 40
+        self._build_player_fields()
+        current_y += 300 + 40
 
-        self.gameLabelY = currentY
-        currentY += 50
+        self.game_label_y = current_y
+        current_y += 50
 
-        self.aiDifficultyDropdown = Dropdown(
-            rect=(xCenter, currentY, 200, 40),
-            font=self.dropdownFont,
+        self.ai_difficulty_dropdown = Dropdown(
+            rect=(x_center, current_y, 200, 40),
+            font=self.dropdown_font,
             options=["EASY", "NORMAL", "HARD", "EXPERT"],
-            defaultIndex=1,
-            onSelect=self._handleAIDifficultyChange)
-        currentY += 80
+            default_index=1,
+            on_select=self._handle_ai_difficulty_change)
+        current_y += 80
 
-        self.cardSetLabelY = currentY
-        currentY += 50
+        self.card_set_label_y = current_y
+        current_y += 50
 
-        from models.cardSets.setLoader import getAvailableCardSets
-        self.availableCardSets = getAvailableCardSets()
-        self.selectedCardSets = ['baseGame']
-        self.cardSetCheckboxes = []
-        self.cardSetSectionY = currentY
+        self.available_card_sets = get_available_card_sets()
+        self.selected_card_sets = ['baseGame']
+        self.card_set_checkboxes = []
+        self.card_set_section_y = current_y
 
-        sortedCardSets = sorted(self.availableCardSets,
+        sorted_card_sets = sorted(self.available_card_sets,
                                 key=lambda x:
                                 (x['name'] != 'baseGame', x['name']))
 
-        for cardSet in sortedCardSets:
-            isBaseGame = cardSet['name'] == 'baseGame'
-            checkbox = Checkbox(rect=(xCenter, 0, 20, 20),
-                                checked=isBaseGame,
-                                onToggle=lambda checked, name=cardSet['name']:
-                                self._toggleCardSet(name, checked))
-            if isBaseGame:
-                checkbox.setDisabled(True)
-            self.cardSetCheckboxes.append((cardSet, checkbox))
+        for card_set in sorted_card_sets:
+            is_base_game = card_set['name'] == 'baseGame'
+            checkbox = Checkbox(rect=(x_center, 0, 20, 20),
+                                checked=is_base_game,
+                                on_toggle=lambda checked, name=card_set['name']:
+                                self._toggle_card_set(name, checked))
+            if is_base_game:
+                checkbox.set_disabled(True)
+            self.card_set_checkboxes.append((card_set, checkbox))
 
-        cardSetCount = len(self.availableCardSets)
-        currentY += 30 * cardSetCount + 80
+        card_set_count = len(self.available_card_sets)
+        current_y += 30 * card_set_count + 80
 
-        self.networkLabelY = currentY
-        currentY += 50
+        self.network_label_y = current_y
+        current_y += 50
 
-        self.networkModes = ["local", "host", "client"]
-        defaultIndex = self.networkModes.index(networkMode)
-        self.networkModeDropdown = Dropdown(
-            rect=(xCenter, currentY, 200, 40),
-            font=self.dropdownFont,
-            options=self.networkModes,
-            defaultIndex=defaultIndex,
-            onSelect=self._handleNetworkModeChange)
-        currentY += 60
+        self.network_modes = ["local", "host", "client"]
+        default_index = self.network_modes.index(network_mode)
+        self.network_mode_dropdown = Dropdown(
+            rect=(x_center, current_y, 200, 40),
+            font=self.dropdown_font,
+            options=self.network_modes,
+            default_index=default_index,
+            on_select=self._handle_network_mode_change)
+        current_y += 60
 
-        self.hostIPField = InputField(rect=(xCenter, currentY, 200, 40),
-                                      font=self.inputFont)
-        self.hostIPField.setText(hostIP)
-        currentY += 60
+        self.host_ip_field = InputField(rect=(x_center, current_y, 200, 40),
+                                      font=self.input_font)
+        self.host_ip_field.set_text(host_ip)
+        current_y += 60
 
-        self.portField = InputField(rect=(xCenter, currentY, 200, 40),
-                                    font=self.inputFont)
-        self.portField.setText(port)
-        currentY += 80
+        self.port_field = InputField(rect=(x_center, current_y, 200, 40),
+                                    font=self.input_font)
+        self.port_field.set_text(port)
+        current_y += 80
 
-        self.startButton = Button((xCenter, currentY, 200, 60), "Start Game",
-                                  self.buttonFont)
-        currentY += 80
-        self.backButton = Button((xCenter, currentY, 200, 60), "Back",
-                                 self.buttonFont)
+        self.start_button = Button((x_center, current_y, 200, 60), "Start Game",
+                                  self.button_font)
+        current_y += 80
+        self.back_button = Button((x_center, current_y, 200, 60), "Back",
+                                 self.button_font)
 
-        self._handleNetworkModeChange(networkMode)
+        self._handle_network_mode_change(network_mode)
 
-    def _getEnabledPlayersCount(self):
+    def _get_enabled_players_count(self):
         """Get count of enabled players"""
         return sum(1 for player in self.players if player.enabled)
 
-    def _buildPlayerFields(self) -> None:
+    def _build_player_fields(self) -> None:
         """Build UI fields based on current player data (single source of truth)"""
-        self.playerFields = []
+        self.player_fields = []
 
         for i, player in enumerate(self.players):
-            y = self.playerListY + (i * 50 if i == 0 else 60 + (i - 1) * 50)
+            y = self.player_list_y + (i * 50 if i == 0 else 60 + (i - 1) * 50)
 
-            def _makeTextChangeHandler(index):
+            def _make_text_change_handler(index):
 
-                def _handler(newText):
-                    lowered = newText.lower()
+                def _handler(new_text):
+                    lowered = new_text.lower()
                     forbidden_found = None
                     for word in FORBIDDEN_WORDS:
                         if word in lowered:
                             forbidden_found = word
                             break
                     if forbidden_found:
-                        if index < len(self.originalPlayerNames):
-                            default_name = self.originalPlayerNames[index]
+                        if index < len(self.original_player_names):
+                            default_name = self.original_player_names[index]
                         else:
                             default_name = f"Player {index + 1}"
-                        self.players[index].setName(default_name)
-                        if hasattr(self, 'playerFields') and len(
-                                self.playerFields) > index:
-                            nameField = self.playerFields[index][0]
-                            nameField.setText(default_name)
-                        self.addToast(
+                        self.players[index].set_name(default_name)
+                        if hasattr(self, 'player_fields') and len(
+                                self.player_fields) > index:
+                            name_field = self.player_fields[index][0]
+                            name_field.set_text(default_name)
+                        self.add_toast(
                             Toast(
                                 f"Forbidden word detected in name. Reset to default.",
                                 type="error"))
-                        if hasattr(self, 'playerFields') and len(
-                                self.playerFields) > index:
-                            aiCheckbox = self.playerFields[index][1]
-                            if aiCheckbox:
-                                aiCheckbox.setChecked(self.players[index].isAI)
+                        if hasattr(self, 'player_fields') and len(
+                                self.player_fields) > index:
+                            ai_checkbox = self.player_fields[index][1]
+                            if ai_checkbox:
+                                ai_checkbox.set_checked(self.players[index].is_ai)
                         return
-                    self.players[index].setName(newText)
-                    if hasattr(self, 'playerFields') and len(
-                            self.playerFields) > index:
-                        aiCheckbox = self.playerFields[index][1]
-                        if aiCheckbox:
-                            aiCheckbox.setChecked(self.players[index].isAI)
+                    self.players[index].set_name(new_text)
+                    if hasattr(self, 'player_fields') and len(
+                            self.player_fields) > index:
+                        ai_checkbox = self.player_fields[index][1]
+                        if ai_checkbox:
+                            ai_checkbox.set_checked(self.players[index].is_ai)
 
                 return _handler
 
-            nameField = InputField(rect=(self.screen.get_width() // 2 - 100, y,
+            name_field = InputField(rect=(self.screen.get_width() // 2 - 100, y,
                                          200, 40),
-                                   font=self.inputFont,
-                                   onTextChange=_makeTextChangeHandler(i))
+                                   font=self.input_font,
+                                   on_text_change=_make_text_change_handler(i))
 
-            if self.networkMode == "client" and i > 0:
-                nameField.setText("")
-                nameField.setDisabled(True)
+            if self.network_mode == "client" and i > 0:
+                name_field.set_text("")
+                name_field.set_disabled(True)
             else:
-                nameField.setText(player.getDisplayName())
-                nameField.setDisabled(not player.enabled)
-                if i > 0 and self.networkMode == "host":
-                    nameField.setReadOnly(True)
+                name_field.set_text(player.get_display_name())
+                name_field.set_disabled(not player.enabled)
+                if i > 0 and self.network_mode == "host":
+                    name_field.set_read_only(True)
 
-            aiCheckbox = None
+            ai_checkbox = None
 
             if i == 0:
-                canToggleAI = settingsManager.get("DEBUG", False)
-                aiCheckbox = Checkbox(
+                can_toggle_ai = settings_manager.get("DEBUG", False)
+                ai_checkbox = Checkbox(
                     rect=(self.screen.get_width() // 2 + 110, y + 10, 20, 20),
-                    checked=player.isAI,
-                    onToggle=(lambda value, index=i: self._togglePlayerAI(
-                        index, value)) if canToggleAI else None)
-                aiCheckbox.setDisabled(not player.enabled or not canToggleAI)
+                    checked=player.is_ai,
+                    on_toggle=(lambda value, index=i: self._toggle_player_ai(
+                        index, value)) if can_toggle_ai else None)
+                ai_checkbox.set_disabled(not player.enabled or not can_toggle_ai)
 
             elif i != 0:
-                canToggleAI = (self.networkMode == "local")
-                aiCheckbox = Checkbox(
+                can_toggle_ai = (self.network_mode == "local")
+                ai_checkbox = Checkbox(
                     rect=(self.screen.get_width() // 2 + 110, y + 10, 20, 20),
-                    checked=player.isAI,
-                    onToggle=(lambda value, index=i: self._togglePlayerAI(
-                        index, value)) if canToggleAI else None)
-                aiCheckbox.setDisabled(not player.enabled or not canToggleAI)
+                    checked=player.is_ai,
+                    on_toggle=(lambda value, index=i: self._toggle_player_ai(
+                        index, value)) if can_toggle_ai else None)
+                ai_checkbox.set_disabled(not player.enabled or not can_toggle_ai)
 
-            self.playerFields.append((nameField, aiCheckbox))
+            self.player_fields.append((name_field, ai_checkbox))
 
-    def _togglePlayerAI(self, index: int, value: bool) -> None:
+    def _toggle_player_ai(self, index: int, value: bool) -> None:
         """Toggle AI status for a player"""
-        self.players[index].setAI(value)
+        self.players[index].set_ai(value)
 
-        nameField = self.playerFields[index][0]
-        nameField.setText(self.players[index].getDisplayName())
+        name_field = self.player_fields[index][0]
+        name_field.set_text(self.players[index].get_display_name())
 
         player = self.players[index]
         if value:
-            currentDifficulty = self.aiDifficultyDropdown.getSelected()
-            baseName = player.name
-            if baseName.startswith("AI_EASY_"):
-                baseName = baseName[8:]
-            elif baseName.startswith("AI_HARD_"):
-                baseName = baseName[8:]
-            elif baseName.startswith("AI_EXPERT_"):
-                baseName = baseName[10:]
-            elif baseName.startswith("AI_NORMAL_"):
-                baseName = baseName[10:]
-            elif baseName.startswith("AI_"):
-                baseName = baseName[3:]
+            current_difficulty = self.ai_difficulty_dropdown.get_selected()
+            base_name = player.name
+            if base_name.startswith("AI_EASY_"):
+                base_name = base_name[8:]
+            elif base_name.startswith("AI_HARD_"):
+                base_name = base_name[8:]
+            elif base_name.startswith("AI_EXPERT_"):
+                base_name = base_name[10:]
+            elif base_name.startswith("AI_NORMAL_"):
+                base_name = base_name[10:]
+            elif base_name.startswith("AI_"):
+                base_name = base_name[3:]
 
-            player.name = f"AI_{currentDifficulty}_{baseName}"
-            nameField.setText(player.getDisplayName())
+            player.name = f"AI_{current_difficulty}_{base_name}"
+            name_field.set_text(player.get_display_name())
 
-    def _handleAIDifficultyChange(self, difficulty: str) -> None:
+    def _handle_ai_difficulty_change(self, difficulty: str) -> None:
         """Handle AI difficulty change for all AI players"""
         for i, player in enumerate(self.players):
-            if player.isAI:
-                baseName = player.name
-                if baseName.startswith("AI_EASY_"):
-                    baseName = baseName[8:]
-                elif baseName.startswith("AI_HARD_"):
-                    baseName = baseName[8:]
-                elif baseName.startswith("AI_EXPERT_"):
-                    baseName = baseName[10:]
-                elif baseName.startswith("AI_NORMAL_"):
-                    baseName = baseName[10:]
-                elif baseName.startswith("AI_"):
-                    baseName = baseName[3:]
+            if player.is_ai:
+                base_name = player.name
+                if base_name.startswith("AI_EASY_"):
+                    base_name = base_name[8:]
+                elif base_name.startswith("AI_HARD_"):
+                    base_name = base_name[8:]
+                elif base_name.startswith("AI_EXPERT_"):
+                    base_name = base_name[10:]
+                elif base_name.startswith("AI_NORMAL_"):
+                    base_name = base_name[10:]
+                elif base_name.startswith("AI_"):
+                    base_name = base_name[3:]
 
-                player.name = f"AI_{difficulty}_{baseName}"
+                player.name = f"AI_{difficulty}_{base_name}"
 
-                if i < len(self.playerFields):
-                    nameField = self.playerFields[i][0]
-                    nameField.setText(player.getDisplayName())
+                if i < len(self.player_fields):
+                    name_field = self.player_fields[i][0]
+                    name_field.set_text(player.get_display_name())
 
-    def _handleNetworkModeChange(self, mode: str) -> None:
+    def _handle_network_mode_change(self, mode: str) -> None:
         """Handle network mode change"""
-        self.networkMode = mode
-        isLocal = mode == "local"
+        self.network_mode = mode
+        is_local = mode == "local"
 
-        if not isLocal:
+        if not is_local:
             for i, player in enumerate(self.players):
                 if i > 0:
-                    baseName = player.name
-                    if baseName.startswith("AI_EASY_"):
-                        baseName = baseName[8:]
-                    elif baseName.startswith("AI_HARD_"):
-                        baseName = baseName[8:]
-                    elif baseName.startswith("AI_EXPERT_"):
-                        baseName = baseName[10:]
-                    elif baseName.startswith("AI_NORMAL_"):
-                        baseName = baseName[10:]
-                    elif baseName.startswith("AI_"):
-                        baseName = baseName[3:]
+                    base_name = player.name
+                    if base_name.startswith("AI_EASY_"):
+                        base_name = base_name[8:]
+                    elif base_name.startswith("AI_HARD_"):
+                        base_name = base_name[8:]
+                    elif base_name.startswith("AI_EXPERT_"):
+                        base_name = base_name[10:]
+                    elif base_name.startswith("AI_NORMAL_"):
+                        base_name = base_name[10:]
+                    elif base_name.startswith("AI_"):
+                        base_name = base_name[3:]
 
-                    player.name = baseName
-                    player.setAI(False)
+                    player.name = base_name
+                    player.set_ai(False)
 
         if mode == "host":
-            hostValue = self.localIP
-        elif isLocal:
-            hostValue = None
+            host_value = self.local_ip
+        elif is_local:
+            host_value = None
         else:
-            hostValue = settingsManager.get("HOST_IP", "0.0.0.0")
+            host_value = settings_manager.get("HOST_IP", "0.0.0.0")
 
-        self.hostIPField.setText(hostValue or "")
-        self.hostIPField.setDisabled(isLocal)
-        self.portField.setDisabled(isLocal)
+        self.host_ip_field.set_text(host_value or "")
+        self.host_ip_field.set_disabled(is_local)
+        self.port_field.set_disabled(is_local)
 
-        self.aiDifficultyDropdown.setDisabled(not isLocal)
+        self.ai_difficulty_dropdown.set_disabled(not is_local)
 
-        isClient = mode == "client"
-        for cardSet, checkbox in self.cardSetCheckboxes:
-            if cardSet['name'] != 'baseGame':
-                checkbox.setDisabled(isClient)
+        is_client = mode == "client"
+        for card_set, checkbox in self.card_set_checkboxes:
+            if card_set['name'] != 'base_game':
+                checkbox.set_disabled(is_client)
 
-        self._buildPlayerFields()
+        self._build_player_fields()
 
-    def _toggleCardSet(self, setName: str, checked: bool) -> None:
+    def _toggle_card_set(self, set_name: str, checked: bool) -> None:
         """Handle card set selection toggle"""
-        if checked and setName not in self.selectedCardSets:
-            self.selectedCardSets.append(setName)
-        elif not checked and setName in self.selectedCardSets:
-            self.selectedCardSets.remove(setName)
+        if checked and set_name not in self.selected_card_sets:
+            self.selected_card_sets.append(set_name)
+        elif not checked and set_name in self.selected_card_sets:
+            self.selected_card_sets.remove(set_name)
 
-        settingsManager.set("SELECTED_CARD_SETS",
-                            self.selectedCardSets,
+        settings_manager.set("SELECTED_CARD_SETS",
+                            self.selected_card_sets,
                             temporary=True)
 
-    def _addPlayerField(self) -> None:
+    def _add_player_field(self) -> None:
         """Add a new player"""
-        enabledCount = self._getEnabledPlayersCount()
-        if enabledCount >= 6:
-            self.addToast(Toast("Maximum 6 players allowed", type="warning"))
+        enabled_count = self._get_enabled_players_count()
+        if enabled_count >= 6:
+            self.add_toast(Toast("Maximum 6 players allowed", type="warning"))
             return
 
         for player in self.players:
@@ -414,67 +414,67 @@ class GamePrepareScene(Scene):
                 player.enabled = True
                 break
 
-        self._buildPlayerFields()
+        self._build_player_fields()
 
-    def _removePlayerField(self) -> None:
+    def _remove_player_field(self) -> None:
         """Remove a player"""
-        enabledCount = self._getEnabledPlayersCount()
-        if enabledCount <= 2:
-            self.addToast(Toast("At least 2 players required", type="warning"))
+        enabled_count = self._get_enabled_players_count()
+        if enabled_count <= 2:
+            self.add_toast(Toast("At least 2 players required", type="warning"))
             return
 
         for i in reversed(range(len(self.players))):
             if self.players[i].enabled:
                 self.players[i].enabled = False
-                if i < len(self.originalPlayerNames):
-                    self.players[i].name = self.originalPlayerNames[i]
+                if i < len(self.original_player_names):
+                    self.players[i].name = self.original_player_names[i]
                 else:
                     self.players[i].name = f"Player {i + 1}"
-                self.players[i].isAI = False
+                self.players[i].is_ai = False
                 break
 
-        self._buildPlayerFields()
+        self._build_player_fields()
 
-    def _applySettingsAndStart(self) -> None:
+    def _apply_settings_and_start(self) -> None:
         """Apply settings and start the game"""
-        playerNames = []
+        player_names = []
         for player in self.players:
             if player.enabled:
-                playerNames.append(player.getDisplayName())
+                player_names.append(player.get_display_name())
 
-        settingsManager.set("PLAYERS", playerNames, temporary=True)
-        settingsManager.set("NETWORK_MODE",
-                            self.networkModeDropdown.getSelected(),
+        settings_manager.set("PLAYERS", player_names, temporary=True)
+        settings_manager.set("NETWORK_MODE",
+                            self.network_mode_dropdown.get_selected(),
                             temporary=True)
-        settingsManager.set("HOST_IP",
-                            self.hostIPField.getText(),
-                            temporary=True)
-
-        selectedCardSets = []
-        for cardSet, checkbox in self.cardSetCheckboxes:
-            if checkbox.isChecked():
-                selectedCardSets.append(cardSet['name'])
-        settingsManager.set("SELECTED_CARD_SETS",
-                            selectedCardSets,
+        settings_manager.set("HOST_IP",
+                            self.host_ip_field.get_text(),
                             temporary=True)
 
-        if self.networkModeDropdown.getSelected() != "local":
+        selected_card_sets = []
+        for card_set, checkbox in self.card_set_checkboxes:
+            if checkbox.is_checked():
+                selected_card_sets.append(card_set['name'])
+        settings_manager.set("SELECTED_CARD_SETS",
+                            selected_card_sets,
+                            temporary=True)
+
+        if self.network_mode_dropdown.get_selected() != "local":
             try:
-                port = int(self.portField.getText())
+                port = int(self.port_field.get_text())
                 if not (1024 <= port <= 65535):
                     raise ValueError
-                settingsManager.set("HOST_PORT", port, temporary=True)
+                settings_manager.set("HOST_PORT", port, temporary=True)
             except ValueError:
-                self.addToast(Toast("Invalid port number", type="error"))
+                self.add_toast(Toast("Invalid port number", type="error"))
                 return
-        networkMode = self.networkModeDropdown.getSelected()
-        if networkMode == "local":
-            self.switchScene("startGame", playerNames)
+        network_mode = self.network_mode_dropdown.get_selected()
+        if network_mode == "local":
+            self.switch_scene("start_game", player_names)
         else:
-            self.switchScene("startLobby", playerNames)
+            self.switch_scene("start_lobby", player_names)
 
-    def handleEvents(self, events: list[pygame.event.Event]) -> None:
-        self._applyScroll(events)
+    def handle_events(self, events: list[pygame.event.Event]) -> None:
+        self._apply_scroll(events)
 
         for event in events:
             if event.type == pygame.QUIT:
@@ -483,139 +483,139 @@ class GamePrepareScene(Scene):
 
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
-                    self.switchScene(GameState.MENU)
+                    self.switch_scene(GameState.MENU)
 
-            if self.networkModeDropdown.handleEvent(event,
-                                                    yOffset=self.scrollOffset):
+            if self.network_mode_dropdown.handle_event(event,
+                                                    y_offset=self.scroll_offset):
                 continue
 
-            if self.aiDifficultyDropdown.handleEvent(
-                    event, yOffset=self.scrollOffset):
+            if self.ai_difficulty_dropdown.handle_event(
+                    event, y_offset=self.scroll_offset):
                 continue
 
-            self.hostIPField.handleEvent(event, yOffset=self.scrollOffset)
-            self.portField.handleEvent(event, yOffset=self.scrollOffset)
+            self.host_ip_field.handle_event(event, y_offset=self.scroll_offset)
+            self.port_field.handle_event(event, y_offset=self.scroll_offset)
 
-            for cardSet, checkbox in self.cardSetCheckboxes:
-                if checkbox.handleEvent(event, yOffset=0):
+            for card_set, checkbox in self.card_set_checkboxes:
+                if checkbox.handle_event(event, y_offset=0):
                     continue
 
-            for nameField, aiCheckbox in self.playerFields:
-                nameField.handleEvent(event, yOffset=self.scrollOffset)
-                if aiCheckbox:
-                    aiCheckbox.handleEvent(event, yOffset=self.scrollOffset)
+            for name_field, ai_checkbox in self.player_fields:
+                name_field.handle_event(event, y_offset=self.scroll_offset)
+                if ai_checkbox:
+                    ai_checkbox.handle_event(event, y_offset=self.scroll_offset)
 
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                if self.backButton._isClicked(event.pos,
-                                             yOffset=self.scrollOffset):
-                    self.switchScene(GameState.MENU)
-                elif self.startButton._isClicked(event.pos,
-                                                yOffset=self.scrollOffset):
-                    self._applySettingsAndStart()
-                elif self.addPlayerButton._isClicked(event.pos,
-                                                    yOffset=self.scrollOffset):
-                    self._addPlayerField()
-                elif self.removePlayerButton._isClicked(
-                        event.pos, yOffset=self.scrollOffset):
-                    self._removePlayerField()
+                if self.back_button._is_clicked(event.pos,
+                                             y_offset=self.scroll_offset):
+                    self.switch_scene(GameState.MENU)
+                elif self.start_button._is_clicked(event.pos,
+                                                y_offset=self.scroll_offset):
+                    self._apply_settings_and_start()
+                elif self.add_player_button._is_clicked(event.pos,
+                                                    y_offset=self.scroll_offset):
+                    self._add_player_field()
+                elif self.remove_player_button._is_clicked(
+                        event.pos, y_offset=self.scroll_offset):
+                    self._remove_player_field()
 
     def draw(self) -> None:
         self.screen.fill((30, 30, 30))
-        offsetY = self.scrollOffset
+        offset_y = self.scroll_offset
 
-        titleText = self.font.render("Game Setup", True, (255, 255, 255))
-        titleRect = titleText.get_rect(center=(self.screen.get_width() // 2,
-                                               self.titleY + offsetY))
-        self.screen.blit(titleText, titleRect)
+        title_text = self.font.render("Game Setup", True, (255, 255, 255))
+        title_rect = title_text.get_rect(center=(self.screen.get_width() // 2,
+                                               self.title_y + offset_y))
+        self.screen.blit(title_text, title_rect)
 
-        playerLabel = self.dropdownFont.render("Players", True, (255, 215, 0))
-        playerLabelRect = playerLabel.get_rect()
-        playerLabelRect.centerx = self.screen.get_width() // 2
-        playerLabelRect.y = self.playerLabelY + offsetY
-        self.screen.blit(playerLabel, playerLabelRect)
+        player_label = self.dropdown_font.render("Players", True, (255, 215, 0))
+        player_label_rect = player_label.get_rect()
+        player_label_rect.centerx = self.screen.get_width() // 2
+        player_label_rect.y = self.player_label_y + offset_y
+        self.screen.blit(player_label, player_label_rect)
 
-        gameLabel = self.dropdownFont.render("Game", True, (255, 215, 0))
-        gameLabelRect = gameLabel.get_rect()
-        gameLabelRect.centerx = self.screen.get_width() // 2
-        gameLabelRect.y = self.gameLabelY + offsetY
-        self.screen.blit(gameLabel, gameLabelRect)
+        game_label = self.dropdown_font.render("Game", True, (255, 215, 0))
+        game_label_rect = game_label.get_rect()
+        game_label_rect.centerx = self.screen.get_width() // 2
+        game_label_rect.y = self.game_label_y + offset_y
+        self.screen.blit(game_label, game_label_rect)
 
-        cardSetLabel = self.dropdownFont.render("Card Sets", True,
+        card_set_label = self.dropdown_font.render("Card Sets", True,
                                                 (255, 215, 0))
-        cardSetLabelRect = cardSetLabel.get_rect()
-        cardSetLabelRect.centerx = self.screen.get_width() // 2
-        cardSetLabelRect.y = self.cardSetLabelY + offsetY
-        self.screen.blit(cardSetLabel, cardSetLabelRect)
+        card_set_label_rect = card_set_label.get_rect()
+        card_set_label_rect.centerx = self.screen.get_width() // 2
+        card_set_label_rect.y = self.card_set_label_y + offset_y
+        self.screen.blit(card_set_label, card_set_label_rect)
 
-        networkLabel = self.dropdownFont.render("Network", True, (255, 215, 0))
-        networkLabelRect = networkLabel.get_rect()
-        networkLabelRect.centerx = self.screen.get_width() // 2
-        networkLabelRect.y = self.networkLabelY + offsetY
-        self.screen.blit(networkLabel, networkLabelRect)
+        network_label = self.dropdown_font.render("Network", True, (255, 215, 0))
+        network_label_rect = network_label.get_rect()
+        network_label_rect.centerx = self.screen.get_width() // 2
+        network_label_rect.y = self.network_label_y + offset_y
+        self.screen.blit(network_label, network_label_rect)
 
-        labelFont = self.dropdownFont
+        label_font = self.dropdown_font
 
-        for i, (nameField, aiCheckbox) in enumerate(self.playerFields):
-            labelText = "Your name:" if i == 0 else f"Player {i + 1}:"
-            label = labelFont.render(labelText, True, (255, 255, 255))
-            labelRect = label.get_rect(right=nameField.rect.left - 10,
-                                       centery=nameField.rect.centery +
-                                       offsetY)
-            self.screen.blit(label, labelRect)
-            nameField.draw(self.screen, yOffset=offsetY)
-            aiCheckbox.draw(self.screen, yOffset=offsetY)
+        for i, (name_field, ai_checkbox) in enumerate(self.player_fields):
+            label_text = "Your name:" if i == 0 else f"Player {i + 1}:"
+            label = label_font.render(label_text, True, (255, 255, 255))
+            label_rect = label.get_rect(right=name_field.rect.left - 10,
+                                       centery=name_field.rect.centery +
+                                       offset_y)
+            self.screen.blit(label, label_rect)
+            name_field.draw(self.screen, y_offset=offset_y)
+            ai_checkbox.draw(self.screen, y_offset=offset_y)
 
-        netLabel = labelFont.render("Network mode:", True, (255, 255, 255))
-        netLabelRect = netLabel.get_rect(
-            right=self.networkModeDropdown.rect.left - 10,
-            centery=self.networkModeDropdown.rect.centery + offsetY)
-        self.screen.blit(netLabel, netLabelRect)
+        net_label = label_font.render("Network mode:", True, (255, 255, 255))
+        net_label_rect = net_label.get_rect(
+            right=self.network_mode_dropdown.rect.left - 10,
+            centery=self.network_mode_dropdown.rect.centery + offset_y)
+        self.screen.blit(net_label, net_label_rect)
 
-        aiLabel = labelFont.render("AI Difficulty:", True, (255, 255, 255))
-        aiLabelRect = aiLabel.get_rect(
-            right=self.aiDifficultyDropdown.rect.left - 10,
-            centery=self.aiDifficultyDropdown.rect.centery + offsetY)
-        self.screen.blit(aiLabel, aiLabelRect)
+        ai_label = label_font.render("AI Difficulty:", True, (255, 255, 255))
+        ai_label_rect = ai_label.get_rect(
+            right=self.ai_difficulty_dropdown.rect.left - 10,
+            centery=self.ai_difficulty_dropdown.rect.centery + offset_y)
+        self.screen.blit(ai_label, ai_label_rect)
 
-        for i, (cardSet, checkbox) in enumerate(self.cardSetCheckboxes):
-            y = self.cardSetSectionY + 20 + i * 30 + offsetY
-            checkbox.rect.x = self.aiDifficultyDropdown.rect.x
+        for i, (card_set, checkbox) in enumerate(self.card_set_checkboxes):
+            y = self.card_set_section_y + 20 + i * 30 + offset_y
+            checkbox.rect.x = self.ai_difficulty_dropdown.rect.x
             checkbox.rect.y = y - 10
-            checkbox.draw(self.screen, yOffset=0)
-            cardSetText = labelFont.render(
-                f"{cardSet['displayName']} ({cardSet['cardCount']} cards):",
+            checkbox.draw(self.screen, y_offset=0)
+            card_set_text = label_font.render(
+                f"{card_set['display_name']} ({card_set['card_count']} cards):",
                 True, (255, 255, 255))
-            cardSetRect = cardSetText.get_rect(right=checkbox.rect.left - 10,
+            card_set_rect = card_set_text.get_rect(right=checkbox.rect.left - 10,
                                                centery=checkbox.rect.centery)
-            self.screen.blit(cardSetText, cardSetRect)
+            self.screen.blit(card_set_text, card_set_rect)
 
-        ipLabel = labelFont.render("Host IP:", True, (255, 255, 255))
-        ipLabelRect = ipLabel.get_rect(right=self.hostIPField.rect.left - 10,
-                                       centery=self.hostIPField.rect.centery +
-                                       offsetY)
-        self.screen.blit(ipLabel, ipLabelRect)
-        self.hostIPField.draw(self.screen, yOffset=offsetY)
+        ip_label = label_font.render("Host IP:", True, (255, 255, 255))
+        ip_label_rect = ip_label.get_rect(right=self.host_ip_field.rect.left - 10,
+                                       centery=self.host_ip_field.rect.centery +
+                                       offset_y)
+        self.screen.blit(ip_label, ip_label_rect)
+        self.host_ip_field.draw(self.screen, y_offset=offset_y)
 
-        portLabel = labelFont.render("Port:", True, (255, 255, 255))
-        portLabelRect = portLabel.get_rect(
-            right=self.portField.rect.left - 10,
-            centery=self.portField.rect.centery + offsetY)
-        self.screen.blit(portLabel, portLabelRect)
-        self.portField.draw(self.screen, yOffset=offsetY)
+        port_label = label_font.render("Port:", True, (255, 255, 255))
+        port_label_rect = port_label.get_rect(
+            right=self.port_field.rect.left - 10,
+            centery=self.port_field.rect.centery + offset_y)
+        self.screen.blit(port_label, port_label_rect)
+        self.port_field.draw(self.screen, y_offset=offset_y)
 
-        self.aiDifficultyDropdown.draw(self.screen, yOffset=offsetY)
-        self.networkModeDropdown.draw(self.screen, yOffset=offsetY)
-        self.addPlayerButton.draw(self.screen, yOffset=offsetY)
-        self.removePlayerButton.draw(self.screen, yOffset=offsetY)
-        self.backButton.draw(self.screen, yOffset=offsetY)
-        self.startButton.draw(self.screen, yOffset=offsetY)
+        self.ai_difficulty_dropdown.draw(self.screen, y_offset=offset_y)
+        self.network_mode_dropdown.draw(self.screen, y_offset=offset_y)
+        self.add_player_button.draw(self.screen, y_offset=offset_y)
+        self.remove_player_button.draw(self.screen, y_offset=offset_y)
+        self.back_button.draw(self.screen, y_offset=offset_y)
+        self.start_button.draw(self.screen, y_offset=offset_y)
 
-        self.maxScroll = max(self.screen.get_height(),
-                             self.backButton.rect.bottom + 80)
+        self.max_scroll = max(self.screen.get_height(),
+                             self.back_button.rect.bottom + 80)
 
-        self.toastManager.draw(self.screen)
+        self.toast_manager.draw(self.screen)
 
         pygame.display.flip()
 
-    def addToast(self, toast):
-        self.toastManager.addToast(toast)
+    def add_toast(self, toast):
+        self.toast_manager.add_toast(toast)

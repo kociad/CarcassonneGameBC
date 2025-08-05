@@ -2,7 +2,7 @@ import subprocess
 import sys
 
 
-def installRequirements():
+def install_requirements():
     try:
         subprocess.check_call(
             [sys.executable, "-m", "pip", "install", "-r", "requirements.txt"])
@@ -13,4 +13,4 @@ def installRequirements():
 
 
 if __name__ == "__main__":
-    installRequirements()
+    install_requirements()

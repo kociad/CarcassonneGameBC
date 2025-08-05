@@ -22,9 +22,9 @@ class SettingsManager:
         self.observers: Dict[str, List[Callable]] = {}
         self._runtime_overrides: Dict[str, Any] = {}
         self._original_settings: Dict[str, Any] = {}
-        self._loadFromSettingsFile()
+        self._load_from_settings_file()
 
-    def _loadFromSettingsFile(self):
+    def _load_from_settings_file(self):
         """Load settings from settings.py module."""
         try:
             import settings
@@ -76,7 +76,7 @@ class SettingsManager:
             logger.debug(
                 f"Runtime setting {key} changed from {old_value} to {value}")
         else:
-            if self._updateSettingsFile(key, value):
+            if self._update_settings_file(key, value):
                 self._original_settings[key] = value
                 self._runtime_overrides.pop(key, None)
                 logger.debug(
@@ -84,10 +84,10 @@ class SettingsManager:
                 )
             else:
                 return False
-        self._notifyObservers(key, old_value, value)
+        self._notify_observers(key, old_value, value)
         return True
 
-    def _updateSettingsFile(self, key: str, value: Any) -> bool:
+    def _update_settings_file(self, key: str, value: Any) -> bool:
         """Update a setting in the settings.py file."""
         try:
             import settings
@@ -117,17 +117,17 @@ class SettingsManager:
             logger.error(f"Failed to update settings.py: {e}")
             return False
 
-    def reloadFromFile(self) -> None:
+    def reload_from_file(self) -> None:
         """Reload settings from settings.py (discards runtime overrides)."""
         self._runtime_overrides.clear()
-        self._loadFromSettingsFile()
+        self._load_from_settings_file()
         logger.debug("Settings reloaded from file")
 
-    def getTemporaryChanges(self) -> Dict[str, Any]:
+    def get_temporary_changes(self) -> Dict[str, Any]:
         """Get all temporary (runtime) changes."""
         return self._runtime_overrides.copy()
 
-    def makePermanent(self, key: str = None) -> bool:
+    def make_permanent(self, key: str = None) -> bool:
         """Make runtime changes permanent by writing to settings.py."""
         if key:
             if key in self._runtime_overrides:
@@ -153,14 +153,14 @@ class SettingsManager:
         if key in self.observers and callback in self.observers[key]:
             self.observers[key].remove(callback)
 
-    def _notifyObservers(self, key: str, oldValue: Any, newValue: Any):
+    def _notify_observers(self, key: str, old_value: Any, new_value: Any):
         """Notify all observers of a setting change."""
         if key in self.observers:
             for callback in self.observers[key]:
                 try:
-                    callback(key, oldValue, newValue)
+                    callback(key, old_value, new_value)
                 except Exception as e:
                     logger.error(f"Observer callback failed for {key}: {e}")
 
 
-settingsManager = SettingsManager()
+settings_manager = SettingsManager()

@@ -3,7 +3,7 @@ import subprocess
 import sys
 
 
-def dependenciesMet():
+def dependencies_met():
     """
     Try importing required packages listed in requirements.txt.
     If all imports succeed, dependencies are considered met.
@@ -15,7 +15,7 @@ def dependenciesMet():
         return False
 
 
-def installDependencies():
+def install_dependencies():
     """
     Run the install_dependencies.py script if dependencies are missing.
     """
@@ -23,7 +23,7 @@ def installDependencies():
     subprocess.check_call([sys.executable, "install_dependencies.py"])
 
 
-def runGame():
+def run_game():
     """
     Run the main game script.
     """
@@ -32,7 +32,7 @@ def runGame():
 
 
 if __name__ == "__main__":
-    if not dependenciesMet():
-        installDependencies()
+    if not dependencies_met():
+        install_dependencies()
 
-    runGame()
+    run_game()

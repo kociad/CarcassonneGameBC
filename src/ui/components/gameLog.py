@@ -2,7 +2,7 @@ import pygame
 import time
 from typing import List, Tuple
 import typing
-from utils.settingsManager import settingsManager
+from utils.settingsManager import settings_manager
 
 
 class GameLogEntry:
@@ -24,7 +24,7 @@ class GameLogEntry:
         self.level = level
         self.timestamp = timestamp or time.time()
 
-    def getFormattedTime(self) -> str:
+    def get_formatted_time(self) -> str:
         """Get the formatted timestamp for the log entry."""
         return time.strftime("%H:%M:%S", time.localtime(self.timestamp))
 
@@ -34,20 +34,20 @@ class GameLog:
 
     def __init__(self) -> None:
         """Initialize the game log."""
-        self.maxEntries = settingsManager.get("GAME_LOG_MAX_ENTRIES", 2000)
+        self.max_entries = settings_manager.get("GAME_LOG_MAX_ENTRIES", 2000)
         self.entries: List[GameLogEntry] = []
         self.visible = False
-        self.scrollOffset = 0
+        self.scroll_offset = 0
         self.font = pygame.font.Font(None, 28)
-        self.titleFont = pygame.font.Font(None, 36)
-        self.levelColors = {
+        self.title_font = pygame.font.Font(None, 36)
+        self.level_colors = {
             "INFO": (240, 240, 240),
             "DEBUG": (150, 200, 255),
             "SCORING": (255, 255, 0),
             "WARNING": (255, 220, 100),
             "ERROR": (255, 120, 120),
         }
-        self.levelBackgrounds = {
+        self.level_backgrounds = {
             "INFO": (0, 0, 0, 0),
             "DEBUG": (0, 50, 100, 30),
             "SCORING": (80, 80, 0, 40),
@@ -55,7 +55,7 @@ class GameLog:
             "ERROR": (100, 0, 0, 50),
         }
 
-    def addEntry(self, message: str, level: str = "INFO") -> None:
+    def add_entry(self, message: str, level: str = "INFO") -> None:
         """
         Add a new log entry.
         
@@ -65,56 +65,56 @@ class GameLog:
         """
         entry = GameLogEntry(message, level)
         self.entries.append(entry)
-        if len(self.entries) > self.maxEntries:
+        if len(self.entries) > self.max_entries:
             self.entries.pop(0)
-        self.scrollToBottom()
+        self.scroll_to_bottom()
 
-    def toggleVisibility(self) -> None:
+    def toggle_visibility(self) -> None:
         """Toggle the visibility of the game log."""
         self.visible = not self.visible
 
-    def scrollToBottom(self) -> None:
+    def scroll_to_bottom(self) -> None:
         """Scroll to the bottom of the log."""
-        self.scrollOffset = 0
+        self.scroll_offset = 0
 
-    def handleScroll(self, scrollDelta: int) -> None:
+    def handle_scroll(self, scroll_delta: int) -> None:
         """
         Handle scrolling through log entries.
         
         Args:
-            scrollDelta: Scroll amount
+            scroll_delta: Scroll amount
         """
         if not self.visible:
             return
-        debugEnabled = settingsManager.get("DEBUG", False)
-        filteredCount = 0
+        debug_enabled = settings_manager.get("DEBUG", False)
+        filtered_count = 0
         for entry in self.entries:
-            if entry.level == "DEBUG" and not debugEnabled:
+            if entry.level == "DEBUG" and not debug_enabled:
                 continue
-            filteredCount += 1
-        self.scrollOffset += scrollDelta * 5
-        usableHeight = settingsManager.get("WINDOW_HEIGHT", 1080) - 100
-        lineHeight = 32
-        maxVisibleLines = usableHeight // lineHeight
-        maxScroll = max(0, filteredCount - maxVisibleLines)
-        self.scrollOffset = max(0, min(self.scrollOffset, maxScroll))
+            filtered_count += 1
+        self.scroll_offset += scroll_delta * 5
+        usable_height = settings_manager.get("WINDOW_HEIGHT", 1080) - 100
+        line_height = 32
+        max_visible_lines = usable_height // line_height
+        max_scroll = max(0, filtered_count - max_visible_lines)
+        self.scroll_offset = max(0, min(self.scroll_offset, max_scroll))
 
-    def getVisibleLines(self) -> int:
+    def get_visible_lines(self) -> int:
         """Get the number of visible lines in the log."""
-        screenHeight = settingsManager.get("WINDOW_HEIGHT", 1080)
-        usableHeight = screenHeight - 100
-        lineHeight = 32
-        return usableHeight // lineHeight
+        screen_height = settings_manager.get("WINDOW_HEIGHT", 1080)
+        usable_height = screen_height - 100
+        line_height = 32
+        return usable_height // line_height
 
-    def updateMaxEntries(self) -> None:
+    def update_max_entries(self) -> None:
         """Update the maximum number of log entries from settings."""
-        newMaxEntries = settingsManager.get("GAME_LOG_MAX_ENTRIES", 2000)
-        if newMaxEntries != self.maxEntries:
-            self.maxEntries = newMaxEntries
-            if len(self.entries) > self.maxEntries:
-                removeCount = len(self.entries) - self.maxEntries
-                self.entries = self.entries[removeCount:]
-                self.scrollToBottom()
+        new_max_entries = settings_manager.get("GAME_LOG_MAX_ENTRIES", 2000)
+        if new_max_entries != self.max_entries:
+            self.max_entries = new_max_entries
+            if len(self.entries) > self.max_entries:
+                remove_count = len(self.entries) - self.max_entries
+                self.entries = self.entries[remove_count:]
+                self.scroll_to_bottom()
 
     def draw(self, screen: pygame.Surface) -> None:
         """
@@ -125,98 +125,98 @@ class GameLog:
         """
         if not self.visible:
             return
-        screenWidth = settingsManager.get("WINDOW_WIDTH", 1920)
-        screenHeight = settingsManager.get("WINDOW_HEIGHT", 1080)
-        overlay = pygame.Surface((screenWidth, screenHeight), pygame.SRCALPHA)
+        screen_width = settings_manager.get("WINDOW_WIDTH", 1920)
+        screen_height = settings_manager.get("WINDOW_HEIGHT", 1080)
+        overlay = pygame.Surface((screen_width, screen_height), pygame.SRCALPHA)
         overlay.fill((0, 0, 0, 200))
         screen.blit(overlay, (0, 0))
-        titleText = self.titleFont.render(
+        title_text = self.title_font.render(
             "Game Log (Press TAB to close, Mouse Wheel to scroll)", True,
             (255, 255, 255))
-        titleRect = titleText.get_rect(center=(screenWidth // 2, 30))
-        titleBg = pygame.Surface((titleRect.width + 20, titleRect.height + 10),
+        title_rect = title_text.get_rect(center=(screen_width // 2, 30))
+        title_bg = pygame.Surface((title_rect.width + 20, title_rect.height + 10),
                                  pygame.SRCALPHA)
-        titleBg.fill((50, 50, 50, 180))
-        screen.blit(titleBg, (titleRect.x - 10, titleRect.y - 5))
-        screen.blit(titleText, titleRect)
-        debugEnabled = settingsManager.get("DEBUG", False)
-        filteredEntries = []
+        title_bg.fill((50, 50, 50, 180))
+        screen.blit(title_bg, (title_rect.x - 10, title_rect.y - 5))
+        screen.blit(title_text, title_rect)
+        debug_enabled = settings_manager.get("DEBUG", False)
+        filtered_entries = []
         for entry in self.entries:
-            if entry.level == "DEBUG" and not debugEnabled:
+            if entry.level == "DEBUG" and not debug_enabled:
                 continue
-            filteredEntries.append(entry)
-        usableHeight = screenHeight - 100
-        lineHeight = 32
-        maxVisibleLines = usableHeight // lineHeight
-        totalFilteredEntries = len(filteredEntries)
-        if totalFilteredEntries == 0:
+            filtered_entries.append(entry)
+        usable_height = screen_height - 100
+        line_height = 32
+        max_visible_lines = usable_height // line_height
+        total_filtered_entries = len(filtered_entries)
+        if total_filtered_entries == 0:
             return
-        startIndex = max(
-            0, totalFilteredEntries - maxVisibleLines - self.scrollOffset)
-        endIndex = min(totalFilteredEntries,
-                       totalFilteredEntries - self.scrollOffset)
-        maxScroll = max(0, totalFilteredEntries - maxVisibleLines)
-        self.scrollOffset = max(0, min(self.scrollOffset, maxScroll))
-        startIndex = max(
-            0, totalFilteredEntries - maxVisibleLines - self.scrollOffset)
-        endIndex = min(totalFilteredEntries,
-                       totalFilteredEntries - self.scrollOffset)
-        yPos = 70
-        entriesDrawn = 0
-        for i in range(startIndex, endIndex):
-            if i < 0 or i >= len(filteredEntries):
+        start_index = max(
+            0, total_filtered_entries - max_visible_lines - self.scroll_offset)
+        end_index = min(total_filtered_entries,
+                       total_filtered_entries - self.scroll_offset)
+        max_scroll = max(0, total_filtered_entries - max_visible_lines)
+        self.scroll_offset = max(0, min(self.scroll_offset, max_scroll))
+        start_index = max(
+            0, total_filtered_entries - max_visible_lines - self.scroll_offset)
+        end_index = min(total_filtered_entries,
+                       total_filtered_entries - self.scroll_offset)
+        y_pos = 70
+        entries_drawn = 0
+        for i in range(start_index, end_index):
+            if i < 0 or i >= len(filtered_entries):
                 continue
-            entry = filteredEntries[i]
-            if yPos + lineHeight > screenHeight - 20:
+            entry = filtered_entries[i]
+            if y_pos + line_height > screen_height - 20:
                 break
-            timeStr = entry.getFormattedTime()
-            levelStr = f"[{entry.level}]"
-            fullMessage = f"{timeStr} {levelStr} {entry.message}"
-            textColor = self.levelColors.get(entry.level, (255, 255, 255))
-            bgColor = self.levelBackgrounds.get(entry.level, (0, 0, 0, 0))
-            if bgColor[3] > 0:
-                lineBg = pygame.Surface((screenWidth - 20, lineHeight),
+            time_str = entry.get_formatted_time()
+            level_str = f"[{entry.level}]"
+            full_message = f"{time_str} {level_str} {entry.message}"
+            text_color = self.level_colors.get(entry.level, (255, 255, 255))
+            bg_color = self.level_backgrounds.get(entry.level, (0, 0, 0, 0))
+            if bg_color[3] > 0:
+                line_bg = pygame.Surface((screen_width - 20, line_height),
                                         pygame.SRCALPHA)
-                lineBg.fill(bgColor)
-                screen.blit(lineBg, (10, yPos - 2))
-            maxWidth = screenWidth - 40
-            testSurface = self.font.render(fullMessage, True, textColor)
-            if testSurface.get_width() > maxWidth:
+                line_bg.fill(bg_color)
+                screen.blit(line_bg, (10, y_pos - 2))
+            max_width = screen_width - 40
+            test_surface = self.font.render(full_message, True, text_color)
+            if test_surface.get_width() > max_width:
                 words = entry.message.split(' ')
                 lines = []
-                currentLine = f"{timeStr} {levelStr}"
+                current_line = f"{time_str} {level_str}"
                 for word in words:
-                    testLine = f"{currentLine} {word}"
-                    if self.font.size(testLine)[0] <= maxWidth:
-                        currentLine = testLine
+                    test_line = f"{current_line} {word}"
+                    if self.font.size(test_line)[0] <= max_width:
+                        current_line = test_line
                     else:
-                        if currentLine.strip():
-                            lines.append(currentLine)
-                        currentLine = f"           {word}"
-                if currentLine.strip():
-                    lines.append(currentLine)
+                        if current_line.strip():
+                            lines.append(current_line)
+                        current_line = f"           {word}"
+                if current_line.strip():
+                    lines.append(current_line)
                 for line in lines:
-                    if yPos + lineHeight > screenHeight - 20:
+                    if y_pos + line_height > screen_height - 20:
                         break
-                    wrappedSurface = self.font.render(line, True, textColor)
-                    screen.blit(wrappedSurface, (20, yPos))
-                    yPos += lineHeight
-                    entriesDrawn += 1
+                    wrapped_surface = self.font.render(line, True, text_color)
+                    screen.blit(wrapped_surface, (20, y_pos))
+                    y_pos += line_height
+                    entries_drawn += 1
             else:
-                screen.blit(testSurface, (20, yPos))
-                yPos += lineHeight
-                entriesDrawn += 1
-        if totalFilteredEntries > maxVisibleLines:
-            visibleStart = max(
-                1, totalFilteredEntries - self.scrollOffset - entriesDrawn + 1)
-            visibleEnd = totalFilteredEntries - self.scrollOffset
-            scrollInfo = f"Lines {visibleStart}-{visibleEnd} of {totalFilteredEntries}"
-            scrollSurface = self.font.render(scrollInfo, True, (180, 180, 180))
-            scrollBg = pygame.Surface((scrollSurface.get_width() + 10,
-                                       scrollSurface.get_height() + 6),
+                screen.blit(test_surface, (20, y_pos))
+                y_pos += line_height
+                entries_drawn += 1
+        if total_filtered_entries > max_visible_lines:
+            visible_start = max(
+                1, total_filtered_entries - self.scroll_offset - entries_drawn + 1)
+            visible_end = total_filtered_entries - self.scroll_offset
+            scroll_info = f"Lines {visible_start}-{visible_end} of {total_filtered_entries}"
+            scroll_surface = self.font.render(scroll_info, True, (180, 180, 180))
+            scroll_bg = pygame.Surface((scroll_surface.get_width() + 10,
+                                       scroll_surface.get_height() + 6),
                                       pygame.SRCALPHA)
-            scrollBg.fill((0, 0, 0, 150))
-            scrollRect = (screenWidth - scrollSurface.get_width() - 25,
-                          screenHeight - 35)
-            screen.blit(scrollBg, (scrollRect[0] - 5, scrollRect[1] - 3))
-            screen.blit(scrollSurface, scrollRect)
+            scroll_bg.fill((0, 0, 0, 150))
+            scroll_rect = (screen_width - scroll_surface.get_width() - 25,
+                          screen_height - 35)
+            screen.blit(scroll_bg, (scroll_rect[0] - 5, scroll_rect[1] - 3))
+            screen.blit(scroll_surface, scroll_rect)
