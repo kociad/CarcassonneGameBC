@@ -162,7 +162,8 @@ class CommandManager:
     def get_commands_since(self, sequence_number: int) -> List[GameCommand]:
         """Get all commands with sequence number greater than the given one."""
         return [
-            cmd for cmd in self.commands if cmd.sequence_number > sequence_number
+            cmd for cmd in self.commands
+            if cmd.sequence_number > sequence_number
         ]
 
     def get_latest_sequence_number(self) -> int:
@@ -215,7 +216,7 @@ def create_command_from_data(data: dict) -> Optional[GameCommand]:
 
 
 def encode_command_message(command: GameCommand,
-                         message_type: str = "command") -> str:
+                           message_type: str = "command") -> str:
     """Encode a command as a network message."""
     return encode_message(message_type, command.serialize())
 

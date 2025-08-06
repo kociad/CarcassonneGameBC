@@ -162,23 +162,26 @@ class Game:
         """
         try:
             if state == GameState.MENU:
-                self._current_scene = MainMenuScene(self._screen, self._init_scene,
-                                                  self._get_game_session,
-                                                  self._cleanup_previous_game)
+                self._current_scene = MainMenuScene(
+                    self._screen, self._init_scene, self._get_game_session,
+                    self._cleanup_previous_game)
             elif state == GameState.GAME:
                 self._current_scene = GameScene(self._screen, self._init_scene,
-                                              self._game_session, self._clock,
-                                              self._network, self._game_log)
+                                                self._game_session,
+                                                self._clock, self._network,
+                                                self._game_log)
             elif state == GameState.SETTINGS:
-                self._current_scene = SettingsScene(self._screen, self._init_scene)
+                self._current_scene = SettingsScene(self._screen,
+                                                    self._init_scene)
             elif state == GameState.PREPARE:
                 self._current_scene = GamePrepareScene(self._screen,
-                                                     self._init_scene)
+                                                       self._init_scene)
             elif state == GameState.LOBBY:
-                self._current_scene = LobbyScene(self._screen, self._init_scene,
-                                               self._start_game,
-                                               self._get_game_session,
-                                               self._network, self._game_log)
+                self._current_scene = LobbyScene(self._screen,
+                                                 self._init_scene,
+                                                 self._start_game,
+                                                 self._get_game_session,
+                                                 self._network, self._game_log)
             elif state == GameState.HELP:
                 self._current_scene = HelpScene(self._screen, self._init_scene)
             # Handle dynamic callback from GamePrepareScene
@@ -210,9 +213,10 @@ class Game:
             network_mode = self._network.network_mode
             if network_mode in ("host", "local"):
                 lobby_completed = True
-                self._game_session = GameSession(player_names,
-                                               lobby_completed=lobby_completed,
-                                               network_mode=network_mode)
+                self._game_session = GameSession(
+                    player_names,
+                    lobby_completed=lobby_completed,
+                    network_mode=network_mode)
                 player_index = settings_manager.get("PLAYER_INDEX", 0)
                 host_player = self._game_session.players[player_index]
                 host_player.set_is_human(True)
@@ -267,9 +271,10 @@ class Game:
             network_mode = self._network.network_mode
             if network_mode in ("host", "local"):
                 lobby_completed = network_mode == "local"
-                self._game_session = GameSession(player_names,
-                                               lobby_completed=lobby_completed,
-                                               network_mode=network_mode)
+                self._game_session = GameSession(
+                    player_names,
+                    lobby_completed=lobby_completed,
+                    network_mode=network_mode)
                 player_index = settings_manager.get("PLAYER_INDEX", 0)
                 host_player = self._game_session.players[player_index]
                 host_player.set_is_human(True)
@@ -337,8 +342,8 @@ class Game:
                             f"Player name set to '{player.name}' from client settings."
                         )
                         settings_manager.set("PLAYER_INDEX",
-                                            player.get_index(),
-                                            temporary=True)
+                                             player.get_index(),
+                                             temporary=True)
                         logger.debug(
                             f"Client assigned to player index {player.get_index()}"
                         )
@@ -578,8 +583,8 @@ class Game:
 
             # Show notification in current scene if it has show_notification method
             if hasattr(self._current_scene, 'show_notification'):
-                self._current_scene.show_notification("error",
-                                                   "Lost connection to host")
+                self._current_scene.show_notification(
+                    "error", "Lost connection to host")
             else:
                 self.on_show_notification(
                     "error", "Lost connection to host, returning to main menu")
@@ -674,7 +679,8 @@ class Game:
         except Exception as e:
             log_error("Failed to handle sync request", e)
 
-    def _on_show_notification(self, notification_type: str, message: str) -> None:
+    def _on_show_notification(self, notification_type: str,
+                              message: str) -> None:
         """
         Handle notification requests from game session.
         
@@ -689,7 +695,8 @@ class Game:
 
             if hasattr(self._current_scene, 'show_notification'):
                 logger.debug("Scene has show_notification method, calling it")
-                self._current_scene.show_notification(notification_type, message)
+                self._current_scene.show_notification(notification_type,
+                                                      message)
             else:
                 logger.debug(f"Scene doesn't support notifications: {message}")
         except Exception as e:

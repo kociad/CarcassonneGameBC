@@ -136,7 +136,7 @@ class GameSession:
         logger.debug("Generating deck...")
 
         selected_card_sets = settings_manager.get("SELECTED_CARD_SETS",
-                                               ["baseGame"])
+                                                  ["baseGame"])
 
         card_definitions = []
         card_distributions = {}
@@ -237,7 +237,8 @@ class GameSession:
             logger.debug(
                 f"Player {self.current_player.get_name()} was unable to place card, placement is invalid"
             )
-            if self.on_show_notification and not self.current_player.get_is_ai():
+            if self.on_show_notification and not self.current_player.get_is_ai(
+            ):
                 self.on_show_notification(
                     "error",
                     "Cannot place card here - terrain doesn't match adjacent cards!"
@@ -282,10 +283,10 @@ class GameSession:
             return
 
     def play_turn(self,
-                 x: int,
-                 y: int,
-                 position: str = "C",
-                 player: typing.Any = None) -> None:
+                  x: int,
+                  y: int,
+                  position: str = "C",
+                  player: typing.Any = None) -> None:
         """Play a single complete game turn in two phases."""
         if player is None:
             player = self.current_player
@@ -345,8 +346,9 @@ class GameSession:
                 if self.turn_phase != 2:
                     logger.warning("Cannot place figure in phase 1")
                     return False
-                figure_placed = self.play_figure(self.current_player, command.x,
-                                               command.y, command.position)
+                figure_placed = self.play_figure(self.current_player,
+                                                 command.x, command.y,
+                                                 command.position)
                 if figure_placed:
                     for structure in self.structures:
                         structure.check_completion()
@@ -396,7 +398,8 @@ class GameSession:
                 logger.debug(
                     f"Player {self.current_player.get_name()} was unable to skip card placement - card can be placed somewhere on the board"
                 )
-                if self.on_show_notification and not self.current_player.get_is_ai():
+                if self.on_show_notification and not self.current_player.get_is_ai(
+                ):
                     self.on_show_notification(
                         "warning",
                         "Cannot discard card - it can be placed on the board!")
@@ -420,7 +423,7 @@ class GameSession:
             self.turn_phase = 1
 
     def play_figure(self, player: typing.Any, x: int, y: int,
-                   position: str) -> bool:
+                    position: str) -> bool:
         """Place a figure on a valid card position."""
         logger.debug("Playing figure...")
         card = self.game_board.get_card(x, y)
@@ -440,7 +443,7 @@ class GameSession:
             )
             if self.on_show_notification and not player.get_is_ai():
                 self.on_show_notification("error",
-                                        "No card found at this position!")
+                                          "No card found at this position!")
             return False
         structure = self.structure_map.get((x, y, position))
         if structure:
@@ -513,23 +516,25 @@ class GameSession:
             if cache_key in self._structure_cache:
                 del self._structure_cache[cache_key]
 
-        for direction, terrain_type in self.last_placed_card.get_terrains().items(
-        ):
+        for direction, terrain_type in self.last_placed_card.get_terrains(
+        ).items():
             key = (x, y, direction)
             if not terrain_type or key in self.structure_map:
                 continue
 
-            cache_key = self._get_structure_cache_key(x, y, direction, terrain_type)
+            cache_key = self._get_structure_cache_key(x, y, direction,
+                                                      terrain_type)
             if cache_key in self._structure_cache:
                 logger.debug(f"Using cached structure for {cache_key}")
                 cached_structure = self._structure_cache[cache_key]
                 if cached_structure:
                     self.structure_map[key] = cached_structure
-                    cached_structure.add_card_side(self.last_placed_card, direction)
+                    cached_structure.add_card_side(self.last_placed_card,
+                                                   direction)
                 continue
 
-            connected_sides = self.scan_connected_sides(x, y, direction,
-                                                     terrain_type)
+            connected_sides = self.scan_connected_sides(
+                x, y, direction, terrain_type)
             connected_structures = {
                 self.structure_map.get(side)
                 for side in connected_sides if self.structure_map.get(side)
@@ -549,13 +554,15 @@ class GameSession:
 
             for cx, cy, cdir in connected_sides:
                 self.structure_map[(cx, cy, cdir)] = main_structure
-                main_structure.add_card_side(self.game_board.get_card(cx, cy), cdir)
+                main_structure.add_card_side(self.game_board.get_card(cx, cy),
+                                             cdir)
 
         self._structure_cache_valid = True
         self._last_board_hash = current_board_hash
 
     def find_connected_structures(self, x: int, y: int, direction: str,
-                                terrain_type: str, structure_map: dict) -> list:
+                                  terrain_type: str,
+                                  structure_map: dict) -> list:
         """Find existing structures connected to the given card side."""
         neighbors = {
             "N": (x, y - 1, "S"),
@@ -574,7 +581,7 @@ class GameSession:
         return list(set(connected))
 
     def scan_connected_sides(self, x: int, y: int, direction: str,
-                           terrain_type: str) -> set:
+                             terrain_type: str) -> set:
         """Collect all connected sides forming a continuous structure."""
         visited = set()
         stack = [(x, y, direction)]
@@ -692,8 +699,8 @@ class GameSession:
         """Display the final scores."""
         logger.scoring("=== FINAL SCORES ===")
         sorted_players = sorted(self.players,
-                               key=lambda p: p.get_score(),
-                               reverse=True)
+                                key=lambda p: p.get_score(),
+                                reverse=True)
 
         if sorted_players and self.on_show_notification:
             winner = sorted_players[0]
@@ -705,7 +712,8 @@ class GameSession:
         for i, player in enumerate(sorted_players):
             if i == 0:
                 logger.scoring(
-                    f"WINNER: {player.get_name()}: {player.get_score()} points")
+                    f"WINNER: {player.get_name()}: {player.get_score()} points"
+                )
             else:
                 logger.scoring(
                     f"{player.get_name()}: {player.get_score()} points")
@@ -717,12 +725,12 @@ class GameSession:
                     if self.game_board.get_card(x, y)])
 
     def _get_structure_cache_key(self, x: int, y: int, direction: str,
-                              terrain_type: str) -> tuple:
+                                 terrain_type: str) -> tuple:
         """Get a cache key for structure detection."""
         return (x, y, direction, terrain_type)
 
     def _get_validation_cache_key(self, card: typing.Any, x: int,
-                               y: int) -> tuple:
+                                  y: int) -> tuple:
         """Get a cache key for card validation."""
         return (id(card), x, y, card.rotation)
 
@@ -789,7 +797,7 @@ class GameSession:
         for dx, dy in [(1, 0), (-1, 0), (0, 1), (0, -1)]:
             nx, ny = x + dx, y + dy
             if (0 <= nx < self.game_board.get_grid_size()
-                and 0 <= ny < self.game_board.get_grid_size()):
+                    and 0 <= ny < self.game_board.get_grid_size()):
                 neighbors.add((nx, ny))
 
         self._neighbor_cache[(x, y)] = neighbors
@@ -805,7 +813,7 @@ class GameSession:
         self._invalidate_neighbor_cache()
 
     def validate_card_placement_cached(self, card: typing.Any, x: int,
-                                    y: int) -> bool:
+                                       y: int) -> bool:
         """Validate card placement with caching."""
         if not card:
             return False
@@ -855,7 +863,7 @@ class GameSession:
         return len(valid_placements) > 0
 
     def get_random_valid_placement(self,
-                                card: typing.Any) -> typing.Optional[tuple]:
+                                   card: typing.Any) -> typing.Optional[tuple]:
         """Get a random valid placement for the given card."""
         if not card:
             return None

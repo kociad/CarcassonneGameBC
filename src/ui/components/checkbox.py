@@ -36,7 +36,9 @@ class Checkbox:
         self.disabled_color = disabled_color
         self.disabled = False
 
-    def handle_event(self, event: pygame.event.Event, y_offset: int = 0) -> bool:
+    def handle_event(self,
+                     event: pygame.event.Event,
+                     y_offset: int = 0) -> bool:
         """
         Handle a pygame event for the checkbox.
         

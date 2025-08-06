@@ -63,9 +63,9 @@ class NetworkGameMode:
         if action_type == "playCard":
             self.game_session.play_card(action["x"], action["y"])
         elif action_type == "play_figure":
-            self.game_session.play_figure(self.game_session.get_current_player(),
-                                        action["x"], action["y"],
-                                        action["position"])
+            self.game_session.play_figure(
+                self.game_session.get_current_player(), action["x"],
+                action["y"], action["position"])
         elif action_type == "skip":
             self.game_session.skip_current_action()
         else:

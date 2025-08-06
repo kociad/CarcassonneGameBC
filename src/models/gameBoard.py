@@ -17,7 +17,8 @@ class GameBoard:
             grid_size: The size of the board grid
         """
         self.grid_size = grid_size
-        self.grid = [[None for _ in range(grid_size)] for _ in range(grid_size)]
+        self.grid = [[None for _ in range(grid_size)]
+                     for _ in range(grid_size)]
         self.center = grid_size // 2
 
     def get_grid_size(self) -> int:

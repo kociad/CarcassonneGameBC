@@ -84,7 +84,8 @@ def setup_exception_logging():
             sys.__excepthook__(exc_type, exc_value, exc_traceback)
             return
         logger = logging.getLogger("UNHANDLED_EXCEPTION")
-        tb_lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
+        tb_lines = traceback.format_exception(exc_type, exc_value,
+                                              exc_traceback)
         tb_text = ''.join(tb_lines)
         logger.critical("Unhandled exception occurred!")
         logger.critical(f"Exception Type: {exc_type.__name__}")

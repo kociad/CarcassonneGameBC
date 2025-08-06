@@ -158,7 +158,8 @@ class AIPlayer(Player):
         self._ai_thinking_state = None
         self._ai_thinking_progress = 0
         self._ai_thinking_start_time = None
-        self._ai_thinking_max_time = settings_manager.get("AI_THINKING_SPEED", 0.5)
+        self._ai_thinking_max_time = settings_manager.get(
+            "AI_THINKING_SPEED", 0.5)
 
         self._evaluation_cache = {}
         self._evaluation_cache_valid = False
@@ -319,7 +320,8 @@ class AIPlayer(Player):
 
         placements_per_step = 3
         start_idx = self._ai_thinking_progress
-        end_idx = min(start_idx + placements_per_step, len(possible_placements))
+        end_idx = min(start_idx + placements_per_step,
+                      len(possible_placements))
 
         for i in range(start_idx, end_idx):
             placement = possible_placements[i]
@@ -355,7 +357,8 @@ class AIPlayer(Player):
         top_candidates = data['top_candidates']
 
         if self._ai_thinking_progress < len(top_candidates):
-            strategic_score, placement = top_candidates[self._ai_thinking_progress]
+            strategic_score, placement = top_candidates[
+                self._ai_thinking_progress]
             x, y, rotations_needed, card_copy = placement
 
             card_score = self._simulate_card_placement_advanced(
@@ -423,7 +426,7 @@ class AIPlayer(Player):
             return 1.0
 
     def _get_evaluation_cache_key(self, card: Card, x: int, y: int,
-                               evaluation_type: str) -> tuple:
+                                  evaluation_type: str) -> tuple:
         """Get a cache key for AI evaluation."""
         return (id(card), x, y, card.rotation, evaluation_type)
 
@@ -438,7 +441,7 @@ class AIPlayer(Player):
         self._invalidate_evaluation_cache()
 
     def _get_figure_cache_key(self, x: int, y: int, direction: str,
-                           figure_type: str) -> tuple:
+                              figure_type: str) -> tuple:
         """Get a cache key for figure placement evaluation."""
         return (x, y, direction, figure_type)
 
@@ -451,8 +454,8 @@ class AIPlayer(Player):
         """Public method to invalidate the figure placement cache."""
         self._invalidate_figure_cache()
 
-    def _evaluate_cached(self, card: Card, x: int, y: int, evaluation_type: str,
-                        evaluation_func) -> float:
+    def _evaluate_cached(self, card: Card, x: int, y: int,
+                         evaluation_type: str, evaluation_func) -> float:
         """Evaluate with caching support."""
         cache_key = self._get_evaluation_cache_key(card, x, y, evaluation_type)
         if cache_key in self._evaluation_cache:
@@ -463,7 +466,7 @@ class AIPlayer(Player):
         return result
 
     def _evaluate_figure_cached(self, x: int, y: int, direction: str,
-                              figure_type: str, evaluation_func) -> float:
+                                figure_type: str, evaluation_func) -> float:
         """Evaluate figure placement with caching support."""
         cache_key = self._get_figure_cache_key(x, y, direction, figure_type)
         if cache_key in self._figure_cache:
@@ -524,8 +527,8 @@ class AIPlayer(Player):
         return card_copy
 
     def _simulate_card_placement_advanced(self, game_session: 'GameSession',
-                                       x: int, y: int,
-                                       rotations_needed: int) -> float:
+                                          x: int, y: int,
+                                          rotations_needed: int) -> float:
         """
         Simulate card placement using advanced strategic evaluation.
         
@@ -561,15 +564,16 @@ class AIPlayer(Player):
             lambda: self._evaluate_structure_completion_potential(
                 game_session, x, y, current_card))
         score += self._evaluate_cached(
-            current_card, x, y, "field", lambda: self._evaluate_field_potential(
+            current_card, x, y,
+            "field", lambda: self._evaluate_field_potential(
                 game_session, x, y, current_card))
         score += self._evaluate_cached(
             current_card, x, y,
             "blocking", lambda: self._evaluate_opponent_blocking(
                 game_session, x, y, current_card))
         score += self._evaluate_cached(
-            current_card, x, y,
-            "multiturn", lambda: self._evaluate_multi_turn_potential(
+            current_card, x, y, "multiturn",
+            lambda: self._evaluate_multi_turn_potential(
                 game_session, x, y, current_card))
 
         while current_card.rotation != original_rotation:
@@ -578,8 +582,8 @@ class AIPlayer(Player):
         return score
 
     def _evaluate_card_placement_advanced(self, game_session: 'GameSession',
-                                       x: int, y: int,
-                                       card_copy: Card) -> float:
+                                          x: int, y: int,
+                                          card_copy: Card) -> float:
         """
         Evaluate the score of a card placement position using preset configuration.
         
@@ -611,7 +615,7 @@ class AIPlayer(Player):
 
                 total_sides = len(structure.card_sides)
                 completed_sides = sum(1 for card, _ in structure.card_sides
-                                     if card.get_position())
+                                      if card.get_position())
                 completion_ratio = completed_sides / total_sides if total_sides > 0 else 0
 
                 # Apply completion ratio bonuses
@@ -656,8 +660,8 @@ class AIPlayer(Player):
         return score
 
     def _evaluate_city_specific(self, game_session: 'GameSession',
-                              structure: 'Structure',
-                              completion_ratio: float) -> float:
+                                structure: 'Structure',
+                                completion_ratio: float) -> float:
         """Evaluate city-specific scoring potential using preset configuration."""
         score = 0.0
 
@@ -680,8 +684,8 @@ class AIPlayer(Player):
         return score
 
     def _evaluate_road_specific(self, game_session: 'GameSession',
-                              structure: 'Structure',
-                              completion_ratio: float) -> float:
+                                structure: 'Structure',
+                                completion_ratio: float) -> float:
         """Evaluate road-specific scoring potential using preset configuration."""
         score = 0.0
 
@@ -704,8 +708,8 @@ class AIPlayer(Player):
         return score
 
     def _evaluate_monastery_specific(self, game_session: 'GameSession',
-                                   structure: 'Structure',
-                                   completion_ratio: float) -> float:
+                                     structure: 'Structure',
+                                     completion_ratio: float) -> float:
         """Evaluate monastery-specific scoring potential using preset configuration."""
         score = 0.0
 
@@ -718,9 +722,10 @@ class AIPlayer(Player):
 
         return score
 
-    def _evaluate_figure_opportunity_advanced(self, game_session: 'GameSession',
-                                           x: int, y: int,
-                                           card_copy: Card) -> float:
+    def _evaluate_figure_opportunity_advanced(self,
+                                              game_session: 'GameSession',
+                                              x: int, y: int,
+                                              card_copy: Card) -> float:
         """
         Evaluate potential meeple placement opportunities using preset configuration.
         
@@ -747,9 +752,10 @@ class AIPlayer(Player):
                 else:
                     total_sides = len(structure.card_sides)
                     completed_sides = sum(1 for card, _ in structure.card_sides
-                                         if card.get_position())
+                                          if card.get_position())
                     completion_ratio = completed_sides / total_sides if total_sides > 0 else 0
-                    score += completion_ratio * self._preset["figure_opportunity"]
+                    score += completion_ratio * self._preset[
+                        "figure_opportunity"]
 
                 if len(self.figures) > 0:
                     score += 40.0
@@ -764,7 +770,7 @@ class AIPlayer(Player):
         return score
 
     def _evaluate_field_figure_opportunity(self, game_session: 'GameSession',
-                                        structure: 'Structure') -> float:
+                                           structure: 'Structure') -> float:
         """Evaluate field meeple placement opportunities using preset configuration."""
         score = 0.0
 
@@ -798,7 +804,7 @@ class AIPlayer(Player):
         return score
 
     def _evaluate_opponent_blocking(self, game_session: 'GameSession', x: int,
-                                  y: int, card_copy: Card) -> float:
+                                    y: int, card_copy: Card) -> float:
         """
         Evaluate the potential to block opponents or prevent them from scoring.
         
@@ -821,12 +827,13 @@ class AIPlayer(Player):
             structure = game_session.structure_map.get((x, y, direction))
             if structure:
                 opponent_figures = [
-                    fig for fig in structure.get_figures() if fig.player != self
+                    fig for fig in structure.get_figures()
+                    if fig.player != self
                 ]
                 if opponent_figures:
                     total_sides = len(structure.card_sides)
                     completed_sides = sum(1 for card, _ in structure.card_sides
-                                         if card.get_position())
+                                          if card.get_position())
                     completion_ratio = completed_sides / total_sides if total_sides > 0 else 0
 
                     blocking_score = 0
@@ -843,8 +850,9 @@ class AIPlayer(Player):
 
         return score
 
-    def _evaluate_multi_turn_potential(self, game_session: 'GameSession', x: int,
-                                    y: int, card_copy: Card) -> float:
+    def _evaluate_multi_turn_potential(self, game_session: 'GameSession',
+                                       x: int, y: int,
+                                       card_copy: Card) -> float:
         """
         Evaluate the potential for future turns and strategic positioning.
         
@@ -863,16 +871,17 @@ class AIPlayer(Player):
             score += self._evaluate_early_game_positioning(
                 game_session, x, y, card_copy)
         elif self._game_phase == "mid":
-            score += self._evaluate_mid_game_positioning(game_session, x, y,
-                                                      card_copy)
+            score += self._evaluate_mid_game_positioning(
+                game_session, x, y, card_copy)
         else:
-            score += self._evaluate_late_game_positioning(game_session, x, y,
-                                                       card_copy)
+            score += self._evaluate_late_game_positioning(
+                game_session, x, y, card_copy)
 
         return score
 
-    def _evaluate_early_game_positioning(self, game_session: 'GameSession', x: int,
-                                      y: int, card_copy: Card) -> float:
+    def _evaluate_early_game_positioning(self, game_session: 'GameSession',
+                                         x: int, y: int,
+                                         card_copy: Card) -> float:
         """Evaluate positioning for early game strategy."""
         score = 0.0
 
@@ -888,8 +897,9 @@ class AIPlayer(Player):
 
         return score
 
-    def _evaluate_mid_game_positioning(self, game_session: 'GameSession', x: int,
-                                    y: int, card_copy: Card) -> float:
+    def _evaluate_mid_game_positioning(self, game_session: 'GameSession',
+                                       x: int, y: int,
+                                       card_copy: Card) -> float:
         """Evaluate positioning for mid game strategy."""
         score = 0.0
 
@@ -904,8 +914,9 @@ class AIPlayer(Player):
 
         return score
 
-    def _evaluate_late_game_positioning(self, game_session: 'GameSession', x: int,
-                                     y: int, card_copy: Card) -> float:
+    def _evaluate_late_game_positioning(self, game_session: 'GameSession',
+                                        x: int, y: int,
+                                        card_copy: Card) -> float:
         """Evaluate positioning for late game strategy."""
         score = 0.0
 
@@ -918,7 +929,7 @@ class AIPlayer(Player):
             if structure:
                 total_sides = len(structure.card_sides)
                 completed_sides = sum(1 for card, _ in structure.card_sides
-                                     if card.get_position())
+                                      if card.get_position())
                 completion_ratio = completed_sides / total_sides if total_sides > 0 else 0
 
                 if completion_ratio > 0.8:
@@ -928,9 +939,10 @@ class AIPlayer(Player):
 
         return score
 
-    def _evaluate_structure_completion_potential(self, game_session: 'GameSession',
-                                              x: int, y: int,
-                                              card: Card) -> float:
+    def _evaluate_structure_completion_potential(self,
+                                                 game_session: 'GameSession',
+                                                 x: int, y: int,
+                                                 card: Card) -> float:
         """
         Evaluate potential score gains from structure completion.
         
@@ -954,7 +966,7 @@ class AIPlayer(Player):
             if structure:
                 total_sides = len(structure.card_sides)
                 completed_sides = sum(1 for card, _ in structure.card_sides
-                                     if card.get_position())
+                                      if card.get_position())
                 completion_ratio = completed_sides / total_sides if total_sides > 0 else 0
 
                 if completion_ratio > 0.8:
@@ -972,7 +984,7 @@ class AIPlayer(Player):
         return score
 
     def _evaluate_field_potential(self, game_session: 'GameSession', x: int,
-                                y: int, card: Card) -> float:
+                                  y: int, card: Card) -> float:
         """
         Evaluate potential score gains from field placement.
         
@@ -996,8 +1008,9 @@ class AIPlayer(Player):
                 structure = game_session.structure_map.get((x, y, direction))
                 if structure:
                     completed_cities = [
-                        s for s in game_session.structures if
-                        s.get_structure_type() == "City" and s.get_is_completed()
+                        s for s in game_session.structures
+                        if s.get_structure_type() == "City"
+                        and s.get_is_completed()
                     ]
 
                     touched_cities = set()
@@ -1040,7 +1053,8 @@ class AIPlayer(Player):
         return len(self.figures) <= self._preset["conservation_threshold"]
 
     def _handle_figure_placement_advanced(self, game_session: 'GameSession',
-                                       target_x: int, target_y: int) -> None:
+                                          target_x: int,
+                                          target_y: int) -> None:
         """
         Handle meeple placement using advanced strategic evaluation with preset configuration.
         
@@ -1072,7 +1086,7 @@ class AIPlayer(Player):
 
                 total_sides = len(structure.card_sides)
                 completed_sides = sum(1 for card, _ in structure.card_sides
-                                     if card.get_position())
+                                      if card.get_position())
                 completion_ratio = completed_sides / total_sides if total_sides > 0 else 0
 
                 if completion_ratio > 0.8:
@@ -1102,7 +1116,7 @@ class AIPlayer(Player):
 
             if best_score >= threshold:
                 if game_session.play_figure(self, target_x, target_y,
-                                          best_direction):
+                                            best_direction):
                     logger.debug(
                         f"Player {self.name} placed meeple on {best_direction} (score: {best_score}, conserving: {should_conserve})"
                     )
@@ -1121,8 +1135,8 @@ class AIPlayer(Player):
         game_session.skip_current_action()
 
     def _evaluate_figure_placement_advanced(self, game_session: 'GameSession',
-                                         x: int, y: int,
-                                         direction: str) -> float:
+                                            x: int, y: int,
+                                            direction: str) -> float:
         """
         Evaluate the score of a meeple placement using preset configuration.
         
@@ -1148,7 +1162,7 @@ class AIPlayer(Player):
             else:
                 total_sides = len(structure.card_sides)
                 completed_sides = sum(1 for card, _ in structure.card_sides
-                                     if card.get_position())
+                                      if card.get_position())
                 completion_ratio = completed_sides / total_sides if total_sides > 0 else 0
                 score += completion_ratio * self._preset["figure_opportunity"]
 
@@ -1169,7 +1183,7 @@ class AIPlayer(Player):
             return score
 
         return self._evaluate_figure_cached(x, y, direction, "advanced",
-                                          evaluate_figure_placement)
+                                            evaluate_figure_placement)
 
     def _evaluate_city_figure_placement(self, structure: 'Structure') -> float:
         """Evaluate city figure placement scoring."""
@@ -1202,13 +1216,13 @@ class AIPlayer(Player):
         return score
 
     def _evaluate_monastery_figure_placement(self,
-                                          structure: 'Structure') -> float:
+                                             structure: 'Structure') -> float:
         """Evaluate monastery meeple placement scoring."""
         score = 0.0
 
         total_sides = len(structure.card_sides)
         completed_sides = sum(1 for card, _ in structure.card_sides
-                             if card.get_position())
+                              if card.get_position())
         completion_ratio = completed_sides / total_sides if total_sides > 0 else 0
 
         if completion_ratio > 0.6:
@@ -1221,7 +1235,7 @@ class AIPlayer(Player):
         return score
 
     def _evaluate_field_figure_placement(self, game_session: 'GameSession',
-                                      structure: 'Structure') -> float:
+                                         structure: 'Structure') -> float:
         """Evaluate field meeple placement scoring."""
         score = 0.0
 
@@ -1254,7 +1268,7 @@ class AIPlayer(Player):
         return score
 
     def _handle_figure_placement_simple(self, game_session: 'GameSession',
-                                     target_x: int, target_y: int) -> None:
+                                        target_x: int, target_y: int) -> None:
         """
         Handle meeple placement with simple logic.
         
@@ -1275,14 +1289,15 @@ class AIPlayer(Player):
             structure = game_session.structure_map.get(
                 (target_x, target_y, direction))
             if structure and not structure.get_figures():
-                score = self._evaluate_figure_placement(game_session, target_x,
-                                                      target_y, direction)
+                score = self._evaluate_figure_placement(
+                    game_session, target_x, target_y, direction)
                 if score > best_score:
                     best_score = score
                     best_direction = direction
 
         if best_direction and best_score > 0:
-            if game_session.play_figure(self, target_x, target_y, best_direction):
+            if game_session.play_figure(self, target_x, target_y,
+                                        best_direction):
                 logger.debug(
                     f"Player {self.name} placed meeple on {best_direction} (score: {best_score})"
                 )
@@ -1295,8 +1310,8 @@ class AIPlayer(Player):
         )
         game_session.skip_current_action()
 
-    def _check_and_score_completed_structures(self,
-                                          game_session: 'GameSession') -> None:
+    def _check_and_score_completed_structures(
+            self, game_session: 'GameSession') -> None:
         """Check for completed structures and score them immediately."""
         logger.debug("Checking completed structures...")
         for structure in game_session.structures:
@@ -1307,7 +1322,7 @@ class AIPlayer(Player):
                 game_session.score_structure(structure)
 
     def _evaluate_figure_placement(self, game_session: 'GameSession', x: int,
-                                 y: int, direction: str) -> float:
+                                   y: int, direction: str) -> float:
         """
         Evaluate the score of a meeple placement.
         
@@ -1331,7 +1346,7 @@ class AIPlayer(Player):
         else:
             total_sides = len(structure.card_sides)
             completed_sides = sum(1 for card, _ in structure.card_sides
-                                 if card.get_position())
+                                  if card.get_position())
             completion_ratio = completed_sides / total_sides if total_sides > 0 else 0
             score += completion_ratio * 50.0
 

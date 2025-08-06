@@ -83,7 +83,8 @@ class ProgressBar:
         """
         if self.max_value == self.min_value:
             return 0.0
-        return (self.value - self.min_value) / (self.max_value - self.min_value)
+        return (self.value - self.min_value) / (self.max_value -
+                                                self.min_value)
 
     def set_progress(self, progress: float) -> None:
         """
@@ -93,7 +94,8 @@ class ProgressBar:
             progress: Progress percentage as float between 0.0 and 1.0
         """
         progress = max(0.0, min(1.0, progress))
-        self.value = self.min_value + progress * (self.max_value - self.min_value)
+        self.value = self.min_value + progress * (self.max_value -
+                                                  self.min_value)
 
     def draw(self, screen: pygame.Surface, y_offset: int = 0) -> None:
         """
@@ -120,7 +122,8 @@ class ProgressBar:
 
         if self.show_text:
             progress_text = f"{int(progress * 100)}%"
-            text_surface = self.font.render(progress_text, True, self.text_color)
+            text_surface = self.font.render(progress_text, True,
+                                            self.text_color)
             text_rect = text_surface.get_rect()
             text_rect.centerx = x + self.rect.width // 2
             text_rect.centery = y + self.rect.height // 2

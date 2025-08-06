@@ -161,7 +161,8 @@ class Toast:
                 progress = self._bounce_ease(progress)
 
             screen = pygame.display.get_surface()
-            start_y = screen.get_height() + 60 if screen else self.target_y + 60
+            start_y = screen.get_height(
+            ) + 60 if screen else self.target_y + 60
             self.current_y = start_y + (self.target_y - start_y) * progress
 
             if progress >= 1.0:
@@ -201,7 +202,7 @@ class Toast:
 
         text_surf = self.font.render(self.message, True, self.text_color)
         text_rect = text_surf.get_rect(center=(screen.get_width() // 2,
-                                             self.current_y))
+                                               self.current_y))
 
         bg_rect = text_rect.inflate(20, 10)
 
@@ -216,9 +217,13 @@ class Toast:
                 progress = min(elapsed / self.animation_duration, 1.0)
                 alpha = int(255 * progress)
 
-        bg_surf = pygame.Surface((bg_rect.width, bg_rect.height), pygame.SRCALPHA)
+        bg_surf = pygame.Surface((bg_rect.width, bg_rect.height),
+                                 pygame.SRCALPHA)
         bg_color = (*self.bg_color, alpha)
-        pygame.draw.rect(bg_surf, bg_color, bg_surf.get_rect(), border_radius=8)
+        pygame.draw.rect(bg_surf,
+                         bg_color,
+                         bg_surf.get_rect(),
+                         border_radius=8)
         screen.blit(bg_surf, bg_rect.topleft)
 
         if alpha < 255:
@@ -261,8 +266,8 @@ class ToastManager:
         """
         current_time = time.time()
 
-        if self.toast_queue and (current_time -
-                                self.last_toast_time) >= self.delay_between_toasts:
+        if self.toast_queue and (current_time - self.last_toast_time
+                                 ) >= self.delay_between_toasts:
             self._process_queue()
 
         active_toasts = [
@@ -273,8 +278,8 @@ class ToastManager:
             self.toast_queue.append(toast)
             return True
 
-        if not self.toasts or (current_time -
-                               self.last_toast_time) >= self.delay_between_toasts:
+        if not self.toasts or (current_time - self.last_toast_time
+                               ) >= self.delay_between_toasts:
             toast.manager = self
             self.toasts.append(toast)
             self.last_toast_time = current_time
@@ -335,8 +340,8 @@ class ToastManager:
             self._update_positions()
 
         current_time = time.time()
-        if self.toast_queue and (current_time -
-                                self.last_toast_time) >= self.delay_between_toasts:
+        if self.toast_queue and (current_time - self.last_toast_time
+                                 ) >= self.delay_between_toasts:
             self._process_queue()
 
     def draw(self, screen: pygame.Surface) -> None:
@@ -360,8 +365,9 @@ class ToastManager:
 
     def get_active_count(self) -> int:
         """Get the number of active toasts."""
-        return len(
-            [t for t in self.toasts if not t.is_expired() and not t.sliding_out])
+        return len([
+            t for t in self.toasts if not t.is_expired() and not t.sliding_out
+        ])
 
     def is_full(self) -> bool:
         """Check if the manager is at maximum capacity."""

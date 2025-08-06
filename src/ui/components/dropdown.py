@@ -43,7 +43,9 @@ class Dropdown:
         self.border_color = border_color
         self.highlight_color = highlight_color
 
-    def handle_event(self, event: pygame.event.Event, y_offset: int = 0) -> bool:
+    def handle_event(self,
+                     event: pygame.event.Event,
+                     y_offset: int = 0) -> bool:
         """
         Handle a pygame event for the dropdown.
         
@@ -86,27 +88,27 @@ class Dropdown:
         """
         draw_rect = self.rect.move(0, y_offset)
         full_height = self.rect.height + (len(self.options) * self.rect.height
-                                         if self.expanded else 0)
+                                          if self.expanded else 0)
         draw_surface = pygame.Surface((self.rect.width, full_height),
-                                     pygame.SRCALPHA)
+                                      pygame.SRCALPHA)
         alpha = 150 if self.disabled else 255
         bg = (*self.bg_color, alpha)
         border = (*self.border_color, alpha)
         text_col = (*((150, 150, 150) if self.disabled else self.text_color),
-                   alpha)
+                    alpha)
         highlight = (*self.highlight_color, alpha)
         local_rect = pygame.Rect(0, 0, self.rect.width, self.rect.height)
         pygame.draw.rect(draw_surface, bg, local_rect)
         pygame.draw.rect(draw_surface, border, local_rect, 2)
-        selected_text = self.font.render(self.options[self.selected_index], True,
-                                        text_col)
-        draw_surface.blit(selected_text,
-                         (5,
-                          (self.rect.height - selected_text.get_height()) // 2))
+        selected_text = self.font.render(self.options[self.selected_index],
+                                         True, text_col)
+        draw_surface.blit(
+            selected_text,
+            (5, (self.rect.height - selected_text.get_height()) // 2))
         if self.expanded:
             for i, option in enumerate(self.options):
                 option_rect = pygame.Rect(0, (i + 1) * self.rect.height,
-                                         self.rect.width, self.rect.height)
+                                          self.rect.width, self.rect.height)
                 pygame.draw.rect(draw_surface,
                                  highlight if i == self.selected_index else bg,
                                  option_rect)

@@ -71,11 +71,11 @@ class Slider:
             new_value = int(input_text)
             if new_value < self.min_value:
                 self._show_toast(f"Value must be at least {self.min_value}",
-                                "error")
+                                 "error")
                 self.input_field.set_text(str(self.value))
             elif new_value > self.max_value:
                 self._show_toast(f"Value must be at most {self.max_value}",
-                                "error")
+                                 "error")
                 self.input_field.set_text(str(self.value))
             else:
                 if new_value != self.value:
@@ -118,7 +118,9 @@ class Slider:
         """Check if the slider is disabled."""
         return self.disabled
 
-    def handle_event(self, event: pygame.event.Event, y_offset: int = 0) -> None:
+    def handle_event(self,
+                     event: pygame.event.Event,
+                     y_offset: int = 0) -> None:
         """
         Handle a pygame event for the slider.
         
@@ -142,10 +144,10 @@ class Slider:
                 self.dragging = True
             elif shifted_rect.collidepoint(event.pos):
                 rel_x = min(max(event.pos[0], shifted_rect.left),
-                           shifted_rect.right)
+                            shifted_rect.right)
                 ratio = (rel_x - shifted_rect.left) / shifted_rect.width
                 new_value = int(self.min_value + ratio *
-                               (self.max_value - self.min_value))
+                                (self.max_value - self.min_value))
                 if new_value != self.value:
                     self.value = new_value
                     self.input_field.set_text(str(new_value))
@@ -156,10 +158,11 @@ class Slider:
         elif event.type == pygame.MOUSEBUTTONUP:
             self.dragging = False
         elif event.type == pygame.MOUSEMOTION and self.dragging:
-            rel_x = min(max(event.pos[0], shifted_rect.left), shifted_rect.right)
+            rel_x = min(max(event.pos[0], shifted_rect.left),
+                        shifted_rect.right)
             ratio = (rel_x - shifted_rect.left) / shifted_rect.width
             new_value = int(self.min_value + ratio *
-                           (self.max_value - self.min_value))
+                            (self.max_value - self.min_value))
             if new_value != self.value:
                 self.value = new_value
                 self.input_field.set_text(str(new_value))
@@ -183,8 +186,8 @@ class Slider:
             (self.max_value - self.min_value)) * self.rect.width
         handle_y = self.rect.centery + y_offset
         return pygame.Rect(handle_x - self.handle_radius,
-                           handle_y - self.handle_radius, self.handle_radius * 2,
-                           self.handle_radius * 2)
+                           handle_y - self.handle_radius,
+                           self.handle_radius * 2, self.handle_radius * 2)
 
     def draw(self, surface: pygame.Surface, y_offset: int = 0) -> None:
         """
@@ -208,7 +211,7 @@ class Slider:
         pygame.draw.rect(surface, bg_color, shifted_rect)
         pygame.draw.rect(surface, border_color, shifted_rect, 1)
         fill_width = ((self.value - self.min_value) /
-                     (self.max_value - self.min_value)) * shifted_rect.width
+                      (self.max_value - self.min_value)) * shifted_rect.width
         pygame.draw.rect(
             surface, fg_color,
             pygame.Rect(shifted_rect.left, shifted_rect.top, fill_width,

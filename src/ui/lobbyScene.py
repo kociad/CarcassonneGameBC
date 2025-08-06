@@ -27,11 +27,12 @@ class LobbyScene(Scene):
         self.scroll_offset = 0
         self.max_scroll = 0
         self.scroll_speed = 30
-        self.is_host = (getattr(self.network, 'network_mode', 'local') == 'host')
+        self.is_host = (getattr(self.network, 'network_mode',
+                                'local') == 'host')
         self.network_mode = getattr(self.network, 'network_mode', 'local')
         self.start_button = Button((screen.get_width() // 2 - 100,
-                                   screen.get_height() - 120, 200, 60),
-                                  "Start Game", self.button_font)
+                                    screen.get_height() - 120, 200, 60),
+                                   "Start Game", self.button_font)
         self.waiting_for_host = False
         self.original_player_names = settings_manager.get("PLAYERS", [])
         if self.network_mode == "local":
@@ -45,7 +46,8 @@ class LobbyScene(Scene):
         self.players = session.get_players() if session else []
         self.status_list = []
         for i, origName in enumerate(self.original_player_names):
-            player = next((p for p in self.players if p.get_index() == i), None)
+            player = next((p for p in self.players if p.get_index() == i),
+                          None)
             if player is not None and player.get_is_ai():
                 status = "AI"
                 color = (120, 120, 120)
@@ -64,11 +66,12 @@ class LobbyScene(Scene):
                 "color": color
             })
         self.required_humans = sum(1 for s in self.status_list
-                                  if s["status"] != "AI")
+                                   if s["status"] != "AI")
         self.connected_humans = sum(1 for s in self.status_list
-                                   if s["status"] == "Connected")
+                                    if s["status"] == "Connected")
         self.all_connected = (self.connected_humans == self.required_humans)
-        self.start_button.set_disabled(not (self.is_host and self.all_connected))
+        self.start_button.set_disabled(not (
+            self.is_host and self.all_connected))
 
     def handle_events(self, events: list[pygame.event.Event]) -> None:
         """Handle user and network events in the lobby scene."""
@@ -105,7 +108,7 @@ class LobbyScene(Scene):
         offset_y = self.scroll_offset
         title_text = self.font.render("Lobby", True, (255, 255, 255))
         title_rect = title_text.get_rect(center=(self.screen.get_width() // 2,
-                                               60 + offset_y))
+                                                 60 + offset_y))
         self.screen.blit(title_text, title_rect)
         label_font = pygame.font.Font(None, 48)
         y = 160 + offset_y
@@ -121,14 +124,15 @@ class LobbyScene(Scene):
                 ) + spacing + status_surf.get_width()
                 start_x = (self.screen.get_width() - total_width) // 2
                 self.screen.blit(name_surf, (start_x, y))
-                self.screen.blit(status_surf,
-                                 (start_x + name_surf.get_width() + spacing, y))
+                self.screen.blit(
+                    status_surf,
+                    (start_x + name_surf.get_width() + spacing, y))
                 y += 60
             self.start_button.draw(self.screen, y_offset=offset_y)
         else:
             wait_font = pygame.font.Font(None, 36)
-            wait_text = wait_font.render("Waiting for host to start the game...",
-                                       True, (255, 255, 255))
+            wait_text = wait_font.render(
+                "Waiting for host to start the game...", True, (255, 255, 255))
             wait_rect = wait_text.get_rect(
                 center=(self.screen.get_width() // 2,
                         self.screen.get_height() // 2 + 40 + offset_y))

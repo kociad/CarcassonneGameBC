@@ -169,15 +169,16 @@ class GamePrepareScene(Scene):
         self.card_set_section_y = current_y
 
         sorted_card_sets = sorted(self.available_card_sets,
-                                key=lambda x:
-                                (x['name'] != 'baseGame', x['name']))
+                                  key=lambda x:
+                                  (x['name'] != 'baseGame', x['name']))
 
         for card_set in sorted_card_sets:
             is_base_game = card_set['name'] == 'baseGame'
-            checkbox = Checkbox(rect=(x_center, 0, 20, 20),
-                                checked=is_base_game,
-                                on_toggle=lambda checked, name=card_set['name']:
-                                self._toggle_card_set(name, checked))
+            checkbox = Checkbox(
+                rect=(x_center, 0, 20, 20),
+                checked=is_base_game,
+                on_toggle=lambda checked, name=card_set[
+                    'name']: self._toggle_card_set(name, checked))
             if is_base_game:
                 checkbox.set_disabled(True)
             self.card_set_checkboxes.append((card_set, checkbox))
@@ -199,20 +200,20 @@ class GamePrepareScene(Scene):
         current_y += 60
 
         self.host_ip_field = InputField(rect=(x_center, current_y, 200, 40),
-                                      font=self.input_font)
+                                        font=self.input_font)
         self.host_ip_field.set_text(host_ip)
         current_y += 60
 
         self.port_field = InputField(rect=(x_center, current_y, 200, 40),
-                                    font=self.input_font)
+                                     font=self.input_font)
         self.port_field.set_text(port)
         current_y += 80
 
-        self.start_button = Button((x_center, current_y, 200, 60), "Start Game",
-                                  self.button_font)
+        self.start_button = Button((x_center, current_y, 200, 60),
+                                   "Start Game", self.button_font)
         current_y += 80
         self.back_button = Button((x_center, current_y, 200, 60), "Back",
-                                 self.button_font)
+                                  self.button_font)
 
         self._handle_network_mode_change(network_mode)
 
@@ -254,7 +255,8 @@ class GamePrepareScene(Scene):
                                 self.player_fields) > index:
                             ai_checkbox = self.player_fields[index][1]
                             if ai_checkbox:
-                                ai_checkbox.set_checked(self.players[index].is_ai)
+                                ai_checkbox.set_checked(
+                                    self.players[index].is_ai)
                         return
                     self.players[index].set_name(new_text)
                     if hasattr(self, 'player_fields') and len(
@@ -265,10 +267,10 @@ class GamePrepareScene(Scene):
 
                 return _handler
 
-            name_field = InputField(rect=(self.screen.get_width() // 2 - 100, y,
-                                         200, 40),
-                                   font=self.input_font,
-                                   on_text_change=_make_text_change_handler(i))
+            name_field = InputField(
+                rect=(self.screen.get_width() // 2 - 100, y, 200, 40),
+                font=self.input_font,
+                on_text_change=_make_text_change_handler(i))
 
             if self.network_mode == "client" and i > 0:
                 name_field.set_text("")
@@ -288,7 +290,8 @@ class GamePrepareScene(Scene):
                     checked=player.is_ai,
                     on_toggle=(lambda value, index=i: self._toggle_player_ai(
                         index, value)) if can_toggle_ai else None)
-                ai_checkbox.set_disabled(not player.enabled or not can_toggle_ai)
+                ai_checkbox.set_disabled(not player.enabled
+                                         or not can_toggle_ai)
 
             elif i != 0:
                 can_toggle_ai = (self.network_mode == "local")
@@ -297,7 +300,8 @@ class GamePrepareScene(Scene):
                     checked=player.is_ai,
                     on_toggle=(lambda value, index=i: self._toggle_player_ai(
                         index, value)) if can_toggle_ai else None)
-                ai_checkbox.set_disabled(not player.enabled or not can_toggle_ai)
+                ai_checkbox.set_disabled(not player.enabled
+                                         or not can_toggle_ai)
 
             self.player_fields.append((name_field, ai_checkbox))
 
@@ -399,8 +403,8 @@ class GamePrepareScene(Scene):
             self.selected_card_sets.remove(set_name)
 
         settings_manager.set("SELECTED_CARD_SETS",
-                            self.selected_card_sets,
-                            temporary=True)
+                             self.selected_card_sets,
+                             temporary=True)
 
     def _add_player_field(self) -> None:
         """Add a new player"""
@@ -420,7 +424,8 @@ class GamePrepareScene(Scene):
         """Remove a player"""
         enabled_count = self._get_enabled_players_count()
         if enabled_count <= 2:
-            self.add_toast(Toast("At least 2 players required", type="warning"))
+            self.add_toast(Toast("At least 2 players required",
+                                 type="warning"))
             return
 
         for i in reversed(range(len(self.players))):
@@ -444,19 +449,19 @@ class GamePrepareScene(Scene):
 
         settings_manager.set("PLAYERS", player_names, temporary=True)
         settings_manager.set("NETWORK_MODE",
-                            self.network_mode_dropdown.get_selected(),
-                            temporary=True)
+                             self.network_mode_dropdown.get_selected(),
+                             temporary=True)
         settings_manager.set("HOST_IP",
-                            self.host_ip_field.get_text(),
-                            temporary=True)
+                             self.host_ip_field.get_text(),
+                             temporary=True)
 
         selected_card_sets = []
         for card_set, checkbox in self.card_set_checkboxes:
             if checkbox.is_checked():
                 selected_card_sets.append(card_set['name'])
         settings_manager.set("SELECTED_CARD_SETS",
-                            selected_card_sets,
-                            temporary=True)
+                             selected_card_sets,
+                             temporary=True)
 
         if self.network_mode_dropdown.get_selected() != "local":
             try:
@@ -485,8 +490,8 @@ class GamePrepareScene(Scene):
                 if event.key == pygame.K_ESCAPE:
                     self.switch_scene(GameState.MENU)
 
-            if self.network_mode_dropdown.handle_event(event,
-                                                    y_offset=self.scroll_offset):
+            if self.network_mode_dropdown.handle_event(
+                    event, y_offset=self.scroll_offset):
                 continue
 
             if self.ai_difficulty_dropdown.handle_event(
@@ -503,17 +508,18 @@ class GamePrepareScene(Scene):
             for name_field, ai_checkbox in self.player_fields:
                 name_field.handle_event(event, y_offset=self.scroll_offset)
                 if ai_checkbox:
-                    ai_checkbox.handle_event(event, y_offset=self.scroll_offset)
+                    ai_checkbox.handle_event(event,
+                                             y_offset=self.scroll_offset)
 
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if self.back_button._is_clicked(event.pos,
-                                             y_offset=self.scroll_offset):
-                    self.switch_scene(GameState.MENU)
-                elif self.start_button._is_clicked(event.pos,
                                                 y_offset=self.scroll_offset):
+                    self.switch_scene(GameState.MENU)
+                elif self.start_button._is_clicked(
+                        event.pos, y_offset=self.scroll_offset):
                     self._apply_settings_and_start()
-                elif self.add_player_button._is_clicked(event.pos,
-                                                    y_offset=self.scroll_offset):
+                elif self.add_player_button._is_clicked(
+                        event.pos, y_offset=self.scroll_offset):
                     self._add_player_field()
                 elif self.remove_player_button._is_clicked(
                         event.pos, y_offset=self.scroll_offset):
@@ -525,10 +531,11 @@ class GamePrepareScene(Scene):
 
         title_text = self.font.render("Game Setup", True, (255, 255, 255))
         title_rect = title_text.get_rect(center=(self.screen.get_width() // 2,
-                                               self.title_y + offset_y))
+                                                 self.title_y + offset_y))
         self.screen.blit(title_text, title_rect)
 
-        player_label = self.dropdown_font.render("Players", True, (255, 215, 0))
+        player_label = self.dropdown_font.render("Players", True,
+                                                 (255, 215, 0))
         player_label_rect = player_label.get_rect()
         player_label_rect.centerx = self.screen.get_width() // 2
         player_label_rect.y = self.player_label_y + offset_y
@@ -541,13 +548,14 @@ class GamePrepareScene(Scene):
         self.screen.blit(game_label, game_label_rect)
 
         card_set_label = self.dropdown_font.render("Card Sets", True,
-                                                (255, 215, 0))
+                                                   (255, 215, 0))
         card_set_label_rect = card_set_label.get_rect()
         card_set_label_rect.centerx = self.screen.get_width() // 2
         card_set_label_rect.y = self.card_set_label_y + offset_y
         self.screen.blit(card_set_label, card_set_label_rect)
 
-        network_label = self.dropdown_font.render("Network", True, (255, 215, 0))
+        network_label = self.dropdown_font.render("Network", True,
+                                                  (255, 215, 0))
         network_label_rect = network_label.get_rect()
         network_label_rect.centerx = self.screen.get_width() // 2
         network_label_rect.y = self.network_label_y + offset_y
@@ -559,8 +567,8 @@ class GamePrepareScene(Scene):
             label_text = "Your name:" if i == 0 else f"Player {i + 1}:"
             label = label_font.render(label_text, True, (255, 255, 255))
             label_rect = label.get_rect(right=name_field.rect.left - 10,
-                                       centery=name_field.rect.centery +
-                                       offset_y)
+                                        centery=name_field.rect.centery +
+                                        offset_y)
             self.screen.blit(label, label_rect)
             name_field.draw(self.screen, y_offset=offset_y)
             ai_checkbox.draw(self.screen, y_offset=offset_y)
@@ -585,14 +593,14 @@ class GamePrepareScene(Scene):
             card_set_text = label_font.render(
                 f"{card_set['display_name']} ({card_set['card_count']} cards):",
                 True, (255, 255, 255))
-            card_set_rect = card_set_text.get_rect(right=checkbox.rect.left - 10,
-                                               centery=checkbox.rect.centery)
+            card_set_rect = card_set_text.get_rect(
+                right=checkbox.rect.left - 10, centery=checkbox.rect.centery)
             self.screen.blit(card_set_text, card_set_rect)
 
         ip_label = label_font.render("Host IP:", True, (255, 255, 255))
-        ip_label_rect = ip_label.get_rect(right=self.host_ip_field.rect.left - 10,
-                                       centery=self.host_ip_field.rect.centery +
-                                       offset_y)
+        ip_label_rect = ip_label.get_rect(
+            right=self.host_ip_field.rect.left - 10,
+            centery=self.host_ip_field.rect.centery + offset_y)
         self.screen.blit(ip_label, ip_label_rect)
         self.host_ip_field.draw(self.screen, y_offset=offset_y)
 
@@ -611,7 +619,7 @@ class GamePrepareScene(Scene):
         self.start_button.draw(self.screen, y_offset=offset_y)
 
         self.max_scroll = max(self.screen.get_height(),
-                             self.back_button.rect.bottom + 80)
+                              self.back_button.rect.bottom + 80)
 
         self.toast_manager.draw(self.screen)
 

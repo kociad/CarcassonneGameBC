@@ -155,7 +155,8 @@ class Structure:
         max_count = max(owner_counts.values())
         logger.debug(f"Retrieved owners: {owner_counts}")
         return [
-            owner for owner, count in owner_counts.items() if count == max_count
+            owner for owner, count in owner_counts.items()
+            if count == max_count
         ]
 
     def merge(self, other_structure: 'Structure') -> None:
@@ -238,7 +239,7 @@ class Structure:
                 "y": card_position["Y"],
                 "direction": direction
             } for (card, direction) in self.card_sides
-                          if (card_position := card.get_position())],
+                           if (card_position := card.get_position())],
             "figures": [{
                 "owner_index":
                 f.get_owner().get_index(),
@@ -303,10 +304,9 @@ class Structure:
                 if not owner:
                     raise ValueError(
                         f"Owner with index {owner_index} not found")
-                matched = next(
-                    (fig for fig in placed_figures if fig.owner == owner
-                     and fig.card == card and fig.position_on_card == position),
-                    None)
+                matched = next((fig for fig in placed_figures
+                                if fig.owner == owner and fig.card == card
+                                and fig.position_on_card == position), None)
                 if matched:
                     s.figures.append(matched)
                 else:

@@ -22,7 +22,7 @@ class Figure:
         """
         self.owner = owner
         original_image = pygame.image.load(image_path +
-                                          f"{owner.get_color()}.png")
+                                           f"{owner.get_color()}.png")
         self.image = pygame.transform.scale(
             original_image, (settings.FIGURE_SIZE, settings.FIGURE_SIZE))
         self.card = None

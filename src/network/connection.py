@@ -124,7 +124,7 @@ class NetworkConnection:
             if command and self.on_command_received:
                 self.on_command_received(command, conn)
             ack_message = encode_message("command_ack",
-                                       {"command_id": command.command_id})
+                                         {"command_id": command.command_id})
             if conn:
                 try:
                     conn.sendall((ack_message + "\n").encode())
@@ -227,7 +227,8 @@ class NetworkConnection:
             self.send_to_host(message)
 
         logger.debug(
-            f"Sent command {command.command_type} with ID {command.command_id}")
+            f"Sent command {command.command_type} with ID {command.command_id}"
+        )
 
     def _command_cleanup_loop(self):
         """Background thread to clean up expired commands."""

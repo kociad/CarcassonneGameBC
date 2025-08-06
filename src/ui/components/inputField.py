@@ -56,7 +56,9 @@ class InputField:
         self.on_text_change = on_text_change
         self.cursor_pos = len(self.text)
 
-    def handle_event(self, event: pygame.event.Event, y_offset: int = 0) -> None:
+    def handle_event(self,
+                     event: pygame.event.Event,
+                     y_offset: int = 0) -> None:
         """
         Handle a pygame event for the input field.
         
@@ -149,7 +151,7 @@ class InputField:
             min(self.rect.width - 10,
                 text_surface.get_width() - self.scroll_offset))
         visible_rect = pygame.Rect(self.scroll_offset, 0, clamped_width,
-                                  text_surface.get_height())
+                                   text_surface.get_height())
         surface.blit(text_surface.subsurface(visible_rect),
                      (draw_rect.x + 5, draw_rect.y +
                       (draw_rect.height - text_surface.get_height()) // 2))

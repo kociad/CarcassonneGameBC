@@ -44,10 +44,10 @@ class HelpScene(Scene):
         self.controls_height = len(self.controls) * line_height
         current_y += self.controls_height + 40
         self.rules_button = Button((center_x, current_y, 200, 60), "Wiki",
-                                  self.button_font)
+                                   self.button_font)
         current_y += 80
         self.back_button = Button((center_x, current_y, 200, 60), "Back",
-                                 self.button_font)
+                                  self.button_font)
         self.max_scroll = max(screen.get_height(), current_y + 100)
 
     def handle_events(self, events: list[pygame.event.Event]) -> None:
@@ -62,10 +62,10 @@ class HelpScene(Scene):
                     self.switch_scene(GameState.MENU)
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if self.back_button._is_clicked(event.pos,
-                                             y_offset=self.scroll_offset):
-                    self.switch_scene(GameState.MENU)
-                elif self.rules_button._is_clicked(event.pos,
                                                 y_offset=self.scroll_offset):
+                    self.switch_scene(GameState.MENU)
+                elif self.rules_button._is_clicked(
+                        event.pos, y_offset=self.scroll_offset):
                     webbrowser.open("https://wikicarpedia.com/car/Base_game")
 
     def draw(self) -> None:
@@ -74,7 +74,7 @@ class HelpScene(Scene):
         offset_y = self.scroll_offset
         title_text = self.font.render("How to Play", True, (255, 255, 255))
         title_rect = title_text.get_rect(center=(self.screen.get_width() // 2,
-                                               self.title_y + offset_y))
+                                                 self.title_y + offset_y))
         self.screen.blit(title_text, title_rect)
         current_y = self.controls_start_y + offset_y
         line_height = 35
@@ -97,7 +97,8 @@ class HelpScene(Scene):
                     center=(self.screen.get_width() // 2, current_y))
             else:
                 text_rect = text_surface.get_rect(left=50, centery=current_y)
-            if text_rect.bottom > 0 and text_rect.top < self.screen.get_height():
+            if text_rect.bottom > 0 and text_rect.top < self.screen.get_height(
+            ):
                 self.screen.blit(text_surface, text_rect)
             current_y += line_height
         self.rules_button.draw(self.screen, y_offset=offset_y)

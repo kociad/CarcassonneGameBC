@@ -127,15 +127,16 @@ class GameLog:
             return
         screen_width = settings_manager.get("WINDOW_WIDTH", 1920)
         screen_height = settings_manager.get("WINDOW_HEIGHT", 1080)
-        overlay = pygame.Surface((screen_width, screen_height), pygame.SRCALPHA)
+        overlay = pygame.Surface((screen_width, screen_height),
+                                 pygame.SRCALPHA)
         overlay.fill((0, 0, 0, 200))
         screen.blit(overlay, (0, 0))
         title_text = self.title_font.render(
             "Game Log (Press TAB to close, Mouse Wheel to scroll)", True,
             (255, 255, 255))
         title_rect = title_text.get_rect(center=(screen_width // 2, 30))
-        title_bg = pygame.Surface((title_rect.width + 20, title_rect.height + 10),
-                                 pygame.SRCALPHA)
+        title_bg = pygame.Surface(
+            (title_rect.width + 20, title_rect.height + 10), pygame.SRCALPHA)
         title_bg.fill((50, 50, 50, 180))
         screen.blit(title_bg, (title_rect.x - 10, title_rect.y - 5))
         screen.blit(title_text, title_rect)
@@ -154,13 +155,13 @@ class GameLog:
         start_index = max(
             0, total_filtered_entries - max_visible_lines - self.scroll_offset)
         end_index = min(total_filtered_entries,
-                       total_filtered_entries - self.scroll_offset)
+                        total_filtered_entries - self.scroll_offset)
         max_scroll = max(0, total_filtered_entries - max_visible_lines)
         self.scroll_offset = max(0, min(self.scroll_offset, max_scroll))
         start_index = max(
             0, total_filtered_entries - max_visible_lines - self.scroll_offset)
         end_index = min(total_filtered_entries,
-                       total_filtered_entries - self.scroll_offset)
+                        total_filtered_entries - self.scroll_offset)
         y_pos = 70
         entries_drawn = 0
         for i in range(start_index, end_index):
@@ -176,7 +177,7 @@ class GameLog:
             bg_color = self.level_backgrounds.get(entry.level, (0, 0, 0, 0))
             if bg_color[3] > 0:
                 line_bg = pygame.Surface((screen_width - 20, line_height),
-                                        pygame.SRCALPHA)
+                                         pygame.SRCALPHA)
                 line_bg.fill(bg_color)
                 screen.blit(line_bg, (10, y_pos - 2))
             max_width = screen_width - 40
@@ -208,15 +209,17 @@ class GameLog:
                 entries_drawn += 1
         if total_filtered_entries > max_visible_lines:
             visible_start = max(
-                1, total_filtered_entries - self.scroll_offset - entries_drawn + 1)
+                1, total_filtered_entries - self.scroll_offset -
+                entries_drawn + 1)
             visible_end = total_filtered_entries - self.scroll_offset
             scroll_info = f"Lines {visible_start}-{visible_end} of {total_filtered_entries}"
-            scroll_surface = self.font.render(scroll_info, True, (180, 180, 180))
+            scroll_surface = self.font.render(scroll_info, True,
+                                              (180, 180, 180))
             scroll_bg = pygame.Surface((scroll_surface.get_width() + 10,
-                                       scroll_surface.get_height() + 6),
-                                      pygame.SRCALPHA)
+                                        scroll_surface.get_height() + 6),
+                                       pygame.SRCALPHA)
             scroll_bg.fill((0, 0, 0, 150))
             scroll_rect = (screen_width - scroll_surface.get_width() - 25,
-                          screen_height - 35)
+                           screen_height - 35)
             screen.blit(scroll_bg, (scroll_rect[0] - 5, scroll_rect[1] - 3))
             screen.blit(scroll_surface, scroll_rect)
