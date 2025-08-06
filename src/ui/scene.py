@@ -28,9 +28,9 @@ class Scene:
 
     def show_notification(self, notification_type: str, message: str) -> None:
         """
-        Show notification toast - available to all scenes that have a toastManager
+        Show notification toast - available to all scenes that have a toast_manager
         """
-        if hasattr(self, 'toastManager'):
+        if hasattr(self, 'toast_manager'):
             toast_type_map = {
                 "error": "error",
                 "warning": "warning",
