@@ -9,7 +9,7 @@ from models.figure import Figure
 from models.card import Card
 
 import settings
-from utils.settingsManager import settings_manager
+from utils.settings_manager import settings_manager
 
 logger = logging.getLogger(__name__)
 

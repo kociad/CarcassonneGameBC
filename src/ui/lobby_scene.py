@@ -2,8 +2,8 @@ import pygame
 from ui.scene import Scene
 from ui.components.button import Button
 from ui.components.toast import Toast, ToastManager
-from gameState import GameState
-from utils.settingsManager import settings_manager
+from game_state import GameState
+from utils.settings_manager import settings_manager
 import typing
 
 

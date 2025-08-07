@@ -4,11 +4,11 @@ import typing
 import settings
 
 from ui.scene import Scene
-from gameState import GameState
-from utils.settingsManager import settings_manager
+from game_state import GameState
+from utils.settings_manager import settings_manager
 from ui.components.toast import Toast, ToastManager
 from ui.components.button import Button
-from ui.components.progressBar import ProgressBar
+from ui.components.progress_bar import ProgressBar
 
 logger = logging.getLogger(__name__)
 
@@ -692,7 +692,7 @@ class GameScene(Scene):
     def _execute_local_turn(self, x: int, y: int, direction: str) -> None:
         """Execute a turn locally and send command to network."""
         from network.command import PlaceCardCommand, PlaceFigureCommand
-        from utils.settingsManager import settings_manager
+        from utils.settings_manager import settings_manager
 
         current_player = self.session.get_current_player()
         player_index = current_player.get_index() if current_player else 0
@@ -722,7 +722,7 @@ class GameScene(Scene):
     def _execute_local_rotate(self) -> None:
         """Execute a card rotation locally and send command to network."""
         from network.command import RotateCardCommand
-        from utils.settingsManager import settings_manager
+        from utils.settings_manager import settings_manager
 
         if not self.session.get_current_card():
             return
@@ -741,7 +741,7 @@ class GameScene(Scene):
     def _execute_local_skip(self) -> None:
         """Execute a skip action locally and send command to network."""
         from network.command import SkipActionCommand
-        from utils.settingsManager import settings_manager
+        from utils.settings_manager import settings_manager
 
         current_player = self.session.get_current_player()
         player_index = current_player.get_index() if current_player else 0

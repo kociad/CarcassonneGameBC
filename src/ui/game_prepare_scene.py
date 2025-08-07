@@ -2,14 +2,14 @@ import pygame
 import socket
 from ui.scene import Scene
 from ui.components.button import Button
-from ui.components.inputField import InputField
+from ui.components.input_field import InputField
 from ui.components.dropdown import Dropdown
 from ui.components.toast import Toast, ToastManager
 from ui.components.checkbox import Checkbox
-from gameState import GameState
-from utils.settingsManager import settings_manager
+from game_state import GameState
+from utils.settings_manager import settings_manager
 import typing
-from models.cardSets.setLoader import get_available_card_sets
+from models.card_sets.set_loader import get_available_card_sets
 
 FORBIDDEN_WORDS = ["ai", "easy", "normal", "hard", "expert"]
 
@@ -164,22 +164,24 @@ class GamePrepareScene(Scene):
         current_y += 50
 
         self.available_card_sets = get_available_card_sets()
-        self.selected_card_sets = ['baseGame']
+        self.default_card_sets = settings_manager.get("SELECTED_CARD_SETS",
+                                                      ["base_game"])
+        self.selected_card_sets = list(self.default_card_sets)
         self.card_set_checkboxes = []
         self.card_set_section_y = current_y
 
-        sorted_card_sets = sorted(self.available_card_sets,
-                                  key=lambda x:
-                                  (x['name'] != 'baseGame', x['name']))
+        sorted_card_sets = sorted(
+            self.available_card_sets,
+            key=lambda x: (x['name'] not in self.default_card_sets, x['name']))
 
         for card_set in sorted_card_sets:
-            is_base_game = card_set['name'] == 'baseGame'
+            is_default = card_set['name'] in self.default_card_sets
             checkbox = Checkbox(
                 rect=(x_center, 0, 20, 20),
-                checked=is_base_game,
+                checked=is_default,
                 on_toggle=lambda checked, name=card_set[
                     'name']: self._toggle_card_set(name, checked))
-            if is_base_game:
+            if is_default:
                 checkbox.set_disabled(True)
             self.card_set_checkboxes.append((card_set, checkbox))
 
@@ -390,7 +392,7 @@ class GamePrepareScene(Scene):
 
         is_client = mode == "client"
         for card_set, checkbox in self.card_set_checkboxes:
-            if card_set['name'] != 'base_game':
+            if card_set['name'] not in self.default_card_sets:
                 checkbox.set_disabled(is_client)
 
         self._build_player_fields()

@@ -2,7 +2,7 @@ import pygame
 import time
 from typing import List, Tuple
 import typing
-from utils.settingsManager import settings_manager
+from utils.settings_manager import settings_manager
 
 
 class GameLogEntry:

@@ -10,22 +10,22 @@ import logging
 from datetime import datetime
 import typing
 
-from ui.mainMenuScene import MainMenuScene
-from ui.settingsScene import SettingsScene
-from ui.gamePrepareScene import GamePrepareScene
+from ui.main_menu_scene import MainMenuScene
+from ui.settings_scene import SettingsScene
+from ui.game_prepare_scene import GamePrepareScene
 from ui.scene import Scene
-from ui.gameScene import GameScene
-from ui.helpScene import HelpScene
-from gameState import GameState
-from utils.loggingConfig import configure_logging, log_error
-from models.gameSession import GameSession
+from ui.game_scene import GameScene
+from ui.help_scene import HelpScene
+from game_state import GameState
+from utils.logging_config import configure_logging, log_error
+from models.game_session import GameSession
 from network.connection import NetworkConnection
 from network.message import encode_message
 from network.command import encode_command_message
-from utils.settingsManager import settings_manager
-from ui.components.gameLog import GameLog
-from utils.loggingConfig import set_game_log_instance
-from ui.lobbyScene import LobbyScene
+from utils.settings_manager import settings_manager
+from ui.components.game_log import GameLog
+from utils.logging_config import set_game_log_instance
+from ui.lobby_scene import LobbyScene
 
 # Configure logging with exception handling
 configure_logging()

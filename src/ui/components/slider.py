@@ -1,5 +1,5 @@
 import pygame
-from ui.components.inputField import InputField
+from ui.components.input_field import InputField
 from ui.components.toast import Toast
 import typing
 

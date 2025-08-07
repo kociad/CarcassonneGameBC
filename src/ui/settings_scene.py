@@ -1,13 +1,13 @@
 import pygame
 from ui.scene import Scene
-from gameState import GameState
+from game_state import GameState
 from ui.components.button import Button
-from ui.components.inputField import InputField
+from ui.components.input_field import InputField
 from ui.components.dropdown import Dropdown
 from ui.components.toast import Toast, ToastManager
 from ui.components.checkbox import Checkbox
 from ui.components.slider import Slider
-from utils.settingsManager import settings_manager
+from utils.settings_manager import settings_manager
 import typing
 
 
@@ -241,7 +241,7 @@ class SettingsScene(Scene):
         self.resolution_dropdown.set_disabled(new_value)
 
     def _on_debug_changed(self, key, old_value, new_value):
-        from utils.loggingConfig import update_logging_level
+        from utils.logging_config import update_logging_level
         update_logging_level()
 
         self.fps_slider.set_disabled(not new_value)
@@ -446,7 +446,7 @@ class SettingsScene(Scene):
             #self.add_toast(Toast("Restart the game to apply changes", type="warning"))
 
             if "GAME_LOG_MAX_ENTRIES" in changes:
-                from utils.loggingConfig import game_log_instance
+                from utils.logging_config import game_log_instance
                 if game_log_instance:
                     game_log_instance.update_max_entries()
         else:

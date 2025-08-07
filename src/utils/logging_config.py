@@ -21,7 +21,7 @@ logging.Logger.scoring = scoring
 
 def configure_logging() -> None:
     """Configure logging for the application with file and console output and global exception handling."""
-    from utils.settingsManager import settings_manager
+    from utils.settings_manager import settings_manager
     debug_enabled = settings_manager.get("DEBUG", False)
     log_to_console = settings_manager.get("LOG_TO_CONSOLE", True)
     handlers = []
@@ -54,7 +54,7 @@ def configure_logging() -> None:
 
 def update_logging_level() -> None:
     """Update logging level based on current DEBUG setting."""
-    from utils.settingsManager import settings_manager
+    from utils.settings_manager import settings_manager
     debug_enabled = settings_manager.get("DEBUG", True)
     if debug_enabled:
         logging.disable(logging.NOTSET)

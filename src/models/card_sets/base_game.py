@@ -6,7 +6,7 @@ Contains all the standard tiles from the base game.
 CARD_SET_NAME = "Base Game"
 
 CARD_DEFINITIONS = [{
-    "image": "baseGame/Base_Game_C3_Tile_A.png",
+    "image": "base_game/Base_Game_C3_Tile_A.png",
     "terrains": {
         "N": "field",
         "E": "field",
@@ -21,7 +21,7 @@ CARD_DEFINITIONS = [{
     },
     "features": None
 }, {
-    "image": "baseGame/Base_Game_C3_Tile_B.png",
+    "image": "base_game/Base_Game_C3_Tile_B.png",
     "terrains": {
         "N": "field",
         "E": "field",
@@ -37,7 +37,7 @@ CARD_DEFINITIONS = [{
     },
     "features": None
 }, {
-    "image": "baseGame/Base_Game_C3_Tile_C.png",
+    "image": "base_game/Base_Game_C3_Tile_C.png",
     "terrains": {
         "N": "city",
         "E": "city",
@@ -53,7 +53,7 @@ CARD_DEFINITIONS = [{
     },
     "features": ["coat"]
 }, {
-    "image": "baseGame/Base_Game_C3_Tile_D.png",
+    "image": "base_game/Base_Game_C3_Tile_D.png",
     "terrains": {
         "N": "city",
         "E": "road",
@@ -67,7 +67,7 @@ CARD_DEFINITIONS = [{
     },
     "features": None
 }, {
-    "image": "baseGame/Base_Game_C3_Tile_E.png",
+    "image": "base_game/Base_Game_C3_Tile_E.png",
     "terrains": {
         "N": "city",
         "E": "field",
@@ -82,7 +82,7 @@ CARD_DEFINITIONS = [{
     },
     "features": None
 }, {
-    "image": "baseGame/Base_Game_C3_Tile_F.png",
+    "image": "base_game/Base_Game_C3_Tile_F.png",
     "terrains": {
         "N": "field",
         "E": "city",
@@ -96,7 +96,7 @@ CARD_DEFINITIONS = [{
     },
     "features": ["coat"]
 }, {
-    "image": "baseGame/Base_Game_C3_Tile_G.png",
+    "image": "base_game/Base_Game_C3_Tile_G.png",
     "terrains": {
         "N": "field",
         "E": "city",
@@ -110,7 +110,7 @@ CARD_DEFINITIONS = [{
     },
     "features": None
 }, {
-    "image": "baseGame/Base_Game_C3_Tile_H.png",
+    "image": "base_game/Base_Game_C3_Tile_H.png",
     "terrains": {
         "N": "city",
         "E": "field",
@@ -124,7 +124,7 @@ CARD_DEFINITIONS = [{
     },
     "features": None
 }, {
-    "image": "baseGame/Base_Game_C3_Tile_I.png",
+    "image": "base_game/Base_Game_C3_Tile_I.png",
     "terrains": {
         "N": "city",
         "E": "field",
@@ -138,7 +138,7 @@ CARD_DEFINITIONS = [{
     },
     "features": None
 }, {
-    "image": "baseGame/Base_Game_C3_Tile_J.png",
+    "image": "base_game/Base_Game_C3_Tile_J.png",
     "terrains": {
         "N": "city",
         "E": "road",
@@ -152,7 +152,7 @@ CARD_DEFINITIONS = [{
     },
     "features": None
 }, {
-    "image": "baseGame/Base_Game_C3_Tile_K.png",
+    "image": "base_game/Base_Game_C3_Tile_K.png",
     "terrains": {
         "N": "city",
         "E": "field",
@@ -166,7 +166,7 @@ CARD_DEFINITIONS = [{
     },
     "features": None
 }, {
-    "image": "baseGame/Base_Game_C3_Tile_L.png",
+    "image": "base_game/Base_Game_C3_Tile_L.png",
     "terrains": {
         "N": "city",
         "E": "road",
@@ -177,7 +177,7 @@ CARD_DEFINITIONS = [{
     "connections": None,
     "features": None
 }, {
-    "image": "baseGame/Base_Game_C3_Tile_M.png",
+    "image": "base_game/Base_Game_C3_Tile_M.png",
     "terrains": {
         "N": "city",
         "E": "city",
@@ -193,7 +193,7 @@ CARD_DEFINITIONS = [{
     },
     "features": ["coat"]
 }, {
-    "image": "baseGame/Base_Game_C3_Tile_N.png",
+    "image": "base_game/Base_Game_C3_Tile_N.png",
     "terrains": {
         "N": "city",
         "E": "city",
@@ -209,7 +209,7 @@ CARD_DEFINITIONS = [{
     },
     "features": None
 }, {
-    "image": "baseGame/Base_Game_C3_Tile_O.png",
+    "image": "base_game/Base_Game_C3_Tile_O.png",
     "terrains": {
         "N": "city",
         "E": "road",
@@ -225,7 +225,7 @@ CARD_DEFINITIONS = [{
     },
     "features": ["coat"]
 }, {
-    "image": "baseGame/Base_Game_C3_Tile_P.png",
+    "image": "base_game/Base_Game_C3_Tile_P.png",
     "terrains": {
         "N": "city",
         "E": "road",
@@ -241,7 +241,7 @@ CARD_DEFINITIONS = [{
     },
     "features": None
 }, {
-    "image": "baseGame/Base_Game_C3_Tile_Q.png",
+    "image": "base_game/Base_Game_C3_Tile_Q.png",
     "terrains": {
         "N": "city",
         "E": "city",
@@ -256,7 +256,7 @@ CARD_DEFINITIONS = [{
     },
     "features": ["coat"]
 }, {
-    "image": "baseGame/Base_Game_C3_Tile_R.png",
+    "image": "base_game/Base_Game_C3_Tile_R.png",
     "terrains": {
         "N": "city",
         "E": "city",
@@ -271,7 +271,7 @@ CARD_DEFINITIONS = [{
     },
     "features": None
 }, {
-    "image": "baseGame/Base_Game_C3_Tile_S.png",
+    "image": "base_game/Base_Game_C3_Tile_S.png",
     "terrains": {
         "N": "city",
         "E": "city",
@@ -286,7 +286,7 @@ CARD_DEFINITIONS = [{
     },
     "features": ["coat"]
 }, {
-    "image": "baseGame/Base_Game_C3_Tile_T.png",
+    "image": "base_game/Base_Game_C3_Tile_T.png",
     "terrains": {
         "N": "city",
         "E": "city",
@@ -301,7 +301,7 @@ CARD_DEFINITIONS = [{
     },
     "features": None
 }, {
-    "image": "baseGame/Base_Game_C3_Tile_U.png",
+    "image": "base_game/Base_Game_C3_Tile_U.png",
     "terrains": {
         "N": "road",
         "E": "field",
@@ -315,7 +315,7 @@ CARD_DEFINITIONS = [{
     },
     "features": None
 }, {
-    "image": "baseGame/Base_Game_C3_Tile_V.png",
+    "image": "base_game/Base_Game_C3_Tile_V.png",
     "terrains": {
         "N": "field",
         "E": "field",
@@ -331,7 +331,7 @@ CARD_DEFINITIONS = [{
     },
     "features": None
 }, {
-    "image": "baseGame/Base_Game_C3_Tile_W.png",
+    "image": "base_game/Base_Game_C3_Tile_W.png",
     "terrains": {
         "N": "field",
         "E": "road",
@@ -342,7 +342,7 @@ CARD_DEFINITIONS = [{
     "connections": None,
     "features": None
 }, {
-    "image": "baseGame/Base_Game_C3_Tile_X.png",
+    "image": "base_game/Base_Game_C3_Tile_X.png",
     "terrains": {
         "N": "road",
         "E": "road",
@@ -355,30 +355,30 @@ CARD_DEFINITIONS = [{
 }]
 
 CARD_DISTRIBUTIONS = {
-    "baseGame/Base_Game_C3_Tile_A.png": 2,
-    "baseGame/Base_Game_C3_Tile_B.png": 4,
-    "baseGame/Base_Game_C3_Tile_C.png": 1,
-    "baseGame/Base_Game_C3_Tile_D.png": 4,
-    "baseGame/Base_Game_C3_Tile_E.png": 5,
-    "baseGame/Base_Game_C3_Tile_F.png": 2,
-    "baseGame/Base_Game_C3_Tile_G.png": 1,
-    "baseGame/Base_Game_C3_Tile_H.png": 3,
-    "baseGame/Base_Game_C3_Tile_I.png": 2,
-    "baseGame/Base_Game_C3_Tile_J.png": 3,
-    "baseGame/Base_Game_C3_Tile_K.png": 3,
-    "baseGame/Base_Game_C3_Tile_L.png": 3,
-    "baseGame/Base_Game_C3_Tile_M.png": 2,
-    "baseGame/Base_Game_C3_Tile_N.png": 3,
-    "baseGame/Base_Game_C3_Tile_O.png": 2,
-    "baseGame/Base_Game_C3_Tile_P.png": 3,
-    "baseGame/Base_Game_C3_Tile_Q.png": 1,
-    "baseGame/Base_Game_C3_Tile_R.png": 3,
-    "baseGame/Base_Game_C3_Tile_S.png": 2,
-    "baseGame/Base_Game_C3_Tile_T.png": 1,
-    "baseGame/Base_Game_C3_Tile_U.png": 8,
-    "baseGame/Base_Game_C3_Tile_V.png": 9,
-    "baseGame/Base_Game_C3_Tile_W.png": 4,
-    "baseGame/Base_Game_C3_Tile_X.png": 1
+    "base_game/Base_Game_C3_Tile_A.png": 2,
+    "base_game/Base_Game_C3_Tile_B.png": 4,
+    "base_game/Base_Game_C3_Tile_C.png": 1,
+    "base_game/Base_Game_C3_Tile_D.png": 4,
+    "base_game/Base_Game_C3_Tile_E.png": 5,
+    "base_game/Base_Game_C3_Tile_F.png": 2,
+    "base_game/Base_Game_C3_Tile_G.png": 1,
+    "base_game/Base_Game_C3_Tile_H.png": 3,
+    "base_game/Base_Game_C3_Tile_I.png": 2,
+    "base_game/Base_Game_C3_Tile_J.png": 3,
+    "base_game/Base_Game_C3_Tile_K.png": 3,
+    "base_game/Base_Game_C3_Tile_L.png": 3,
+    "base_game/Base_Game_C3_Tile_M.png": 2,
+    "base_game/Base_Game_C3_Tile_N.png": 3,
+    "base_game/Base_Game_C3_Tile_O.png": 2,
+    "base_game/Base_Game_C3_Tile_P.png": 3,
+    "base_game/Base_Game_C3_Tile_Q.png": 1,
+    "base_game/Base_Game_C3_Tile_R.png": 3,
+    "base_game/Base_Game_C3_Tile_S.png": 2,
+    "base_game/Base_Game_C3_Tile_T.png": 1,
+    "base_game/Base_Game_C3_Tile_U.png": 8,
+    "base_game/Base_Game_C3_Tile_V.png": 9,
+    "base_game/Base_Game_C3_Tile_W.png": 4,
+    "base_game/Base_Game_C3_Tile_X.png": 1
 }
 
 

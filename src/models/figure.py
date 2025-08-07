@@ -1,7 +1,7 @@
 import pygame
 import logging
 import typing
-from models.gameBoard import GameBoard
+from models.game_board import GameBoard
 import settings
 
 logger = logging.getLogger(__name__)

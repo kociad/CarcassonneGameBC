@@ -2,8 +2,8 @@ import pygame
 import webbrowser
 from ui.scene import Scene
 from ui.components.button import Button
-from gameState import GameState
-from utils.settingsManager import settings_manager
+from game_state import GameState
+from utils.settings_manager import settings_manager
 import logging
 import typing
 
@@ -59,7 +59,7 @@ class MainMenuScene(Scene):
             if hasattr(self, 'cleanup_callback') and self.cleanup_callback:
                 self.cleanup_callback()
         except Exception as e:
-            from utils.loggingConfig import log_error
+            from utils.logging_config import log_error
             log_error("Error during previous game cleanup from menu", e)
 
     def handle_events(self, events: list[pygame.event.Event]) -> None:

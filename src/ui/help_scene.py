@@ -2,7 +2,7 @@ import pygame
 import webbrowser
 from ui.scene import Scene
 from ui.components.button import Button
-from gameState import GameState
+from game_state import GameState
 import typing
 
 

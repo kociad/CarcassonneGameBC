@@ -35,7 +35,7 @@ def load_card_set(set_name: str) -> Dict[str, Any]:
     Returns a dictionary with 'definitions' and 'distributions' keys.
     """
     try:
-        module = importlib.import_module(f'models.cardSets.{set_name}')
+        module = importlib.import_module(f'models.card_sets.{set_name}')
 
         # Get card definitions
         if hasattr(module, 'get_card_definitions'):
@@ -106,7 +106,8 @@ def get_available_card_sets() -> List[Dict[str, Any]]:
         if set_data['definitions']:
             display_name = 'Unknown Expansion'
             try:
-                module = importlib.import_module(f'models.cardSets.{set_name}')
+                module = importlib.import_module(
+                    f'models.card_sets.{set_name}')
                 if hasattr(module, 'CARD_SET_NAME'):
                     display_name = module.CARD_SET_NAME
             except:
@@ -114,7 +115,8 @@ def get_available_card_sets() -> List[Dict[str, Any]]:
 
             description = f"{len(set_data['definitions'])} cards"
             try:
-                module = importlib.import_module(f'models.cardSets.{set_name}')
+                module = importlib.import_module(
+                    f'models.card_sets.{set_name}')
                 if hasattr(module, '__doc__') and module.__doc__:
                     description = module.__doc__.strip().split('\n')[0]
             except:

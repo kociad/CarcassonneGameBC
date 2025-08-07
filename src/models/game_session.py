@@ -1,17 +1,17 @@
 import random
 import logging
 import typing
-import utils.loggingConfig
+import utils.logging_config
 
-from models.gameBoard import GameBoard
+from models.game_board import GameBoard
 from models.card import Card
 from models.player import Player
 from models.structure import Structure
-from models.aiPlayer import AIPlayer
+from models.ai_player import AIPlayer
 from models.figure import Figure
 import settings
-from utils.settingsManager import settings_manager
-from models.cardSets.setLoader import load_all_card_sets, load_card_set
+from utils.settings_manager import settings_manager
+from models.card_sets.set_loader import load_all_card_sets, load_card_set
 
 logger = logging.getLogger(__name__)
 
