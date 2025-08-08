@@ -312,7 +312,7 @@ class GameScene(Scene):
                             compass_size = tile_size // 4
                             compass_image = pygame.transform.scale(
                                 compass_image, (compass_size, compass_size))
-                            compass_x = x * tile_size - self.offset_x + tile_size - compass_size - 5
+                            compass_x = x * tile_size - self.offset_x + 5
                             compass_y = y * tile_size - self.offset_y + 5
                             self.screen.blit(compass_image,
                                              (compass_x, compass_y))
@@ -330,6 +330,7 @@ class GameScene(Scene):
             for structure in detected_structures:
                 if structure.get_is_completed():
                     tint_color = structure.get_color()
+                    structure_type = structure.get_structure_type()
 
                     card_edge_map = {}
                     for card, direction in structure.card_sides:
@@ -351,31 +352,231 @@ class GameScene(Scene):
                             rect.fill((0, 0, 0, 0))
 
                             for direction in directions:
-                                if direction == "N":
-                                    pygame.draw.rect(
-                                        rect, tint_color,
-                                        (0, 0, tile_size, tile_size // 3))
-                                elif direction == "S":
-                                    pygame.draw.rect(
-                                        rect, tint_color,
-                                        (0, 2 * tile_size // 3, tile_size,
-                                         tile_size // 3))
-                                elif direction == "E":
-                                    pygame.draw.rect(
-                                        rect, tint_color,
-                                        (2 * tile_size // 3, 0, tile_size // 3,
-                                         tile_size))
-                                elif direction == "W":
-                                    pygame.draw.rect(
-                                        rect, tint_color,
-                                        (0, 0, tile_size // 3, tile_size))
-                                elif direction == "C":
-                                    center_x = tile_size // 2
-                                    center_y = tile_size // 2
-                                    radius = tile_size // 6
-                                    pygame.draw.circle(rect, tint_color,
-                                                       (center_x, center_y),
-                                                       radius)
+                                 if structure_type == "Road":
+                                     # For roads, only show middle third
+                                     if direction == "N":
+                                         road_width = tile_size // 3
+                                         road_x = (tile_size - road_width) // 2
+                                         pygame.draw.rect(
+                                             rect, tint_color,
+                                             (road_x, 0, road_width, tile_size // 3))
+                                         pygame.draw.rect(
+                                             rect, (255, 255, 255),
+                                             (road_x, 0, road_width, tile_size // 3), 2)
+                                     elif direction == "S":
+                                         road_width = tile_size // 3
+                                         road_x = (tile_size - road_width) // 2
+                                         pygame.draw.rect(
+                                             rect, tint_color,
+                                             (road_x, 2 * tile_size // 3, road_width,
+                                              tile_size // 3))
+                                         pygame.draw.rect(
+                                             rect, (255, 255, 255),
+                                             (road_x, 2 * tile_size // 3, road_width,
+                                              tile_size // 3), 2)
+                                     elif direction == "E":
+                                         road_height = tile_size // 3
+                                         road_y = (tile_size - road_height) // 2
+                                         pygame.draw.rect(
+                                             rect, tint_color,
+                                             (2 * tile_size // 3, road_y, tile_size // 3,
+                                              road_height))
+                                         pygame.draw.rect(
+                                             rect, (255, 255, 255),
+                                             (2 * tile_size // 3, road_y, tile_size // 3,
+                                              road_height), 2)
+                                     elif direction == "W":
+                                         road_height = tile_size // 3
+                                         road_y = (tile_size - road_height) // 2
+                                         pygame.draw.rect(
+                                             rect, tint_color,
+                                             (0, road_y, tile_size // 3, road_height))
+                                         pygame.draw.rect(
+                                             rect, (255, 255, 255),
+                                             (0, road_y, tile_size // 3, road_height), 2)
+                                     elif direction == "C":
+                                         center_x = tile_size // 2
+                                         center_y = tile_size // 2
+                                         square_size = tile_size // 3
+                                         square_x = center_x - square_size // 2
+                                         square_y = center_y - square_size // 2
+                                         pygame.draw.rect(rect, tint_color,
+                                                          (square_x, square_y, square_size, square_size))
+                                         pygame.draw.rect(rect, (255, 255, 255),
+                                                          (square_x, square_y, square_size, square_size), 2)
+                                 else:
+                                     # For other structures (cities, monasteries), show full edge
+                                     if direction == "N":
+                                         pygame.draw.rect(
+                                             rect, tint_color,
+                                             (0, 0, tile_size, tile_size // 3))
+                                         pygame.draw.rect(
+                                             rect, (255, 255, 255),
+                                             (0, 0, tile_size, tile_size // 3), 2)
+                                     elif direction == "S":
+                                         pygame.draw.rect(
+                                             rect, tint_color,
+                                             (0, 2 * tile_size // 3, tile_size,
+                                              tile_size // 3))
+                                         pygame.draw.rect(
+                                             rect, (255, 255, 255),
+                                             (0, 2 * tile_size // 3, tile_size,
+                                              tile_size // 3), 2)
+                                     elif direction == "E":
+                                         pygame.draw.rect(
+                                             rect, tint_color,
+                                             (2 * tile_size // 3, 0, tile_size // 3,
+                                              tile_size))
+                                         pygame.draw.rect(
+                                             rect, (255, 255, 255),
+                                             (2 * tile_size // 3, 0, tile_size // 3,
+                                              tile_size), 2)
+                                     elif direction == "W":
+                                         pygame.draw.rect(
+                                             rect, tint_color,
+                                             (0, 0, tile_size // 3, tile_size))
+                                         pygame.draw.rect(
+                                             rect, (255, 255, 255),
+                                             (0, 0, tile_size // 3, tile_size), 2)
+                                     elif direction == "C":
+                                         center_x = tile_size // 2
+                                         center_y = tile_size // 2
+                                         square_size = tile_size // 3
+                                         square_x = center_x - square_size // 2
+                                         square_y = center_y - square_size // 2
+                                         pygame.draw.rect(rect, tint_color,
+                                                          (square_x, square_y, square_size, square_size))
+                                         pygame.draw.rect(rect, (255, 255, 255),
+                                                          (square_x, square_y, square_size, square_size), 2)
+
+                            self.screen.blit(
+                                rect, (card_x * tile_size - self.offset_x,
+                                       card_y * tile_size - self.offset_y))
+
+            # Draw hover highlight for structure placement
+            if settings_manager.get("DEBUG"):
+                mouse_x, mouse_y = pygame.mouse.get_pos()
+                hovered_structure = self._get_hovered_structure(mouse_x, mouse_y)
+                if hovered_structure:
+                    hover_color = (255, 255, 0, 150)  # Yellow with transparency
+                    structure_type = hovered_structure.get_structure_type()
+
+                    card_edge_map = {}
+                    for card, direction in hovered_structure.card_sides:
+                        if direction is None:
+                            continue
+                        if card not in card_edge_map:
+                            card_edge_map[card] = []
+                        card_edge_map[card].append(direction)
+
+                    for card, directions in card_edge_map.items():
+                        card_position = [(x, y)
+                                         for y in range(game_board.grid_size)
+                                         for x in range(game_board.grid_size)
+                                         if game_board.get_card(x, y) == card]
+                        if card_position:
+                            card_x, card_y = card_position[0]
+                            rect = pygame.Surface((tile_size, tile_size),
+                                                  pygame.SRCALPHA)
+                            rect.fill((0, 0, 0, 0))
+
+                            for direction in directions:
+                                 if structure_type == "Road":
+                                     # For roads, only show middle third
+                                     if direction == "N":
+                                         road_width = tile_size // 3
+                                         road_x = (tile_size - road_width) // 2
+                                         pygame.draw.rect(
+                                             rect, hover_color,
+                                             (road_x, 0, road_width, tile_size // 3))
+                                         pygame.draw.rect(
+                                             rect, (255, 255, 255),
+                                             (road_x, 0, road_width, tile_size // 3), 2)
+                                     elif direction == "S":
+                                         road_width = tile_size // 3
+                                         road_x = (tile_size - road_width) // 2
+                                         pygame.draw.rect(
+                                             rect, hover_color,
+                                             (road_x, 2 * tile_size // 3, road_width,
+                                              tile_size // 3))
+                                         pygame.draw.rect(
+                                             rect, (255, 255, 255),
+                                             (road_x, 2 * tile_size // 3, road_width,
+                                              tile_size // 3), 2)
+                                     elif direction == "E":
+                                         road_height = tile_size // 3
+                                         road_y = (tile_size - road_height) // 2
+                                         pygame.draw.rect(
+                                             rect, hover_color,
+                                             (2 * tile_size // 3, road_y, tile_size // 3,
+                                              road_height))
+                                         pygame.draw.rect(
+                                             rect, (255, 255, 255),
+                                             (2 * tile_size // 3, road_y, tile_size // 3,
+                                              road_height), 2)
+                                     elif direction == "W":
+                                         road_height = tile_size // 3
+                                         road_y = (tile_size - road_height) // 2
+                                         pygame.draw.rect(
+                                             rect, hover_color,
+                                             (0, road_y, tile_size // 3, road_height))
+                                         pygame.draw.rect(
+                                             rect, (255, 255, 255),
+                                             (0, road_y, tile_size // 3, road_height), 2)
+                                     elif direction == "C":
+                                         center_x = tile_size // 2
+                                         center_y = tile_size // 2
+                                         square_size = tile_size // 3
+                                         square_x = center_x - square_size // 2
+                                         square_y = center_y - square_size // 2
+                                         pygame.draw.rect(rect, hover_color,
+                                                          (square_x, square_y, square_size, square_size))
+                                         pygame.draw.rect(rect, (255, 255, 255),
+                                                          (square_x, square_y, square_size, square_size), 2)
+                                 else:
+                                     # For other structures (cities, monasteries), show full edge
+                                     if direction == "N":
+                                         pygame.draw.rect(
+                                             rect, hover_color,
+                                             (0, 0, tile_size, tile_size // 3))
+                                         pygame.draw.rect(
+                                             rect, (255, 255, 255),
+                                             (0, 0, tile_size, tile_size // 3), 2)
+                                     elif direction == "S":
+                                         pygame.draw.rect(
+                                             rect, hover_color,
+                                             (0, 2 * tile_size // 3, tile_size,
+                                              tile_size // 3))
+                                         pygame.draw.rect(
+                                             rect, (255, 255, 255),
+                                             (0, 2 * tile_size // 3, tile_size,
+                                              tile_size // 3), 2)
+                                     elif direction == "E":
+                                         pygame.draw.rect(
+                                             rect, hover_color,
+                                             (2 * tile_size // 3, 0, tile_size // 3,
+                                              tile_size))
+                                         pygame.draw.rect(
+                                             rect, (255, 255, 255),
+                                             (2 * tile_size // 3, 0, tile_size // 3,
+                                              tile_size), 2)
+                                     elif direction == "W":
+                                         pygame.draw.rect(
+                                             rect, hover_color,
+                                             (0, 0, tile_size // 3, tile_size))
+                                         pygame.draw.rect(
+                                             rect, (255, 255, 255),
+                                             (0, 0, tile_size // 3, tile_size), 2)
+                                     elif direction == "C":
+                                         center_x = tile_size // 2
+                                         center_y = tile_size // 2
+                                         square_size = tile_size // 3
+                                         square_x = center_x - square_size // 2
+                                         square_y = center_y - square_size // 2
+                                         pygame.draw.rect(rect, hover_color,
+                                                          (square_x, square_y, square_size, square_size))
+                                         pygame.draw.rect(rect, (255, 255, 255),
+                                                          (square_x, square_y, square_size, square_size), 2)
 
                             self.screen.blit(
                                 rect, (card_x * tile_size - self.offset_x,
@@ -803,6 +1004,28 @@ class GameScene(Scene):
         }
 
         return min(distances, key=distances.get)
+
+    def _get_hovered_structure(self, mouse_x: int, mouse_y: int) -> typing.Optional[typing.Any]:
+        """Get the structure that would be selected if placing a meeple at the hovered position."""
+            
+        tile_size = settings_manager.get("TILE_SIZE")
+        grid_x, grid_y = (mouse_x + self.get_offset_x()) // tile_size, (
+            mouse_y + self.get_offset_y()) // tile_size
+
+        card = self.session.get_game_board().get_card(grid_x, grid_y)
+        if not card:
+            return None
+
+        direction = self._detect_click_direction(mouse_x, mouse_y, grid_x, grid_y)
+        if not direction:
+            return None
+
+        for structure in self.session.get_structures():
+            for structure_card, structure_direction in structure.card_sides:
+                if structure_card == card and structure_direction == direction:
+                    return structure
+
+        return None
 
     def _update_game_session(self, new_session) -> None:
         """

@@ -75,12 +75,14 @@ CARD_DEFINITIONS = [{
         "E": "field",
         "S": "field",
         "W": "field",
-        "C": None
+        "C": "city"
     },
     "connections": {
+        "N": ["C"],
         "E": ["S", "W"],
         "S": ["W", "E"],
-        "W": ["E", "S"]
+        "W": ["E", "S"],
+        "C": ["N"]
     },
     "features": None
 }, {
@@ -150,11 +152,12 @@ CARD_DEFINITIONS = [{
         "E": "road",
         "S": "road",
         "W": "field",
-        "C": None
+        "C": "road"
     },
     "connections": {
-        "E": ["S"],
-        "S": ["E"]
+        "E": ["S","C"],
+        "S": ["E","C"],
+        "C": ["E","S"]
     },
     "features": None
 }, {
@@ -190,13 +193,14 @@ CARD_DEFINITIONS = [{
         "E": "city",
         "S": "field",
         "W": "field",
-        "C": None
+        "C": "city"
     },
     "connections": {
-        "N": ["E"],
-        "E": ["N"],
+        "N": ["E","C"],
+        "E": ["N","C"],
         "S": ["W"],
-        "W": ["S"]
+        "W": ["S"],
+        "C": ["N","E"]
     },
     "features": ["coat"]
 }, {
@@ -206,13 +210,14 @@ CARD_DEFINITIONS = [{
         "E": "city",
         "S": "field",
         "W": "field",
-        "C": None
+        "C": "city"
     },
     "connections": {
-        "N": ["E"],
-        "E": ["N"],
+        "N": ["E","C"],
+        "E": ["N","C"],
         "S": ["W"],
-        "W": ["S"]
+        "W": ["S"],
+        "C": ["N","E"]
     },
     "features": None
 }, {
@@ -222,13 +227,14 @@ CARD_DEFINITIONS = [{
         "E": "road",
         "S": "road",
         "W": "city",
-        "C": None
+        "C": "city"
     },
     "connections": {
-        "N": ["W"],
+        "N": ["W","C"],
         "E": ["S"],
         "S": ["E"],
-        "W": ["N"]
+        "W": ["N","C"],
+        "C": ["N","W"]
     },
     "features": ["coat"]
 }, {
@@ -238,13 +244,14 @@ CARD_DEFINITIONS = [{
         "E": "road",
         "S": "road",
         "W": "city",
-        "C": None
+        "C": "city"
     },
     "connections": {
-        "N": ["W"],
+        "N": ["W","C"],
         "E": ["S"],
         "S": ["E"],
-        "W": ["N"]
+        "W": ["N","C"],
+        "C": ["N","W"]
     },
     "features": None
 }, {
@@ -333,14 +340,14 @@ CARD_DEFINITIONS = [{
         "E": "field",
         "S": "road",
         "W": "road",
-        "C": "field"
+        "C": "road"
     },
     "connections": {
-        "N": ["E","C"],
-        "E": ["N","C"],
-        "S": ["W"],
-        "W": ["S"],
-        "C": ["N","E"]
+        "N": ["E"],
+        "E": ["N"],
+        "S": ["W","C"],
+        "W": ["S","C"],
+        "C": ["S","W"]
     },
     "features": None
 }, {

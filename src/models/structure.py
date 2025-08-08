@@ -111,6 +111,8 @@ class Structure:
     def _check_city_completion(self) -> bool:
         """Check if the city structure is completed."""
         for card, direction in self.card_sides:
+            if direction == "C":
+                continue
             neighbor_card = card.get_neighbors().get(direction)
             if not neighbor_card:
                 return False
@@ -119,6 +121,8 @@ class Structure:
     def _check_road_completion(self) -> bool:
         """Check if the road structure is completed."""
         for card, direction in self.card_sides:
+            if direction == "C":
+                continue
             neighbor_card = card.get_neighbors().get(direction)
             if not neighbor_card:
                 return False
@@ -170,7 +174,8 @@ class Structure:
         for figure in other_structure.figures:
             self.figures.append(figure)
         for card in other_structure.cards:
-            self.cards.append(card)
+            if card not in self.cards:
+                self.cards.append(card)
 
     def get_score(self, game_session: typing.Any = None) -> int:
         """
