@@ -10,6 +10,111 @@ from typing import Dict, List, Any
 
 logger = logging.getLogger(__name__)
 
+ALLOWED_DIRECTIONS = {"N", "E", "S", "W", "C", "NW", "NE", "SW", "SE"}
+ALLOWED_TERRAINS = {"city", "road", "monastery", "field"}
+
+
+def _sanitize_card_definitions(definitions: List[Dict[str, Any]],
+                               set_name: str) -> List[Dict[str, Any]]:
+    """
+    Remove unsupported direction keys from terrains and connections, logging at debug level.
+    This prevents odd, non-interactable structures from entering the game.
+    """
+    sanitized: List[Dict[str, Any]] = []
+    for idx, raw_def in enumerate(definitions or []):
+        try:
+            card_def = dict(raw_def)
+            terrains = dict(card_def.get("terrains", {}))
+            connections = card_def.get("connections")
+            connection_groups = card_def.get("connection_groups")
+
+            unsupported_terrain_keys = [
+                d for d in terrains.keys() if d not in ALLOWED_DIRECTIONS
+            ]
+            if unsupported_terrain_keys:
+                logger.debug(
+                    f"Card set '{set_name}' card #{idx} ({card_def.get('image','?')}) "
+                    f"contains unsupported terrain keys {unsupported_terrain_keys}; ignoring.")
+            filtered_terrains = {k: v for k, v in terrains.items() if k in ALLOWED_DIRECTIONS}
+            sanitized_terrains = {}
+            for dir_key, terrain_value in filtered_terrains.items():
+                if terrain_value is None:
+                    sanitized_terrains[dir_key] = None
+                    continue
+                try:
+                    terrain_str = str(terrain_value).lower()
+                except Exception:
+                    terrain_str = None
+                if terrain_str not in ALLOWED_TERRAINS:
+                    logger.debug(
+                        f"Card set '{set_name}' card #{idx} ({card_def.get('image','?')}) "
+                        f"has unsupported terrain type '{terrain_value}' at '{dir_key}'; setting to None.")
+                    sanitized_terrains[dir_key] = None
+                else:
+                    sanitized_terrains[dir_key] = terrain_str
+            terrains = sanitized_terrains
+            card_def["terrains"] = terrains
+
+            base_connections: Dict[str, List[str]] = {}
+            
+            if isinstance(connection_groups, list):
+                for gi, group in enumerate(connection_groups):
+                    if not isinstance(group, list):
+                        logger.debug(
+                            f"Card set '{set_name}' card #{idx} group #{gi} is not a list; skipping.")
+                        continue
+                    valid = [d for d in group if d in ALLOWED_DIRECTIONS]
+                    dropped = set(group) - set(valid)
+                    if dropped:
+                        logger.debug(
+                            f"Card set '{set_name}' card #{idx} ({card_def.get('image','?')}) "
+                            f"drops unsupported directions in connection_groups: {sorted(dropped)}.")
+                    for from_dir in valid:
+                        others = [d for d in valid if d != from_dir]
+                        if not others:
+                            continue
+                        existing = set(base_connections.get(from_dir, []))
+                        existing.update(others)
+                        base_connections[from_dir] = sorted(existing)
+
+            # Merge/validate explicit connections dict
+            if connections is not None:
+                if not isinstance(connections, dict):
+                    logger.debug(
+                        f"Card set '{set_name}' card #{idx} has invalid connections type; dropping.")
+                    connections = None
+                else:
+                    for from_dir, to_list in connections.items():
+                        if from_dir not in ALLOWED_DIRECTIONS:
+                            logger.debug(
+                                f"Card set '{set_name}' card #{idx} ({card_def.get('image','?')}) "
+                                f"connection from unsupported '{from_dir}'; ignoring.")
+                            continue
+                        if not isinstance(to_list, list):
+                            continue
+                        filtered_to = [d for d in to_list if d in ALLOWED_DIRECTIONS]
+                        dropped = set(to_list) - set(filtered_to)
+                        if dropped:
+                            logger.debug(
+                                f"Card set '{set_name}' card #{idx} ({card_def.get('image','?')}) "
+                                f"drops unsupported connection targets {sorted(dropped)} from '{from_dir}'.")
+                        if filtered_to:
+                            merged = set(base_connections.get(from_dir, []))
+                            merged.update(filtered_to)
+                            base_connections[from_dir] = sorted(merged)
+
+            card_def["connections"] = base_connections if base_connections else None
+            # Remove helper field if present, to avoid leaking into runtime
+            if "connection_groups" in card_def:
+                del card_def["connection_groups"]
+
+            sanitized.append(card_def)
+        except Exception as e:
+            logger.debug(
+                f"Failed to sanitize card definition #{idx} in set '{set_name}': {e}")
+            sanitized.append(raw_def)
+    return sanitized
+
 
 def discover_card_sets() -> List[str]:
     """
@@ -45,6 +150,8 @@ def load_card_set(set_name: str) -> Dict[str, Any]:
         else:
             logger.warning(f"Card set {set_name} has no card definitions")
             definitions = []
+
+        definitions = _sanitize_card_definitions(definitions, set_name)
 
         # Get card distributions
         if hasattr(module, 'get_card_distributions'):

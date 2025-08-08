@@ -20,6 +20,8 @@ PLAYERS = [
     "Player 1", "Player 2", "Player 3", "Player 4", "Player 5", "Player 6"
 ]
 
+SELECTED_CARD_SETS = ["1_base_game"]
+
 # Network Mode: "host" or "client" or "local"
 NETWORK_MODE = "local"
 
@@ -35,7 +37,6 @@ WINDOW_WIDTH = 1920
 WINDOW_HEIGHT = 1080
 FULLSCREEN = False
 SHOW_VALID_PLACEMENTS = True
-SELECTED_CARD_SETS = ['base_game_center_test']
 
 # Apply dynamic fullscreen resolution override if needed
 if FULLSCREEN:

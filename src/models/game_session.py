@@ -604,14 +604,29 @@ class GameSession:
                 "N": (cx, cy - 1, "S"),
                 "S": (cx, cy + 1, "N"),
                 "E": (cx + 1, cy, "W"),
-                "W": (cx - 1, cy, "E")
+                "W": (cx - 1, cy, "E"),
+                "NW": (cx - 1, cy - 1, "SE"),
+                "NE": (cx + 1, cy - 1, "SW"),
+                "SW": (cx - 1, cy + 1, "NE"),
+                "SE": (cx + 1, cy + 1, "NW"),
             }
+            corner_side_adjacents = {
+                "NW": [((cx - 1, cy), "NE"), ((cx, cy - 1), "SW")],
+                "NE": [((cx + 1, cy), "NW"), ((cx, cy - 1), "SE")],
+                "SW": [((cx - 1, cy), "SE"), ((cx, cy + 1), "NW")],
+                "SE": [((cx + 1, cy), "SW"), ((cx, cy + 1), "NE")],
+            }
+            """
             if terrain_type == "field":
                 edge_line_adjacents = {
                     "N": [((cx - 1, cy), "N"), ((cx + 1, cy), "N")],
                     "S": [((cx - 1, cy), "S"), ((cx + 1, cy), "S")],
                     "E": [((cx, cy - 1), "E"), ((cx, cy + 1), "E")],
                     "W": [((cx, cy - 1), "W"), ((cx, cy + 1), "W")],
+                    "NW": [((cx, cy - 1), "SW"), ((cx - 1, cy), "NE")],
+                    "NE": [((cx, cy - 1), "SE"), ((cx + 1, cy), "NW")],
+                    "SW": [((cx, cy + 1), "NW"), ((cx - 1, cy), "SE")],
+                    "SE": [((cx, cy + 1), "NE"), ((cx + 1, cy), "SW")],
                 }
                 if cdir in edge_line_adjacents:
                     for (nx, ny), ndir in edge_line_adjacents[cdir]:
@@ -620,12 +635,18 @@ class GameSession:
                                 ndir) == terrain_type:
                             if (nx, ny, ndir) not in visited:
                                 stack.append((nx, ny, ndir))
+            """
             if cdir in neighbors:
                 nx, ny, ndir = neighbors[cdir]
                 neighbor = self.game_board.get_card(nx, ny)
                 if neighbor and neighbor.get_terrains().get(
                         ndir) == terrain_type:
                     stack.append((nx, ny, ndir))
+            if cdir in corner_side_adjacents:
+                for (nx, ny), ndir in corner_side_adjacents[cdir]:
+                    neighbor = self.game_board.get_card(nx, ny)
+                    if neighbor and neighbor.get_terrains().get(ndir) == terrain_type:
+                        stack.append((nx, ny, ndir))
         return visited
 
     def score_structure(self, structure: typing.Any) -> None:

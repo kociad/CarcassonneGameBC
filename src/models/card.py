@@ -114,19 +114,24 @@ class Card:
             "E": "S",
             "S": "W",
             "W": "N",
+            "NW": "NE",
+            "NE": "SE",
+            "SE": "SW",
+            "SW": "NW",
             "C": "C",
         }
-        self.terrains = {
-            direction_map[dir]: self.terrains[dir]
-            for dir in self.terrains
-        }
+        new_terrains = {}
+        for dir, terrain in self.terrains.items():
+            new_dir = direction_map.get(dir, dir)
+            new_terrains[new_dir] = terrain
+        self.terrains = new_terrains
 
         if self.connections:
             new_connections = {}
             for dir, connectedList in self.connections.items():
-                new_dir = direction_map[dir]
+                new_dir = direction_map.get(dir, dir)
                 new_connections[new_dir] = [
-                    direction_map[conn] for conn in connectedList
+                    direction_map.get(conn, conn) for conn in connectedList
                 ]
 
             self.connections = new_connections
