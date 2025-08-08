@@ -254,6 +254,10 @@ class SettingsScene(Scene):
         self.ai_strategic_candidates_field.set_disabled(not new_value)
         self.ai_thinking_speed_field.set_disabled(not new_value)
         self.log_to_console_checkbox.set_disabled(not new_value)
+        
+        if not new_value:
+            self.log_to_console_checkbox.set_checked(False)
+            settings_manager.set("LOG_TO_CONSOLE", False, temporary=True)
 
     def handle_events(self, events: list[pygame.event.Event]) -> None:
         self._apply_scroll(events)
