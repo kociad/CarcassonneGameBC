@@ -356,10 +356,12 @@ class SettingsScene(Scene):
             changes["WINDOW_HEIGHT"] = height
 
         changes["FULLSCREEN"] = self.fullscreen_checkbox.is_checked()
-        changes["DEBUG"] = self.debug_checkbox.is_checked()
-        if not self.log_to_console_checkbox.is_disabled():
-            changes[
-                "LOG_TO_CONSOLE"] = self.log_to_console_checkbox.is_checked()
+        debug_checked = self.debug_checkbox.is_checked()
+        changes["DEBUG"] = debug_checked
+        if not debug_checked:
+            changes["LOG_TO_CONSOLE"] = False
+        elif not self.log_to_console_checkbox.is_disabled():
+            changes["LOG_TO_CONSOLE"] = self.log_to_console_checkbox.is_checked()
         if not self.valid_placement_checkbox.is_disabled():
             changes[
                 "SHOW_VALID_PLACEMENTS"] = self.valid_placement_checkbox.is_checked(
