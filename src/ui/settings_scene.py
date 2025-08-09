@@ -254,7 +254,7 @@ class SettingsScene(Scene):
         self.ai_strategic_candidates_field.set_disabled(not new_value)
         self.ai_thinking_speed_field.set_disabled(not new_value)
         self.log_to_console_checkbox.set_disabled(not new_value)
-        
+
         if not new_value:
             self.log_to_console_checkbox.set_checked(False)
             settings_manager.set("LOG_TO_CONSOLE", False, temporary=True)
@@ -361,7 +361,8 @@ class SettingsScene(Scene):
         if not debug_checked:
             changes["LOG_TO_CONSOLE"] = False
         elif not self.log_to_console_checkbox.is_disabled():
-            changes["LOG_TO_CONSOLE"] = self.log_to_console_checkbox.is_checked()
+            changes[
+                "LOG_TO_CONSOLE"] = self.log_to_console_checkbox.is_checked()
         if not self.valid_placement_checkbox.is_disabled():
             changes[
                 "SHOW_VALID_PLACEMENTS"] = self.valid_placement_checkbox.is_checked(

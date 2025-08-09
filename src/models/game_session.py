@@ -645,7 +645,8 @@ class GameSession:
             if cdir in corner_side_adjacents:
                 for (nx, ny), ndir in corner_side_adjacents[cdir]:
                     neighbor = self.game_board.get_card(nx, ny)
-                    if neighbor and neighbor.get_terrains().get(ndir) == terrain_type:
+                    if neighbor and neighbor.get_terrains().get(
+                            ndir) == terrain_type:
                         stack.append((nx, ny, ndir))
         return visited
 

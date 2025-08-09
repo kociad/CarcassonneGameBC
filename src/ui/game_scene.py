@@ -351,66 +351,151 @@ class GameScene(Scene):
                                                   pygame.SRCALPHA)
                             rect.fill((0, 0, 0, 0))
                             for direction in directions:
-                                terrains_for_card = card.get_terrains() if hasattr(card, 'get_terrains') else {}
+                                terrains_for_card = card.get_terrains(
+                                ) if hasattr(card, 'get_terrains') else {}
                                 square_size = tile_size // 3
                                 # Corners
                                 if direction == "NW":
-                                    pygame.draw.rect(rect, tint_color, (0, 0, square_size, square_size))
-                                    pygame.draw.rect(rect, (255, 255, 255), (0, 0, square_size, square_size), 2)
+                                    pygame.draw.rect(
+                                        rect, tint_color,
+                                        (0, 0, square_size, square_size))
+                                    pygame.draw.rect(
+                                        rect, (255, 255, 255),
+                                        (0, 0, square_size, square_size), 2)
                                 elif direction == "NE":
-                                    pygame.draw.rect(rect, tint_color, (2 * square_size, 0, square_size, square_size))
-                                    pygame.draw.rect(rect, (255, 255, 255), (2 * square_size, 0, square_size, square_size), 2)
+                                    pygame.draw.rect(
+                                        rect, tint_color,
+                                        (2 * square_size, 0, square_size,
+                                         square_size))
+                                    pygame.draw.rect(
+                                        rect, (255, 255, 255),
+                                        (2 * square_size, 0, square_size,
+                                         square_size), 2)
                                 elif direction == "SW":
-                                    pygame.draw.rect(rect, tint_color, (0, 2 * square_size, square_size, square_size))
-                                    pygame.draw.rect(rect, (255, 255, 255), (0, 2 * square_size, square_size, square_size), 2)
+                                    pygame.draw.rect(
+                                        rect, tint_color,
+                                        (0, 2 * square_size, square_size,
+                                         square_size))
+                                    pygame.draw.rect(
+                                        rect, (255, 255, 255),
+                                        (0, 2 * square_size, square_size,
+                                         square_size), 2)
                                 elif direction == "SE":
-                                    pygame.draw.rect(rect, tint_color, (2 * square_size, 2 * square_size, square_size, square_size))
-                                    pygame.draw.rect(rect, (255, 255, 255), (2 * square_size, 2 * square_size, square_size, square_size), 2)
+                                    pygame.draw.rect(
+                                        rect, tint_color,
+                                        (2 * square_size, 2 * square_size,
+                                         square_size, square_size))
+                                    pygame.draw.rect(
+                                        rect, (255, 255, 255),
+                                        (2 * square_size, 2 * square_size,
+                                         square_size, square_size), 2)
                                 # Center
                                 elif direction == "C":
                                     center_x = tile_size // 2
                                     center_y = tile_size // 2
                                     square_x = center_x - square_size // 2
                                     square_y = center_y - square_size // 2
-                                    pygame.draw.rect(rect, tint_color, (square_x, square_y, square_size, square_size))
-                                    pygame.draw.rect(rect, (255, 255, 255), (square_x, square_y, square_size, square_size), 2)
+                                    pygame.draw.rect(
+                                        rect, tint_color,
+                                        (square_x, square_y, square_size,
+                                         square_size))
+                                    pygame.draw.rect(
+                                        rect, (255, 255, 255),
+                                        (square_x, square_y, square_size,
+                                         square_size), 2)
                                 # Edges
                                 elif direction == "N":
-                                    edge_has_corners = bool(terrains_for_card.get("NW") is not None or terrains_for_card.get("NE") is not None)
+                                    edge_has_corners = bool(
+                                        terrains_for_card.get("NW") is not None
+                                        or terrains_for_card.get("NE")
+                                        is not None)
                                     if edge_has_corners:
                                         mid_x = (tile_size - square_size) // 2
-                                        pygame.draw.rect(rect, tint_color, (mid_x, 0, square_size, square_size))
-                                        pygame.draw.rect(rect, (255, 255, 255), (mid_x, 0, square_size, square_size), 2)
+                                        pygame.draw.rect(
+                                            rect, tint_color,
+                                            (mid_x, 0, square_size,
+                                             square_size))
+                                        pygame.draw.rect(
+                                            rect, (255, 255, 255),
+                                            (mid_x, 0, square_size,
+                                             square_size), 2)
                                     else:
-                                        pygame.draw.rect(rect, tint_color, (0, 0, tile_size, square_size))
-                                        pygame.draw.rect(rect, (255, 255, 255), (0, 0, tile_size, square_size), 2)
+                                        pygame.draw.rect(
+                                            rect, tint_color,
+                                            (0, 0, tile_size, square_size))
+                                        pygame.draw.rect(
+                                            rect, (255, 255, 255),
+                                            (0, 0, tile_size, square_size), 2)
                                 elif direction == "S":
-                                    edge_has_corners = bool(terrains_for_card.get("SW") is not None or terrains_for_card.get("SE") is not None)
+                                    edge_has_corners = bool(
+                                        terrains_for_card.get("SW") is not None
+                                        or terrains_for_card.get("SE")
+                                        is not None)
                                     if edge_has_corners:
                                         mid_x = (tile_size - square_size) // 2
-                                        pygame.draw.rect(rect, tint_color, (mid_x, 2 * square_size, square_size, square_size))
-                                        pygame.draw.rect(rect, (255, 255, 255), (mid_x, 2 * square_size, square_size, square_size), 2)
+                                        pygame.draw.rect(
+                                            rect, tint_color,
+                                            (mid_x, 2 * square_size,
+                                             square_size, square_size))
+                                        pygame.draw.rect(
+                                            rect, (255, 255, 255),
+                                            (mid_x, 2 * square_size,
+                                             square_size, square_size), 2)
                                     else:
-                                        pygame.draw.rect(rect, tint_color, (0, 2 * square_size, tile_size, square_size))
-                                        pygame.draw.rect(rect, (255, 255, 255), (0, 2 * square_size, tile_size, square_size), 2)
+                                        pygame.draw.rect(
+                                            rect, tint_color,
+                                            (0, 2 * square_size, tile_size,
+                                             square_size))
+                                        pygame.draw.rect(
+                                            rect, (255, 255, 255),
+                                            (0, 2 * square_size, tile_size,
+                                             square_size), 2)
                                 elif direction == "E":
-                                    edge_has_corners = bool(terrains_for_card.get("NE") is not None or terrains_for_card.get("SE") is not None)
+                                    edge_has_corners = bool(
+                                        terrains_for_card.get("NE") is not None
+                                        or terrains_for_card.get("SE")
+                                        is not None)
                                     if edge_has_corners:
                                         mid_y = (tile_size - square_size) // 2
-                                        pygame.draw.rect(rect, tint_color, (2 * square_size, mid_y, square_size, square_size))
-                                        pygame.draw.rect(rect, (255, 255, 255), (2 * square_size, mid_y, square_size, square_size), 2)
+                                        pygame.draw.rect(
+                                            rect, tint_color,
+                                            (2 * square_size, mid_y,
+                                             square_size, square_size))
+                                        pygame.draw.rect(
+                                            rect, (255, 255, 255),
+                                            (2 * square_size, mid_y,
+                                             square_size, square_size), 2)
                                     else:
-                                        pygame.draw.rect(rect, tint_color, (2 * square_size, 0, square_size, tile_size))
-                                        pygame.draw.rect(rect, (255, 255, 255), (2 * square_size, 0, square_size, tile_size), 2)
+                                        pygame.draw.rect(
+                                            rect, tint_color,
+                                            (2 * square_size, 0, square_size,
+                                             tile_size))
+                                        pygame.draw.rect(
+                                            rect, (255, 255, 255),
+                                            (2 * square_size, 0, square_size,
+                                             tile_size), 2)
                                 elif direction == "W":
-                                    edge_has_corners = bool(terrains_for_card.get("NW") is not None or terrains_for_card.get("SW") is not None)
+                                    edge_has_corners = bool(
+                                        terrains_for_card.get("NW") is not None
+                                        or terrains_for_card.get("SW")
+                                        is not None)
                                     if edge_has_corners:
                                         mid_y = (tile_size - square_size) // 2
-                                        pygame.draw.rect(rect, tint_color, (0, mid_y, square_size, square_size))
-                                        pygame.draw.rect(rect, (255, 255, 255), (0, mid_y, square_size, square_size), 2)
+                                        pygame.draw.rect(
+                                            rect, tint_color,
+                                            (0, mid_y, square_size,
+                                             square_size))
+                                        pygame.draw.rect(
+                                            rect, (255, 255, 255),
+                                            (0, mid_y, square_size,
+                                             square_size), 2)
                                     else:
-                                        pygame.draw.rect(rect, tint_color, (0, 0, square_size, tile_size))
-                                        pygame.draw.rect(rect, (255, 255, 255), (0, 0, square_size, tile_size), 2)
+                                        pygame.draw.rect(
+                                            rect, tint_color,
+                                            (0, 0, square_size, tile_size))
+                                        pygame.draw.rect(
+                                            rect, (255, 255, 255),
+                                            (0, 0, square_size, tile_size), 2)
 
                             self.screen.blit(
                                 rect, (card_x * tile_size - self.offset_x,
@@ -419,9 +504,11 @@ class GameScene(Scene):
             # Draw hover highlight for structure placement
             if settings_manager.get("DEBUG"):
                 mouse_x, mouse_y = pygame.mouse.get_pos()
-                hovered_structure = self._get_hovered_structure(mouse_x, mouse_y)
+                hovered_structure = self._get_hovered_structure(
+                    mouse_x, mouse_y)
                 if hovered_structure:
-                    hover_color = (255, 255, 0, 150)  # Yellow with transparency
+                    hover_color = (255, 255, 0, 150
+                                   )  # Yellow with transparency
                     structure_type = hovered_structure.get_structure_type()
 
                     card_edge_map = {}
@@ -443,63 +530,148 @@ class GameScene(Scene):
                                                   pygame.SRCALPHA)
                             rect.fill((0, 0, 0, 0))
                             for direction in directions:
-                                terrains_for_card = card.get_terrains() if hasattr(card, 'get_terrains') else {}
+                                terrains_for_card = card.get_terrains(
+                                ) if hasattr(card, 'get_terrains') else {}
                                 square_size = tile_size // 3
                                 if direction == "NW":
-                                    pygame.draw.rect(rect, hover_color, (0, 0, square_size, square_size))
-                                    pygame.draw.rect(rect, (255, 255, 255), (0, 0, square_size, square_size), 2)
+                                    pygame.draw.rect(
+                                        rect, hover_color,
+                                        (0, 0, square_size, square_size))
+                                    pygame.draw.rect(
+                                        rect, (255, 255, 255),
+                                        (0, 0, square_size, square_size), 2)
                                 elif direction == "NE":
-                                    pygame.draw.rect(rect, hover_color, (2 * square_size, 0, square_size, square_size))
-                                    pygame.draw.rect(rect, (255, 255, 255), (2 * square_size, 0, square_size, square_size), 2)
+                                    pygame.draw.rect(
+                                        rect, hover_color,
+                                        (2 * square_size, 0, square_size,
+                                         square_size))
+                                    pygame.draw.rect(
+                                        rect, (255, 255, 255),
+                                        (2 * square_size, 0, square_size,
+                                         square_size), 2)
                                 elif direction == "SW":
-                                    pygame.draw.rect(rect, hover_color, (0, 2 * square_size, square_size, square_size))
-                                    pygame.draw.rect(rect, (255, 255, 255), (0, 2 * square_size, square_size, square_size), 2)
+                                    pygame.draw.rect(
+                                        rect, hover_color,
+                                        (0, 2 * square_size, square_size,
+                                         square_size))
+                                    pygame.draw.rect(
+                                        rect, (255, 255, 255),
+                                        (0, 2 * square_size, square_size,
+                                         square_size), 2)
                                 elif direction == "SE":
-                                    pygame.draw.rect(rect, hover_color, (2 * square_size, 2 * square_size, square_size, square_size))
-                                    pygame.draw.rect(rect, (255, 255, 255), (2 * square_size, 2 * square_size, square_size, square_size), 2)
+                                    pygame.draw.rect(
+                                        rect, hover_color,
+                                        (2 * square_size, 2 * square_size,
+                                         square_size, square_size))
+                                    pygame.draw.rect(
+                                        rect, (255, 255, 255),
+                                        (2 * square_size, 2 * square_size,
+                                         square_size, square_size), 2)
                                 elif direction == "C":
                                     center_x = tile_size // 2
                                     center_y = tile_size // 2
                                     square_x = center_x - square_size // 2
                                     square_y = center_y - square_size // 2
-                                    pygame.draw.rect(rect, hover_color, (square_x, square_y, square_size, square_size))
-                                    pygame.draw.rect(rect, (255, 255, 255), (square_x, square_y, square_size, square_size), 2)
+                                    pygame.draw.rect(
+                                        rect, hover_color,
+                                        (square_x, square_y, square_size,
+                                         square_size))
+                                    pygame.draw.rect(
+                                        rect, (255, 255, 255),
+                                        (square_x, square_y, square_size,
+                                         square_size), 2)
                                 elif direction == "N":
-                                    edge_has_corners = bool(terrains_for_card.get("NW") is not None or terrains_for_card.get("NE") is not None)
+                                    edge_has_corners = bool(
+                                        terrains_for_card.get("NW") is not None
+                                        or terrains_for_card.get("NE")
+                                        is not None)
                                     if edge_has_corners:
                                         mid_x = (tile_size - square_size) // 2
-                                        pygame.draw.rect(rect, hover_color, (mid_x, 0, square_size, square_size))
-                                        pygame.draw.rect(rect, (255, 255, 255), (mid_x, 0, square_size, square_size), 2)
+                                        pygame.draw.rect(
+                                            rect, hover_color,
+                                            (mid_x, 0, square_size,
+                                             square_size))
+                                        pygame.draw.rect(
+                                            rect, (255, 255, 255),
+                                            (mid_x, 0, square_size,
+                                             square_size), 2)
                                     else:
-                                        pygame.draw.rect(rect, hover_color, (0, 0, tile_size, square_size))
-                                        pygame.draw.rect(rect, (255, 255, 255), (0, 0, tile_size, square_size), 2)
+                                        pygame.draw.rect(
+                                            rect, hover_color,
+                                            (0, 0, tile_size, square_size))
+                                        pygame.draw.rect(
+                                            rect, (255, 255, 255),
+                                            (0, 0, tile_size, square_size), 2)
                                 elif direction == "S":
-                                    edge_has_corners = bool(terrains_for_card.get("SW") is not None or terrains_for_card.get("SE") is not None)
+                                    edge_has_corners = bool(
+                                        terrains_for_card.get("SW") is not None
+                                        or terrains_for_card.get("SE")
+                                        is not None)
                                     if edge_has_corners:
                                         mid_x = (tile_size - square_size) // 2
-                                        pygame.draw.rect(rect, hover_color, (mid_x, 2 * square_size, square_size, square_size))
-                                        pygame.draw.rect(rect, (255, 255, 255), (mid_x, 2 * square_size, square_size, square_size), 2)
+                                        pygame.draw.rect(
+                                            rect, hover_color,
+                                            (mid_x, 2 * square_size,
+                                             square_size, square_size))
+                                        pygame.draw.rect(
+                                            rect, (255, 255, 255),
+                                            (mid_x, 2 * square_size,
+                                             square_size, square_size), 2)
                                     else:
-                                        pygame.draw.rect(rect, hover_color, (0, 2 * square_size, tile_size, square_size))
-                                        pygame.draw.rect(rect, (255, 255, 255), (0, 2 * square_size, tile_size, square_size), 2)
+                                        pygame.draw.rect(
+                                            rect, hover_color,
+                                            (0, 2 * square_size, tile_size,
+                                             square_size))
+                                        pygame.draw.rect(
+                                            rect, (255, 255, 255),
+                                            (0, 2 * square_size, tile_size,
+                                             square_size), 2)
                                 elif direction == "E":
-                                    edge_has_corners = bool(terrains_for_card.get("NE") is not None or terrains_for_card.get("SE") is not None)
+                                    edge_has_corners = bool(
+                                        terrains_for_card.get("NE") is not None
+                                        or terrains_for_card.get("SE")
+                                        is not None)
                                     if edge_has_corners:
                                         mid_y = (tile_size - square_size) // 2
-                                        pygame.draw.rect(rect, hover_color, (2 * square_size, mid_y, square_size, square_size))
-                                        pygame.draw.rect(rect, (255, 255, 255), (2 * square_size, mid_y, square_size, square_size), 2)
+                                        pygame.draw.rect(
+                                            rect, hover_color,
+                                            (2 * square_size, mid_y,
+                                             square_size, square_size))
+                                        pygame.draw.rect(
+                                            rect, (255, 255, 255),
+                                            (2 * square_size, mid_y,
+                                             square_size, square_size), 2)
                                     else:
-                                        pygame.draw.rect(rect, hover_color, (2 * square_size, 0, square_size, tile_size))
-                                        pygame.draw.rect(rect, (255, 255, 255), (2 * square_size, 0, square_size, tile_size), 2)
+                                        pygame.draw.rect(
+                                            rect, hover_color,
+                                            (2 * square_size, 0, square_size,
+                                             tile_size))
+                                        pygame.draw.rect(
+                                            rect, (255, 255, 255),
+                                            (2 * square_size, 0, square_size,
+                                             tile_size), 2)
                                 elif direction == "W":
-                                    edge_has_corners = bool(terrains_for_card.get("NW") is not None or terrains_for_card.get("SW") is not None)
+                                    edge_has_corners = bool(
+                                        terrains_for_card.get("NW") is not None
+                                        or terrains_for_card.get("SW")
+                                        is not None)
                                     if edge_has_corners:
                                         mid_y = (tile_size - square_size) // 2
-                                        pygame.draw.rect(rect, hover_color, (0, mid_y, square_size, square_size))
-                                        pygame.draw.rect(rect, (255, 255, 255), (0, mid_y, square_size, square_size), 2)
+                                        pygame.draw.rect(
+                                            rect, hover_color,
+                                            (0, mid_y, square_size,
+                                             square_size))
+                                        pygame.draw.rect(
+                                            rect, (255, 255, 255),
+                                            (0, mid_y, square_size,
+                                             square_size), 2)
                                     else:
-                                        pygame.draw.rect(rect, hover_color, (0, 0, square_size, tile_size))
-                                        pygame.draw.rect(rect, (255, 255, 255), (0, 0, square_size, tile_size), 2)
+                                        pygame.draw.rect(
+                                            rect, hover_color,
+                                            (0, 0, square_size, tile_size))
+                                        pygame.draw.rect(
+                                            rect, (255, 255, 255),
+                                            (0, 0, square_size, tile_size), 2)
 
                             self.screen.blit(
                                 rect, (card_x * tile_size - self.offset_x,
@@ -924,13 +1096,17 @@ class GameScene(Scene):
         two_third_size = 2 * tile_size // 3
 
         terrains = card.get_terrains()
-        if relative_x < third_size and relative_y < third_size and terrains.get("NW") is not None:
+        if relative_x < third_size and relative_y < third_size and terrains.get(
+                "NW") is not None:
             return "NW"
-        if relative_x >= two_third_size and relative_y < third_size and terrains.get("NE") is not None:
+        if relative_x >= two_third_size and relative_y < third_size and terrains.get(
+                "NE") is not None:
             return "NE"
-        if relative_x < third_size and relative_y >= two_third_size and terrains.get("SW") is not None:
+        if relative_x < third_size and relative_y >= two_third_size and terrains.get(
+                "SW") is not None:
             return "SW"
-        if relative_x >= two_third_size and relative_y >= two_third_size and terrains.get("SE") is not None:
+        if relative_x >= two_third_size and relative_y >= two_third_size and terrains.get(
+                "SE") is not None:
             return "SE"
 
         if third_size < relative_x < two_third_size and third_size < relative_y < two_third_size:
@@ -946,9 +1122,10 @@ class GameScene(Scene):
 
         return min(distances, key=distances.get)
 
-    def _get_hovered_structure(self, mouse_x: int, mouse_y: int) -> typing.Optional[typing.Any]:
+    def _get_hovered_structure(self, mouse_x: int,
+                               mouse_y: int) -> typing.Optional[typing.Any]:
         """Get the structure that would be selected if placing a meeple at the hovered position."""
-            
+
         tile_size = settings_manager.get("TILE_SIZE")
         grid_x, grid_y = (mouse_x + self.get_offset_x()) // tile_size, (
             mouse_y + self.get_offset_y()) // tile_size
@@ -957,7 +1134,8 @@ class GameScene(Scene):
         if not card:
             return None
 
-        direction = self._detect_click_direction(mouse_x, mouse_y, grid_x, grid_y)
+        direction = self._detect_click_direction(mouse_x, mouse_y, grid_x,
+                                                 grid_y)
         if not direction:
             return None
 

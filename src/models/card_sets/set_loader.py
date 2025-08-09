@@ -34,8 +34,12 @@ def _sanitize_card_definitions(definitions: List[Dict[str, Any]],
             if unsupported_terrain_keys:
                 logger.debug(
                     f"Card set '{set_name}' card #{idx} ({card_def.get('image','?')}) "
-                    f"contains unsupported terrain keys {unsupported_terrain_keys}; ignoring.")
-            filtered_terrains = {k: v for k, v in terrains.items() if k in ALLOWED_DIRECTIONS}
+                    f"contains unsupported terrain keys {unsupported_terrain_keys}; ignoring."
+                )
+            filtered_terrains = {
+                k: v
+                for k, v in terrains.items() if k in ALLOWED_DIRECTIONS
+            }
             sanitized_terrains = {}
             for dir_key, terrain_value in filtered_terrains.items():
                 if terrain_value is None:
@@ -48,7 +52,8 @@ def _sanitize_card_definitions(definitions: List[Dict[str, Any]],
                 if terrain_str not in ALLOWED_TERRAINS:
                     logger.debug(
                         f"Card set '{set_name}' card #{idx} ({card_def.get('image','?')}) "
-                        f"has unsupported terrain type '{terrain_value}' at '{dir_key}'; setting to None.")
+                        f"has unsupported terrain type '{terrain_value}' at '{dir_key}'; setting to None."
+                    )
                     sanitized_terrains[dir_key] = None
                 else:
                     sanitized_terrains[dir_key] = terrain_str
@@ -56,19 +61,21 @@ def _sanitize_card_definitions(definitions: List[Dict[str, Any]],
             card_def["terrains"] = terrains
 
             base_connections: Dict[str, List[str]] = {}
-            
+
             if isinstance(connection_groups, list):
                 for gi, group in enumerate(connection_groups):
                     if not isinstance(group, list):
                         logger.debug(
-                            f"Card set '{set_name}' card #{idx} group #{gi} is not a list; skipping.")
+                            f"Card set '{set_name}' card #{idx} group #{gi} is not a list; skipping."
+                        )
                         continue
                     valid = [d for d in group if d in ALLOWED_DIRECTIONS]
                     dropped = set(group) - set(valid)
                     if dropped:
                         logger.debug(
                             f"Card set '{set_name}' card #{idx} ({card_def.get('image','?')}) "
-                            f"drops unsupported directions in connection_groups: {sorted(dropped)}.")
+                            f"drops unsupported directions in connection_groups: {sorted(dropped)}."
+                        )
                     for from_dir in valid:
                         others = [d for d in valid if d != from_dir]
                         if not others:
@@ -81,29 +88,35 @@ def _sanitize_card_definitions(definitions: List[Dict[str, Any]],
             if connections is not None:
                 if not isinstance(connections, dict):
                     logger.debug(
-                        f"Card set '{set_name}' card #{idx} has invalid connections type; dropping.")
+                        f"Card set '{set_name}' card #{idx} has invalid connections type; dropping."
+                    )
                     connections = None
                 else:
                     for from_dir, to_list in connections.items():
                         if from_dir not in ALLOWED_DIRECTIONS:
                             logger.debug(
                                 f"Card set '{set_name}' card #{idx} ({card_def.get('image','?')}) "
-                                f"connection from unsupported '{from_dir}'; ignoring.")
+                                f"connection from unsupported '{from_dir}'; ignoring."
+                            )
                             continue
                         if not isinstance(to_list, list):
                             continue
-                        filtered_to = [d for d in to_list if d in ALLOWED_DIRECTIONS]
+                        filtered_to = [
+                            d for d in to_list if d in ALLOWED_DIRECTIONS
+                        ]
                         dropped = set(to_list) - set(filtered_to)
                         if dropped:
                             logger.debug(
                                 f"Card set '{set_name}' card #{idx} ({card_def.get('image','?')}) "
-                                f"drops unsupported connection targets {sorted(dropped)} from '{from_dir}'.")
+                                f"drops unsupported connection targets {sorted(dropped)} from '{from_dir}'."
+                            )
                         if filtered_to:
                             merged = set(base_connections.get(from_dir, []))
                             merged.update(filtered_to)
                             base_connections[from_dir] = sorted(merged)
 
-            card_def["connections"] = base_connections if base_connections else None
+            card_def[
+                "connections"] = base_connections if base_connections else None
             # Remove helper field if present, to avoid leaking into runtime
             if "connection_groups" in card_def:
                 del card_def["connection_groups"]
@@ -111,7 +124,8 @@ def _sanitize_card_definitions(definitions: List[Dict[str, Any]],
             sanitized.append(card_def)
         except Exception as e:
             logger.debug(
-                f"Failed to sanitize card definition #{idx} in set '{set_name}': {e}")
+                f"Failed to sanitize card definition #{idx} in set '{set_name}': {e}"
+            )
             sanitized.append(raw_def)
     return sanitized
 
