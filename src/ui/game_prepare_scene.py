@@ -172,7 +172,10 @@ class GamePrepareScene(Scene):
 
         sorted_card_sets = sorted(
             self.available_card_sets,
-            key=lambda x: (x['name'] not in self.default_card_sets, x['name']))
+            key=lambda x: (
+                x['name'] not in self.default_card_sets,
+                x.get('display_name', x['name']).lower(),
+            ))
 
         for card_set in sorted_card_sets:
             is_default = card_set['name'] in self.default_card_sets

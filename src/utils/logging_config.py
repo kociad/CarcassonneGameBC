@@ -72,9 +72,6 @@ def update_logging_level() -> None:
                     handler,
                     logging.StreamHandler) and handler.stream == sys.stdout:
                 handler.setLevel(logging.INFO)
-        logger = logging.getLogger(__name__)
-        logger.info("Debug logging disabled - INFO and above messages visible")
-
 
 def setup_exception_logging():
     """Set up global exception handling to log all unhandled exceptions."""

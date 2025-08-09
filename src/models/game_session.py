@@ -146,8 +146,9 @@ class GameSession:
             if set_data['definitions']:
                 card_definitions.extend(set_data['definitions'])
                 card_distributions.update(set_data['distributions'])
+                display = set_data.get('display_name', set_name)
                 logger.info(
-                    f"Loaded selected card set: {set_name} with {len(set_data['definitions'])} card definitions"
+                    f"Loaded selected card set: {display} with {len(set_data['definitions'])} card definitions"
                 )
 
         cards = []

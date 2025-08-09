@@ -114,7 +114,7 @@ class SettingsScene(Scene):
         self.fps_slider = Slider(rect=(x_center, current_y, 180, 20),
                                  font=self.dropdown_font,
                                  min_value=30,
-                                 max_value=144,
+                                 max_value=240,
                                  value=settings_manager.get("FPS", 60),
                                  on_change=None)
         self.fps_slider.set_disabled(not settings_manager.get("DEBUG"))

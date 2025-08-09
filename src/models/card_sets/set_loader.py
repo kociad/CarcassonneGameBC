@@ -176,18 +176,26 @@ def load_card_set(set_name: str) -> Dict[str, Any]:
             logger.warning(f"Card set {set_name} has no card distributions")
             distributions = {}
 
+        display_name = set_name
+        try:
+            if hasattr(module, 'CARD_SET_NAME'):
+                display_name = getattr(module, 'CARD_SET_NAME')
+        except Exception:
+            pass
+
         return {
             'definitions': definitions,
             'distributions': distributions,
-            'name': set_name
+            'name': set_name,
+            'display_name': display_name
         }
 
     except ImportError as e:
         logger.error(f"Failed to load card set {set_name}: {e}")
-        return {'definitions': [], 'distributions': {}, 'name': set_name}
+        return {'definitions': [], 'distributions': {}, 'name': set_name, 'display_name': set_name}
     except Exception as e:
         logger.error(f"Error loading card set {set_name}: {e}")
-        return {'definitions': [], 'distributions': {}, 'name': set_name}
+        return {'definitions': [], 'distributions': {}, 'name': set_name, 'display_name': set_name}
 
 
 def load_all_card_sets() -> Dict[str, Any]:
