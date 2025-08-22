@@ -305,6 +305,14 @@ class GameScene(Scene):
                                      (x * tile_size - self.offset_x,
                                       y * tile_size - self.offset_y))
 
+                    last_placed_card = self.session.last_placed_card if hasattr(self.session, 'last_placed_card') else None
+                    if last_placed_card is not None and card == last_placed_card:
+                        highlight_rect = pygame.Rect(
+                            x * tile_size - self.offset_x,
+                            y * tile_size - self.offset_y,
+                            tile_size, tile_size)
+                        pygame.draw.rect(self.screen, (255, 255, 0), highlight_rect, 5)
+
                     if x == center_x and y == center_y:
                         try:
                             compass_image = pygame.image.load(
