@@ -5,57 +5,43 @@
 import asyncio
 import pygame
 import sys
-import os
-
-# Přidáme src do Python path
-current_dir = os.path.dirname(os.path.abspath(__file__))
-src_path = os.path.join(current_dir, 'src')
-if src_path not in sys.path:
-    sys.path.insert(0, src_path)
 
 async def main():
-    try:
-        # Import až po nastavení cesty
-        from game import Game
-        
-        print("Initializing game...")
-        game = Game()
-        print("Game initialized, starting main loop...")
-        
-        running = True
-        while running:
-            events = pygame.event.get()
-            
-            # Kontrola quit událostí
-            for event in events:
-                if event.type == pygame.QUIT:
-                    running = False
-                    break
-            
-            if not running:
-                break
-                
-            # Update hry
-            if hasattr(game, '_current_scene') and game._current_scene:
-                try:
-                    game._current_scene.handle_events(events)
-                    game._current_scene.update()
-                    game._current_scene.draw()
-                    pygame.display.flip()
-                except Exception as e:
-                    print(f"Error in game loop: {e}")
-                    
-            # Kritické pro pygbag - yield control
-            await asyncio.sleep(0)
-            
-    except Exception as e:
-        print(f"Error starting game: {e}")
-        import traceback
-        traceback.print_exc()
+    print("Starting pygame...")
+    pygame.init()
     
-    print("Game loop ended")
+    # Jednoduchý test
+    screen = pygame.display.set_mode((800, 600))
+    pygame.display.set_caption("Test Carcassonne")
+    
+    clock = pygame.time.Clock()
+    running = True
+    
+    print("Entering main loop...")
+    
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+        
+        # Vyplnit obrazovku modrou barvou
+        screen.fill((0, 100, 200))
+        
+        # Nakreslit text
+        font = pygame.font.Font(None, 74)
+        text = font.render("Carcassonne Web Test", True, (255, 255, 255))
+        text_rect = text.get_rect(center=(400, 300))
+        screen.blit(text, text_rect)
+        
+        pygame.display.flip()
+        clock.tick(60)
+        
+        # Kritické pro pygbag
+        await asyncio.sleep(0)
+    
     pygame.quit()
+    print("Game ended")
 
 if __name__ == "__main__":
-    print("Starting Carcassonne web version...")
+    print("Python script started")
     asyncio.run(main())
