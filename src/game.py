@@ -51,32 +51,38 @@ class Game:
         try:
             pygame.init()
 
-            if settings_manager.get("FULLSCREEN", False):
-                info = pygame.display.Info()
-                self._screen = pygame.display.set_mode(
-                    (info.current_w, info.current_h), pygame.FULLSCREEN)
+            # Lower resolution for web view
+            if "pygbag" in sys.modules:
+                self._screen = pygame.display.set_mode((1280, 720))
+
+            # Desktop
             else:
-                width = settings_manager.get("WINDOW_WIDTH", 1920)
-                height = settings_manager.get("WINDOW_HEIGHT", 1080)
-                self._screen = pygame.display.set_mode((width, height))
+                if settings_manager.get("FULLSCREEN", False):
+                    info = pygame.display.Info()
+                    self._screen = pygame.display.set_mode(
+                        (info.current_w, info.current_h), pygame.FULLSCREEN)
+                else:
+                    width = settings_manager.get("WINDOW_WIDTH", 1920)
+                    height = settings_manager.get("WINDOW_HEIGHT", 1080)
+                    self._screen = pygame.display.set_mode((width, height))
 
-            pygame.display.set_caption("Carcassonne")
+                pygame.display.set_caption("Carcassonne")
 
-            self._clock = pygame.time.Clock()
-            self._running = True
+                self._clock = pygame.time.Clock()
+                self._running = True
 
-            # Initialize persistent game log
-            self._game_log = GameLog()
-            set_game_log_instance(self._game_log)
+                # Initialize persistent game log
+                self._game_log = GameLog()
+                set_game_log_instance(self._game_log)
 
-            # Game-related attributes (deferred until game starts)
-            self._game_session = None
-            self._network = None
+                # Game-related attributes (deferred until game starts)
+                self._game_session = None
+                self._network = None
 
-            self._current_scene = None
-            self._init_scene(GameState.MENU)
+                self._current_scene = None
+                self._init_scene(GameState.MENU)
 
-            logger.debug("Game initialized successfully")
+                logger.debug("Game initialized successfully")
 
         except Exception as e:
             log_error("Failed to initialize game", e)
