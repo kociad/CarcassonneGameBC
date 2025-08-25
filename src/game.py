@@ -7,6 +7,8 @@ scene transitions, network communication, and overall game state.
 
 import pygame
 import logging
+import sys
+import os
 from datetime import datetime
 import typing
 
@@ -31,6 +33,9 @@ from ui.lobby_scene import LobbyScene
 configure_logging()
 logger = logging.getLogger(__name__)
 
+# Detect web view
+IS_WEB = "pygbag" in sys.modules or "asyncio" in sys.modules
+
 
 class Game:
     """
@@ -52,9 +57,9 @@ class Game:
             pygame.init()
 
             # Lower resolution for web view
-            if "pygbag" in sys.modules:
+            if IS_WEB:
                 self._screen = pygame.display.set_mode((1280, 720))
-
+                print("Web mode: Using 1280x720 resolution")
             # Desktop
             else:
                 if settings_manager.get("FULLSCREEN", False):
