@@ -2,6 +2,7 @@ import pygame
 import typing
 
 from ui import theme
+from ui.utils.draw import draw_rect_alpha
 
 
 class Checkbox:
@@ -12,11 +13,11 @@ class Checkbox:
         rect: pygame.Rect,
         checked: bool = False,
         on_toggle: typing.Optional[typing.Callable] = None,
-        box_color: tuple = theme.THEME_CHECKBOX_BOX_COLOR,
-        check_color: tuple = theme.THEME_CHECKBOX_CHECK_COLOR,
-        border_color: tuple = theme.THEME_CHECKBOX_BORDER_COLOR,
-        hover_box_color: tuple = theme.THEME_CHECKBOX_HOVER_BOX_COLOR,
-        disabled_color: tuple = theme.THEME_CHECKBOX_DISABLED_COLOR
+        box_color: tuple[int, ...] = theme.THEME_CHECKBOX_BOX_COLOR,
+        check_color: tuple[int, ...] = theme.THEME_CHECKBOX_CHECK_COLOR,
+        border_color: tuple[int, ...] = theme.THEME_CHECKBOX_BORDER_COLOR,
+        hover_box_color: tuple[int, ...] = theme.THEME_CHECKBOX_HOVER_BOX_COLOR,
+        disabled_color: tuple[int, ...] = theme.THEME_CHECKBOX_DISABLED_COLOR
     ) -> None:
         """
         Initialize the checkbox.
@@ -78,12 +79,21 @@ class Checkbox:
             y_offset: Vertical offset for drawing
         """
         shifted_rect = self.rect.move(0, y_offset)
+
+        def split_color(color: tuple[int, ...]) -> tuple[tuple[int, int, int], int]:
+            if len(color) == 4:
+                return (color[0], color[1], color[2]), color[3]
+            return (color[0], color[1], color[2]), 255
+
+        def adjust_color(color: tuple[int, ...], delta: int) -> tuple[int, int, int, int]:
+            rgb, alpha = split_color(color)
+            adjusted = tuple(min(255, channel + delta) for channel in rgb)
+            return (*adjusted, alpha)
         if self.disabled:
             border_color = self.disabled_color
             box_color = self.box_color
         elif self.hovered:
-            border_color = tuple(
-                min(255, channel + 40) for channel in self.border_color)
+            border_color = adjust_color(self.border_color, 40)
             if not self.checked:
                 box_color = self.hover_box_color
             else:
@@ -91,21 +101,20 @@ class Checkbox:
         else:
             border_color = self.border_color
             box_color = self.box_color
-        pygame.draw.rect(surface, box_color, shifted_rect)
-        pygame.draw.rect(surface, border_color, shifted_rect, 2)
+        draw_rect_alpha(surface, box_color, shifted_rect)
+        draw_rect_alpha(surface, border_color, shifted_rect, 2)
         inner = shifted_rect.inflate(-6, -6)
         if self.checked:
             if self.disabled:
                 fill_color = self.disabled_color
             elif self.hovered:
-                fill_color = tuple(
-                    min(255, channel + 30) for channel in self.check_color)
+                fill_color = adjust_color(self.check_color, 30)
             else:
                 fill_color = self.check_color
-            pygame.draw.rect(surface, fill_color, inner)
+            draw_rect_alpha(surface, fill_color, inner)
         elif self.hovered and not self.disabled:
-            hover_fill = tuple(min(255, channel + 20) for channel in self.box_color)
-            pygame.draw.rect(surface, hover_fill, inner)
+            hover_fill = adjust_color(self.box_color, 20)
+            draw_rect_alpha(surface, hover_fill, inner)
 
     def is_checked(self) -> bool:
         """Check if the checkbox is checked."""

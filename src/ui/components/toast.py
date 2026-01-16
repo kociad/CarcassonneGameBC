@@ -195,7 +195,8 @@ class Toast:
 
         self.update()
 
-        text_surf = self.font.render(self.message, True, self.text_color)
+        text_rgb = self.text_color[:3] if len(self.text_color) == 4 else self.text_color
+        text_surf = self.font.render(self.message, True, text_rgb)
         text_rect = text_surf.get_rect(center=(screen.get_width() // 2,
                                                self.current_y))
 
@@ -214,15 +215,16 @@ class Toast:
 
         bg_surf = pygame.Surface((bg_rect.width, bg_rect.height),
                                  pygame.SRCALPHA)
-        bg_color = (*self.bg_color, alpha)
+        bg_color = self._apply_alpha(self.bg_color, alpha)
         pygame.draw.rect(bg_surf,
                          bg_color,
                          bg_surf.get_rect(),
                          border_radius=8)
         screen.blit(bg_surf, bg_rect.topleft)
 
-        if alpha < 255:
-            text_surf.set_alpha(alpha)
+        text_color = self._apply_alpha(self.text_color, alpha)
+        if text_color[3] < 255:
+            text_surf.set_alpha(text_color[3])
 
         screen.blit(text_surf, text_rect)
 
@@ -234,6 +236,17 @@ class Toast:
         """Refresh colors from the current theme."""
         self.text_color, self.bg_color = theme.THEME_TOAST_COLORS[self.type]
         self.set_font(theme.get_font(theme.THEME_FONT_SIZE_BODY))
+
+    @staticmethod
+    def _apply_alpha(color: tuple[int, ...], override_alpha: int) -> tuple[int, int, int, int]:
+        base_alpha = 255
+        if len(color) == 4:
+            rgb = color[:3]
+            base_alpha = color[3]
+        else:
+            rgb = color
+        final_alpha = int(base_alpha * (override_alpha / 255))
+        return (*rgb, max(0, min(255, final_alpha)))
 
 
 class ToastManager:

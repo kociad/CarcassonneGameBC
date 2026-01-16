@@ -2,6 +2,7 @@ import pygame
 import typing
 
 from ui import theme
+from ui.utils.draw import draw_rect_alpha
 
 
 class Button:
@@ -15,10 +16,10 @@ class Button:
                  font: pygame.font.Font,
                  callback: typing.Optional[typing.Callable] = None,
                  disabled: bool = False,
-                 bg_color: tuple[int, int, int] = theme.THEME_BUTTON_BG_COLOR,
-                 hover_bg_color: tuple[int, int, int] = (
+                 bg_color: tuple[int, ...] = theme.THEME_BUTTON_BG_COLOR,
+                 hover_bg_color: tuple[int, ...] = (
                      theme.THEME_BUTTON_HOVER_BG_COLOR),
-                 pressed_bg_color: tuple[int, int, int] = (
+                 pressed_bg_color: tuple[int, ...] = (
                      theme.THEME_BUTTON_PRESSED_BG_COLOR)
                  ) -> None:
         """
@@ -94,7 +95,7 @@ class Button:
             bg = self.hover_bg_color
         else:
             bg = self.bg_color
-        pygame.draw.rect(screen, bg, draw_rect)
+        draw_rect_alpha(screen, bg, draw_rect)
         screen.blit(self.rendered_text, text_rect)
 
     def handle_event(self,

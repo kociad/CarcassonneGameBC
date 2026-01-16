@@ -3,6 +3,7 @@ import time
 import typing
 
 from ui import theme
+from ui.utils.draw import draw_rect_alpha
 
 
 class InputField:
@@ -305,15 +306,14 @@ class InputField:
             border_color = theme.THEME_INPUT_DISABLED_BORDER_COLOR
         else:
             if self.active or self.hovered:
-                border_color = tuple(
-                    min(255, channel + 40) for channel in self.border_color)
+                border_color = self._adjust_color(self.border_color, 40)
             else:
                 border_color = self.border_color
         text_color = (theme.THEME_INPUT_DISABLED_TEXT_COLOR if self.disabled
                       else (self.text_color if self.text or self.active
                             else theme.THEME_INPUT_PLACEHOLDER_COLOR))
-        pygame.draw.rect(surface, bg_color, draw_rect)
-        pygame.draw.rect(surface, border_color, draw_rect, 2)
+        draw_rect_alpha(surface, bg_color, draw_rect)
+        draw_rect_alpha(surface, border_color, draw_rect, 2)
         display_text = self.text if self.text or self.active else self.placeholder
         text_surface = self.font.render(display_text, True, text_color)
         clamped_width = max(
@@ -332,12 +332,14 @@ class InputField:
             highlight_start = max(0, start_x)
             highlight_end = min(visible_width, end_x)
             if highlight_end > highlight_start:
-                selection_color = tuple(
-                    min(255, channel + 60) for channel in self.bg_color)
+                selection_color = self._adjust_color(self.bg_color, 60)
                 highlight_surface = pygame.Surface(
                     (highlight_end - highlight_start, text_surface.get_height()),
                     pygame.SRCALPHA)
-                highlight_surface.fill((*selection_color, 140))
+                if len(selection_color) == 4:
+                    highlight_surface.fill((*selection_color[:3], 140))
+                else:
+                    highlight_surface.fill((*selection_color, 140))
                 surface.blit(highlight_surface,
                              (draw_rect.x + 5 + highlight_start,
                               draw_rect.y +
@@ -353,6 +355,14 @@ class InputField:
             cursor_height = draw_rect.height - 10
             pygame.draw.line(surface, text_color, (cursor_x, cursor_y),
                              (cursor_x, cursor_y + cursor_height), 2)
+
+    @staticmethod
+    def _adjust_color(color: tuple[int, ...], delta: int) -> tuple[int, ...]:
+        rgb = color[:3] if len(color) == 4 else color
+        adjusted = tuple(min(255, channel + delta) for channel in rgb)
+        if len(color) == 4:
+            return (*adjusted, color[3])
+        return adjusted
 
     def get_text(self) -> str:
         """Get the current text value."""

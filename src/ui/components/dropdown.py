@@ -14,12 +14,12 @@ class Dropdown:
         options: list[str],
         on_select: typing.Optional[typing.Callable] = None,
         default_index: int = 0,
-        text_color: tuple = theme.THEME_DROPDOWN_TEXT_COLOR,
-        bg_color: tuple = theme.THEME_DROPDOWN_BG_COLOR,
-        border_color: tuple = theme.THEME_DROPDOWN_BORDER_COLOR,
-        highlight_color: tuple = theme.THEME_DROPDOWN_HIGHLIGHT_COLOR,
-        hover_bg_color: tuple = theme.THEME_DROPDOWN_HOVER_BG_COLOR,
-        hover_option_color: tuple = theme.THEME_DROPDOWN_HOVER_OPTION_COLOR
+        text_color: tuple[int, ...] = theme.THEME_DROPDOWN_TEXT_COLOR,
+        bg_color: tuple[int, ...] = theme.THEME_DROPDOWN_BG_COLOR,
+        border_color: tuple[int, ...] = theme.THEME_DROPDOWN_BORDER_COLOR,
+        highlight_color: tuple[int, ...] = theme.THEME_DROPDOWN_HIGHLIGHT_COLOR,
+        hover_bg_color: tuple[int, ...] = theme.THEME_DROPDOWN_HOVER_BG_COLOR,
+        hover_option_color: tuple[int, ...] = theme.THEME_DROPDOWN_HOVER_OPTION_COLOR
     ) -> None:
         """
         Initialize the dropdown.
