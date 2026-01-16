@@ -756,8 +756,6 @@ class SettingsScene(Scene):
             self.ai_strategic_candidates_field.draw(self.screen,
                                                     y_offset=offset_y)
             self.ai_thinking_speed_field.draw(self.screen, y_offset=offset_y)
-        self.resolution_dropdown.draw(self.screen, y_offset=offset_y)
-
         self.apply_button.draw(self.screen, y_offset=offset_y)
         self.back_button.draw(self.screen, y_offset=offset_y)
 
@@ -765,6 +763,7 @@ class SettingsScene(Scene):
                               self.back_button.rect.bottom + 80)
 
         self.toast_manager.draw(self.screen)
+        self.resolution_dropdown.draw(self.screen, y_offset=offset_y)
 
     def refresh_theme(self) -> None:
         """Refresh fonts and component styling after theme changes."""

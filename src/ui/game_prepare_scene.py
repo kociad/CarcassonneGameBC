@@ -655,8 +655,6 @@ class GamePrepareScene(Scene):
         self.screen.blit(port_label, port_label_rect)
         self.port_field.draw(self.screen, y_offset=offset_y)
 
-        self.ai_difficulty_dropdown.draw(self.screen, y_offset=offset_y)
-        self.network_mode_dropdown.draw(self.screen, y_offset=offset_y)
         self.add_player_button.draw(self.screen, y_offset=offset_y)
         self.remove_player_button.draw(self.screen, y_offset=offset_y)
         self.back_button.draw(self.screen, y_offset=offset_y)
@@ -666,6 +664,8 @@ class GamePrepareScene(Scene):
                               self.back_button.rect.bottom + 80)
 
         self.toast_manager.draw(self.screen)
+        self.ai_difficulty_dropdown.draw(self.screen, y_offset=offset_y)
+        self.network_mode_dropdown.draw(self.screen, y_offset=offset_y)
 
     def refresh_theme(self) -> None:
         """Refresh fonts and component styling after theme changes."""

@@ -106,6 +106,7 @@ class Dropdown:
                             self.on_select(self.get_selected())
                         return True
                 self.expanded = False
+                return True
         return False
 
     def draw(self, surface: pygame.Surface, y_offset: int = 0) -> None:
