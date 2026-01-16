@@ -15,7 +15,8 @@ class Dropdown:
         text_color: tuple = (0, 0, 0),
         bg_color: tuple = (255, 255, 255),
         border_color: tuple = (0, 0, 0),
-        highlight_color: tuple = (200, 200, 200)
+        highlight_color: tuple = (200, 200, 200),
+        hover_color: tuple = (230, 230, 230)
     ) -> None:
         """
         Initialize the dropdown.
@@ -30,6 +31,7 @@ class Dropdown:
             bg_color: Background color
             border_color: Border color
             highlight_color: Color for highlighting selected option
+            hover_color: Color for hovered option
         """
         self.rect = pygame.Rect(rect)
         self.font = font
@@ -42,8 +44,9 @@ class Dropdown:
         self.bg_color = bg_color
         self.border_color = border_color
         self.highlight_color = highlight_color
+        self.hover_color = hover_color
         self.hovered_control = False
-        self.hovered_index: typing.Optional[int] = None
+        self.hover_index: typing.Optional[int] = None
 
     def handle_event(self,
                      event: pygame.event.Event,
@@ -61,26 +64,20 @@ class Dropdown:
         shifted_rect = self.rect.move(0, y_offset)
         if self.disabled:
             self.hovered_control = False
-            self.hovered_index = None
+            self.hover_index = None
             return False
         if event.type == pygame.MOUSEMOTION:
-            if shifted_rect.collidepoint(event.pos):
-                self.hovered_control = True
-                self.hovered_index = None
-            elif self.expanded:
-                self.hovered_control = False
-                self.hovered_index = None
+            self.hovered_control = shifted_rect.collidepoint(event.pos)
+            self.hover_index = None
+            if self.expanded:
                 for i, _ in enumerate(self.options):
                     option_rect = pygame.Rect(
                         shifted_rect.x,
                         shifted_rect.y + (i + 1) * self.rect.height,
                         self.rect.width, self.rect.height)
                     if option_rect.collidepoint(event.pos):
-                        self.hovered_index = i
+                        self.hover_index = i
                         break
-            else:
-                self.hovered_control = False
-                self.hovered_index = None
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             if shifted_rect.collidepoint(event.pos):
                 self.expanded = not self.expanded
@@ -124,7 +121,7 @@ class Dropdown:
         text_col = (*((150, 150, 150) if self.disabled else self.text_color),
                     alpha)
         highlight = (*self.highlight_color, alpha)
-        hover_option = (*tuple(min(255, channel + 20) for channel in self.bg_color), alpha)
+        hover_option = (*self.hover_color, alpha)
         local_rect = pygame.Rect(0, 0, self.rect.width, self.rect.height)
         pygame.draw.rect(draw_surface, bg, local_rect)
         pygame.draw.rect(draw_surface, border, local_rect, 2)
@@ -139,7 +136,7 @@ class Dropdown:
                                           self.rect.width, self.rect.height)
                 if i == self.selected_index:
                     option_bg = highlight
-                elif self.hovered_index == i:
+                elif self.hover_index == i:
                     option_bg = hover_option
                 else:
                     option_bg = bg
