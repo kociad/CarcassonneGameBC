@@ -217,13 +217,11 @@ class SettingsScene(Scene):
         current_y += 80
 
         self.apply_button = Button((x_center, current_y, 200, 60), "Apply",
-                                   self.button_font,
-                                   lambda: self._apply_settings())
+                                   self.button_font)
         current_y += 80
 
         self.back_button = Button((x_center, current_y, 200, 60), "Back",
-                                  self.button_font,
-                                  lambda: self.switch_scene(GameState.MENU))
+                                  self.button_font)
 
     def _on_tile_size_changed(self, new_tile_size):
         new_min_sidebar_width = new_tile_size + 20
@@ -326,7 +324,16 @@ class SettingsScene(Scene):
                 event, y_offset=self.scroll_offset)
             self.ai_thinking_speed_field.handle_event(
                 event, y_offset=self.scroll_offset)
+            if event.type in (pygame.MOUSEMOTION, pygame.MOUSEBUTTONUP):
+                self.back_button.handle_event(event,
+                                              y_offset=self.scroll_offset)
+                self.apply_button.handle_event(event,
+                                               y_offset=self.scroll_offset)
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                self.back_button.handle_event(event,
+                                              y_offset=self.scroll_offset)
+                self.apply_button.handle_event(event,
+                                               y_offset=self.scroll_offset)
                 if self.back_button._is_clicked(event.pos,
                                                 y_offset=self.scroll_offset):
                     self.switch_scene(GameState.MENU)

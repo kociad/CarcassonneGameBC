@@ -72,6 +72,8 @@ class MainMenuScene(Scene):
                 elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                     self.show_confirm_dialog = False
                 elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                    self.confirm_yes_button.handle_event(event)
+                    self.confirm_no_button.handle_event(event)
                     if self.confirm_yes_button._is_clicked(event.pos):
                         self.show_confirm_dialog = False
                         logger.info(
@@ -80,6 +82,9 @@ class MainMenuScene(Scene):
                         self.switch_scene(GameState.PREPARE)
                     elif self.confirm_no_button._is_clicked(event.pos):
                         self.show_confirm_dialog = False
+                elif event.type in (pygame.MOUSEMOTION, pygame.MOUSEBUTTONUP):
+                    self.confirm_yes_button.handle_event(event)
+                    self.confirm_no_button.handle_event(event)
             return
         self._apply_scroll(events)
         for event in events:
@@ -87,6 +92,16 @@ class MainMenuScene(Scene):
                 pygame.quit()
                 exit()
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                self.continue_button.handle_event(event,
+                                                  y_offset=self.scroll_offset)
+                self.start_button.handle_event(event,
+                                               y_offset=self.scroll_offset)
+                self.settings_button.handle_event(event,
+                                                  y_offset=self.scroll_offset)
+                self.quit_button.handle_event(event,
+                                              y_offset=self.scroll_offset)
+                self.how_to_play_button.handle_event(
+                    event, y_offset=self.scroll_offset)
                 if self.continue_button._is_clicked(
                         event.pos, y_offset=self.scroll_offset
                 ) and not self.continue_button.disabled:
@@ -116,6 +131,17 @@ class MainMenuScene(Scene):
                 elif self.how_to_play_button._is_clicked(
                         event.pos, y_offset=self.scroll_offset):
                     self.switch_scene(GameState.HELP)
+            elif event.type in (pygame.MOUSEMOTION, pygame.MOUSEBUTTONUP):
+                self.continue_button.handle_event(event,
+                                                  y_offset=self.scroll_offset)
+                self.start_button.handle_event(event,
+                                               y_offset=self.scroll_offset)
+                self.settings_button.handle_event(event,
+                                                  y_offset=self.scroll_offset)
+                self.quit_button.handle_event(event,
+                                              y_offset=self.scroll_offset)
+                self.how_to_play_button.handle_event(
+                    event, y_offset=self.scroll_offset)
 
     def draw_confirm_dialog(self) -> None:
         """Draw the confirmation dialog overlay."""
