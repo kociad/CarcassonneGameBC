@@ -699,6 +699,21 @@ class ThemeDebugOverlay:
             if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                 self.toggle()
                 continue
+            dropdown_controls = [
+                control for control in self.controls
+                if any(isinstance(component, Dropdown)
+                       for component in control.components)
+            ]
+            expanded_dropdowns = [
+                control for control in dropdown_controls
+                if any(component.expanded for component in control.components
+                       if isinstance(component, Dropdown))
+            ]
+            if (event.type == pygame.MOUSEBUTTONDOWN and event.button == 1
+                    and expanded_dropdowns):
+                for control in expanded_dropdowns:
+                    control.handle_event(event, self.scroll_offset)
+                continue
             self.save_button.handle_event(event)
             for control in self.controls:
                 control.handle_event(event, self.scroll_offset)
@@ -754,6 +769,17 @@ class ThemeDebugOverlay:
         self.save_button.draw(self.screen)
         previous_clip = self.screen.get_clip()
         self.screen.set_clip(self.panel_rect)
-        for control in self.controls:
+        dropdown_controls = [
+            control for control in self.controls
+            if any(isinstance(component, Dropdown)
+                   for component in control.components)
+        ]
+        non_dropdown_controls = [
+            control for control in self.controls
+            if control not in dropdown_controls
+        ]
+        for control in non_dropdown_controls:
+            control.draw(self.screen, self.scroll_offset)
+        for control in dropdown_controls:
             control.draw(self.screen, self.scroll_offset)
         self.screen.set_clip(previous_clip)
