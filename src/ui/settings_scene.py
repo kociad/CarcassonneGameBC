@@ -207,13 +207,13 @@ class SettingsScene(Scene):
             not settings_manager.get("DEBUG"))
         current_y += 80
 
-        apply_rect = pygame.Rect(0, 0, 200, 60)
+        apply_rect = pygame.Rect(0, 0, 0, 60)
         apply_rect.center = (button_center_x, current_y + 30)
         self.apply_button = Button(apply_rect, "Apply", self.button_font,
                                    lambda: self._apply_settings())
         current_y += 80
 
-        back_rect = pygame.Rect(0, 0, 200, 60)
+        back_rect = pygame.Rect(0, 0, 0, 60)
         back_rect.center = (button_center_x, current_y + 30)
         self.back_button = Button(back_rect, "Back", self.button_font,
                                   lambda: self.switch_scene(GameState.MENU))

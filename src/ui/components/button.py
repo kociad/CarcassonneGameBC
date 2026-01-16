@@ -8,8 +8,6 @@ from ui.utils.draw import draw_rect_alpha
 class Button:
     """A clickable button UI component."""
 
-    HORIZONTAL_PADDING = 12
-
     def __init__(self,
                  rect: pygame.Rect,
                  text: str,
@@ -42,6 +40,7 @@ class Button:
         self.hover_bg_color = hover_bg_color
         self.pressed_bg_color = pressed_bg_color
         self.text_color = theme.THEME_BUTTON_TEXT_COLOR
+        self.horizontal_padding = theme.THEME_BUTTON_HORIZONTAL_PADDING
         self.disabled = disabled
         self.callback = callback
         self.is_hovered = False
@@ -60,8 +59,8 @@ class Button:
 
     def _resize_to_text(self, text_width: int) -> None:
         center = self.rect.center
-        padded_width = text_width + self.HORIZONTAL_PADDING * 2
-        self.rect.width = max(self.rect.width, padded_width)
+        padded_width = text_width + self.horizontal_padding * 2
+        self.rect.width = padded_width
         self.rect.center = center
 
     def set_font(self, font: pygame.font.Font) -> None:
@@ -75,6 +74,7 @@ class Button:
         self.hover_bg_color = theme.THEME_BUTTON_HOVER_BG_COLOR
         self.pressed_bg_color = theme.THEME_BUTTON_PRESSED_BG_COLOR
         self.text_color = theme.THEME_BUTTON_TEXT_COLOR
+        self.horizontal_padding = theme.THEME_BUTTON_HORIZONTAL_PADDING
         self._update_render()
 
     def draw(self, screen: pygame.Surface, y_offset: int = 0) -> None:

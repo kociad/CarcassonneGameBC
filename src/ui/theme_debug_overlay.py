@@ -66,24 +66,24 @@ class ThemeDebugOverlay:
             max(14, int(theme.THEME_FONT_SIZE_BODY * 0.45))
         )
         button_size = 36
+        toggle_rect = pygame.Rect(0, 0, 0, button_size)
+        toggle_rect.center = (
+            screen_width - button_size // 2 - 12,
+            12 + button_size // 2,
+        )
         self.toggle_button = Button(
-            rect=(
-                screen_width - button_size - 12,
-                12,
-                button_size,
-                button_size,
-            ),
+            rect=toggle_rect,
             text="DBG",
             font=theme.get_font(16),
             callback=self.toggle,
         )
+        save_rect = pygame.Rect(0, 0, 0, 36)
+        save_rect.center = (
+            self.panel_rect.left + 16 + 60,
+            self.panel_rect.top + 16 + 18,
+        )
         self.save_button = Button(
-            rect=(
-                self.panel_rect.left + 16,
-                self.panel_rect.top + 16,
-                120,
-                36,
-            ),
+            rect=save_rect,
             text="Save",
             font=theme.get_font(18),
             callback=self._save_theme,
