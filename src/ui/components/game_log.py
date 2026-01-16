@@ -3,6 +3,7 @@ import time
 from typing import List, Tuple
 import typing
 from utils.settings_manager import settings_manager
+from ui.theme import get_theme
 
 
 class GameLogEntry:
@@ -34,25 +35,26 @@ class GameLog:
 
     def __init__(self) -> None:
         """Initialize the game log."""
+        theme = get_theme()
         self.max_entries = settings_manager.get("GAME_LOG_MAX_ENTRIES", 2000)
         self.entries: List[GameLogEntry] = []
         self.visible = False
         self.scroll_offset = 0
-        self.font = pygame.font.Font(None, 28)
-        self.title_font = pygame.font.Font(None, 36)
+        self.font = theme.font("small")
+        self.title_font = theme.font("dialog")
         self.level_colors = {
-            "INFO": (240, 240, 240),
-            "DEBUG": (150, 200, 255),
-            "SCORING": (255, 255, 0),
-            "WARNING": (255, 220, 100),
-            "ERROR": (255, 120, 120),
+            "INFO": theme.color("log_info"),
+            "DEBUG": theme.color("log_debug"),
+            "SCORING": theme.color("log_scoring"),
+            "WARNING": theme.color("log_warning"),
+            "ERROR": theme.color("log_error"),
         }
         self.level_backgrounds = {
-            "INFO": (0, 0, 0, 0),
-            "DEBUG": (0, 50, 100, 30),
-            "SCORING": (80, 80, 0, 40),
-            "WARNING": (100, 80, 0, 40),
-            "ERROR": (100, 0, 0, 50),
+            "INFO": theme.color("log_info_bg"),
+            "DEBUG": theme.color("log_debug_bg"),
+            "SCORING": theme.color("log_scoring_bg"),
+            "WARNING": theme.color("log_warning_bg"),
+            "ERROR": theme.color("log_error_bg"),
         }
 
     def add_entry(self, message: str, level: str = "INFO") -> None:
@@ -129,15 +131,15 @@ class GameLog:
         screen_height = settings_manager.get("WINDOW_HEIGHT", 1080)
         overlay = pygame.Surface((screen_width, screen_height),
                                  pygame.SRCALPHA)
-        overlay.fill((0, 0, 0, 200))
+        overlay.fill(get_theme().color("log_overlay"))
         screen.blit(overlay, (0, 0))
         title_text = self.title_font.render(
             "Game Log (Press TAB to close, Mouse Wheel to scroll)", True,
-            (255, 255, 255))
+            get_theme().color("text_primary"))
         title_rect = title_text.get_rect(center=(screen_width // 2, 30))
         title_bg = pygame.Surface(
             (title_rect.width + 20, title_rect.height + 10), pygame.SRCALPHA)
-        title_bg.fill((50, 50, 50, 180))
+        title_bg.fill(get_theme().color("log_title_bg"))
         screen.blit(title_bg, (title_rect.x - 10, title_rect.y - 5))
         screen.blit(title_text, title_rect)
         debug_enabled = settings_manager.get("DEBUG", False)
@@ -173,8 +175,10 @@ class GameLog:
             time_str = entry.get_formatted_time()
             level_str = f"[{entry.level}]"
             full_message = f"{time_str} {level_str} {entry.message}"
-            text_color = self.level_colors.get(entry.level, (255, 255, 255))
-            bg_color = self.level_backgrounds.get(entry.level, (0, 0, 0, 0))
+            text_color = self.level_colors.get(
+                entry.level, get_theme().color("text_primary"))
+            bg_color = self.level_backgrounds.get(
+                entry.level, get_theme().color("log_info_bg"))
             if bg_color[3] > 0:
                 line_bg = pygame.Surface((screen_width - 20, line_height),
                                          pygame.SRCALPHA)
@@ -213,12 +217,12 @@ class GameLog:
                 entries_drawn + 1)
             visible_end = total_filtered_entries - self.scroll_offset
             scroll_info = f"Lines {visible_start}-{visible_end} of {total_filtered_entries}"
-            scroll_surface = self.font.render(scroll_info, True,
-                                              (180, 180, 180))
+            scroll_surface = self.font.render(
+                scroll_info, True, get_theme().color("log_scroll_text"))
             scroll_bg = pygame.Surface((scroll_surface.get_width() + 10,
                                         scroll_surface.get_height() + 6),
                                        pygame.SRCALPHA)
-            scroll_bg.fill((0, 0, 0, 150))
+            scroll_bg.fill(get_theme().color("log_scroll_bg"))
             scroll_rect = (screen_width - scroll_surface.get_width() - 25,
                            screen_height - 35)
             screen.blit(scroll_bg, (scroll_rect[0] - 5, scroll_rect[1] - 3))

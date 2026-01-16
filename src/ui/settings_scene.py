@@ -7,6 +7,7 @@ from ui.components.dropdown import Dropdown
 from ui.components.toast import Toast, ToastManager
 from ui.components.checkbox import Checkbox
 from ui.components.slider import Slider
+from ui.theme import get_theme
 from utils.settings_manager import settings_manager
 import typing
 
@@ -16,10 +17,11 @@ class SettingsScene(Scene):
     def __init__(self, screen: pygame.Surface,
                  switch_scene_callback: typing.Callable) -> None:
         super().__init__(screen, switch_scene_callback)
-        self.font = pygame.font.Font(None, 80)
-        self.button_font = pygame.font.Font(None, 48)
-        self.input_font = pygame.font.Font(None, 36)
-        self.dropdown_font = pygame.font.Font(None, 36)
+        theme = get_theme()
+        self.font = theme.font("scene_title")
+        self.button_font = theme.font("button")
+        self.input_font = theme.font("body")
+        self.dropdown_font = theme.font("body")
         self.toast_manager = ToastManager(max_toasts=5)
         self.scroll_offset = 0
         self.max_scroll = 0
@@ -470,49 +472,56 @@ class SettingsScene(Scene):
         self.resolution_dropdown.set_disabled(value)
 
     def draw(self) -> None:
-        self.screen.fill((30, 30, 30))
+        theme = get_theme()
+        self.screen.fill(theme.color("background"))
         offset_y = self.scroll_offset
         label_font = self.dropdown_font
 
-        title_text = self.font.render("Settings", True, (255, 255, 255))
+        title_text = self.font.render("Settings", True,
+                                      theme.color("text_primary"))
         title_rect = title_text.get_rect(center=(self.screen.get_width() // 2,
                                                  self.title_y + offset_y))
         self.screen.blit(title_text, title_rect)
 
         # Draw section headers
-        display_label = self.dropdown_font.render("Display", True,
-                                                  (255, 215, 0))
+        display_label = self.dropdown_font.render(
+            "Display", True, theme.color("text_accent"))
         display_label_rect = display_label.get_rect()
         display_label_rect.centerx = self.screen.get_width() // 2
         display_label_rect.y = self.display_label_y + offset_y
         self.screen.blit(display_label, display_label_rect)
 
-        game_label = self.dropdown_font.render("Game", True, (255, 215, 0))
+        game_label = self.dropdown_font.render(
+            "Game", True, theme.color("text_accent"))
         game_label_rect = game_label.get_rect()
         game_label_rect.centerx = self.screen.get_width() // 2
         game_label_rect.y = self.game_label_y + offset_y
         self.screen.blit(game_label, game_label_rect)
 
-        debug_label = self.dropdown_font.render("Debug", True, (255, 215, 0))
+        debug_label = self.dropdown_font.render(
+            "Debug", True, theme.color("text_accent"))
         debug_label_rect = debug_label.get_rect()
         debug_label_rect.centerx = self.screen.get_width() // 2
         debug_label_rect.y = self.debug_label_y + offset_y
         self.screen.blit(debug_label, debug_label_rect)
 
-        ai_label = self.dropdown_font.render("AI", True, (255, 215, 0))
+        ai_label = self.dropdown_font.render("AI", True,
+                                             theme.color("text_accent"))
         ai_label_rect = ai_label.get_rect()
         ai_label_rect.centerx = self.screen.get_width() // 2
         ai_label_rect.y = self.ai_label_y + offset_y
         self.screen.blit(ai_label, ai_label_rect)
 
         # Display Settings
-        res_label = label_font.render("Resolution:", True, (255, 255, 255))
+        res_label = label_font.render("Resolution:", True,
+                                      theme.color("text_primary"))
         res_label_rect = res_label.get_rect(
             right=self.resolution_dropdown.rect.left - 10,
             centery=self.resolution_dropdown.rect.centery + offset_y)
         self.screen.blit(res_label, res_label_rect)
 
-        fs_label = label_font.render("Fullscreen:", True, (255, 255, 255))
+        fs_label = label_font.render("Fullscreen:", True,
+                                     theme.color("text_primary"))
         fs_label_rect = fs_label.get_rect(
             right=self.fullscreen_checkbox.rect.left - 10,
             centery=self.fullscreen_checkbox.rect.centery + offset_y)
@@ -520,9 +529,10 @@ class SettingsScene(Scene):
 
         # Game Settings
         label_color = (
-            120, 120,
-            120) if self.valid_placement_checkbox.is_disabled() else (255, 255,
-                                                                      255)
+            theme.color("text_muted")
+            if self.valid_placement_checkbox.is_disabled()
+            else theme.color("text_primary")
+        )
         valid_placements_label = label_font.render(
             "Show valid card placements:", True, label_color)
         valid_placements_label_rect = valid_placements_label.get_rect(
@@ -531,16 +541,18 @@ class SettingsScene(Scene):
         self.screen.blit(valid_placements_label, valid_placements_label_rect)
 
         # Debug Settings (DEBUG checkbox first)
-        db_label = label_font.render("Debug:", True, (255, 255, 255))
+        db_label = label_font.render("Debug:", True,
+                                     theme.color("text_primary"))
         db_label_rect = db_label.get_rect(
             right=self.debug_checkbox.rect.left - 10,
             centery=self.debug_checkbox.rect.centery + offset_y)
         self.screen.blit(db_label, db_label_rect)
 
         label_color = (
-            120, 120,
-            120) if self.log_to_console_checkbox.is_disabled() else (255, 255,
-                                                                     255)
+            theme.color("text_muted")
+            if self.log_to_console_checkbox.is_disabled()
+            else theme.color("text_primary")
+        )
         log_to_console_label = label_font.render("Log to console:", True,
                                                  label_color)
         log_to_console_label_rect = log_to_console_label.get_rect(
@@ -548,48 +560,55 @@ class SettingsScene(Scene):
             centery=self.log_to_console_checkbox.rect.centery + offset_y)
         self.screen.blit(log_to_console_label, log_to_console_label_rect)
 
-        label_color = (120, 120,
-                       120) if self.fps_slider.is_disabled() else (255, 255,
-                                                                   255)
+        label_color = (
+            theme.color("text_muted")
+            if self.fps_slider.is_disabled()
+            else theme.color("text_primary")
+        )
         fps_label = label_font.render("FPS:", True, label_color)
         fps_label_rect = fps_label.get_rect(
             right=self.fps_slider.rect.left - 10,
             centery=self.fps_slider.rect.centery + offset_y)
         self.screen.blit(fps_label, fps_label_rect)
 
-        label_color = (120, 120,
-                       120) if self.grid_size_slider.is_disabled() else (255,
-                                                                         255,
-                                                                         255)
+        label_color = (
+            theme.color("text_muted")
+            if self.grid_size_slider.is_disabled()
+            else theme.color("text_primary")
+        )
         grid_label = label_font.render("Grid size:", True, label_color)
         grid_label_rect = grid_label.get_rect(
             right=self.grid_size_slider.rect.left - 10,
             centery=self.grid_size_slider.rect.centery + offset_y)
         self.screen.blit(grid_label, grid_label_rect)
 
-        label_color = (120, 120,
-                       120) if self.tile_size_slider.is_disabled() else (255,
-                                                                         255,
-                                                                         255)
+        label_color = (
+            theme.color("text_muted")
+            if self.tile_size_slider.is_disabled()
+            else theme.color("text_primary")
+        )
         tsz_label = label_font.render("Tile size:", True, label_color)
         tsz_label_rect = tsz_label.get_rect(
             right=self.tile_size_slider.rect.left - 10,
             centery=self.tile_size_slider.rect.centery + offset_y)
         self.screen.blit(tsz_label, tsz_label_rect)
 
-        label_color = (120, 120,
-                       120) if self.figure_size_slider.is_disabled() else (255,
-                                                                           255,
-                                                                           255)
+        label_color = (
+            theme.color("text_muted")
+            if self.figure_size_slider.is_disabled()
+            else theme.color("text_primary")
+        )
         fsz_label = label_font.render("Figure size:", True, label_color)
         fsz_label_rect = fsz_label.get_rect(
             right=self.figure_size_slider.rect.left - 10,
             centery=self.figure_size_slider.rect.centery + offset_y)
         self.screen.blit(fsz_label, fsz_label_rect)
 
-        label_color = (120, 120,
-                       120) if self.sidebar_width_slider.is_disabled() else (
-                           255, 255, 255)
+        label_color = (
+            theme.color("text_muted")
+            if self.sidebar_width_slider.is_disabled()
+            else theme.color("text_primary")
+        )
         sbw_label = label_font.render("Sidebar width:", True, label_color)
         sbw_label_rect = sbw_label.get_rect(
             right=self.sidebar_width_slider.rect.left - 10,
@@ -597,10 +616,10 @@ class SettingsScene(Scene):
         self.screen.blit(sbw_label, sbw_label_rect)
 
         label_color = (
-            120, 120,
-            120) if self.game_log_max_entries_field.is_disabled() else (255,
-                                                                        255,
-                                                                        255)
+            theme.color("text_muted")
+            if self.game_log_max_entries_field.is_disabled()
+            else theme.color("text_primary")
+        )
         log_label = label_font.render("Game log max entries:", True,
                                       label_color)
         log_label_rect = log_label.get_rect(
@@ -609,9 +628,11 @@ class SettingsScene(Scene):
         self.screen.blit(log_label, log_label_rect)
 
         # AI Settings
-        label_color = (120, 120,
-                       120) if self.ai_simulation_checkbox.is_disabled() else (
-                           255, 255, 255)
+        label_color = (
+            theme.color("text_muted")
+            if self.ai_simulation_checkbox.is_disabled()
+            else theme.color("text_primary")
+        )
         ai_simulation_label = label_font.render("AI simulation:", True,
                                                 label_color)
         ai_simulation_label_rect = ai_simulation_label.get_rect(
@@ -620,10 +641,10 @@ class SettingsScene(Scene):
         self.screen.blit(ai_simulation_label, ai_simulation_label_rect)
 
         label_color = (
-            120, 120,
-            120) if self.ai_strategic_candidates_field.is_disabled() else (255,
-                                                                           255,
-                                                                           255)
+            theme.color("text_muted")
+            if self.ai_strategic_candidates_field.is_disabled()
+            else theme.color("text_primary")
+        )
         ai_candidates_label = label_font.render("AI strategic candidates:",
                                                 True, label_color)
         ai_candidates_label_rect = ai_candidates_label.get_rect(
@@ -632,9 +653,10 @@ class SettingsScene(Scene):
         self.screen.blit(ai_candidates_label, ai_candidates_label_rect)
 
         label_color = (
-            120, 120,
-            120) if self.ai_thinking_speed_field.is_disabled() else (255, 255,
-                                                                     255)
+            theme.color("text_muted")
+            if self.ai_thinking_speed_field.is_disabled()
+            else theme.color("text_primary")
+        )
         thinking_speed_label = label_font.render("AI Thinking Speed (s):",
                                                  True, label_color)
         thinking_speed_label_rect = thinking_speed_label.get_rect(
