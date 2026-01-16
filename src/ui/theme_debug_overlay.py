@@ -57,13 +57,16 @@ class ThemeDebugOverlay:
             screen_height - (self.panel_margin * 2),
         )
         self.title_font = theme.get_font(
-            max(18, int(theme.THEME_FONT_SIZE_BODY * 0.6))
+            "title", max(18, int(theme.THEME_FONT_SIZE_BODY * 0.6))
         )
         self.label_font = theme.get_font(
-            max(14, int(theme.THEME_FONT_SIZE_BODY * 0.45))
+            "label", max(14, int(theme.THEME_FONT_SIZE_BODY * 0.45))
         )
         self.control_font = theme.get_font(
-            max(14, int(theme.THEME_FONT_SIZE_BODY * 0.45))
+            "label", max(14, int(theme.THEME_FONT_SIZE_BODY * 0.45))
+        )
+        self._title_surface = self.title_font.render(
+            "Theme Debug Overlay", True, theme.THEME_TEXT_COLOR_LIGHT
         )
         button_size = 36
         toggle_rect = pygame.Rect(0, 0, 0, button_size)
@@ -74,7 +77,7 @@ class ThemeDebugOverlay:
         self.toggle_button = Button(
             rect=toggle_rect,
             text="DBG",
-            font=theme.get_font(16),
+            font=theme.get_font("button", 16),
             callback=self.toggle,
         )
         save_rect = pygame.Rect(0, 0, 0, 36)
@@ -85,7 +88,7 @@ class ThemeDebugOverlay:
         self.save_button = Button(
             rect=save_rect,
             text="Save",
-            font=theme.get_font(18),
+            font=theme.get_font("button", 18),
             callback=self._save_theme,
         )
 
@@ -260,23 +263,17 @@ class ThemeDebugOverlay:
             components.insert(0, checkbox)
 
         def draw(surface: pygame.Surface, y_offset: int) -> None:
-            label_surface = self.label_font.render(label, True,
-                                                   theme.THEME_TEXT_COLOR_LIGHT)
             surface.blit(label_surface, (label_x, start_y + y_offset))
             if checkbox is not None:
                 checkbox.draw(surface, y_offset=y_offset)
-                enabled_label = self.label_font.render("Enabled", True,
-                                                       theme.THEME_TEXT_COLOR_LIGHT)
                 surface.blit(enabled_label,
                              (control_x + 26, start_y + y_offset))
             for idx, slider in enumerate(sliders):
-                channel_label = self.label_font.render(
-                    channel_labels[idx], True, theme.THEME_TEXT_COLOR_LIGHT
-                )
                 label_y = start_y + y_offset + label_height + 6 + idx * (
                     slider_height + channel_gap
                 )
-                surface.blit(channel_label, (control_x, label_y - 2))
+                surface.blit(channel_label_surfaces[idx],
+                             (control_x, label_y - 2))
                 slider.draw(surface, y_offset=y_offset)
             if checkbox is None or checkbox.checked:
                 swatch_x = control_x + slider_width + swatch_margin
@@ -300,7 +297,29 @@ class ThemeDebugOverlay:
             for slider in sliders:
                 slider.handle_event(event, y_offset=y_offset)
 
+        def _refresh_label_surfaces() -> None:
+            nonlocal label_surface
+            nonlocal enabled_label
+            nonlocal channel_label_surfaces
+            label_surface = self.label_font.render(
+                label, True, theme.THEME_TEXT_COLOR_LIGHT
+            )
+            enabled_label = self.label_font.render(
+                "Enabled", True, theme.THEME_TEXT_COLOR_LIGHT
+            )
+            channel_label_surfaces = [
+                self.label_font.render(
+                    channel_label, True, theme.THEME_TEXT_COLOR_LIGHT
+                ) for channel_label in channel_labels
+            ]
+
+        label_surface = None
+        enabled_label = None
+        channel_label_surfaces: list[pygame.Surface] = []
+        _refresh_label_surfaces()
+
         def sync() -> None:
+            _refresh_label_surfaces()
             current_value = getattr(theme, name)
             if optional and current_value is None:
                 if checkbox is not None:
@@ -356,8 +375,6 @@ class ThemeDebugOverlay:
         )
 
         def draw(surface: pygame.Surface, y_offset: int) -> None:
-            label_surface = self.label_font.render(label, True,
-                                                   theme.THEME_TEXT_COLOR_LIGHT)
             surface.blit(label_surface, (label_x, start_y + y_offset))
             slider.draw(surface, y_offset=y_offset)
 
@@ -365,9 +382,17 @@ class ThemeDebugOverlay:
             slider.handle_event(event, y_offset=y_offset)
 
         def sync() -> None:
+            nonlocal label_surface
+            label_surface = self.label_font.render(
+                label, True, theme.THEME_TEXT_COLOR_LIGHT
+            )
             slider.set_value(int(getattr(theme, name)))
             slider.apply_theme()
             slider.set_font(self.control_font)
+
+        label_surface = self.label_font.render(
+            label, True, theme.THEME_TEXT_COLOR_LIGHT
+        )
 
         return ThemeControl(
             name=name,
@@ -401,8 +426,6 @@ class ThemeDebugOverlay:
         )
 
         def draw(surface: pygame.Surface, y_offset: int) -> None:
-            label_surface = self.label_font.render(label, True,
-                                                   theme.THEME_TEXT_COLOR_LIGHT)
             surface.blit(label_surface, (label_x, start_y + y_offset))
             slider.draw(surface, y_offset=y_offset)
 
@@ -410,9 +433,17 @@ class ThemeDebugOverlay:
             slider.handle_event(event, y_offset=y_offset)
 
         def sync() -> None:
+            nonlocal label_surface
+            label_surface = self.label_font.render(
+                label, True, theme.THEME_TEXT_COLOR_LIGHT
+            )
             slider.set_value(int(getattr(theme, name)))
             slider.apply_theme()
             slider.set_font(self.control_font)
+
+        label_surface = self.label_font.render(
+            label, True, theme.THEME_TEXT_COLOR_LIGHT
+        )
 
         return ThemeControl(
             name=name,
@@ -444,8 +475,6 @@ class ThemeDebugOverlay:
         )
 
         def draw(surface: pygame.Surface, y_offset: int) -> None:
-            label_surface = self.label_font.render(label, True,
-                                                   theme.THEME_TEXT_COLOR_LIGHT)
             surface.blit(label_surface, (label_x, start_y + y_offset))
             input_field.draw(surface, y_offset=y_offset)
 
@@ -453,10 +482,18 @@ class ThemeDebugOverlay:
             input_field.handle_event(event, y_offset=y_offset)
 
         def sync() -> None:
+            nonlocal label_surface
+            label_surface = self.label_font.render(
+                label, True, theme.THEME_TEXT_COLOR_LIGHT
+            )
             input_field.set_text("" if getattr(theme, name) is None else
                                  str(getattr(theme, name)))
             input_field.apply_theme()
             input_field.set_font(self.control_font)
+
+        label_surface = self.label_font.render(
+            label, True, theme.THEME_TEXT_COLOR_LIGHT
+        )
 
         return ThemeControl(
             name=name,
@@ -493,12 +530,8 @@ class ThemeDebugOverlay:
             input_field.set_disabled(True)
 
         def draw(surface: pygame.Surface, y_offset: int) -> None:
-            label_surface = self.label_font.render(label, True,
-                                                   theme.THEME_TEXT_COLOR_LIGHT)
             surface.blit(label_surface, (label_x, start_y + y_offset))
             checkbox.draw(surface, y_offset=y_offset)
-            enabled_label = self.label_font.render("Enabled", True,
-                                                   theme.THEME_TEXT_COLOR_LIGHT)
             surface.blit(enabled_label, (control_x + 26, start_y + y_offset))
             input_field.draw(surface, y_offset=y_offset)
 
@@ -507,6 +540,14 @@ class ThemeDebugOverlay:
             input_field.handle_event(event, y_offset=y_offset)
 
         def sync() -> None:
+            nonlocal label_surface
+            nonlocal enabled_label
+            label_surface = self.label_font.render(
+                label, True, theme.THEME_TEXT_COLOR_LIGHT
+            )
+            enabled_label = self.label_font.render(
+                "Enabled", True, theme.THEME_TEXT_COLOR_LIGHT
+            )
             current_value = getattr(theme, name)
             checkbox.set_checked(current_value is not None)
             input_field.set_text("" if current_value is None else
@@ -515,6 +556,13 @@ class ThemeDebugOverlay:
             checkbox.apply_theme()
             input_field.apply_theme()
             input_field.set_font(self.control_font)
+
+        label_surface = self.label_font.render(
+            label, True, theme.THEME_TEXT_COLOR_LIGHT
+        )
+        enabled_label = self.label_font.render(
+            "Enabled", True, theme.THEME_TEXT_COLOR_LIGHT
+        )
 
         return ThemeControl(
             name=name,
@@ -547,8 +595,6 @@ class ThemeDebugOverlay:
         )
 
         def draw(surface: pygame.Surface, y_offset: int) -> None:
-            label_surface = self.label_font.render(label, True,
-                                                   theme.THEME_TEXT_COLOR_LIGHT)
             surface.blit(label_surface, (label_x, start_y + y_offset))
             dropdown.draw(surface, y_offset=y_offset)
 
@@ -556,6 +602,10 @@ class ThemeDebugOverlay:
             dropdown.handle_event(event, y_offset=y_offset)
 
         def sync() -> None:
+            nonlocal label_surface
+            label_surface = self.label_font.render(
+                label, True, theme.THEME_TEXT_COLOR_LIGHT
+            )
             current_value = getattr(theme, name)
             if current_value in options:
                 dropdown.set_selected(options.index(current_value))
@@ -563,6 +613,10 @@ class ThemeDebugOverlay:
                 dropdown.set_selected(0)
             dropdown.apply_theme()
             dropdown.set_font(self.control_font)
+
+        label_surface = self.label_font.render(
+            label, True, theme.THEME_TEXT_COLOR_LIGHT
+        )
 
         return ThemeControl(
             name=name,
@@ -622,9 +676,15 @@ class ThemeDebugOverlay:
         return channels[:4]
 
     def _set_theme_value(self, name: str, value: typing.Any) -> None:
+        current_value = getattr(theme, name, None)
+        if current_value == value:
+            return
         setattr(theme, name, value)
         theme.refresh_theme_state()
-        theme.clear_font_cache()
+        if name.startswith("THEME_FONT_FAMILY_") or name.startswith(
+            "THEME_FONT_SIZE_"
+        ):
+            theme.clear_font_cache()
         self._on_theme_update()
         self.refresh_theme()
 
@@ -723,18 +783,21 @@ class ThemeDebugOverlay:
 
     def refresh_theme(self) -> None:
         self.title_font = theme.get_font(
-            max(18, int(theme.THEME_FONT_SIZE_BODY * 0.6))
+            "title", max(18, int(theme.THEME_FONT_SIZE_BODY * 0.6))
         )
         self.label_font = theme.get_font(
-            max(14, int(theme.THEME_FONT_SIZE_BODY * 0.45))
+            "label", max(14, int(theme.THEME_FONT_SIZE_BODY * 0.45))
         )
         self.control_font = theme.get_font(
-            max(14, int(theme.THEME_FONT_SIZE_BODY * 0.45))
+            "label", max(14, int(theme.THEME_FONT_SIZE_BODY * 0.45))
+        )
+        self._title_surface = self.title_font.render(
+            "Theme Debug Overlay", True, theme.THEME_TEXT_COLOR_LIGHT
         )
         self.toggle_button.apply_theme()
         self.save_button.apply_theme()
-        self.toggle_button.set_font(theme.get_font(16))
-        self.save_button.set_font(theme.get_font(18))
+        self.toggle_button.set_font(theme.get_font("button", 16))
+        self.save_button.set_font(theme.get_font("button", 18))
         for control in self.controls:
             control.sync()
 
@@ -759,11 +822,8 @@ class ThemeDebugOverlay:
         panel.fill((30, 30, 30, 230))
         self.screen.blit(panel, self.panel_rect.topleft)
         pygame.draw.rect(self.screen, (200, 200, 200), self.panel_rect, 2)
-        title_surface = self.title_font.render(
-            "Theme Debug Overlay", True, theme.THEME_TEXT_COLOR_LIGHT
-        )
         self.screen.blit(
-            title_surface,
+            self._title_surface,
             (self.panel_rect.left + 160, self.panel_rect.top + 20),
         )
         self.save_button.draw(self.screen)

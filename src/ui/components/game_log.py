@@ -40,8 +40,9 @@ class GameLog:
         self.entries: List[GameLogEntry] = []
         self.visible = False
         self.scroll_offset = 0
-        self.font = theme.get_font(theme.THEME_FONT_SIZE_GAME_LOG_BODY)
-        self.title_font = theme.get_font(theme.THEME_FONT_SIZE_BODY)
+        self.font = theme.get_font(
+            "body", theme.THEME_FONT_SIZE_GAME_LOG_BODY)
+        self.title_font = theme.get_font("title", theme.THEME_FONT_SIZE_BODY)
         self.level_colors = {
             "INFO": theme.THEME_GAME_LOG_INFO_COLOR,
             "DEBUG": theme.THEME_GAME_LOG_DEBUG_COLOR,
@@ -230,8 +231,9 @@ class GameLog:
 
     def refresh_theme(self) -> None:
         """Refresh fonts and colors from the current theme."""
-        self.font = theme.get_font(theme.THEME_FONT_SIZE_GAME_LOG_BODY)
-        self.title_font = theme.get_font(theme.THEME_FONT_SIZE_BODY)
+        self.font = theme.get_font(
+            "body", theme.THEME_FONT_SIZE_GAME_LOG_BODY)
+        self.title_font = theme.get_font("title", theme.THEME_FONT_SIZE_BODY)
         self.level_colors = {
             "INFO": theme.THEME_GAME_LOG_INFO_COLOR,
             "DEBUG": theme.THEME_GAME_LOG_DEBUG_COLOR,
