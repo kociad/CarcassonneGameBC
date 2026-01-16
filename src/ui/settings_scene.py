@@ -101,6 +101,15 @@ class SettingsScene(Scene):
             not settings_manager.get("DEBUG"))
         current_y += 60
 
+        self.theme_debug_button = Button(
+            (x_center, current_y, 200, 50),
+            "Theme Debug",
+            self.button_font,
+            lambda: self.switch_scene(GameState.THEME_DEBUG))
+        self.theme_debug_button.set_disabled(
+            not settings_manager.get("DEBUG"))
+        current_y += 70
+
         self.fps_slider = Slider(rect=(x_center, current_y, 180, 20),
                                  font=self.dropdown_font,
                                  min_value=30,
@@ -271,6 +280,10 @@ class SettingsScene(Scene):
                                      current_y)
             current_y += 60
 
+            self._set_component_rect(self.theme_debug_button, x_center,
+                                     current_y)
+            current_y += 70
+
             self._set_slider_rect(self.fps_slider, x_center, current_y)
             current_y += 40
 
@@ -331,6 +344,7 @@ class SettingsScene(Scene):
         self.ai_strategic_candidates_field.set_disabled(not new_value)
         self.ai_thinking_speed_field.set_disabled(not new_value)
         self.log_to_console_checkbox.set_disabled(not new_value)
+        self.theme_debug_button.set_disabled(not new_value)
 
         if not new_value:
             self.log_to_console_checkbox.set_checked(False)
@@ -354,6 +368,8 @@ class SettingsScene(Scene):
             debug_enabled = settings_manager.get("DEBUG")
             if debug_enabled:
                 self.log_to_console_checkbox.handle_event(
+                    event, y_offset=self.scroll_offset)
+                self.theme_debug_button.handle_event(
                     event, y_offset=self.scroll_offset)
             self.valid_placement_checkbox.handle_event(
                 event, y_offset=self.scroll_offset)
@@ -411,17 +427,27 @@ class SettingsScene(Scene):
                                               y_offset=self.scroll_offset)
                 self.apply_button.handle_event(event,
                                                y_offset=self.scroll_offset)
+                if debug_enabled:
+                    self.theme_debug_button.handle_event(
+                        event, y_offset=self.scroll_offset)
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 self.back_button.handle_event(event,
                                               y_offset=self.scroll_offset)
                 self.apply_button.handle_event(event,
                                                y_offset=self.scroll_offset)
+                if debug_enabled:
+                    self.theme_debug_button.handle_event(
+                        event, y_offset=self.scroll_offset)
                 if self.back_button._is_clicked(event.pos,
                                                 y_offset=self.scroll_offset):
                     self.switch_scene(GameState.MENU)
                 elif self.apply_button._is_clicked(
                         event.pos, y_offset=self.scroll_offset):
                     self._apply_settings()
+                elif (debug_enabled and
+                      self.theme_debug_button._is_clicked(
+                          event.pos, y_offset=self.scroll_offset)):
+                    self.switch_scene(GameState.THEME_DEBUG)
 
     def _handle_ai_simulation_toggle(self, value):
         settings_manager.set("AI_USE_SIMULATION", value, temporary=True)
@@ -692,6 +718,13 @@ class SettingsScene(Scene):
                 centery=self.game_log_max_entries_field.rect.centery + offset_y)
             self.screen.blit(log_label, log_label_rect)
 
+            debug_button_label = label_font.render(
+                "Theme Debug:", True, theme.THEME_TEXT_COLOR_LIGHT)
+            debug_button_label_rect = debug_button_label.get_rect(
+                right=self.theme_debug_button.rect.left - 10,
+                centery=self.theme_debug_button.rect.centery + offset_y)
+            self.screen.blit(debug_button_label, debug_button_label_rect)
+
         # AI Settings
         if debug_enabled:
             label_color = (
@@ -734,6 +767,7 @@ class SettingsScene(Scene):
         self.valid_placement_checkbox.draw(self.screen, y_offset=offset_y)
         if debug_enabled:
             self.log_to_console_checkbox.draw(self.screen, y_offset=offset_y)
+            self.theme_debug_button.draw(self.screen, y_offset=offset_y)
             self.fps_slider.draw(self.screen, y_offset=offset_y)
             self.grid_size_slider.draw(self.screen, y_offset=offset_y)
             self.tile_size_slider.draw(self.screen, y_offset=offset_y)
