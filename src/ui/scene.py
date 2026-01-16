@@ -1,3 +1,4 @@
+import logging
 import os
 import pygame
 import typing
@@ -16,6 +17,7 @@ class Scene:
         self.max_scroll = 0
         self.scroll_speed = 30
         self._background_cache: dict[tuple, pygame.Surface] = {}
+        self._logger = logging.getLogger(__name__)
 
     def handle_events(self, events: list[pygame.event.Event]) -> None:
         """Handle events for the scene."""
@@ -112,7 +114,13 @@ class Scene:
 
         try:
             image = pygame.image.load(image_path).convert_alpha()
-        except (pygame.error, FileNotFoundError):
+        except (pygame.error, FileNotFoundError) as exc:
+            self._logger.warning(
+                "Failed to load background image '%s' from '%s': %s",
+                image_name,
+                image_path,
+                exc,
+            )
             return None
 
         scaled = self._scale_background_image(image, target_size, scale_mode)
