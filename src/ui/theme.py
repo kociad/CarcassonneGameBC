@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
+import os
+
 import pygame
+
+import settings
 
 Color = tuple[int, int, int, int]
 ColorA = tuple[int, int, int, int]
@@ -24,6 +28,16 @@ THEME_FONT_SIZE_BODY: int = 36
 THEME_FONT_SIZE_HELP_CONTROLS: int = 32
 # Game log body text size; integer size 18-32.
 THEME_FONT_SIZE_GAME_LOG_BODY: int = 28
+
+# Font families (asset filename or system font name).
+# Title text font family name or file in assets/fonts/; None uses default pygame font.
+THEME_FONT_FAMILY_TITLE: str | None = None
+# Body text font family name or file in assets/fonts/; None uses default pygame font.
+THEME_FONT_FAMILY_BODY: str | None = None
+# Label text font family name or file in assets/fonts/; None uses default pygame font.
+THEME_FONT_FAMILY_LABEL: str | None = None
+# Button text font family name or file in assets/fonts/; None uses default pygame font.
+THEME_FONT_FAMILY_BUTTON: str | None = None
 
 # Button colors
 # Horizontal padding applied on each side of button labels; integer size in pixels.
@@ -332,15 +346,54 @@ THEME_PLAYER_COLOR_PINK: Color = (255, 100, 255, 255)
 # Player "black" tint (light gray fallback); RGB tuple (0-255 per channel).
 THEME_PLAYER_COLOR_BLACK: Color = (200, 200, 200, 255)
 
-# Cache for pygame font instances keyed by size.
-_FONT_CACHE: dict[int, pygame.font.Font] = {}
+# Cache for pygame font instances keyed by role, size, and font family.
+_FONT_CACHE: dict[tuple[str, int, str | None], pygame.font.Font] = {}
 
 
-def get_font(size: int) -> pygame.font.Font:
-    """Return a cached pygame font at the given size."""
-    if size not in _FONT_CACHE:
-        _FONT_CACHE[size] = pygame.font.Font(None, size)
-    return _FONT_CACHE[size]
+def resolve_font_path(font_name: str | None) -> str | None:
+    """Resolve a font name to an assets/fonts path if it exists."""
+    if not font_name:
+        return None
+    font_name = font_name.strip()
+    if not font_name:
+        return None
+    if os.path.isabs(font_name) and os.path.isfile(font_name):
+        return font_name
+    asset_font_path = os.path.join(settings.ASSETS_PATH, "fonts", font_name)
+    if os.path.isfile(asset_font_path):
+        return asset_font_path
+    return None
+
+
+def _get_font_family(role: str) -> str | None:
+    if role == "title":
+        return THEME_FONT_FAMILY_TITLE
+    if role == "label":
+        return THEME_FONT_FAMILY_LABEL
+    if role == "button":
+        return THEME_FONT_FAMILY_BUTTON
+    return THEME_FONT_FAMILY_BODY
+
+
+def _load_font(font_name: str | None, size: int) -> pygame.font.Font:
+    font_path = resolve_font_path(font_name)
+    if font_path:
+        return pygame.font.Font(font_path, size)
+    if font_name:
+        matched = pygame.font.match_font(font_name)
+        if matched:
+            return pygame.font.Font(matched, size)
+        return pygame.font.SysFont(font_name, size)
+    return pygame.font.Font(None, size)
+
+
+def get_font(role: str, size: int) -> pygame.font.Font:
+    """Return a cached pygame font for the given role and size."""
+    font_family = _get_font_family(role)
+    cache_key = (role, size, font_family)
+    if cache_key not in _FONT_CACHE:
+        _FONT_CACHE[cache_key] = _load_font(font_family, size)
+    return _FONT_CACHE[cache_key]
 
 
 def clear_font_cache() -> None:
