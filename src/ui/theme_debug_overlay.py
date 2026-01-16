@@ -100,7 +100,7 @@ class ThemeDebugOverlay:
             label = name.replace("THEME_", "").replace("_", " ")
             if name.endswith("_TINT_COLOR"):
                 enabled = value is not None
-                initial_value = value if value is not None else (0, 0, 0, 0)
+                initial_value = value if value is not None else (0, 0, 0, 255)
                 control = self._build_color_control(
                     name,
                     label,
@@ -213,15 +213,17 @@ class ThemeDebugOverlay:
         optional: bool = False,
         enabled: bool = True,
     ) -> ThemeControl:
-        channels = list(value)
+        channels = self._normalize_color_channels(value)
         if optional and not enabled:
             self._optional_values[name] = channels
         slider_height = 20
         channel_gap = 8
         label_height = self.label_font.get_height()
         sliders: list[Slider] = []
-        channel_labels = ["R", "G", "B", "A"][:len(channels)]
+        channel_labels = ["R", "G", "B", "A"]
         checkbox = None
+        swatch_size = 26
+        swatch_margin = 10
 
         def build_sliders(y_offset: int) -> None:
             for idx, channel in enumerate(channels):
@@ -276,6 +278,21 @@ class ThemeDebugOverlay:
                 )
                 surface.blit(channel_label, (control_x, label_y - 2))
                 slider.draw(surface, y_offset=y_offset)
+            if checkbox is None or checkbox.checked:
+                swatch_x = control_x + slider_width + swatch_margin
+                swatch_y = start_y + y_offset + label_height + 6
+                swatch_surface = pygame.Surface(
+                    (swatch_size, swatch_size), pygame.SRCALPHA
+                )
+                swatch_color = tuple(int(slider.value) for slider in sliders)
+                swatch_surface.fill(swatch_color)
+                surface.blit(swatch_surface, (swatch_x, swatch_y))
+                pygame.draw.rect(
+                    surface,
+                    theme.THEME_TEXT_COLOR_LIGHT,
+                    pygame.Rect(swatch_x, swatch_y, swatch_size, swatch_size),
+                    1,
+                )
 
         def handle_event(event: pygame.event.Event, y_offset: int) -> None:
             if checkbox is not None:
@@ -299,7 +316,7 @@ class ThemeDebugOverlay:
                 checkbox.set_checked(True)
                 for slider in sliders:
                     slider.set_disabled(False)
-            current_channels = list(current_value)
+            current_channels = self._normalize_color_channels(current_value)
             for idx, slider in enumerate(sliders):
                 slider.set_value(int(current_channels[idx]))
                 slider.apply_theme()
@@ -561,7 +578,7 @@ class ThemeDebugOverlay:
     def _toggle_optional_color(self, name: str, enabled: bool,
                                sliders: list[Slider]) -> None:
         if enabled:
-            restored = self._optional_values.get(name, [0, 0, 0, 0])
+            restored = self._optional_values.get(name, [0, 0, 0, 255])
             self._set_theme_value(name, tuple(restored))
             for slider in sliders:
                 slider.set_disabled(False)
@@ -592,11 +609,17 @@ class ThemeDebugOverlay:
                               value: int) -> None:
         current_value = getattr(theme, name)
         if current_value is None:
-            current = self._optional_values.get(name, [0, 0, 0, 0])
+            current = self._optional_values.get(name, [0, 0, 0, 255])
         else:
-            current = list(current_value)
+            current = self._normalize_color_channels(current_value)
         current[channel_index] = int(value)
         self._set_theme_value(name, tuple(current))
+
+    def _normalize_color_channels(self, value: tuple) -> list[int]:
+        channels = list(value)
+        if len(channels) < 4:
+            channels.extend([255] * (4 - len(channels)))
+        return channels[:4]
 
     def _set_theme_value(self, name: str, value: typing.Any) -> None:
         setattr(theme, name, value)
