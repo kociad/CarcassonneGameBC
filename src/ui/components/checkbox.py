@@ -35,6 +35,7 @@ class Checkbox:
         self.border_color = border_color
         self.disabled_color = disabled_color
         self.disabled = False
+        self.hovered = False
 
     def handle_event(self,
                      event: pygame.event.Event,
@@ -49,10 +50,13 @@ class Checkbox:
         Returns:
             True if event was handled, False otherwise
         """
+        shifted_rect = self.rect.move(0, y_offset)
         if self.disabled:
+            self.hovered = False
             return False
+        if event.type == pygame.MOUSEMOTION:
+            self.hovered = shifted_rect.collidepoint(event.pos)
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-            shifted_rect = self.rect.move(0, y_offset)
             if shifted_rect.collidepoint(event.pos):
                 self.checked = not self.checked
                 if self.on_toggle:
@@ -69,12 +73,28 @@ class Checkbox:
             y_offset: Vertical offset for drawing
         """
         shifted_rect = self.rect.move(0, y_offset)
-        border_color = self.disabled_color if self.disabled else self.border_color
+        if self.disabled:
+            border_color = self.disabled_color
+        elif self.hovered:
+            border_color = tuple(
+                min(255, channel + 40) for channel in self.border_color)
+        else:
+            border_color = self.border_color
+        pygame.draw.rect(surface, self.box_color, shifted_rect)
         pygame.draw.rect(surface, border_color, shifted_rect, 2)
+        inner = shifted_rect.inflate(-6, -6)
         if self.checked:
-            fill_color = self.disabled_color if self.disabled else self.check_color
-            inner = shifted_rect.inflate(-6, -6)
+            if self.disabled:
+                fill_color = self.disabled_color
+            elif self.hovered:
+                fill_color = tuple(
+                    min(255, channel + 30) for channel in self.check_color)
+            else:
+                fill_color = self.check_color
             pygame.draw.rect(surface, fill_color, inner)
+        elif self.hovered and not self.disabled:
+            hover_fill = tuple(min(255, channel + 20) for channel in self.box_color)
+            pygame.draw.rect(surface, hover_fill, inner)
 
     def is_checked(self) -> bool:
         """Check if the checkbox is checked."""

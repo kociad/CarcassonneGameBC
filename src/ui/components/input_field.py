@@ -41,6 +41,7 @@ class InputField:
         self.placeholder = placeholder
         self.text = initial_text if initial_text else text
         self.active = False
+        self.hovered = False
         self.disabled = False
         self.read_only = False
         self.text_color = text_color
@@ -66,9 +67,12 @@ class InputField:
             event: Pygame event to handle
             y_offset: Vertical offset for event detection
         """
-        if self.disabled or self.read_only:
-            return
         shifted_rect = self.rect.move(0, y_offset)
+        if self.disabled or self.read_only:
+            self.hovered = False
+            return
+        if event.type == pygame.MOUSEMOTION:
+            self.hovered = shifted_rect.collidepoint(event.pos)
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             self.active = shifted_rect.collidepoint(event.pos)
         if self.active and event.type == pygame.KEYDOWN:
@@ -139,7 +143,14 @@ class InputField:
             self.last_blink = now
         draw_rect = self.rect.move(0, y_offset)
         bg_color = (200, 200, 200) if self.disabled else self.bg_color
-        border_color = (100, 100, 100) if self.disabled else self.border_color
+        if self.disabled:
+            border_color = (100, 100, 100)
+        else:
+            if self.active or self.hovered:
+                border_color = tuple(
+                    min(255, channel + 40) for channel in self.border_color)
+            else:
+                border_color = self.border_color
         text_color = (150, 150, 150) if self.disabled else (
             self.text_color if self.text or self.active else (150, 150, 150))
         pygame.draw.rect(surface, bg_color, draw_rect)
