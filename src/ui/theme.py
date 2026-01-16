@@ -348,6 +348,7 @@ THEME_PLAYER_COLOR_BLACK: Color = (200, 200, 200, 255)
 
 # Cache for pygame font instances keyed by role, size, and font family.
 _FONT_CACHE: dict[tuple[str, int, str | None], pygame.font.Font] = {}
+_SYSTEM_FONT_MATCH_CACHE: dict[str, str | None] = {}
 
 
 def resolve_font_path(font_name: str | None) -> str | None:
@@ -383,7 +384,11 @@ def _load_font(font_name: str | None, size: int) -> pygame.font.Font:
         _, extension = os.path.splitext(font_name.lower())
         if extension in {".ttf", ".otf", ".ttc", ".otc"}:
             return pygame.font.Font(None, size)
-        matched = pygame.font.match_font(font_name)
+        if font_name in _SYSTEM_FONT_MATCH_CACHE:
+            matched = _SYSTEM_FONT_MATCH_CACHE[font_name]
+        else:
+            matched = pygame.font.match_font(font_name)
+            _SYSTEM_FONT_MATCH_CACHE[font_name] = matched
         if matched:
             return pygame.font.Font(matched, size)
         return pygame.font.SysFont(font_name, size)
