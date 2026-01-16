@@ -17,10 +17,12 @@ class SettingsScene(Scene):
     def __init__(self, screen: pygame.Surface,
                  switch_scene_callback: typing.Callable) -> None:
         super().__init__(screen, switch_scene_callback)
-        self.font = theme.get_font(theme.THEME_FONT_SIZE_SCENE_TITLE)
-        self.button_font = theme.get_font(theme.THEME_FONT_SIZE_BUTTON)
-        self.input_font = theme.get_font(theme.THEME_FONT_SIZE_BODY)
-        self.dropdown_font = theme.get_font(theme.THEME_FONT_SIZE_BODY)
+        self.font = theme.get_font("title", theme.THEME_FONT_SIZE_SCENE_TITLE)
+        self.button_font = theme.get_font(
+            "button", theme.THEME_FONT_SIZE_BUTTON
+        )
+        self.input_font = theme.get_font("body", theme.THEME_FONT_SIZE_BODY)
+        self.dropdown_font = theme.get_font("body", theme.THEME_FONT_SIZE_BODY)
         self.toast_manager = ToastManager(max_toasts=5)
         self.scroll_offset = 0
         self.max_scroll = 0
@@ -768,10 +770,12 @@ class SettingsScene(Scene):
     def refresh_theme(self) -> None:
         """Refresh fonts and component styling after theme changes."""
         super().refresh_theme()
-        self.font = theme.get_font(theme.THEME_FONT_SIZE_SCENE_TITLE)
-        self.button_font = theme.get_font(theme.THEME_FONT_SIZE_BUTTON)
-        self.input_font = theme.get_font(theme.THEME_FONT_SIZE_BODY)
-        self.dropdown_font = theme.get_font(theme.THEME_FONT_SIZE_BODY)
+        self.font = theme.get_font("title", theme.THEME_FONT_SIZE_SCENE_TITLE)
+        self.button_font = theme.get_font(
+            "button", theme.THEME_FONT_SIZE_BUTTON
+        )
+        self.input_font = theme.get_font("body", theme.THEME_FONT_SIZE_BODY)
+        self.dropdown_font = theme.get_font("body", theme.THEME_FONT_SIZE_BODY)
 
         self.resolution_dropdown.set_font(self.dropdown_font)
         self.resolution_dropdown.apply_theme()

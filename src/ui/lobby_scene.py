@@ -22,8 +22,10 @@ class LobbyScene(Scene):
         self.get_game_session = get_game_session
         self.network = network
         self.game_log = game_log
-        self.font = theme.get_font(theme.THEME_FONT_SIZE_SCENE_TITLE)
-        self.button_font = theme.get_font(theme.THEME_FONT_SIZE_BUTTON)
+        self.font = theme.get_font("title", theme.THEME_FONT_SIZE_SCENE_TITLE)
+        self.button_font = theme.get_font(
+            "button", theme.THEME_FONT_SIZE_BUTTON
+        )
         self.toast_manager = ToastManager(max_toasts=5)
         self.scroll_offset = 0
         self.max_scroll = 0
@@ -124,7 +126,7 @@ class LobbyScene(Scene):
         title_rect = title_text.get_rect(center=(self.screen.get_width() // 2,
                                                  60 + offset_y))
         self.screen.blit(title_text, title_rect)
-        label_font = theme.get_font(theme.THEME_FONT_SIZE_BUTTON)
+        label_font = theme.get_font("label", theme.THEME_FONT_SIZE_BUTTON)
         y = 160 + offset_y
         if self.is_host:
             for i, status in enumerate(self.status_list):
@@ -145,7 +147,7 @@ class LobbyScene(Scene):
                 y += 60
             self.start_button.draw(self.screen, y_offset=offset_y)
         else:
-            wait_font = theme.get_font(theme.THEME_FONT_SIZE_BODY)
+            wait_font = theme.get_font("body", theme.THEME_FONT_SIZE_BODY)
             wait_text = wait_font.render(
                 "Waiting for host to start the game...", True,
                 theme.THEME_TEXT_COLOR_LIGHT)
@@ -160,8 +162,10 @@ class LobbyScene(Scene):
     def refresh_theme(self) -> None:
         """Refresh fonts and component styling after theme changes."""
         super().refresh_theme()
-        self.font = theme.get_font(theme.THEME_FONT_SIZE_SCENE_TITLE)
-        self.button_font = theme.get_font(theme.THEME_FONT_SIZE_BUTTON)
+        self.font = theme.get_font("title", theme.THEME_FONT_SIZE_SCENE_TITLE)
+        self.button_font = theme.get_font(
+            "button", theme.THEME_FONT_SIZE_BUTTON
+        )
         self.start_button.set_font(self.button_font)
         self.start_button.apply_theme()
         self.toast_manager.apply_theme()
