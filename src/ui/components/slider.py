@@ -2,7 +2,7 @@ import pygame
 from ui.components.input_field import InputField
 from ui.components.toast import Toast
 from ui import theme
-from ui.utils.draw import draw_circle_alpha, draw_rect_alpha
+from ui.utils.draw import draw_rect_alpha
 import typing
 
 
@@ -13,15 +13,10 @@ class Slider:
     def _required_height(font: pygame.font.Font) -> int:
         return font.get_height() + 14
 
-    @staticmethod
-    def _calculate_handle_radius(height: int) -> int:
-        return max(4, min(10, height // 2))
-
     def _apply_height(self, height: int) -> None:
         self.rect.height = height
         self.input_field.rect.height = height
         self.input_field.rect.y = self.rect.y
-        self.handle_radius = self._calculate_handle_radius(height)
 
     def __init__(self,
                  rect: pygame.Rect,
@@ -54,7 +49,6 @@ class Slider:
         self.disabled = False
         required_height = self._required_height(font)
         self.rect.height = max(self.rect.height, required_height)
-        self.handle_radius = self._calculate_handle_radius(self.rect.height)
         self.dragging = False
         self.hovered_handle = False
         self.hovered_track = False
@@ -211,13 +205,17 @@ class Slider:
         Returns:
             Rectangle for the slider handle
         """
+        handle_width = max(10, self.rect.height // 2)
         handle_x = self.rect.left + (
             (self.value - self.min_value) /
             (self.max_value - self.min_value)) * self.rect.width
-        handle_y = self.rect.centery + y_offset
-        return pygame.Rect(handle_x - self.handle_radius,
-                           handle_y - self.handle_radius,
-                           self.handle_radius * 2, self.handle_radius * 2)
+        handle_center_y = self.rect.centery + y_offset
+        return pygame.Rect(
+            int(handle_x - (handle_width / 2)),
+            int(handle_center_y - (self.rect.height / 2)),
+            int(handle_width),
+            int(self.rect.height),
+        )
 
     def draw(self, surface: pygame.Surface, y_offset: int = 0) -> None:
         """
@@ -256,10 +254,8 @@ class Slider:
             pygame.Rect(shifted_rect.left, shifted_rect.top, fill_width,
                         shifted_rect.height))
         handle_rect = self._handle_rect(y_offset)
-        draw_circle_alpha(surface, handle_color, handle_rect.center,
-                          self.handle_radius)
-        draw_circle_alpha(surface, border_color, handle_rect.center,
-                          self.handle_radius, 1)
+        draw_rect_alpha(surface, handle_color, handle_rect)
+        draw_rect_alpha(surface, border_color, handle_rect, 1)
         self.input_field.draw(surface, y_offset=y_offset)
         if not self.active_toast and self.toast_queue:
             self.active_toast = self.toast_queue.pop(0)
