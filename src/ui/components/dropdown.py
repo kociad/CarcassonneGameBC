@@ -114,7 +114,10 @@ class Dropdown:
         draw_surface = pygame.Surface((self.rect.width, full_height),
                                       pygame.SRCALPHA)
         alpha = 150 if self.disabled else 255
-        bg = (*self.bg_color, alpha)
+        bg_base = self.bg_color
+        if self.hovered_control and not self.disabled:
+            bg_base = tuple(min(255, channel + 20) for channel in self.bg_color)
+        bg = (*bg_base, alpha)
         if self.disabled:
             border = (*self.border_color, alpha)
         elif self.hovered_control:

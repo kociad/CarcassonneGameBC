@@ -75,12 +75,19 @@ class Checkbox:
         shifted_rect = self.rect.move(0, y_offset)
         if self.disabled:
             border_color = self.disabled_color
+            box_color = self.box_color
         elif self.hovered:
             border_color = tuple(
                 min(255, channel + 40) for channel in self.border_color)
+            if not self.checked:
+                box_color = tuple(
+                    min(255, channel + 20) for channel in self.box_color)
+            else:
+                box_color = self.box_color
         else:
             border_color = self.border_color
-        pygame.draw.rect(surface, self.box_color, shifted_rect)
+            box_color = self.box_color
+        pygame.draw.rect(surface, box_color, shifted_rect)
         pygame.draw.rect(surface, border_color, shifted_rect, 2)
         inner = shifted_rect.inflate(-6, -6)
         if self.checked:
