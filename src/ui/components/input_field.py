@@ -60,7 +60,128 @@ class InputField:
         self.max_value = max_value
         self.on_text_change = on_text_change
         self.cursor_pos = len(self.text)
+        self.selection_start: typing.Optional[int] = None
+        self.selection_end: typing.Optional[int] = None
         InputField._instances.append(self)
+
+    def _has_selection(self) -> bool:
+        return (self.selection_start is not None
+                and self.selection_end is not None
+                and self.selection_start != self.selection_end)
+
+    def _get_selection_range(self) -> tuple[int, int]:
+        if not self._has_selection():
+            return (self.cursor_pos, self.cursor_pos)
+        start = min(self.selection_start, self.selection_end)
+        end = max(self.selection_start, self.selection_end)
+        return (start, end)
+
+    def _clear_selection(self) -> None:
+        self.selection_start = None
+        self.selection_end = None
+
+    def _delete_selection(self) -> bool:
+        if not self._has_selection():
+            return False
+        start, end = self._get_selection_range()
+        self.text = self.text[:start] + self.text[end:]
+        self.cursor_pos = start
+        self._clear_selection()
+        return True
+
+    @staticmethod
+    def _ensure_scrap_ready() -> bool:
+        try:
+            if not pygame.scrap.get_init():
+                pygame.scrap.init()
+        except pygame.error:
+            return False
+        return pygame.scrap.get_init()
+
+    def _copy_to_clipboard(self, text: str) -> None:
+        if not text:
+            return
+        if not self._ensure_scrap_ready():
+            return
+        try:
+            pygame.scrap.put(pygame.SCRAP_TEXT, text.encode('utf-8'))
+        except pygame.error:
+            return
+
+    def _get_clipboard_text(self) -> str:
+        if not self._ensure_scrap_ready():
+            return ""
+        try:
+            data = pygame.scrap.get(pygame.SCRAP_TEXT)
+        except pygame.error:
+            return ""
+        if not data:
+            return ""
+        if isinstance(data, bytes):
+            try:
+                text = data.decode('utf-8')
+            except UnicodeDecodeError:
+                text = data.decode('latin1', errors='ignore')
+        else:
+            text = str(data)
+        return text.replace('\x00', '')
+
+    def _filter_numeric_insert(self, insert_text: str,
+                               base_text: str,
+                               insert_pos: int) -> str:
+        allowed: list[str] = []
+        has_minus = '-' in base_text
+        has_dot = '.' in base_text
+        has_comma = ',' in base_text
+        for ch in insert_text:
+            if ch.isdigit():
+                allowed.append(ch)
+                continue
+            if ch == '-' and not has_minus and insert_pos == 0 and not allowed:
+                allowed.append(ch)
+                has_minus = True
+                continue
+            if ch == '.' and not has_dot:
+                allowed.append(ch)
+                has_dot = True
+                continue
+            if ch == ',' and not has_comma:
+                allowed.append(ch)
+                has_comma = True
+        return "".join(allowed)
+
+    def _insert_text(self, insert_text: str) -> bool:
+        if not insert_text:
+            return False
+        base_text = self.text
+        insert_pos = self.cursor_pos
+        if self._has_selection():
+            start, end = self._get_selection_range()
+            base_text = self.text[:start] + self.text[end:]
+            insert_pos = start
+        if self.numeric:
+            insert_text = self._filter_numeric_insert(insert_text,
+                                                     base_text, insert_pos)
+        if not insert_text:
+            return False
+        if self._has_selection():
+            self._delete_selection()
+        self.text = self.text[:self.cursor_pos] + insert_text + self.text[
+            self.cursor_pos:]
+        self.cursor_pos += len(insert_text)
+        return True
+
+    def _ensure_cursor_visible(self) -> None:
+        cursor_x = self.font.size(self.text[:self.cursor_pos])[0]
+        visible_width = self.rect.width - 10
+        if cursor_x - self.scroll_offset > visible_width:
+            self.scroll_offset = cursor_x - visible_width
+        elif cursor_x - self.scroll_offset < 0:
+            self.scroll_offset = cursor_x
+        text_width = self.font.size(self.text)[0]
+        if text_width - self.scroll_offset < visible_width:
+            self.scroll_offset = max(0, text_width - visible_width)
+        self.scroll_offset = max(0, self.scroll_offset)
 
     def handle_event(self,
                      event: pygame.event.Event,
@@ -73,7 +194,7 @@ class InputField:
             y_offset: Vertical offset for event detection
         """
         shifted_rect = self.rect.move(0, y_offset)
-        if self.disabled or self.read_only:
+        if self.disabled:
             self.hovered = False
             return
         if event.type == pygame.MOUSEMOTION:
@@ -86,6 +207,8 @@ class InputField:
                 pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             self.active = shifted_rect.collidepoint(event.pos)
+            if self.active:
+                self._clear_selection()
             any_hovered = any(
                 field.hovered or field.active for field in InputField._instances)
             if any_hovered:
@@ -94,57 +217,74 @@ class InputField:
                 pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
         if self.active and event.type == pygame.KEYDOWN:
             old_text = self.text
-            if event.key == pygame.K_LEFT:
+            has_ctrl = bool(event.mod & pygame.KMOD_CTRL)
+            if has_ctrl and event.key == pygame.K_c:
+                if self._has_selection():
+                    start, end = self._get_selection_range()
+                    self._copy_to_clipboard(self.text[start:end])
+                else:
+                    self._copy_to_clipboard(self.text)
+            elif has_ctrl and event.key == pygame.K_x:
+                if not self.read_only:
+                    if self._has_selection():
+                        start, end = self._get_selection_range()
+                        self._copy_to_clipboard(self.text[start:end])
+                    else:
+                        self._copy_to_clipboard(self.text)
+                    if self.text:
+                        if not self._delete_selection():
+                            self.text = ""
+                            self.cursor_pos = 0
+                        self._clear_selection()
+            elif has_ctrl and event.key == pygame.K_v:
+                if not self.read_only:
+                    clipboard_text = self._get_clipboard_text()
+                    if clipboard_text:
+                        changed = self._insert_text(clipboard_text)
+                        if changed:
+                            self._clear_selection()
+            elif has_ctrl and event.key == pygame.K_a:
+                if self.text:
+                    self.selection_start = 0
+                    self.selection_end = len(self.text)
+                    self.cursor_pos = len(self.text)
+            elif event.key == pygame.K_LEFT:
                 if self.cursor_pos > 0:
                     self.cursor_pos -= 1
+                self._clear_selection()
             elif event.key == pygame.K_RIGHT:
                 if self.cursor_pos < len(self.text):
                     self.cursor_pos += 1
+                self._clear_selection()
             elif event.key == pygame.K_HOME:
                 self.cursor_pos = 0
+                self._clear_selection()
             elif event.key == pygame.K_END:
                 self.cursor_pos = len(self.text)
+                self._clear_selection()
             elif event.key == pygame.K_BACKSPACE:
-                if self.cursor_pos > 0:
-                    self.text = self.text[:self.cursor_pos -
-                                          1] + self.text[self.cursor_pos:]
-                    self.cursor_pos -= 1
+                if not self.read_only:
+                    if not self._delete_selection():
+                        if self.cursor_pos > 0:
+                            self.text = self.text[:self.cursor_pos -
+                                                  1] + self.text[self.cursor_pos:]
+                            self.cursor_pos -= 1
             elif event.key == pygame.K_DELETE:
-                if self.cursor_pos < len(self.text):
-                    self.text = self.text[:self.cursor_pos] + self.text[
-                        self.cursor_pos + 1:]
+                if not self.read_only:
+                    if not self._delete_selection():
+                        if self.cursor_pos < len(self.text):
+                            self.text = self.text[:self.cursor_pos] + self.text[
+                                self.cursor_pos + 1:]
             elif event.key == pygame.K_RETURN:
                 self.active = False
             else:
-                if self.numeric:
-                    if (event.unicode.isdigit()
-                            or (event.unicode == '-' and len(self.text) == 0)
-                            or (event.unicode == '.' and '.' not in self.text)
-                            or
-                        (event.unicode == ',' and ',' not in self.text)):
-                        self.text = self.text[:self.
-                                              cursor_pos] + event.unicode + self.text[
-                                                  self.cursor_pos:]
-                        self.cursor_pos += 1
-                else:
+                if not self.read_only:
                     if event.unicode and event.unicode.isprintable():
-                        self.text = self.text[:self.
-                                              cursor_pos] + event.unicode + self.text[
-                                                  self.cursor_pos:]
-                        self.cursor_pos += 1
+                        self._insert_text(event.unicode)
             self.cursor_pos = max(0, min(self.cursor_pos, len(self.text)))
             if self.on_text_change and self.text != old_text:
                 self.on_text_change(self.text)
-            cursor_x = self.font.size(self.text[:self.cursor_pos])[0]
-            visible_width = self.rect.width - 10
-            if cursor_x - self.scroll_offset > visible_width:
-                self.scroll_offset = cursor_x - visible_width
-            elif cursor_x - self.scroll_offset < 0:
-                self.scroll_offset = cursor_x
-            text_width = self.font.size(self.text)[0]
-            if text_width - self.scroll_offset < visible_width:
-                self.scroll_offset = max(0, text_width - visible_width)
-            self.scroll_offset = max(0, self.scroll_offset)
+            self._ensure_cursor_visible()
 
     def draw(self, surface: pygame.Surface, y_offset: int = 0) -> None:
         """
@@ -182,6 +322,27 @@ class InputField:
                 text_surface.get_width() - self.scroll_offset))
         visible_rect = pygame.Rect(self.scroll_offset, 0, clamped_width,
                                    text_surface.get_height())
+        if self._has_selection() and self.text:
+            selection_start, selection_end = self._get_selection_range()
+            start_x = self.font.size(self.text[:selection_start])[0]
+            end_x = self.font.size(self.text[:selection_end])[0]
+            start_x -= self.scroll_offset
+            end_x -= self.scroll_offset
+            visible_width = self.rect.width - 10
+            highlight_start = max(0, start_x)
+            highlight_end = min(visible_width, end_x)
+            if highlight_end > highlight_start:
+                selection_color = tuple(
+                    min(255, channel + 60) for channel in self.bg_color)
+                highlight_surface = pygame.Surface(
+                    (highlight_end - highlight_start, text_surface.get_height()),
+                    pygame.SRCALPHA)
+                highlight_surface.fill((*selection_color, 140))
+                surface.blit(highlight_surface,
+                             (draw_rect.x + 5 + highlight_start,
+                              draw_rect.y +
+                              (draw_rect.height - text_surface.get_height()) //
+                              2))
         surface.blit(text_surface.subsurface(visible_rect),
                      (draw_rect.x + 5, draw_rect.y +
                       (draw_rect.height - text_surface.get_height()) // 2))
@@ -207,6 +368,7 @@ class InputField:
         self.text = str(value)
         self.cursor_pos = len(self.text)
         self.scroll_offset = 0
+        self._clear_selection()
 
     def set_disabled(self, value: bool) -> None:
         """
@@ -218,6 +380,7 @@ class InputField:
         self.disabled = value
         if value:
             self.active = False
+            self._clear_selection()
 
     def set_font(self, font: pygame.font.Font) -> None:
         """Update the font used by the input field."""
@@ -238,6 +401,8 @@ class InputField:
             value: Whether to make the field read-only
         """
         self.read_only = value
+        if value:
+            self._clear_selection()
 
     def is_disabled(self) -> bool:
         """Check if the input field is disabled."""
