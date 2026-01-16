@@ -50,7 +50,7 @@ class Dropdown:
         self.highlight_color = highlight_color or theme.color("dropdown_highlight")
         self.hover_bg_color = theme.color("dropdown_hover_bg")
         self.hovered_control = False
-        self.hovered_index: typing.Optional[int] = None
+        self.hover_index: typing.Optional[int] = None
 
     def handle_event(self,
                      event: pygame.event.Event,
@@ -68,26 +68,20 @@ class Dropdown:
         shifted_rect = self.rect.move(0, y_offset)
         if self.disabled:
             self.hovered_control = False
-            self.hovered_index = None
+            self.hover_index = None
             return False
         if event.type == pygame.MOUSEMOTION:
-            if shifted_rect.collidepoint(event.pos):
-                self.hovered_control = True
-                self.hovered_index = None
-            elif self.expanded:
-                self.hovered_control = False
-                self.hovered_index = None
+            self.hovered_control = shifted_rect.collidepoint(event.pos)
+            self.hover_index = None
+            if self.expanded:
                 for i, _ in enumerate(self.options):
                     option_rect = pygame.Rect(
                         shifted_rect.x,
                         shifted_rect.y + (i + 1) * self.rect.height,
                         self.rect.width, self.rect.height)
                     if option_rect.collidepoint(event.pos):
-                        self.hovered_index = i
+                        self.hover_index = i
                         break
-            else:
-                self.hovered_control = False
-                self.hovered_index = None
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             if shifted_rect.collidepoint(event.pos):
                 self.expanded = not self.expanded
@@ -151,7 +145,7 @@ class Dropdown:
                                           self.rect.width, self.rect.height)
                 if i == self.selected_index:
                     option_bg = highlight
-                elif self.hovered_index == i:
+                elif self.hover_index == i:
                     option_bg = hover_option
                 else:
                     option_bg = bg

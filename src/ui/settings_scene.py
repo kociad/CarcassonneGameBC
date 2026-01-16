@@ -33,7 +33,8 @@ class SettingsScene(Scene):
         self.debug_enabled = settings_manager.get("DEBUG")
 
         current_resolution = f"{settings_manager.get('WINDOW_WIDTH')}x{settings_manager.get('WINDOW_HEIGHT')}"
-        x_center = screen.get_width() // 2 - 100
+        self.x_center = screen.get_width() // 2 - 100
+        x_center = self.x_center
         current_y = 60
 
         self.title_y = current_y
@@ -291,6 +292,77 @@ class SettingsScene(Scene):
 
         self.back_button = Button((x_center, current_y, 200, 60), "Back",
                                   self.button_font)
+        self._layout_components()
+
+    def _layout_components(self) -> None:
+        x_center = self.x_center
+        current_y = 60
+
+        self.title_y = current_y
+        current_y += 60
+
+        self.display_label_y = current_y
+        current_y += 50
+
+        self.resolution_dropdown.rect.topleft = (x_center, current_y)
+        current_y += 60
+
+        self.fullscreen_checkbox.rect.topleft = (x_center, current_y)
+        current_y += 80
+
+        self.game_label_y = current_y
+        current_y += 50
+
+        self.valid_placement_checkbox.rect.topleft = (x_center, current_y)
+        current_y += 80
+
+        self.debug_label_y = current_y
+        current_y += 50
+
+        self.debug_checkbox.rect.topleft = (x_center, current_y)
+        current_y += 40
+
+        debug_enabled = self.debug_checkbox.is_checked()
+        if debug_enabled:
+            self.log_to_console_checkbox.rect.topleft = (x_center, current_y)
+            current_y += 60
+
+            self.fps_slider.rect.topleft = (x_center, current_y)
+            current_y += 40
+
+            self.grid_size_slider.rect.topleft = (x_center, current_y)
+            current_y += 40
+
+            self.tile_size_slider.rect.topleft = (x_center, current_y)
+            current_y += 40
+
+            self.figure_size_slider.rect.topleft = (x_center, current_y)
+            current_y += 40
+
+            self.sidebar_width_slider.rect.topleft = (x_center, current_y)
+            current_y += 40
+
+            self.game_log_max_entries_field.rect.topleft = (
+                x_center, current_y)
+            current_y += 80
+
+        if debug_enabled:
+            self.ai_label_y = current_y
+            current_y += 50
+            self.ai_simulation_checkbox.rect.topleft = (x_center, current_y)
+            current_y += 40
+
+            self.ai_strategic_candidates_field.rect.topleft = (
+                x_center, current_y)
+            current_y += 60
+
+            self.ai_thinking_speed_field.rect.topleft = (x_center, current_y)
+            current_y += 80
+
+        self.apply_button.rect.topleft = (x_center, current_y)
+        current_y += 80
+
+        self.back_button.rect.topleft = (x_center, current_y)
 
     def _on_tile_size_changed(self, new_tile_size):
         new_min_sidebar_width = new_tile_size + 20
