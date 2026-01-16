@@ -8,3 +8,4 @@ class GameState(Enum):
     PREPARE: int = auto()
     HELP: int = auto()
     LOBBY: int = auto()
+    THEME_DEBUG: int = auto()

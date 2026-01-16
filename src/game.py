@@ -12,6 +12,7 @@ import typing
 
 from ui.main_menu_scene import MainMenuScene
 from ui.settings_scene import SettingsScene
+from ui.theme_debug_scene import ThemeDebugScene
 from ui.game_prepare_scene import GamePrepareScene
 from ui.scene import Scene
 from ui.game_scene import GameScene
@@ -184,6 +185,13 @@ class Game:
                                                  self._network, self._game_log)
             elif state == GameState.HELP:
                 self._current_scene = HelpScene(self._screen, self._init_scene)
+            elif state == GameState.THEME_DEBUG:
+                if settings_manager.get("DEBUG"):
+                    self._current_scene = ThemeDebugScene(
+                        self._screen, self._init_scene)
+                else:
+                    self._current_scene = SettingsScene(
+                        self._screen, self._init_scene)
             # Handle dynamic callback from GamePrepareScene
             elif isinstance(state,
                             str) and state in ("start_game", "start_lobby"):
