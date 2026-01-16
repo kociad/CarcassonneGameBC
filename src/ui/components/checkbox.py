@@ -13,6 +13,7 @@ class Checkbox:
         box_color: tuple = (255, 255, 255),
         check_color: tuple = (0, 200, 0),
         border_color: tuple = (255, 255, 255),
+        hover_box_color: tuple = (235, 235, 235),
         disabled_color: tuple = (100, 100, 100)
     ) -> None:
         """
@@ -25,6 +26,7 @@ class Checkbox:
             box_color: Color of the checkbox box
             check_color: Color of the check mark
             border_color: Color of the border
+            hover_box_color: Color of the unchecked box on hover
             disabled_color: Color when disabled
         """
         self.rect = pygame.Rect(rect)
@@ -33,6 +35,7 @@ class Checkbox:
         self.box_color = box_color
         self.check_color = check_color
         self.border_color = border_color
+        self.hover_box_color = hover_box_color
         self.disabled_color = disabled_color
         self.disabled = False
         self.hovered = False
@@ -80,8 +83,7 @@ class Checkbox:
             border_color = tuple(
                 min(255, channel + 40) for channel in self.border_color)
             if not self.checked:
-                box_color = tuple(
-                    min(255, channel + 20) for channel in self.box_color)
+                box_color = self.hover_box_color
             else:
                 box_color = self.box_color
         else:
