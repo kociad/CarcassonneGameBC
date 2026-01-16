@@ -14,12 +14,12 @@ class Dropdown:
         options: list[str],
         on_select: typing.Optional[typing.Callable] = None,
         default_index: int = 0,
-        text_color: tuple = theme.THEME_DROPDOWN_TEXT_COLOR,
-        bg_color: tuple = theme.THEME_DROPDOWN_BG_COLOR,
-        border_color: tuple = theme.THEME_DROPDOWN_BORDER_COLOR,
-        highlight_color: tuple = theme.THEME_DROPDOWN_HIGHLIGHT_COLOR,
-        hover_bg_color: tuple = theme.THEME_DROPDOWN_HOVER_BG_COLOR,
-        hover_option_color: tuple = theme.THEME_DROPDOWN_HOVER_OPTION_COLOR
+        text_color: tuple[int, ...] = theme.THEME_DROPDOWN_TEXT_COLOR,
+        bg_color: tuple[int, ...] = theme.THEME_DROPDOWN_BG_COLOR,
+        border_color: tuple[int, ...] = theme.THEME_DROPDOWN_BORDER_COLOR,
+        highlight_color: tuple[int, ...] = theme.THEME_DROPDOWN_HIGHLIGHT_COLOR,
+        hover_bg_color: tuple[int, ...] = theme.THEME_DROPDOWN_HOVER_BG_COLOR,
+        hover_option_color: tuple[int, ...] = theme.THEME_DROPDOWN_HOVER_OPTION_COLOR
     ) -> None:
         """
         Initialize the dropdown.
@@ -122,22 +122,32 @@ class Dropdown:
         draw_surface = pygame.Surface((self.rect.width, full_height),
                                       pygame.SRCALPHA)
         alpha = 150 if self.disabled else 255
-        bg_base = self.bg_color
+        bg_base = self.hover_bg_color if (self.hovered_control and not self.disabled) else self.bg_color
+
+        def apply_alpha(color: tuple[int, ...], override_alpha: int) -> tuple[int, int, int, int]:
+            base_alpha = 255
+            if len(color) == 4:
+                rgb = color[:3]
+                base_alpha = color[3]
+            else:
+                rgb = color
+            final_alpha = int(base_alpha * (override_alpha / 255))
+            return (*rgb, max(0, min(255, final_alpha)))
+
+        def rgb_only(color: tuple[int, ...]) -> tuple[int, int, int]:
+            return color[:3] if len(color) == 4 else color  # type: ignore[return-value]
+
+        bg = apply_alpha(bg_base, alpha)
+        border_base = self.border_color
         if self.hovered_control and not self.disabled:
-            bg_base = self.hover_bg_color
-        bg = (*bg_base, alpha)
-        if self.disabled:
-            border = (*self.border_color, alpha)
-        elif self.hovered_control:
-            border = (*tuple(min(255, channel + 40) for channel in self.border_color), alpha)
-        else:
-            border = (*self.border_color, alpha)
-        text_col = (*(
-            theme.THEME_DROPDOWN_DISABLED_TEXT_COLOR
-            if self.disabled else self.text_color
-        ), alpha)
-        highlight = (*self.highlight_color, alpha)
-        hover_option = (*self.hover_option_color, alpha)
+            border_base = tuple(
+                min(255, channel + 40) for channel in rgb_only(self.border_color)
+            )
+        border = apply_alpha(border_base, alpha)
+        text_color = theme.THEME_DROPDOWN_DISABLED_TEXT_COLOR if self.disabled else self.text_color
+        text_col = apply_alpha(text_color, alpha)
+        highlight = apply_alpha(self.highlight_color, alpha)
+        hover_option = apply_alpha(self.hover_option_color, alpha)
         local_rect = pygame.Rect(0, 0, self.rect.width, self.rect.height)
         pygame.draw.rect(draw_surface, bg, local_rect)
         pygame.draw.rect(draw_surface, border, local_rect, 2)

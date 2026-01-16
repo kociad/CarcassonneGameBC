@@ -2,6 +2,7 @@ import pygame
 from typing import Tuple, Optional
 
 from ui import theme
+from ui.utils.draw import draw_rect_alpha
 
 
 class ProgressBar:
@@ -27,14 +28,14 @@ class ProgressBar:
                  min_value: float = 0.0,
                  max_value: float = 1.0,
                  value: float = 0.0,
-                 background_color: Tuple[int, int, int] = (
+                 background_color: Tuple[int, ...] = (
                      theme.THEME_PROGRESS_BAR_BG_COLOR),
-                 progress_color: Tuple[int, int, int] = (
+                 progress_color: Tuple[int, ...] = (
                      theme.THEME_PROGRESS_BAR_PROGRESS_COLOR),
-                 border_color: Tuple[int, int, int] = (
+                 border_color: Tuple[int, ...] = (
                      theme.THEME_PROGRESS_BAR_BORDER_COLOR),
                  show_text: bool = True,
-                 text_color: Tuple[int, int, int] = (
+                 text_color: Tuple[int, ...] = (
                      theme.THEME_PROGRESS_BAR_TEXT_COLOR)):
         """
         Initialize the progress bar.
@@ -113,18 +114,18 @@ class ProgressBar:
         """
         x, y = self.rect.x, self.rect.y + y_offset
 
-        pygame.draw.rect(screen, self.background_color,
-                         (x, y, self.rect.width, self.rect.height))
+        draw_rect_alpha(screen, self.background_color,
+                        (x, y, self.rect.width, self.rect.height))
 
         progress = self.get_progress()
         if progress > 0:
             progress_width = int(self.rect.width * progress)
             if progress_width > 0:
-                pygame.draw.rect(screen, self.progress_color,
-                                 (x, y, progress_width, self.rect.height))
+                draw_rect_alpha(screen, self.progress_color,
+                                (x, y, progress_width, self.rect.height))
 
-        pygame.draw.rect(screen, self.border_color,
-                         (x, y, self.rect.width, self.rect.height), 2)
+        draw_rect_alpha(screen, self.border_color,
+                        (x, y, self.rect.width, self.rect.height), 2)
 
         if self.show_text:
             progress_text = f"{int(progress * 100)}%"

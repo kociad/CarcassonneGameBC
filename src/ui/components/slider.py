@@ -2,6 +2,7 @@ import pygame
 from ui.components.input_field import InputField
 from ui.components.toast import Toast
 from ui import theme
+from ui.utils.draw import draw_circle_alpha, draw_rect_alpha
 import typing
 
 
@@ -246,19 +247,19 @@ class Slider:
                 border_color = self.hover_border_color
             if self.dragging:
                 handle_color = self.handle_active_color
-        pygame.draw.rect(surface, bg_color, shifted_rect)
-        pygame.draw.rect(surface, border_color, shifted_rect, 1)
+        draw_rect_alpha(surface, bg_color, shifted_rect)
+        draw_rect_alpha(surface, border_color, shifted_rect, 1)
         fill_width = ((self.value - self.min_value) /
                       (self.max_value - self.min_value)) * shifted_rect.width
-        pygame.draw.rect(
+        draw_rect_alpha(
             surface, fg_color,
             pygame.Rect(shifted_rect.left, shifted_rect.top, fill_width,
                         shifted_rect.height))
         handle_rect = self._handle_rect(y_offset)
-        pygame.draw.circle(surface, handle_color, handle_rect.center,
-                           self.handle_radius)
-        pygame.draw.circle(surface, border_color, handle_rect.center,
-                           self.handle_radius, 1)
+        draw_circle_alpha(surface, handle_color, handle_rect.center,
+                          self.handle_radius)
+        draw_circle_alpha(surface, border_color, handle_rect.center,
+                          self.handle_radius, 1)
         self.input_field.draw(surface, y_offset=y_offset)
         if not self.active_toast and self.toast_queue:
             self.active_toast = self.toast_queue.pop(0)
