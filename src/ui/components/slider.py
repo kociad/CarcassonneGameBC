@@ -8,6 +8,20 @@ import typing
 class Slider:
     """A slider UI component for selecting a numeric value."""
 
+    @staticmethod
+    def _required_height(font: pygame.font.Font) -> int:
+        return font.get_height() + 14
+
+    @staticmethod
+    def _calculate_handle_radius(height: int) -> int:
+        return max(4, min(10, height // 2))
+
+    def _apply_height(self, height: int) -> None:
+        self.rect.height = height
+        self.input_field.rect.height = height
+        self.input_field.rect.y = self.rect.y
+        self.handle_radius = self._calculate_handle_radius(height)
+
     def __init__(self,
                  rect: pygame.Rect,
                  font,
@@ -37,7 +51,9 @@ class Slider:
         self.on_change = on_change
         self.last_reported_value = self.value
         self.disabled = False
-        self.handle_radius = 10
+        required_height = self._required_height(font)
+        self.rect.height = max(self.rect.height, required_height)
+        self.handle_radius = self._calculate_handle_radius(self.rect.height)
         self.dragging = False
         self.hovered_handle = False
         self.hovered_track = False
@@ -284,6 +300,9 @@ class Slider:
         """Update the font used by the slider and its input field."""
         self.font = font
         self.input_field.set_font(font)
+        required_height = self._required_height(font)
+        new_height = max(self.rect.height, required_height)
+        self._apply_height(new_height)
 
     def apply_theme(self) -> None:
         """Refresh colors from the current theme."""
