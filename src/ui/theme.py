@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import pygame
 
 from settings import BACKGROUND_IMAGE_PATH
@@ -206,8 +207,8 @@ THEME_GAME_LOG_SCROLL_BG_COLOR: ColorA = (0, 0, 0, 150)
 # Generic scene background color for menus; RGB tuple (0-255 per channel).
 THEME_SCENE_BG_COLOR: Color = (30, 30, 30)
 # Base path for background images (from settings.BACKGROUND_IMAGE_PATH).
-THEME_BACKGROUND_IMAGE_BASE_PATH: str = BACKGROUND_IMAGE_PATH
-# Default background image path for scenes; used when a scene-specific value is None.
+THEME_BACKGROUND_IMAGE_BASE_PATH: str = os.path.normpath(BACKGROUND_IMAGE_PATH)
+# Default background image filename for scenes; used when a scene-specific value is None.
 # Set to None to disable background images globally.
 THEME_BACKGROUND_IMAGE: str | None = None
 # Default background image scaling mode: "fill", "fit", or "stretch".
@@ -219,7 +220,7 @@ THEME_BACKGROUND_TINT_COLOR: ColorA | None = None
 # Default background blur strength; 0 disables blur.
 # Used when a scene-specific value is None.
 THEME_BACKGROUND_BLUR_RADIUS: float = 0.0
-# Main menu background image path; set to None to disable.
+# Main menu background image filename; set to None to disable.
 THEME_MAIN_MENU_BACKGROUND_IMAGE: str | None = None
 # Main menu background scaling mode: "fill", "fit", or "stretch".
 THEME_MAIN_MENU_BACKGROUND_SCALE_MODE: str | None = None
@@ -228,7 +229,7 @@ THEME_MAIN_MENU_BACKGROUND_TINT_COLOR: ColorA | None = None
 # Main menu background blur strength; 0 disables blur.
 THEME_MAIN_MENU_BACKGROUND_BLUR_RADIUS: float | None = None
 
-# Help scene background image path; set to None to disable.
+# Help scene background image filename; set to None to disable.
 THEME_HELP_BACKGROUND_IMAGE: str | None = None
 # Help scene background scaling mode: "fill", "fit", or "stretch".
 THEME_HELP_BACKGROUND_SCALE_MODE: str | None = None
@@ -237,7 +238,7 @@ THEME_HELP_BACKGROUND_TINT_COLOR: ColorA | None = None
 # Help scene background blur strength; 0 disables blur.
 THEME_HELP_BACKGROUND_BLUR_RADIUS: float | None = None
 
-# Lobby background image path; set to None to disable.
+# Lobby background image filename; set to None to disable.
 THEME_LOBBY_BACKGROUND_IMAGE: str | None = None
 # Lobby background scaling mode: "fill", "fit", or "stretch".
 THEME_LOBBY_BACKGROUND_SCALE_MODE: str | None = None
@@ -246,7 +247,7 @@ THEME_LOBBY_BACKGROUND_TINT_COLOR: ColorA | None = None
 # Lobby background blur strength; 0 disables blur.
 THEME_LOBBY_BACKGROUND_BLUR_RADIUS: float | None = None
 
-# Settings background image path; set to None to disable.
+# Settings background image filename; set to None to disable.
 THEME_SETTINGS_BACKGROUND_IMAGE: str | None = None
 # Settings background scaling mode: "fill", "fit", or "stretch".
 THEME_SETTINGS_BACKGROUND_SCALE_MODE: str | None = None
@@ -255,7 +256,7 @@ THEME_SETTINGS_BACKGROUND_TINT_COLOR: ColorA | None = None
 # Settings background blur strength; 0 disables blur.
 THEME_SETTINGS_BACKGROUND_BLUR_RADIUS: float | None = None
 
-# Game setup background image path; set to None to disable.
+# Game setup background image filename; set to None to disable.
 THEME_GAME_PREPARE_BACKGROUND_IMAGE: str | None = None
 # Game setup background scaling mode: "fill", "fit", or "stretch".
 THEME_GAME_PREPARE_BACKGROUND_SCALE_MODE: str | None = None
@@ -264,7 +265,7 @@ THEME_GAME_PREPARE_BACKGROUND_TINT_COLOR: ColorA | None = None
 # Game setup background blur strength; 0 disables blur.
 THEME_GAME_PREPARE_BACKGROUND_BLUR_RADIUS: float | None = None
 
-# Game scene background image path; set to None to disable.
+# Game scene background image filename; set to None to disable.
 THEME_GAME_BACKGROUND_IMAGE: str | None = None
 # Game scene background scaling mode: "fill", "fit", or "stretch".
 THEME_GAME_BACKGROUND_SCALE_MODE: str | None = None

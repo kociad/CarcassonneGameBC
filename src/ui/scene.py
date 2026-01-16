@@ -1,3 +1,4 @@
+import os
 import pygame
 import typing
 
@@ -52,6 +53,13 @@ class Scene:
         image_path = resolved_image_path
         if not image_path:
             return
+
+        base_path = getattr(theme, "THEME_BACKGROUND_IMAGE_BASE_PATH", "")
+        if base_path and not os.path.isabs(image_path):
+            normalized_base = os.path.normpath(base_path)
+            normalized_image = os.path.normpath(image_path)
+            if not normalized_image.startswith(normalized_base + os.sep):
+                image_path = os.path.join(normalized_base, image_path)
 
         screen_size = self.screen.get_size()
         scale_mode_value = (
