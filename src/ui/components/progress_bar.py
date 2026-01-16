@@ -1,6 +1,8 @@
 import pygame
 from typing import Tuple, Optional
 
+from ui import theme
+
 
 class ProgressBar:
     """
@@ -25,11 +27,15 @@ class ProgressBar:
                  min_value: float = 0.0,
                  max_value: float = 1.0,
                  value: float = 0.0,
-                 background_color: Tuple[int, int, int] = (80, 80, 80),
-                 progress_color: Tuple[int, int, int] = (100, 255, 100),
-                 border_color: Tuple[int, int, int] = (150, 150, 150),
+                 background_color: Tuple[int, int, int] = (
+                     theme.THEME_PROGRESS_BAR_BG_COLOR),
+                 progress_color: Tuple[int, int, int] = (
+                     theme.THEME_PROGRESS_BAR_PROGRESS_COLOR),
+                 border_color: Tuple[int, int, int] = (
+                     theme.THEME_PROGRESS_BAR_BORDER_COLOR),
                  show_text: bool = True,
-                 text_color: Tuple[int, int, int] = (255, 255, 255)):
+                 text_color: Tuple[int, int, int] = (
+                     theme.THEME_PROGRESS_BAR_TEXT_COLOR)):
         """
         Initialize the progress bar.
         

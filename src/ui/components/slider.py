@@ -1,6 +1,7 @@
 import pygame
 from ui.components.input_field import InputField
 from ui.components.toast import Toast
+from ui import theme
 import typing
 
 
@@ -40,19 +41,19 @@ class Slider:
         self.dragging = False
         self.hovered_handle = False
         self.hovered_track = False
-        self.bg_color = (200, 200, 200)
-        self.fg_color = (100, 100, 255)
-        self.handle_color = (255, 255, 255)
-        self.border_color = (0, 0, 0)
-        self.handle_hover_color = (235, 235, 255)
-        self.handle_active_color = (180, 180, 255)
-        self.track_hover_color = (120, 120, 255)
-        self.track_active_color = (80, 80, 230)
-        self.hover_border_color = (50, 50, 50)
-        self.disabled_bg_color = (100, 100, 100)
-        self.disabled_fg_color = (60, 60, 60)
-        self.disabled_handle_color = (150, 150, 150)
-        self.disabled_border_color = (80, 80, 80)
+        self.bg_color = theme.THEME_SLIDER_BG_COLOR
+        self.fg_color = theme.THEME_SLIDER_FG_COLOR
+        self.handle_color = theme.THEME_SLIDER_HANDLE_COLOR
+        self.border_color = theme.THEME_SLIDER_BORDER_COLOR
+        self.handle_hover_color = theme.THEME_SLIDER_HANDLE_HOVER_COLOR
+        self.handle_active_color = theme.THEME_SLIDER_HANDLE_ACTIVE_COLOR
+        self.track_hover_color = theme.THEME_SLIDER_TRACK_HOVER_COLOR
+        self.track_active_color = theme.THEME_SLIDER_TRACK_ACTIVE_COLOR
+        self.hover_border_color = theme.THEME_SLIDER_HOVER_BORDER_COLOR
+        self.disabled_bg_color = theme.THEME_SLIDER_DISABLED_BG_COLOR
+        self.disabled_fg_color = theme.THEME_SLIDER_DISABLED_FG_COLOR
+        self.disabled_handle_color = theme.THEME_SLIDER_DISABLED_HANDLE_COLOR
+        self.disabled_border_color = theme.THEME_SLIDER_DISABLED_BORDER_COLOR
         self.toast_queue = []
         self.active_toast = None
         input_field_width = 60

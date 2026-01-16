@@ -4,6 +4,7 @@ from ui.scene import Scene
 from ui.components.button import Button
 from game_state import GameState
 from utils.settings_manager import settings_manager
+from ui import theme
 import logging
 import typing
 
@@ -18,9 +19,9 @@ class MainMenuScene(Scene):
                  get_game_session: typing.Callable,
                  cleanup_previous_game: typing.Callable) -> None:
         super().__init__(screen, switch_scene_callback)
-        self.font = pygame.font.Font(None, 100)
-        self.button_font = pygame.font.Font(None, 48)
-        self.dialog_font = pygame.font.Font(None, 36)
+        self.font = theme.get_font(theme.THEME_FONT_SIZE_MAIN_MENU_TITLE)
+        self.button_font = theme.get_font(theme.THEME_FONT_SIZE_BUTTON)
+        self.dialog_font = theme.get_font(theme.THEME_FONT_SIZE_BODY)
         self.get_game_session = get_game_session
         self.cleanup_callback = cleanup_previous_game
         self.scroll_offset = 0
@@ -148,7 +149,7 @@ class MainMenuScene(Scene):
         overlay = pygame.Surface(
             (self.screen.get_width(), self.screen.get_height()))
         overlay.set_alpha(128)
-        overlay.fill((0, 0, 0))
+        overlay.fill(theme.THEME_MENU_OVERLAY_COLOR)
         self.screen.blit(overlay, (0, 0))
         dialog_width = 580
         dialog_height = 180
@@ -156,16 +157,19 @@ class MainMenuScene(Scene):
         dialog_y = (self.screen.get_height() - dialog_height) // 2
         dialog_rect = pygame.Rect(dialog_x, dialog_y, dialog_width,
                                   dialog_height)
-        pygame.draw.rect(self.screen, (60, 60, 60), dialog_rect)
-        pygame.draw.rect(self.screen, (200, 200, 200), dialog_rect, 2)
+        pygame.draw.rect(self.screen, theme.THEME_MENU_DIALOG_BG_COLOR,
+                         dialog_rect)
+        pygame.draw.rect(self.screen, theme.THEME_MENU_DIALOG_BORDER_COLOR,
+                         dialog_rect, 2)
         message_text = self.dialog_font.render(
             "Starting a new game will end the current game.", True,
-            (255, 255, 255))
+            theme.THEME_MENU_DIALOG_TEXT_COLOR)
         message_rect = message_text.get_rect(center=(self.screen.get_width() //
                                                      2, dialog_y + 35))
         self.screen.blit(message_text, message_rect)
-        confirm_text = self.dialog_font.render("Do you want to continue?",
-                                               True, (255, 255, 255))
+        confirm_text = self.dialog_font.render(
+            "Do you want to continue?", True,
+            theme.THEME_MENU_DIALOG_TEXT_COLOR)
         confirm_rect = confirm_text.get_rect(center=(self.screen.get_width() //
                                                      2, dialog_y + 70))
         self.screen.blit(confirm_text, confirm_rect)
@@ -174,9 +178,10 @@ class MainMenuScene(Scene):
 
     def draw(self) -> None:
         """Draw the main menu scene."""
-        self.screen.fill((30, 30, 30))
+        self.screen.fill(theme.THEME_SCENE_BG_COLOR)
         offset_y = self.scroll_offset
-        title_text = self.font.render("Carcassonne", True, (255, 255, 255))
+        title_text = self.font.render("Carcassonne", True,
+                                      theme.THEME_TEXT_COLOR_LIGHT)
         title_rect = title_text.get_rect(
             center=(self.screen.get_width() // 2,
                     self.screen.get_height() // 3 - 60 + offset_y))

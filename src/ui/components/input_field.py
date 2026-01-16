@@ -2,6 +2,8 @@ import pygame
 import time
 import typing
 
+from ui import theme
+
 
 class InputField:
     """A text input field UI component."""
@@ -14,9 +16,9 @@ class InputField:
                  placeholder: str = "",
                  text: str = "",
                  initial_text: str = "",
-                 text_color: tuple = (0, 0, 0),
-                 bg_color: tuple = (255, 255, 255),
-                 border_color: tuple = (0, 0, 0),
+                 text_color: tuple = theme.THEME_INPUT_TEXT_COLOR,
+                 bg_color: tuple = theme.THEME_INPUT_BG_COLOR,
+                 border_color: tuple = theme.THEME_INPUT_BORDER_COLOR,
                  on_text_change: typing.Optional[typing.Callable] = None,
                  numeric: bool = False,
                  min_value: typing.Optional[float] = None,
@@ -157,17 +159,19 @@ class InputField:
             self.cursor_visible = not self.cursor_visible
             self.last_blink = now
         draw_rect = self.rect.move(0, y_offset)
-        bg_color = (200, 200, 200) if self.disabled else self.bg_color
+        bg_color = (theme.THEME_INPUT_DISABLED_BG_COLOR if self.disabled
+                    else self.bg_color)
         if self.disabled:
-            border_color = (100, 100, 100)
+            border_color = theme.THEME_INPUT_DISABLED_BORDER_COLOR
         else:
             if self.active or self.hovered:
                 border_color = tuple(
                     min(255, channel + 40) for channel in self.border_color)
             else:
                 border_color = self.border_color
-        text_color = (150, 150, 150) if self.disabled else (
-            self.text_color if self.text or self.active else (150, 150, 150))
+        text_color = (theme.THEME_INPUT_DISABLED_TEXT_COLOR if self.disabled
+                      else (self.text_color if self.text or self.active
+                            else theme.THEME_INPUT_PLACEHOLDER_COLOR))
         pygame.draw.rect(surface, bg_color, draw_rect)
         pygame.draw.rect(surface, border_color, draw_rect, 2)
         display_text = self.text if self.text or self.active else self.placeholder
