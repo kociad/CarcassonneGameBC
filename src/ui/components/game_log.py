@@ -227,3 +227,22 @@ class GameLog:
                            screen_height - 35)
             screen.blit(scroll_bg, (scroll_rect[0] - 5, scroll_rect[1] - 3))
             screen.blit(scroll_surface, scroll_rect)
+
+    def refresh_theme(self) -> None:
+        """Refresh fonts and colors from the current theme."""
+        self.font = theme.get_font(theme.THEME_FONT_SIZE_GAME_LOG_BODY)
+        self.title_font = theme.get_font(theme.THEME_FONT_SIZE_BODY)
+        self.level_colors = {
+            "INFO": theme.THEME_GAME_LOG_INFO_COLOR,
+            "DEBUG": theme.THEME_GAME_LOG_DEBUG_COLOR,
+            "SCORING": theme.THEME_GAME_LOG_SCORING_COLOR,
+            "WARNING": theme.THEME_GAME_LOG_WARNING_COLOR,
+            "ERROR": theme.THEME_GAME_LOG_ERROR_COLOR,
+        }
+        self.level_backgrounds = {
+            "INFO": theme.THEME_GAME_LOG_INFO_BG,
+            "DEBUG": theme.THEME_GAME_LOG_DEBUG_BG,
+            "SCORING": theme.THEME_GAME_LOG_SCORING_BG,
+            "WARNING": theme.THEME_GAME_LOG_WARNING_BG,
+            "ERROR": theme.THEME_GAME_LOG_ERROR_BG,
+        }

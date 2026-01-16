@@ -1235,3 +1235,12 @@ class GameScene(Scene):
         self.toast_manager.draw(self.screen)
 
         pygame.display.flip()
+
+    def refresh_theme(self) -> None:
+        """Refresh fonts and component styling after theme changes."""
+        super().refresh_theme()
+        self.font = theme.get_font(theme.THEME_FONT_SIZE_BODY)
+        self.ai_thinking_progress_bar.set_font(self.font)
+        self.ai_thinking_progress_bar.apply_theme()
+        self.toast_manager.apply_theme()
+        self._invalidate_render_cache()

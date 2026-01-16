@@ -156,3 +156,12 @@ class LobbyScene(Scene):
         if self.game_log:
             self.game_log.draw(self.screen)
         pygame.display.flip()
+
+    def refresh_theme(self) -> None:
+        """Refresh fonts and component styling after theme changes."""
+        super().refresh_theme()
+        self.font = theme.get_font(theme.THEME_FONT_SIZE_SCENE_TITLE)
+        self.button_font = theme.get_font(theme.THEME_FONT_SIZE_BUTTON)
+        self.start_button.set_font(self.button_font)
+        self.start_button.apply_theme()
+        self.toast_manager.apply_theme()

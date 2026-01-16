@@ -132,3 +132,11 @@ class Checkbox:
     def is_disabled(self) -> bool:
         """Check if the checkbox is disabled."""
         return self.disabled
+
+    def apply_theme(self) -> None:
+        """Refresh colors from the current theme."""
+        self.box_color = theme.THEME_CHECKBOX_BOX_COLOR
+        self.check_color = theme.THEME_CHECKBOX_CHECK_COLOR
+        self.border_color = theme.THEME_CHECKBOX_BORDER_COLOR
+        self.hover_box_color = theme.THEME_CHECKBOX_HOVER_BOX_COLOR
+        self.disabled_color = theme.THEME_CHECKBOX_DISABLED_COLOR
