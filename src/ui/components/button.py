@@ -50,6 +50,17 @@ class Button:
         color = (theme.THEME_BUTTON_TEXT_DISABLED_COLOR if self.disabled
                  else self.text_color)
         self.rendered_text = self.font.render(self.text, True, color)
+        max_width = max(1, self.rect.width - 10)
+        if self.rendered_text.get_width() > max_width:
+            base_size = max(8, self.font.get_height())
+            for size in range(base_size - 1, 7, -1):
+                candidate_font = theme.get_font(size)
+                candidate_surface = candidate_font.render(self.text, True,
+                                                          color)
+                if candidate_surface.get_width() <= max_width:
+                    self.font = candidate_font
+                    self.rendered_text = candidate_surface
+                    break
         self.text_rect = self.rendered_text.get_rect(center=self.rect.center)
 
     def draw(self, screen: pygame.Surface, y_offset: int = 0) -> None:
