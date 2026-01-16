@@ -47,7 +47,7 @@ class Scene:
         resolved_image_path = (
             image_path
             if image_path is not None
-            else theme.THEME_BACKGROUND_IMAGE
+            else getattr(theme, "THEME_BACKGROUND_IMAGE", None)
         )
         image_path = resolved_image_path
         if not image_path:
@@ -57,7 +57,7 @@ class Scene:
         scale_mode_value = (
             scale_mode_override
             if scale_mode_override is not None
-            else theme.THEME_BACKGROUND_SCALE_MODE
+            else getattr(theme, "THEME_BACKGROUND_SCALE_MODE", "fill")
         )
         scale_mode = (
             str(scale_mode_value).lower().strip()
@@ -67,7 +67,7 @@ class Scene:
         blur_value = (
             blur_radius_override
             if blur_radius_override is not None
-            else theme.THEME_BACKGROUND_BLUR_RADIUS
+            else getattr(theme, "THEME_BACKGROUND_BLUR_RADIUS", 0.0)
         )
         blur_strength = float(blur_value) if blur_value else 0.0
         cache_key = (image_path, screen_size, scale_mode, blur_strength)
@@ -102,7 +102,7 @@ class Scene:
         tint_color = (
             tint_color_override
             if tint_color_override is not None
-            else theme.THEME_BACKGROUND_TINT_COLOR
+            else getattr(theme, "THEME_BACKGROUND_TINT_COLOR", None)
         )
         if tint_color is not None and tint_color[3] > 0:
             overlay = pygame.Surface(screen_size, pygame.SRCALPHA)
