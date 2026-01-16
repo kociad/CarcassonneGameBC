@@ -8,8 +8,6 @@ from ui import theme
 
 logger = logging.getLogger(__name__)
 
-TOAST_COLORS = theme.THEME_TOAST_COLORS
-
 
 class Toast:
     """A toast notification component."""
@@ -30,10 +28,10 @@ class Toast:
         self.duration = duration
         self.start_time = None
         self.font = theme.get_font(theme.THEME_FONT_SIZE_BODY)
-        self.type = type if type in TOAST_COLORS else "info"
+        self.type = type if type in theme.THEME_TOAST_COLORS else "info"
         self.active = False
 
-        self.text_color, self.bg_color = TOAST_COLORS[self.type]
+        self.text_color, self.bg_color = theme.THEME_TOAST_COLORS[self.type]
 
         self.animation_duration = 0.5
         self.current_y = 0
@@ -228,6 +226,15 @@ class Toast:
 
         screen.blit(text_surf, text_rect)
 
+    def set_font(self, font: pygame.font.Font) -> None:
+        """Update the font used by the toast."""
+        self.font = font
+
+    def apply_theme(self) -> None:
+        """Refresh colors from the current theme."""
+        self.text_color, self.bg_color = theme.THEME_TOAST_COLORS[self.type]
+        self.set_font(theme.get_font(theme.THEME_FONT_SIZE_BODY))
+
 
 class ToastManager:
     """Manages multiple toast notifications."""
@@ -358,7 +365,11 @@ class ToastManager:
         """Start slide-out animation for all toasts and clear queue."""
         for toast in self.toasts:
             toast.start_slide_out()
-        self.toast_queue.clear()
+
+    def apply_theme(self) -> None:
+        """Refresh theme styling for active toasts."""
+        for toast in self.toasts:
+            toast.apply_theme()
 
     def get_active_count(self) -> int:
         """Get the number of active toasts."""

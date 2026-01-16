@@ -65,6 +65,10 @@ class Scene:
         """Return the current scroll offset."""
         return self.scroll_offset
 
+    def refresh_theme(self) -> None:
+        """Refresh any cached surfaces after a theme update."""
+        self._background_cache.clear()
+
     def _draw_background(
         self,
         background_color: tuple[int, int, int] | None,

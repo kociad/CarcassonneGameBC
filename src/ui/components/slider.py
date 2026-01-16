@@ -279,3 +279,25 @@ class Slider:
         if self.value < self.min_value:
             self.value = self.min_value
             self.last_reported_value = self.value
+
+    def set_font(self, font: pygame.font.Font) -> None:
+        """Update the font used by the slider and its input field."""
+        self.font = font
+        self.input_field.set_font(font)
+
+    def apply_theme(self) -> None:
+        """Refresh colors from the current theme."""
+        self.bg_color = theme.THEME_SLIDER_BG_COLOR
+        self.fg_color = theme.THEME_SLIDER_FG_COLOR
+        self.handle_color = theme.THEME_SLIDER_HANDLE_COLOR
+        self.border_color = theme.THEME_SLIDER_BORDER_COLOR
+        self.handle_hover_color = theme.THEME_SLIDER_HANDLE_HOVER_COLOR
+        self.handle_active_color = theme.THEME_SLIDER_HANDLE_ACTIVE_COLOR
+        self.track_hover_color = theme.THEME_SLIDER_TRACK_HOVER_COLOR
+        self.track_active_color = theme.THEME_SLIDER_TRACK_ACTIVE_COLOR
+        self.hover_border_color = theme.THEME_SLIDER_HOVER_BORDER_COLOR
+        self.disabled_bg_color = theme.THEME_SLIDER_DISABLED_BG_COLOR
+        self.disabled_fg_color = theme.THEME_SLIDER_DISABLED_FG_COLOR
+        self.disabled_handle_color = theme.THEME_SLIDER_DISABLED_HANDLE_COLOR
+        self.disabled_border_color = theme.THEME_SLIDER_DISABLED_BORDER_COLOR
+        self.input_field.apply_theme()

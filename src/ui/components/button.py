@@ -52,6 +52,19 @@ class Button:
         self.rendered_text = self.font.render(self.text, True, color)
         self.text_rect = self.rendered_text.get_rect(center=self.rect.center)
 
+    def set_font(self, font: pygame.font.Font) -> None:
+        """Update the font used by the button."""
+        self.font = font
+        self._update_render()
+
+    def apply_theme(self) -> None:
+        """Refresh colors from the current theme."""
+        self.bg_color = theme.THEME_BUTTON_BG_COLOR
+        self.hover_bg_color = theme.THEME_BUTTON_HOVER_BG_COLOR
+        self.pressed_bg_color = theme.THEME_BUTTON_PRESSED_BG_COLOR
+        self.text_color = theme.THEME_BUTTON_TEXT_COLOR
+        self._update_render()
+
     def draw(self, screen: pygame.Surface, y_offset: int = 0) -> None:
         """
         Draw the button on the given screen.
