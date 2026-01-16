@@ -48,6 +48,7 @@ class Dropdown:
         self.bg_color = bg_color or theme.color("dropdown_bg")
         self.border_color = border_color or theme.color("dropdown_border")
         self.highlight_color = highlight_color or theme.color("dropdown_highlight")
+        self.hover_bg_color = theme.color("dropdown_hover_bg")
         self.hovered_control = False
         self.hovered_index: typing.Optional[int] = None
 
@@ -124,15 +125,20 @@ class Dropdown:
         if self.disabled:
             border = (*self.border_color, alpha)
         elif self.hovered_control:
-            border = (*tuple(min(255, channel + 40) for channel in self.border_color), alpha)
+            border = (*tuple(min(255, channel + 40)
+                             for channel in self.border_color), alpha)
         else:
             border = (*self.border_color, alpha)
         text_col = (*(self.disabled_text_color if self.disabled
                       else self.text_color), alpha)
         highlight = (*self.highlight_color, alpha)
-        hover_option = (*tuple(min(255, channel + 20) for channel in self.bg_color), alpha)
+        hover_option = (*self.hover_bg_color, alpha)
         local_rect = pygame.Rect(0, 0, self.rect.width, self.rect.height)
-        pygame.draw.rect(draw_surface, bg, local_rect)
+        if self.hovered_control and not self.expanded and not self.disabled:
+            pygame.draw.rect(draw_surface, (*self.hover_bg_color, alpha),
+                             local_rect)
+        else:
+            pygame.draw.rect(draw_surface, bg, local_rect)
         pygame.draw.rect(draw_surface, border, local_rect, 2)
         selected_text = self.font.render(self.options[self.selected_index],
                                          True, text_col)

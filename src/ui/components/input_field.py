@@ -90,6 +90,11 @@ class InputField:
             self.hovered = shifted_rect.collidepoint(event.pos)
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             self.active = shifted_rect.collidepoint(event.pos)
+            if not self.active:
+                try:
+                    pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
+                except pygame.error:
+                    pass
         if self.active and event.type == pygame.KEYDOWN:
             old_text = self.text
             if event.key == pygame.K_LEFT:
@@ -192,6 +197,11 @@ class InputField:
             cursor_height = draw_rect.height - 10
             pygame.draw.line(surface, text_color, (cursor_x, cursor_y),
                              (cursor_x, cursor_y + cursor_height), 2)
+        if self.active and not self.disabled and not self.read_only:
+            try:
+                pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_IBEAM)
+            except pygame.error:
+                pass
 
     def get_text(self) -> str:
         """Get the current text value."""

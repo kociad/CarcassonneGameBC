@@ -37,6 +37,7 @@ class Checkbox:
         self.check_color = check_color or theme.color("checkbox_check")
         self.border_color = border_color or theme.color("checkbox_border")
         self.disabled_color = disabled_color or theme.color("checkbox_disabled")
+        self.hover_fill_color = theme.color("checkbox_hover_fill")
         self.disabled = False
         self.hovered = False
 
@@ -96,8 +97,7 @@ class Checkbox:
                 fill_color = self.check_color
             pygame.draw.rect(surface, fill_color, inner)
         elif self.hovered and not self.disabled:
-            hover_fill = tuple(min(255, channel + 20) for channel in self.box_color)
-            pygame.draw.rect(surface, hover_fill, inner)
+            pygame.draw.rect(surface, self.hover_fill_color, inner)
 
     def is_checked(self) -> bool:
         """Check if the checkbox is checked."""
