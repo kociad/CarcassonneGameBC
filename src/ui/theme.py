@@ -203,6 +203,71 @@ THEME_GAME_LOG_SCROLL_BG_COLOR: ColorA = (0, 0, 0, 150)
 # Shared scene colors
 # Generic scene background color for menus; RGB tuple (0-255 per channel).
 THEME_SCENE_BG_COLOR: Color = (30, 30, 30)
+# Default background image path for scenes; used when a scene-specific value is None.
+# Set to None to disable background images globally.
+THEME_BACKGROUND_IMAGE: str | None = None
+# Default background image scaling mode: "fill", "fit", or "stretch".
+# Used when a scene-specific value is None.
+THEME_BACKGROUND_SCALE_MODE: str = "fill"
+# Default background tint overlay color; RGBA tuple or None to disable.
+# Used when a scene-specific value is None.
+THEME_BACKGROUND_TINT_COLOR: ColorA | None = None
+# Default background blur strength; 0 disables blur.
+# Used when a scene-specific value is None.
+THEME_BACKGROUND_BLUR_RADIUS: float = 0.0
+# Main menu background image path; set to None to disable.
+THEME_MAIN_MENU_BACKGROUND_IMAGE: str | None = None
+# Main menu background scaling mode: "fill", "fit", or "stretch".
+THEME_MAIN_MENU_BACKGROUND_SCALE_MODE: str | None = None
+# Main menu background tint overlay color; RGBA tuple or None to disable.
+THEME_MAIN_MENU_BACKGROUND_TINT_COLOR: ColorA | None = None
+# Main menu background blur strength; 0 disables blur.
+THEME_MAIN_MENU_BACKGROUND_BLUR_RADIUS: float | None = None
+
+# Help scene background image path; set to None to disable.
+THEME_HELP_BACKGROUND_IMAGE: str | None = None
+# Help scene background scaling mode: "fill", "fit", or "stretch".
+THEME_HELP_BACKGROUND_SCALE_MODE: str | None = None
+# Help scene background tint overlay color; RGBA tuple or None to disable.
+THEME_HELP_BACKGROUND_TINT_COLOR: ColorA | None = None
+# Help scene background blur strength; 0 disables blur.
+THEME_HELP_BACKGROUND_BLUR_RADIUS: float | None = None
+
+# Lobby background image path; set to None to disable.
+THEME_LOBBY_BACKGROUND_IMAGE: str | None = None
+# Lobby background scaling mode: "fill", "fit", or "stretch".
+THEME_LOBBY_BACKGROUND_SCALE_MODE: str | None = None
+# Lobby background tint overlay color; RGBA tuple or None to disable.
+THEME_LOBBY_BACKGROUND_TINT_COLOR: ColorA | None = None
+# Lobby background blur strength; 0 disables blur.
+THEME_LOBBY_BACKGROUND_BLUR_RADIUS: float | None = None
+
+# Settings background image path; set to None to disable.
+THEME_SETTINGS_BACKGROUND_IMAGE: str | None = None
+# Settings background scaling mode: "fill", "fit", or "stretch".
+THEME_SETTINGS_BACKGROUND_SCALE_MODE: str | None = None
+# Settings background tint overlay color; RGBA tuple or None to disable.
+THEME_SETTINGS_BACKGROUND_TINT_COLOR: ColorA | None = None
+# Settings background blur strength; 0 disables blur.
+THEME_SETTINGS_BACKGROUND_BLUR_RADIUS: float | None = None
+
+# Game setup background image path; set to None to disable.
+THEME_GAME_PREPARE_BACKGROUND_IMAGE: str | None = None
+# Game setup background scaling mode: "fill", "fit", or "stretch".
+THEME_GAME_PREPARE_BACKGROUND_SCALE_MODE: str | None = None
+# Game setup background tint overlay color; RGBA tuple or None to disable.
+THEME_GAME_PREPARE_BACKGROUND_TINT_COLOR: ColorA | None = None
+# Game setup background blur strength; 0 disables blur.
+THEME_GAME_PREPARE_BACKGROUND_BLUR_RADIUS: float | None = None
+
+# Game scene background image path; set to None to disable.
+THEME_GAME_BACKGROUND_IMAGE: str | None = None
+# Game scene background scaling mode: "fill", "fit", or "stretch".
+THEME_GAME_BACKGROUND_SCALE_MODE: str | None = None
+# Game scene background tint overlay color; RGBA tuple or None to disable.
+THEME_GAME_BACKGROUND_TINT_COLOR: ColorA | None = None
+# Game scene background blur strength; 0 disables blur.
+THEME_GAME_BACKGROUND_BLUR_RADIUS: float | None = None
 # Primary light text for titles and labels; RGB tuple (0-255 per channel).
 THEME_TEXT_COLOR_LIGHT: Color = (255, 255, 255)
 # Section header highlight color (gold); RGB tuple (0-255 per channel).
