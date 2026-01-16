@@ -7,6 +7,7 @@ from ui.components.dropdown import Dropdown
 from ui.components.toast import Toast, ToastManager
 from ui.components.checkbox import Checkbox
 from ui.components.slider import Slider
+from ui.components.progress_bar import ProgressBar
 from ui.theme import get_theme
 from utils.settings_manager import settings_manager
 import typing
@@ -218,6 +219,82 @@ class SettingsScene(Scene):
             not settings_manager.get("DEBUG"))
         current_y += 80
 
+        # ===== THEME SETTINGS (DEBUG ONLY) =====
+        self.theme_label_y = current_y
+        current_y += 50
+
+        theme = get_theme()
+        self.theme_font_name_field = InputField(
+            rect=(x_center, current_y, 200, 40),
+            font=self.input_font,
+            placeholder="Default font",
+            text=theme.font_name or "",
+        )
+        current_y += 60
+
+        self.theme_body_size_slider = Slider(
+            rect=(x_center, current_y, 180, 20),
+            font=self.dropdown_font,
+            min_value=18,
+            max_value=72,
+            value=theme.font_sizes.get("body", 36),
+            on_change=lambda value: self._update_theme_font_size("body", value),
+        )
+        current_y += 40
+
+        self.theme_button_size_slider = Slider(
+            rect=(x_center, current_y, 180, 20),
+            font=self.dropdown_font,
+            min_value=18,
+            max_value=72,
+            value=theme.font_sizes.get("button", 48),
+            on_change=lambda value: self._update_theme_font_size("button",
+                                                                value),
+        )
+        current_y += 60
+
+        self.theme_preview_label_y = current_y
+        current_y += 50
+
+        self.theme_preview_button = Button(
+            (x_center, current_y, 200, 50),
+            "Preview Button",
+            theme.font("button"),
+        )
+        current_y += 70
+
+        self.theme_preview_checkbox = Checkbox(
+            rect=(x_center, current_y, 20, 20),
+            checked=True,
+        )
+        self.theme_preview_dropdown = Dropdown(
+            rect=(x_center, current_y + 40, 200, 40),
+            font=theme.font("body"),
+            options=["Option A", "Option B"],
+            default_index=0,
+        )
+        self.theme_preview_input = InputField(
+            rect=(x_center, current_y + 90, 200, 40),
+            font=theme.font("body"),
+            placeholder="Sample input",
+        )
+        self.theme_preview_slider = Slider(
+            rect=(x_center, current_y + 140, 180, 20),
+            font=theme.font("body"),
+            min_value=0,
+            max_value=100,
+            value=50,
+            on_change=None,
+        )
+        self.theme_preview_progress = ProgressBar(
+            rect=(x_center, current_y + 190, 200, 20),
+            font=theme.font("small"),
+            value=0.65,
+        )
+        current_y += 230
+
+        self._set_theme_controls_disabled(not settings_manager.get("DEBUG"))
+
         self.apply_button = Button((x_center, current_y, 200, 60), "Apply",
                                    self.button_font)
         current_y += 80
@@ -254,6 +331,7 @@ class SettingsScene(Scene):
         self.ai_strategic_candidates_field.set_disabled(not new_value)
         self.ai_thinking_speed_field.set_disabled(not new_value)
         self.log_to_console_checkbox.set_disabled(not new_value)
+        self._set_theme_controls_disabled(not new_value)
 
         if not new_value:
             self.log_to_console_checkbox.set_checked(False)
@@ -326,6 +404,30 @@ class SettingsScene(Scene):
                 event, y_offset=self.scroll_offset)
             self.ai_thinking_speed_field.handle_event(
                 event, y_offset=self.scroll_offset)
+            if self.debug_checkbox.is_checked():
+                font_was_active = self.theme_font_name_field.active
+                self.theme_font_name_field.handle_event(
+                    event, y_offset=self.scroll_offset)
+                if font_was_active and not self.theme_font_name_field.active:
+                    self._apply_theme_font_name()
+                if (self.theme_font_name_field.active
+                        and event.type == pygame.KEYDOWN
+                        and event.key == pygame.K_RETURN):
+                    self._apply_theme_font_name()
+                self.theme_body_size_slider.handle_event(
+                    event, y_offset=self.scroll_offset)
+                self.theme_button_size_slider.handle_event(
+                    event, y_offset=self.scroll_offset)
+                self.theme_preview_button.handle_event(
+                    event, y_offset=self.scroll_offset)
+                self.theme_preview_checkbox.handle_event(
+                    event, y_offset=self.scroll_offset)
+                self.theme_preview_dropdown.handle_event(
+                    event, y_offset=self.scroll_offset)
+                self.theme_preview_input.handle_event(
+                    event, y_offset=self.scroll_offset)
+                self.theme_preview_slider.handle_event(
+                    event, y_offset=self.scroll_offset)
             if event.type in (pygame.MOUSEMOTION, pygame.MOUSEBUTTONUP):
                 self.back_button.handle_event(event,
                                               y_offset=self.scroll_offset)
@@ -354,6 +456,34 @@ class SettingsScene(Scene):
 
     def _handle_valid_placement_toggle(self, value):
         settings_manager.set("SHOW_VALID_PLACEMENTS", value, temporary=True)
+
+    def _set_theme_controls_disabled(self, disabled: bool) -> None:
+        self.theme_font_name_field.set_disabled(disabled)
+        self.theme_body_size_slider.set_disabled(disabled)
+        self.theme_button_size_slider.set_disabled(disabled)
+
+    def _apply_theme_font_name(self) -> None:
+        theme = get_theme()
+        font_name = self.theme_font_name_field.get_text().strip()
+        theme.set_font_name(font_name or None)
+        self._refresh_theme_preview()
+
+    def _update_theme_font_size(self, key: str, value: float) -> None:
+        theme = get_theme()
+        sizes = dict(theme.font_sizes)
+        sizes[key] = int(value)
+        theme.set_font_sizes(sizes)
+        self._refresh_theme_preview()
+
+    def _refresh_theme_preview(self) -> None:
+        theme = get_theme()
+        self.theme_preview_button.font = theme.font("button")
+        self.theme_preview_button._update_render()
+        self.theme_preview_dropdown.font = theme.font("body")
+        self.theme_preview_input.font = theme.font("body")
+        self.theme_preview_slider.font = theme.font("body")
+        self.theme_preview_slider.input_field.font = theme.font("body")
+        self.theme_preview_progress.font = theme.font("small")
 
     def _apply_settings(self):
         changes = {}
@@ -512,6 +642,21 @@ class SettingsScene(Scene):
         ai_label_rect.y = self.ai_label_y + offset_y
         self.screen.blit(ai_label, ai_label_rect)
 
+        if self.debug_checkbox.is_checked():
+            theme_label = self.dropdown_font.render(
+                "Theme", True, theme.color("text_accent"))
+            theme_label_rect = theme_label.get_rect()
+            theme_label_rect.centerx = self.screen.get_width() // 2
+            theme_label_rect.y = self.theme_label_y + offset_y
+            self.screen.blit(theme_label, theme_label_rect)
+
+            preview_label = self.dropdown_font.render(
+                "Theme Preview", True, theme.color("text_accent"))
+            preview_label_rect = preview_label.get_rect()
+            preview_label_rect.centerx = self.screen.get_width() // 2
+            preview_label_rect.y = self.theme_preview_label_y + offset_y
+            self.screen.blit(preview_label, preview_label_rect)
+
         # Display Settings
         res_label = label_font.render("Resolution:", True,
                                       theme.color("text_primary"))
@@ -664,6 +809,28 @@ class SettingsScene(Scene):
             centery=self.ai_thinking_speed_field.rect.centery + offset_y)
         self.screen.blit(thinking_speed_label, thinking_speed_label_rect)
 
+        if self.debug_checkbox.is_checked():
+            font_label = label_font.render("Font name:", True,
+                                           theme.color("text_primary"))
+            font_label_rect = font_label.get_rect(
+                right=self.theme_font_name_field.rect.left - 10,
+                centery=self.theme_font_name_field.rect.centery + offset_y)
+            self.screen.blit(font_label, font_label_rect)
+
+            body_label = label_font.render("Body font size:", True,
+                                           theme.color("text_primary"))
+            body_label_rect = body_label.get_rect(
+                right=self.theme_body_size_slider.rect.left - 10,
+                centery=self.theme_body_size_slider.rect.centery + offset_y)
+            self.screen.blit(body_label, body_label_rect)
+
+            button_label = label_font.render("Button font size:", True,
+                                             theme.color("text_primary"))
+            button_label_rect = button_label.get_rect(
+                right=self.theme_button_size_slider.rect.left - 10,
+                centery=self.theme_button_size_slider.rect.centery + offset_y)
+            self.screen.blit(button_label, button_label_rect)
+
         # Draw all UI components in logical order
         self.fullscreen_checkbox.draw(self.screen, y_offset=offset_y)
         self.valid_placement_checkbox.draw(self.screen, y_offset=offset_y)
@@ -679,6 +846,16 @@ class SettingsScene(Scene):
         self.ai_strategic_candidates_field.draw(self.screen, y_offset=offset_y)
         self.ai_thinking_speed_field.draw(self.screen, y_offset=offset_y)
         self.resolution_dropdown.draw(self.screen, y_offset=offset_y)
+        if self.debug_checkbox.is_checked():
+            self.theme_font_name_field.draw(self.screen, y_offset=offset_y)
+            self.theme_body_size_slider.draw(self.screen, y_offset=offset_y)
+            self.theme_button_size_slider.draw(self.screen, y_offset=offset_y)
+            self.theme_preview_button.draw(self.screen, y_offset=offset_y)
+            self.theme_preview_checkbox.draw(self.screen, y_offset=offset_y)
+            self.theme_preview_dropdown.draw(self.screen, y_offset=offset_y)
+            self.theme_preview_input.draw(self.screen, y_offset=offset_y)
+            self.theme_preview_slider.draw(self.screen, y_offset=offset_y)
+            self.theme_preview_progress.draw(self.screen, y_offset=offset_y)
 
         self.apply_button.draw(self.screen, y_offset=offset_y)
         self.back_button.draw(self.screen, y_offset=offset_y)
