@@ -218,7 +218,7 @@ class GamePrepareScene(Scene):
 
         start_rect = pygame.Rect(0, 0, 200, 60)
         start_rect.center = (button_center_x, current_y + 30)
-        self.start_button = Button(start_rect, "Start Game", self.button_font)
+        self.start_button = Button(start_rect, "Start game", self.button_font)
         current_y += 80
         back_rect = pygame.Rect(0, 0, 200, 60)
         back_rect.center = (button_center_x, current_y + 30)

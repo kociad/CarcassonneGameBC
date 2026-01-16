@@ -39,7 +39,7 @@ class MainMenuScene(Scene):
                                                 is None))
         start_rect = pygame.Rect(0, 0, 200, 60)
         start_rect.center = (center_x, center_y)
-        self.start_button = Button(start_rect, "New Game", self.button_font)
+        self.start_button = Button(start_rect, "New game", self.button_font)
         how_to_play_rect = pygame.Rect(0, 0, 200, 60)
         how_to_play_rect.center = (center_x, center_y + 80)
         self.how_to_play_button = Button(how_to_play_rect, "How to play",
