@@ -622,9 +622,15 @@ class ThemeDebugOverlay:
         return channels[:4]
 
     def _set_theme_value(self, name: str, value: typing.Any) -> None:
+        current_value = getattr(theme, name, None)
+        if current_value == value:
+            return
         setattr(theme, name, value)
         theme.refresh_theme_state()
-        theme.clear_font_cache()
+        if name.startswith("THEME_FONT_FAMILY_") or name.startswith(
+            "THEME_FONT_SIZE_"
+        ):
+            theme.clear_font_cache()
         self._on_theme_update()
         self.refresh_theme()
 

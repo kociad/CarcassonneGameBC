@@ -380,6 +380,9 @@ def _load_font(font_name: str | None, size: int) -> pygame.font.Font:
     if font_path:
         return pygame.font.Font(font_path, size)
     if font_name:
+        _, extension = os.path.splitext(font_name.lower())
+        if extension in {".ttf", ".otf", ".ttc", ".otc"}:
+            return pygame.font.Font(None, size)
         matched = pygame.font.match_font(font_name)
         if matched:
             return pygame.font.Font(matched, size)
