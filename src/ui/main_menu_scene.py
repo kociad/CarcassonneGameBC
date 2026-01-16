@@ -19,9 +19,13 @@ class MainMenuScene(Scene):
                  get_game_session: typing.Callable,
                  cleanup_previous_game: typing.Callable) -> None:
         super().__init__(screen, switch_scene_callback)
-        self.font = theme.get_font(theme.THEME_FONT_SIZE_MAIN_MENU_TITLE)
-        self.button_font = theme.get_font(theme.THEME_FONT_SIZE_BUTTON)
-        self.dialog_font = theme.get_font(theme.THEME_FONT_SIZE_BODY)
+        self.font = theme.get_font(
+            "title", theme.THEME_FONT_SIZE_MAIN_MENU_TITLE
+        )
+        self.button_font = theme.get_font(
+            "button", theme.THEME_FONT_SIZE_BUTTON
+        )
+        self.dialog_font = theme.get_font("body", theme.THEME_FONT_SIZE_BODY)
         self.get_game_session = get_game_session
         self.cleanup_callback = cleanup_previous_game
         self.scroll_offset = 0
@@ -215,9 +219,13 @@ class MainMenuScene(Scene):
     def refresh_theme(self) -> None:
         """Refresh fonts and component styling after theme changes."""
         super().refresh_theme()
-        self.font = theme.get_font(theme.THEME_FONT_SIZE_MAIN_MENU_TITLE)
-        self.button_font = theme.get_font(theme.THEME_FONT_SIZE_BUTTON)
-        self.dialog_font = theme.get_font(theme.THEME_FONT_SIZE_BODY)
+        self.font = theme.get_font(
+            "title", theme.THEME_FONT_SIZE_MAIN_MENU_TITLE
+        )
+        self.button_font = theme.get_font(
+            "button", theme.THEME_FONT_SIZE_BUTTON
+        )
+        self.dialog_font = theme.get_font("body", theme.THEME_FONT_SIZE_BODY)
         buttons = [
             self.continue_button,
             self.start_button,

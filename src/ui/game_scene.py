@@ -27,7 +27,7 @@ class GameScene(Scene):
         self.game_log = game_log
 
         self.scroll_speed = 10
-        self.font = theme.get_font(theme.THEME_FONT_SIZE_BODY)
+        self.font = theme.get_font("body", theme.THEME_FONT_SIZE_BODY)
 
         self.toast_manager = ToastManager(max_toasts=5)
 
@@ -222,7 +222,7 @@ class GameScene(Scene):
             winner = max(players, key=lambda p: p.get_score())
             message = f"{winner.get_name()} wins with {winner.get_score()} points!"
             game_over_font = theme.get_font(
-                theme.THEME_FONT_SIZE_GAME_OVER_TITLE)
+                "title", theme.THEME_FONT_SIZE_GAME_OVER_TITLE)
             window_width = settings_manager.get("WINDOW_WIDTH")
             window_height = settings_manager.get("WINDOW_HEIGHT")
             winner_y = window_height // 3 - 40
@@ -232,8 +232,10 @@ class GameScene(Scene):
                                                       winner_y))
             self.screen.blit(text_surface, text_rect)
 
-            table_font = theme.get_font(theme.THEME_FONT_SIZE_BUTTON)
-            row_font = theme.get_font(theme.THEME_FONT_SIZE_GAME_OVER_ROW)
+            table_font = theme.get_font("label",
+                                        theme.THEME_FONT_SIZE_BUTTON)
+            row_font = theme.get_font(
+                "body", theme.THEME_FONT_SIZE_GAME_OVER_ROW)
             sorted_players = sorted(players,
                                     key=lambda p:
                                     (-p.get_score(), p.get_name()))
@@ -282,7 +284,8 @@ class GameScene(Scene):
                         (table_x + table_width - 10, table_y + row_height *
                          (i + 2)), 1)
 
-            esc_message_font = theme.get_font(theme.THEME_FONT_SIZE_BODY)
+            esc_message_font = theme.get_font("body",
+                                              theme.THEME_FONT_SIZE_BODY)
             esc_message = "Press ESC to return to menu"
             esc_message_surface = esc_message_font.render(
                 esc_message, True, theme.THEME_GAME_OVER_HINT_TEXT_COLOR)
@@ -1237,7 +1240,7 @@ class GameScene(Scene):
     def refresh_theme(self) -> None:
         """Refresh fonts and component styling after theme changes."""
         super().refresh_theme()
-        self.font = theme.get_font(theme.THEME_FONT_SIZE_BODY)
+        self.font = theme.get_font("body", theme.THEME_FONT_SIZE_BODY)
         self.ai_thinking_progress_bar.set_font(self.font)
         self.ai_thinking_progress_bar.apply_theme()
         self.toast_manager.apply_theme()
