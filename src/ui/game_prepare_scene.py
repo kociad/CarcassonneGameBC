@@ -6,6 +6,7 @@ from ui.components.input_field import InputField
 from ui.components.dropdown import Dropdown
 from ui.components.toast import Toast, ToastManager
 from ui.components.checkbox import Checkbox
+from ui.theme import get_theme
 from game_state import GameState
 from utils.settings_manager import settings_manager
 import typing
@@ -99,10 +100,11 @@ class GamePrepareScene(Scene):
 
         self.switch_scene_callback = switch_scene_callback
 
-        self.font = pygame.font.Font(None, 80)
-        self.button_font = pygame.font.Font(None, 48)
-        self.input_font = pygame.font.Font(None, 36)
-        self.dropdown_font = pygame.font.Font(None, 36)
+        theme = get_theme()
+        self.font = theme.font("scene_title")
+        self.button_font = theme.font("button")
+        self.input_font = theme.font("body")
+        self.dropdown_font = theme.font("body")
 
         self.toast_manager = ToastManager(max_toasts=5)
 
@@ -549,36 +551,39 @@ class GamePrepareScene(Scene):
                     self._remove_player_field()
 
     def draw(self) -> None:
-        self.screen.fill((30, 30, 30))
+        theme = get_theme()
+        self.screen.fill(theme.color("background"))
         offset_y = self.scroll_offset
 
-        title_text = self.font.render("Game Setup", True, (255, 255, 255))
+        title_text = self.font.render("Game Setup", True,
+                                      theme.color("text_primary"))
         title_rect = title_text.get_rect(center=(self.screen.get_width() // 2,
                                                  self.title_y + offset_y))
         self.screen.blit(title_text, title_rect)
 
-        player_label = self.dropdown_font.render("Players", True,
-                                                 (255, 215, 0))
+        player_label = self.dropdown_font.render(
+            "Players", True, theme.color("text_accent"))
         player_label_rect = player_label.get_rect()
         player_label_rect.centerx = self.screen.get_width() // 2
         player_label_rect.y = self.player_label_y + offset_y
         self.screen.blit(player_label, player_label_rect)
 
-        game_label = self.dropdown_font.render("Game", True, (255, 215, 0))
+        game_label = self.dropdown_font.render(
+            "Game", True, theme.color("text_accent"))
         game_label_rect = game_label.get_rect()
         game_label_rect.centerx = self.screen.get_width() // 2
         game_label_rect.y = self.game_label_y + offset_y
         self.screen.blit(game_label, game_label_rect)
 
-        card_set_label = self.dropdown_font.render("Card Sets", True,
-                                                   (255, 215, 0))
+        card_set_label = self.dropdown_font.render(
+            "Card Sets", True, theme.color("text_accent"))
         card_set_label_rect = card_set_label.get_rect()
         card_set_label_rect.centerx = self.screen.get_width() // 2
         card_set_label_rect.y = self.card_set_label_y + offset_y
         self.screen.blit(card_set_label, card_set_label_rect)
 
-        network_label = self.dropdown_font.render("Network", True,
-                                                  (255, 215, 0))
+        network_label = self.dropdown_font.render(
+            "Network", True, theme.color("text_accent"))
         network_label_rect = network_label.get_rect()
         network_label_rect.centerx = self.screen.get_width() // 2
         network_label_rect.y = self.network_label_y + offset_y
@@ -588,7 +593,8 @@ class GamePrepareScene(Scene):
 
         for i, (name_field, ai_checkbox) in enumerate(self.player_fields):
             label_text = "Your name:" if i == 0 else f"Player {i + 1}:"
-            label = label_font.render(label_text, True, (255, 255, 255))
+            label = label_font.render(label_text, True,
+                                      theme.color("text_primary"))
             label_rect = label.get_rect(right=name_field.rect.left - 10,
                                         centery=name_field.rect.centery +
                                         offset_y)
@@ -596,13 +602,15 @@ class GamePrepareScene(Scene):
             name_field.draw(self.screen, y_offset=offset_y)
             ai_checkbox.draw(self.screen, y_offset=offset_y)
 
-        net_label = label_font.render("Network mode:", True, (255, 255, 255))
+        net_label = label_font.render("Network mode:", True,
+                                      theme.color("text_primary"))
         net_label_rect = net_label.get_rect(
             right=self.network_mode_dropdown.rect.left - 10,
             centery=self.network_mode_dropdown.rect.centery + offset_y)
         self.screen.blit(net_label, net_label_rect)
 
-        ai_label = label_font.render("AI Difficulty:", True, (255, 255, 255))
+        ai_label = label_font.render("AI Difficulty:", True,
+                                     theme.color("text_primary"))
         ai_label_rect = ai_label.get_rect(
             right=self.ai_difficulty_dropdown.rect.left - 10,
             centery=self.ai_difficulty_dropdown.rect.centery + offset_y)
@@ -615,19 +623,21 @@ class GamePrepareScene(Scene):
             checkbox.draw(self.screen, y_offset=0)
             card_set_text = label_font.render(
                 f"{card_set['display_name']} ({card_set['card_count']} cards):",
-                True, (255, 255, 255))
+                True, theme.color("text_primary"))
             card_set_rect = card_set_text.get_rect(
                 right=checkbox.rect.left - 10, centery=checkbox.rect.centery)
             self.screen.blit(card_set_text, card_set_rect)
 
-        ip_label = label_font.render("Host IP:", True, (255, 255, 255))
+        ip_label = label_font.render("Host IP:", True,
+                                     theme.color("text_primary"))
         ip_label_rect = ip_label.get_rect(
             right=self.host_ip_field.rect.left - 10,
             centery=self.host_ip_field.rect.centery + offset_y)
         self.screen.blit(ip_label, ip_label_rect)
         self.host_ip_field.draw(self.screen, y_offset=offset_y)
 
-        port_label = label_font.render("Port:", True, (255, 255, 255))
+        port_label = label_font.render("Port:", True,
+                                       theme.color("text_primary"))
         port_label_rect = port_label.get_rect(
             right=self.port_field.rect.left - 10,
             centery=self.port_field.rect.centery + offset_y)

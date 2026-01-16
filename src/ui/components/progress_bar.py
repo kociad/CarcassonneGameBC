@@ -1,6 +1,8 @@
 import pygame
 from typing import Tuple, Optional
 
+from ui.theme import get_theme
+
 
 class ProgressBar:
     """
@@ -21,15 +23,15 @@ class ProgressBar:
 
     def __init__(self,
                  rect: Tuple[int, int, int, int],
-                 font: pygame.font.Font,
+                 font: pygame.font.Font | None,
                  min_value: float = 0.0,
                  max_value: float = 1.0,
                  value: float = 0.0,
-                 background_color: Tuple[int, int, int] = (80, 80, 80),
-                 progress_color: Tuple[int, int, int] = (100, 255, 100),
-                 border_color: Tuple[int, int, int] = (150, 150, 150),
+                 background_color: Tuple[int, int, int] | None = None,
+                 progress_color: Tuple[int, int, int] | None = None,
+                 border_color: Tuple[int, int, int] | None = None,
                  show_text: bool = True,
-                 text_color: Tuple[int, int, int] = (255, 255, 255)):
+                 text_color: Tuple[int, int, int] | None = None):
         """
         Initialize the progress bar.
         
@@ -45,16 +47,17 @@ class ProgressBar:
             show_text: Whether to display the percentage text
             text_color: Color of the text
         """
+        theme = get_theme()
         self.rect = pygame.Rect(rect)
-        self.font = font
+        self.font = font or theme.font("small")
         self.min_value = min_value
         self.max_value = max_value
         self.value = max(min_value, min(max_value, value))
-        self.background_color = background_color
-        self.progress_color = progress_color
-        self.border_color = border_color
+        self.background_color = background_color or theme.color("progress_bg")
+        self.progress_color = progress_color or theme.color("progress_fg")
+        self.border_color = border_color or theme.color("progress_border")
         self.show_text = show_text
-        self.text_color = text_color
+        self.text_color = text_color or theme.color("progress_text")
 
     def set_value(self, value: float) -> None:
         """

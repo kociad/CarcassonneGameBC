@@ -2,6 +2,7 @@ import pygame
 from ui.scene import Scene
 from ui.components.button import Button
 from ui.components.toast import Toast, ToastManager
+from ui.theme import get_theme
 from game_state import GameState
 from utils.settings_manager import settings_manager
 import typing
@@ -21,8 +22,9 @@ class LobbyScene(Scene):
         self.get_game_session = get_game_session
         self.network = network
         self.game_log = game_log
-        self.font = pygame.font.Font(None, 80)
-        self.button_font = pygame.font.Font(None, 48)
+        theme = get_theme()
+        self.font = theme.font("scene_title")
+        self.button_font = theme.font("button")
         self.toast_manager = ToastManager(max_toasts=5)
         self.scroll_offset = 0
         self.max_scroll = 0
@@ -50,15 +52,15 @@ class LobbyScene(Scene):
                           None)
             if player is not None and player.get_is_ai():
                 status = "AI"
-                color = (120, 120, 120)
+                color = get_theme().color("text_muted")
                 name = player.get_name()
             elif player is not None and player.is_human:
                 status = "Connected"
-                color = (0, 200, 0)
+                color = get_theme().color("game_status_ready")
                 name = player.get_name()
             else:
                 status = "Waiting..."
-                color = (200, 200, 0)
+                color = get_theme().color("text_accent")
                 name = origName
             self.status_list.append({
                 "name": name,
@@ -109,20 +111,22 @@ class LobbyScene(Scene):
 
     def draw(self) -> None:
         """Draw the lobby scene, including player statuses and the start button."""
-        self.screen.fill((30, 30, 30))
+        theme = get_theme()
+        self.screen.fill(theme.color("background"))
         offset_y = self.scroll_offset
-        title_text = self.font.render("Lobby", True, (255, 255, 255))
+        title_text = self.font.render("Lobby", True, theme.color("text_primary"))
         title_rect = title_text.get_rect(center=(self.screen.get_width() // 2,
                                                  60 + offset_y))
         self.screen.blit(title_text, title_rect)
-        label_font = pygame.font.Font(None, 48)
+        label_font = theme.font("button")
         y = 160 + offset_y
         if self.is_host:
             for i, status in enumerate(self.status_list):
                 name = status["name"]
                 stat = status["status"]
                 color = status["color"]
-                name_surf = label_font.render(f"{name}", True, (255, 255, 255))
+                name_surf = label_font.render(
+                    f"{name}", True, theme.color("text_primary"))
                 status_surf = label_font.render(stat, True, color)
                 spacing = 32
                 total_width = name_surf.get_width(
@@ -135,9 +139,10 @@ class LobbyScene(Scene):
                 y += 60
             self.start_button.draw(self.screen, y_offset=offset_y)
         else:
-            wait_font = pygame.font.Font(None, 36)
+            wait_font = theme.font("dialog")
             wait_text = wait_font.render(
-                "Waiting for host to start the game...", True, (255, 255, 255))
+                "Waiting for host to start the game...", True,
+                theme.color("text_primary"))
             wait_rect = wait_text.get_rect(
                 center=(self.screen.get_width() // 2,
                         self.screen.get_height() // 2 + 40 + offset_y))

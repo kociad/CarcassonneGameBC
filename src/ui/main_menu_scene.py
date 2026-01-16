@@ -2,6 +2,7 @@ import pygame
 import webbrowser
 from ui.scene import Scene
 from ui.components.button import Button
+from ui.theme import get_theme
 from game_state import GameState
 from utils.settings_manager import settings_manager
 import logging
@@ -18,9 +19,10 @@ class MainMenuScene(Scene):
                  get_game_session: typing.Callable,
                  cleanup_previous_game: typing.Callable) -> None:
         super().__init__(screen, switch_scene_callback)
-        self.font = pygame.font.Font(None, 100)
-        self.button_font = pygame.font.Font(None, 48)
-        self.dialog_font = pygame.font.Font(None, 36)
+        theme = get_theme()
+        self.font = theme.font("menu_title")
+        self.button_font = theme.font("button")
+        self.dialog_font = theme.font("dialog")
         self.get_game_session = get_game_session
         self.cleanup_callback = cleanup_previous_game
         self.scroll_offset = 0
@@ -145,10 +147,10 @@ class MainMenuScene(Scene):
 
     def draw_confirm_dialog(self) -> None:
         """Draw the confirmation dialog overlay."""
+        theme = get_theme()
         overlay = pygame.Surface(
-            (self.screen.get_width(), self.screen.get_height()))
-        overlay.set_alpha(128)
-        overlay.fill((0, 0, 0))
+            (self.screen.get_width(), self.screen.get_height()), pygame.SRCALPHA)
+        overlay.fill(theme.color("overlay"))
         self.screen.blit(overlay, (0, 0))
         dialog_width = 580
         dialog_height = 180
@@ -156,16 +158,17 @@ class MainMenuScene(Scene):
         dialog_y = (self.screen.get_height() - dialog_height) // 2
         dialog_rect = pygame.Rect(dialog_x, dialog_y, dialog_width,
                                   dialog_height)
-        pygame.draw.rect(self.screen, (60, 60, 60), dialog_rect)
-        pygame.draw.rect(self.screen, (200, 200, 200), dialog_rect, 2)
+        pygame.draw.rect(self.screen, theme.color("dialog_bg"), dialog_rect)
+        pygame.draw.rect(self.screen, theme.color("dialog_border"),
+                         dialog_rect, 2)
         message_text = self.dialog_font.render(
             "Starting a new game will end the current game.", True,
-            (255, 255, 255))
+            theme.color("text_primary"))
         message_rect = message_text.get_rect(center=(self.screen.get_width() //
                                                      2, dialog_y + 35))
         self.screen.blit(message_text, message_rect)
         confirm_text = self.dialog_font.render("Do you want to continue?",
-                                               True, (255, 255, 255))
+                                               True, theme.color("text_primary"))
         confirm_rect = confirm_text.get_rect(center=(self.screen.get_width() //
                                                      2, dialog_y + 70))
         self.screen.blit(confirm_text, confirm_rect)
@@ -174,9 +177,11 @@ class MainMenuScene(Scene):
 
     def draw(self) -> None:
         """Draw the main menu scene."""
-        self.screen.fill((30, 30, 30))
+        theme = get_theme()
+        self.screen.fill(theme.color("background"))
         offset_y = self.scroll_offset
-        title_text = self.font.render("Carcassonne", True, (255, 255, 255))
+        title_text = self.font.render(
+            "Carcassonne", True, theme.color("text_primary"))
         title_rect = title_text.get_rect(
             center=(self.screen.get_width() // 2,
                     self.screen.get_height() // 3 - 60 + offset_y))

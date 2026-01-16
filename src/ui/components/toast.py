@@ -4,15 +4,9 @@ import math
 import logging
 import typing
 
+from ui.theme import get_theme
+
 logger = logging.getLogger(__name__)
-
-TOAST_COLORS = {
-    "info": ((30, 30, 30), (255, 255, 255)),
-    "success": ((255, 255, 255), (0, 128, 0)),
-    "error": ((255, 255, 255), (128, 0, 0)),
-    "warning": ((0, 0, 0), (255, 215, 0))
-}
-
 
 class Toast:
     """A toast notification component."""
@@ -29,14 +23,25 @@ class Toast:
             type: Type of toast (info, success, error, warning)
             duration: How long to display the toast at bottom position (default 1.5s)
         """
+        theme = get_theme()
+        toast_colors = {
+            "info": (theme.color("toast_info_text"),
+                     theme.color("toast_info_bg")),
+            "success": (theme.color("toast_success_text"),
+                        theme.color("toast_success_bg")),
+            "error": (theme.color("toast_error_text"),
+                      theme.color("toast_error_bg")),
+            "warning": (theme.color("toast_warning_text"),
+                        theme.color("toast_warning_bg")),
+        }
         self.message = message
         self.duration = duration
         self.start_time = None
-        self.font = pygame.font.Font(None, 36)
-        self.type = type if type in TOAST_COLORS else "info"
+        self.font = theme.font("dialog")
+        self.type = type if type in toast_colors else "info"
         self.active = False
 
-        self.text_color, self.bg_color = TOAST_COLORS[self.type]
+        self.text_color, self.bg_color = toast_colors[self.type]
 
         self.animation_duration = 0.5
         self.current_y = 0
