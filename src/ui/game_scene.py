@@ -1200,6 +1200,12 @@ class GameScene(Scene):
 
     def draw(self) -> None:
         self._update_valid_placements()
+        self._draw_background(
+            image_path=theme.THEME_GAME_BACKGROUND_IMAGE,
+            scale_mode_override=theme.THEME_GAME_BACKGROUND_SCALE_MODE,
+            tint_color_override=theme.THEME_GAME_BACKGROUND_TINT_COLOR,
+            blur_radius_override=theme.THEME_GAME_BACKGROUND_BLUR_RADIUS
+        )
         self.draw_board(self.session.get_game_board(),
                         self.session.get_placed_figures(),
                         self.session.get_structures(),

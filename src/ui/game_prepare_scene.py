@@ -550,7 +550,12 @@ class GamePrepareScene(Scene):
                     self._remove_player_field()
 
     def draw(self) -> None:
-        self.screen.fill(theme.THEME_SCENE_BG_COLOR)
+        self._draw_background(
+            image_path=theme.THEME_GAME_PREPARE_BACKGROUND_IMAGE,
+            scale_mode_override=theme.THEME_GAME_PREPARE_BACKGROUND_SCALE_MODE,
+            tint_color_override=theme.THEME_GAME_PREPARE_BACKGROUND_TINT_COLOR,
+            blur_radius_override=theme.THEME_GAME_PREPARE_BACKGROUND_BLUR_RADIUS
+        )
         offset_y = self.scroll_offset
 
         title_text = self.font.render("Game Setup", True,
