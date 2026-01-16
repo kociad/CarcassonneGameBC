@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import pygame
 
+from settings import BACKGROUND_IMAGE_PATH
+
 Color = tuple[int, int, int]
 ColorA = tuple[int, int, int, int]
 
@@ -203,6 +205,8 @@ THEME_GAME_LOG_SCROLL_BG_COLOR: ColorA = (0, 0, 0, 150)
 # Shared scene colors
 # Generic scene background color for menus; RGB tuple (0-255 per channel).
 THEME_SCENE_BG_COLOR: Color = (30, 30, 30)
+# Base path for background images (from settings.BACKGROUND_IMAGE_PATH).
+THEME_BACKGROUND_IMAGE_BASE_PATH: str = BACKGROUND_IMAGE_PATH
 # Default background image path for scenes; used when a scene-specific value is None.
 # Set to None to disable background images globally.
 THEME_BACKGROUND_IMAGE: str | None = None

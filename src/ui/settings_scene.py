@@ -544,10 +544,22 @@ class SettingsScene(Scene):
 
     def draw(self) -> None:
         self._draw_background(
-            image_path=theme.THEME_SETTINGS_BACKGROUND_IMAGE,
-            scale_mode_override=theme.THEME_SETTINGS_BACKGROUND_SCALE_MODE,
-            tint_color_override=theme.THEME_SETTINGS_BACKGROUND_TINT_COLOR,
-            blur_radius_override=theme.THEME_SETTINGS_BACKGROUND_BLUR_RADIUS
+            image_path=getattr(theme, "THEME_SETTINGS_BACKGROUND_IMAGE", None),
+            scale_mode_override=getattr(
+                theme,
+                "THEME_SETTINGS_BACKGROUND_SCALE_MODE",
+                None
+            ),
+            tint_color_override=getattr(
+                theme,
+                "THEME_SETTINGS_BACKGROUND_TINT_COLOR",
+                None
+            ),
+            blur_radius_override=getattr(
+                theme,
+                "THEME_SETTINGS_BACKGROUND_BLUR_RADIUS",
+                None
+            )
         )
         offset_y = self.scroll_offset
         label_font = self.dropdown_font
