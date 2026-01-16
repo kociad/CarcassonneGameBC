@@ -110,7 +110,24 @@ class LobbyScene(Scene):
 
     def draw(self) -> None:
         """Draw the lobby scene, including player statuses and the start button."""
-        self.screen.fill(theme.THEME_SCENE_BG_COLOR)
+        self._draw_background(
+            image_path=getattr(theme, "THEME_LOBBY_BACKGROUND_IMAGE", None),
+            scale_mode_override=getattr(
+                theme,
+                "THEME_LOBBY_BACKGROUND_SCALE_MODE",
+                None
+            ),
+            tint_color_override=getattr(
+                theme,
+                "THEME_LOBBY_BACKGROUND_TINT_COLOR",
+                None
+            ),
+            blur_radius_override=getattr(
+                theme,
+                "THEME_LOBBY_BACKGROUND_BLUR_RADIUS",
+                None
+            )
+        )
         offset_y = self.scroll_offset
         title_text = self.font.render("Lobby", True,
                                       theme.THEME_TEXT_COLOR_LIGHT)
