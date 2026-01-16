@@ -6,6 +6,8 @@ import typing
 class InputField:
     """A text input field UI component."""
 
+    _instances: typing.ClassVar[list['InputField']] = []
+
     def __init__(self,
                  rect: pygame.Rect,
                  font: pygame.font.Font,
@@ -56,6 +58,7 @@ class InputField:
         self.max_value = max_value
         self.on_text_change = on_text_change
         self.cursor_pos = len(self.text)
+        InputField._instances.append(self)
 
     def handle_event(self,
                      event: pygame.event.Event,
@@ -73,8 +76,20 @@ class InputField:
             return
         if event.type == pygame.MOUSEMOTION:
             self.hovered = shifted_rect.collidepoint(event.pos)
+            any_hovered = any(
+                field.hovered or field.active for field in InputField._instances)
+            if any_hovered:
+                pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_IBEAM)
+            else:
+                pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             self.active = shifted_rect.collidepoint(event.pos)
+            any_hovered = any(
+                field.hovered or field.active for field in InputField._instances)
+            if any_hovered:
+                pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_IBEAM)
+            else:
+                pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
         if self.active and event.type == pygame.KEYDOWN:
             old_text = self.text
             if event.key == pygame.K_LEFT:
