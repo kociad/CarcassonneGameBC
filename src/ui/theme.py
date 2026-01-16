@@ -1,5 +1,24 @@
 from __future__ import annotations
 
+"""Centralized UI theme definitions and accessors.
+
+Usage:
+    from ui.theme import get_theme, set_theme, Theme, register_theme
+
+    theme = get_theme()
+    color = theme.color("text_primary")
+    font = theme.font("button")
+
+    # Experiment with fonts at runtime:
+    theme.set_font_name("arial")
+    theme.set_font_sizes({"button": 42, "body": 30, "dialog": 36})
+
+    # Register a custom theme and switch to it:
+    custom = Theme(name="custom", colors={...}, font_sizes={...})
+    register_theme("custom", custom)
+    set_theme("custom")
+"""
+
 from dataclasses import dataclass, field
 from typing import Dict, Optional, Tuple
 
