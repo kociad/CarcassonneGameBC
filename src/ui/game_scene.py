@@ -191,9 +191,17 @@ class GameScene(Scene):
         self._update_valid_placements()
 
         def render_board():
-            surface = pygame.Surface((settings_manager.get("WINDOW_WIDTH"),
-                                      settings_manager.get("WINDOW_HEIGHT")))
-            surface.fill(theme.THEME_GAME_BOARD_BG_COLOR)
+            surface = pygame.Surface(
+                (settings_manager.get("WINDOW_WIDTH"),
+                 settings_manager.get("WINDOW_HEIGHT")))
+            self._draw_background(
+                background_color=theme.THEME_GAME_BACKGROUND_COLOR,
+                image_name=theme.THEME_GAME_BACKGROUND_IMAGE,
+                scale_mode=theme.THEME_GAME_BACKGROUND_SCALE_MODE,
+                tint_color=theme.THEME_GAME_BACKGROUND_TINT_COLOR,
+                blur_radius=theme.THEME_GAME_BACKGROUND_BLUR_RADIUS,
+                surface=surface,
+            )
 
             if settings_manager.get("SHOW_VALID_PLACEMENTS", True):
                 tile_size = settings_manager.get("TILE_SIZE")
@@ -1200,6 +1208,13 @@ class GameScene(Scene):
 
     def draw(self) -> None:
         self._update_valid_placements()
+        self._draw_background(
+            background_color=theme.THEME_GAME_BACKGROUND_COLOR,
+            image_name=theme.THEME_GAME_BACKGROUND_IMAGE,
+            scale_mode=theme.THEME_GAME_BACKGROUND_SCALE_MODE,
+            tint_color=theme.THEME_GAME_BACKGROUND_TINT_COLOR,
+            blur_radius=theme.THEME_GAME_BACKGROUND_BLUR_RADIUS,
+        )
         self.draw_board(self.session.get_game_board(),
                         self.session.get_placed_figures(),
                         self.session.get_structures(),

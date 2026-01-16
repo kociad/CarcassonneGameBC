@@ -543,7 +543,13 @@ class SettingsScene(Scene):
         self.resolution_dropdown.set_disabled(value)
 
     def draw(self) -> None:
-        self.screen.fill(theme.THEME_SCENE_BG_COLOR)
+        self._draw_background(
+            background_color=theme.THEME_SETTINGS_BACKGROUND_COLOR,
+            image_name=theme.THEME_SETTINGS_BACKGROUND_IMAGE,
+            scale_mode=theme.THEME_SETTINGS_BACKGROUND_SCALE_MODE,
+            tint_color=theme.THEME_SETTINGS_BACKGROUND_TINT_COLOR,
+            blur_radius=theme.THEME_SETTINGS_BACKGROUND_BLUR_RADIUS,
+        )
         offset_y = self.scroll_offset
         label_font = self.dropdown_font
 
