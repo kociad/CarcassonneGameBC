@@ -1,6 +1,8 @@
 import pygame
 import typing
 
+from ui import theme
+
 
 class Checkbox:
     """A checkbox UI component."""
@@ -10,11 +12,11 @@ class Checkbox:
         rect: pygame.Rect,
         checked: bool = False,
         on_toggle: typing.Optional[typing.Callable] = None,
-        box_color: tuple = (255, 255, 255),
-        check_color: tuple = (0, 200, 0),
-        border_color: tuple = (255, 255, 255),
-        hover_box_color: tuple = (235, 235, 235),
-        disabled_color: tuple = (100, 100, 100)
+        box_color: tuple = theme.THEME_CHECKBOX_BOX_COLOR,
+        check_color: tuple = theme.THEME_CHECKBOX_CHECK_COLOR,
+        border_color: tuple = theme.THEME_CHECKBOX_BORDER_COLOR,
+        hover_box_color: tuple = theme.THEME_CHECKBOX_HOVER_BOX_COLOR,
+        disabled_color: tuple = theme.THEME_CHECKBOX_DISABLED_COLOR
     ) -> None:
         """
         Initialize the checkbox.

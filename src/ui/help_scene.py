@@ -3,6 +3,7 @@ import webbrowser
 from ui.scene import Scene
 from ui.components.button import Button
 from game_state import GameState
+from ui import theme
 import typing
 
 
@@ -12,10 +13,10 @@ class HelpScene(Scene):
     def __init__(self, screen: pygame.Surface,
                  switch_scene_callback: typing.Callable) -> None:
         super().__init__(screen, switch_scene_callback)
-        self.font = pygame.font.Font(None, 80)
-        self.button_font = pygame.font.Font(None, 48)
-        self.text_font = pygame.font.Font(None, 36)
-        self.controls_font = pygame.font.Font(None, 32)
+        self.font = theme.get_font(theme.THEME_FONT_SIZE_SCENE_TITLE)
+        self.button_font = theme.get_font(theme.THEME_FONT_SIZE_BUTTON)
+        self.text_font = theme.get_font(theme.THEME_FONT_SIZE_BODY)
+        self.controls_font = theme.get_font(theme.THEME_FONT_SIZE_HELP_CONTROLS)
         self.scroll_offset = 0
         self.max_scroll = 0
         self.scroll_speed = 30
@@ -79,9 +80,10 @@ class HelpScene(Scene):
 
     def draw(self) -> None:
         """Draw the help scene."""
-        self.screen.fill((30, 30, 30))
+        self.screen.fill(theme.THEME_SCENE_BG_COLOR)
         offset_y = self.scroll_offset
-        title_text = self.font.render("How to Play", True, (255, 255, 255))
+        title_text = self.font.render("How to Play", True,
+                                      theme.THEME_TEXT_COLOR_LIGHT)
         title_rect = title_text.get_rect(center=(self.screen.get_width() // 2,
                                                  self.title_y + offset_y))
         self.screen.blit(title_text, title_rect)
@@ -92,13 +94,13 @@ class HelpScene(Scene):
                 current_y += line_height // 2
                 continue
             if line.endswith(":") and not line.startswith(" "):
-                color = (255, 215, 0)
+                color = theme.THEME_SECTION_HEADER_COLOR
                 font = self.text_font
             elif line.startswith("2"):
-                color = (200, 200, 255)
+                color = theme.THEME_SUBSECTION_COLOR
                 font = self.controls_font
             else:
-                color = (255, 255, 255)
+                color = theme.THEME_TEXT_COLOR_LIGHT
                 font = self.controls_font
             text_surface = font.render(line, True, color)
             if line.endswith(":") and not line.startswith(" "):

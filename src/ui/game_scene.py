@@ -9,6 +9,7 @@ from utils.settings_manager import settings_manager
 from ui.components.toast import Toast, ToastManager
 from ui.components.button import Button
 from ui.components.progress_bar import ProgressBar
+from ui import theme
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +27,7 @@ class GameScene(Scene):
         self.game_log = game_log
 
         self.scroll_speed = 10
-        self.font = pygame.font.Font(None, 36)
+        self.font = theme.get_font(theme.THEME_FONT_SIZE_BODY)
 
         self.toast_manager = ToastManager(max_toasts=5)
 
@@ -79,11 +80,11 @@ class GameScene(Scene):
             min_value=0.0,
             max_value=1.0,
             value=0.0,
-            background_color=(80, 80, 80),
-            progress_color=(100, 255, 100),
-            border_color=(150, 150, 150),
+            background_color=theme.THEME_PROGRESS_BAR_BG_COLOR,
+            progress_color=theme.THEME_PROGRESS_BAR_PROGRESS_COLOR,
+            border_color=theme.THEME_PROGRESS_BAR_BORDER_COLOR,
             show_text=True,
-            text_color=(255, 255, 255))
+            text_color=theme.THEME_PROGRESS_BAR_TEXT_COLOR)
 
     def _get_render_state_hash(self) -> int:
         """Get a hash of the current render state for caching."""
@@ -192,11 +193,11 @@ class GameScene(Scene):
         def render_board():
             surface = pygame.Surface((settings_manager.get("WINDOW_WIDTH"),
                                       settings_manager.get("WINDOW_HEIGHT")))
-            surface.fill((25, 25, 25))
+            surface.fill(theme.THEME_GAME_BOARD_BG_COLOR)
 
             if settings_manager.get("SHOW_VALID_PLACEMENTS", True):
                 tile_size = settings_manager.get("TILE_SIZE")
-                highlight_color = (255, 255, 0, 100)
+                highlight_color = theme.THEME_GAME_VALID_PLACEMENT_COLOR
                 for (x, y) in self.valid_placements:
                     rect = pygame.Surface((tile_size, tile_size),
                                           pygame.SRCALPHA)
@@ -212,18 +213,19 @@ class GameScene(Scene):
         if is_game_over:
             winner = max(players, key=lambda p: p.get_score())
             message = f"{winner.get_name()} wins with {winner.get_score()} points!"
-            game_over_font = pygame.font.Font(None, 72)
+            game_over_font = theme.get_font(
+                theme.THEME_FONT_SIZE_GAME_OVER_TITLE)
             window_width = settings_manager.get("WINDOW_WIDTH")
             window_height = settings_manager.get("WINDOW_HEIGHT")
             winner_y = window_height // 3 - 40
             text_surface = game_over_font.render(message, True,
-                                                 (255, 255, 255))
+                                                 theme.THEME_TEXT_COLOR_LIGHT)
             text_rect = text_surface.get_rect(center=(window_width // 2,
                                                       winner_y))
             self.screen.blit(text_surface, text_rect)
 
-            table_font = pygame.font.Font(None, 48)
-            row_font = pygame.font.Font(None, 42)
+            table_font = theme.get_font(theme.THEME_FONT_SIZE_BUTTON)
+            row_font = theme.get_font(theme.THEME_FONT_SIZE_GAME_OVER_ROW)
             sorted_players = sorted(players,
                                     key=lambda p:
                                     (-p.get_score(), p.get_name()))
@@ -236,26 +238,30 @@ class GameScene(Scene):
             col1_x = window_width // 2 - 150
             col2_x = window_width // 2 + 150
 
-            pygame.draw.rect(self.screen, (40, 40, 40),
+            pygame.draw.rect(self.screen, theme.THEME_GAME_OVER_TABLE_BG_COLOR,
                              (table_x, table_y, table_width, table_height))
             header_y = table_y + row_height // 2
-            header_player = table_font.render("Player", True, (255, 255, 255))
-            header_score = table_font.render("Score", True, (255, 255, 255))
+            header_player = table_font.render(
+                "Player", True, theme.THEME_TEXT_COLOR_LIGHT)
+            header_score = table_font.render(
+                "Score", True, theme.THEME_TEXT_COLOR_LIGHT)
             self.screen.blit(header_player,
                              header_player.get_rect(center=(col1_x, header_y)))
             self.screen.blit(header_score,
                              header_score.get_rect(center=(col2_x, header_y)))
             pygame.draw.line(
-                self.screen, (100, 100, 100),
+                self.screen, theme.THEME_GAME_OVER_TABLE_LINE_COLOR,
                 (table_x + 10, table_y + row_height),
                 (table_x + table_width - 10, table_y + row_height), 2)
 
             for i, player in enumerate(sorted_players):
                 row_y = table_y + row_height * (i + 1) + row_height // 2
-                name_surface = row_font.render(player.get_name(), True,
-                                               (220, 220, 220))
-                score_surface = row_font.render(str(player.get_score()), True,
-                                                (220, 220, 220))
+                name_surface = row_font.render(
+                    player.get_name(), True,
+                    theme.THEME_GAME_OVER_ROW_TEXT_COLOR)
+                score_surface = row_font.render(
+                    str(player.get_score()), True,
+                    theme.THEME_GAME_OVER_ROW_TEXT_COLOR)
                 self.screen.blit(name_surface,
                                  name_surface.get_rect(center=(col1_x, row_y)))
                 self.screen.blit(
@@ -263,15 +269,15 @@ class GameScene(Scene):
                     score_surface.get_rect(center=(col2_x, row_y)))
                 if i < len(sorted_players) - 1:
                     pygame.draw.line(
-                        self.screen, (70, 70, 70),
+                        self.screen, theme.THEME_GAME_OVER_ROW_LINE_COLOR,
                         (table_x + 10, table_y + row_height * (i + 2)),
                         (table_x + table_width - 10, table_y + row_height *
                          (i + 2)), 1)
 
-            esc_message_font = pygame.font.Font(None, 36)
+            esc_message_font = theme.get_font(theme.THEME_FONT_SIZE_BODY)
             esc_message = "Press ESC to return to menu"
             esc_message_surface = esc_message_font.render(
-                esc_message, True, (180, 180, 180))
+                esc_message, True, theme.THEME_GAME_OVER_HINT_TEXT_COLOR)
             esc_message_rect = esc_message_surface.get_rect(
                 center=(window_width // 2, table_y + table_height + 50))
             self.screen.blit(esc_message_surface, esc_message_rect)
@@ -282,13 +288,13 @@ class GameScene(Scene):
             for x in range(0, (game_board.get_grid_size() + 1) * tile_size,
                            tile_size):
                 pygame.draw.line(
-                    self.screen, (0, 0, 0),
+                    self.screen, theme.THEME_GAME_DEBUG_GRID_COLOR,
                     (x - self.offset_x, 0 - self.offset_y),
                     (x - self.offset_x,
                      game_board.get_grid_size() * tile_size - self.offset_y))
             for y in range(0, (game_board.get_grid_size() + 1) * tile_size,
                            tile_size):
-                pygame.draw.line(self.screen, (0, 0, 0),
+                pygame.draw.line(self.screen, theme.THEME_GAME_DEBUG_GRID_COLOR,
                                  (0 - self.offset_x, y - self.offset_y),
                                  (game_board.get_grid_size() * tile_size -
                                   self.offset_x, y - self.offset_y))
@@ -311,7 +317,9 @@ class GameScene(Scene):
                             x * tile_size - self.offset_x,
                             y * tile_size - self.offset_y,
                             tile_size, tile_size)
-                        pygame.draw.rect(self.screen, (255, 255, 0), highlight_rect, 5)
+                        pygame.draw.rect(self.screen,
+                                         theme.THEME_GAME_HIGHLIGHT_COLOR,
+                                         highlight_rect, 5)
 
                     if x == center_x and y == center_y:
                         try:
@@ -328,8 +336,8 @@ class GameScene(Scene):
                             logger.error(f"Failed to load compass icon: {e}")
 
                 if settings_manager.get("DEBUG"):
-                    text_surface = self.font.render(f"{x},{y}", True,
-                                                    (255, 255, 255))
+                    text_surface = self.font.render(
+                        f"{x},{y}", True, theme.THEME_TEXT_COLOR_LIGHT)
                     text_x = x * tile_size - self.offset_x + tile_size // 3
                     text_y = y * tile_size - self.offset_y + tile_size // 3
                     self.screen.blit(text_surface, (text_x, text_y))
@@ -357,7 +365,7 @@ class GameScene(Scene):
                             card_x, card_y = card_position[0]
                             rect = pygame.Surface((tile_size, tile_size),
                                                   pygame.SRCALPHA)
-                            rect.fill((0, 0, 0, 0))
+                            rect.fill(theme.THEME_TRANSPARENT_COLOR)
                             for direction in directions:
                                 terrains_for_card = card.get_terrains(
                                 ) if hasattr(card, 'get_terrains') else {}
@@ -368,7 +376,7 @@ class GameScene(Scene):
                                         rect, tint_color,
                                         (0, 0, square_size, square_size))
                                     pygame.draw.rect(
-                                        rect, (255, 255, 255),
+                                        rect, theme.THEME_TEXT_COLOR_LIGHT,
                                         (0, 0, square_size, square_size), 2)
                                 elif direction == "NE":
                                     pygame.draw.rect(
@@ -376,7 +384,7 @@ class GameScene(Scene):
                                         (2 * square_size, 0, square_size,
                                          square_size))
                                     pygame.draw.rect(
-                                        rect, (255, 255, 255),
+                                        rect, theme.THEME_TEXT_COLOR_LIGHT,
                                         (2 * square_size, 0, square_size,
                                          square_size), 2)
                                 elif direction == "SW":
@@ -385,7 +393,7 @@ class GameScene(Scene):
                                         (0, 2 * square_size, square_size,
                                          square_size))
                                     pygame.draw.rect(
-                                        rect, (255, 255, 255),
+                                        rect, theme.THEME_TEXT_COLOR_LIGHT,
                                         (0, 2 * square_size, square_size,
                                          square_size), 2)
                                 elif direction == "SE":
@@ -394,7 +402,7 @@ class GameScene(Scene):
                                         (2 * square_size, 2 * square_size,
                                          square_size, square_size))
                                     pygame.draw.rect(
-                                        rect, (255, 255, 255),
+                                        rect, theme.THEME_TEXT_COLOR_LIGHT,
                                         (2 * square_size, 2 * square_size,
                                          square_size, square_size), 2)
                                 # Center
@@ -408,7 +416,7 @@ class GameScene(Scene):
                                         (square_x, square_y, square_size,
                                          square_size))
                                     pygame.draw.rect(
-                                        rect, (255, 255, 255),
+                                        rect, theme.THEME_TEXT_COLOR_LIGHT,
                                         (square_x, square_y, square_size,
                                          square_size), 2)
                                 # Edges
@@ -424,7 +432,7 @@ class GameScene(Scene):
                                             (mid_x, 0, square_size,
                                              square_size))
                                         pygame.draw.rect(
-                                            rect, (255, 255, 255),
+                                            rect, theme.THEME_TEXT_COLOR_LIGHT,
                                             (mid_x, 0, square_size,
                                              square_size), 2)
                                     else:
@@ -432,7 +440,7 @@ class GameScene(Scene):
                                             rect, tint_color,
                                             (0, 0, tile_size, square_size))
                                         pygame.draw.rect(
-                                            rect, (255, 255, 255),
+                                            rect, theme.THEME_TEXT_COLOR_LIGHT,
                                             (0, 0, tile_size, square_size), 2)
                                 elif direction == "S":
                                     edge_has_corners = bool(
@@ -446,7 +454,7 @@ class GameScene(Scene):
                                             (mid_x, 2 * square_size,
                                              square_size, square_size))
                                         pygame.draw.rect(
-                                            rect, (255, 255, 255),
+                                            rect, theme.THEME_TEXT_COLOR_LIGHT,
                                             (mid_x, 2 * square_size,
                                              square_size, square_size), 2)
                                     else:
@@ -455,7 +463,7 @@ class GameScene(Scene):
                                             (0, 2 * square_size, tile_size,
                                              square_size))
                                         pygame.draw.rect(
-                                            rect, (255, 255, 255),
+                                            rect, theme.THEME_TEXT_COLOR_LIGHT,
                                             (0, 2 * square_size, tile_size,
                                              square_size), 2)
                                 elif direction == "E":
@@ -470,7 +478,7 @@ class GameScene(Scene):
                                             (2 * square_size, mid_y,
                                              square_size, square_size))
                                         pygame.draw.rect(
-                                            rect, (255, 255, 255),
+                                            rect, theme.THEME_TEXT_COLOR_LIGHT,
                                             (2 * square_size, mid_y,
                                              square_size, square_size), 2)
                                     else:
@@ -479,7 +487,7 @@ class GameScene(Scene):
                                             (2 * square_size, 0, square_size,
                                              tile_size))
                                         pygame.draw.rect(
-                                            rect, (255, 255, 255),
+                                            rect, theme.THEME_TEXT_COLOR_LIGHT,
                                             (2 * square_size, 0, square_size,
                                              tile_size), 2)
                                 elif direction == "W":
@@ -494,7 +502,7 @@ class GameScene(Scene):
                                             (0, mid_y, square_size,
                                              square_size))
                                         pygame.draw.rect(
-                                            rect, (255, 255, 255),
+                                            rect, theme.THEME_TEXT_COLOR_LIGHT,
                                             (0, mid_y, square_size,
                                              square_size), 2)
                                     else:
@@ -502,7 +510,7 @@ class GameScene(Scene):
                                             rect, tint_color,
                                             (0, 0, square_size, tile_size))
                                         pygame.draw.rect(
-                                            rect, (255, 255, 255),
+                                            rect, theme.THEME_TEXT_COLOR_LIGHT,
                                             (0, 0, square_size, tile_size), 2)
 
                             self.screen.blit(
@@ -515,8 +523,7 @@ class GameScene(Scene):
                 hovered_structure = self._get_hovered_structure(
                     mouse_x, mouse_y)
                 if hovered_structure:
-                    hover_color = (255, 255, 0, 150
-                                   )  # Yellow with transparency
+                    hover_color = theme.THEME_GAME_STRUCTURE_HOVER_COLOR
                     structure_type = hovered_structure.get_structure_type()
 
                     card_edge_map = {}
@@ -536,7 +543,7 @@ class GameScene(Scene):
                             card_x, card_y = card_position[0]
                             rect = pygame.Surface((tile_size, tile_size),
                                                   pygame.SRCALPHA)
-                            rect.fill((0, 0, 0, 0))
+                            rect.fill(theme.THEME_TRANSPARENT_COLOR)
                             for direction in directions:
                                 terrains_for_card = card.get_terrains(
                                 ) if hasattr(card, 'get_terrains') else {}
@@ -546,7 +553,7 @@ class GameScene(Scene):
                                         rect, hover_color,
                                         (0, 0, square_size, square_size))
                                     pygame.draw.rect(
-                                        rect, (255, 255, 255),
+                                        rect, theme.THEME_TEXT_COLOR_LIGHT,
                                         (0, 0, square_size, square_size), 2)
                                 elif direction == "NE":
                                     pygame.draw.rect(
@@ -554,7 +561,7 @@ class GameScene(Scene):
                                         (2 * square_size, 0, square_size,
                                          square_size))
                                     pygame.draw.rect(
-                                        rect, (255, 255, 255),
+                                        rect, theme.THEME_TEXT_COLOR_LIGHT,
                                         (2 * square_size, 0, square_size,
                                          square_size), 2)
                                 elif direction == "SW":
@@ -563,7 +570,7 @@ class GameScene(Scene):
                                         (0, 2 * square_size, square_size,
                                          square_size))
                                     pygame.draw.rect(
-                                        rect, (255, 255, 255),
+                                        rect, theme.THEME_TEXT_COLOR_LIGHT,
                                         (0, 2 * square_size, square_size,
                                          square_size), 2)
                                 elif direction == "SE":
@@ -572,7 +579,7 @@ class GameScene(Scene):
                                         (2 * square_size, 2 * square_size,
                                          square_size, square_size))
                                     pygame.draw.rect(
-                                        rect, (255, 255, 255),
+                                        rect, theme.THEME_TEXT_COLOR_LIGHT,
                                         (2 * square_size, 2 * square_size,
                                          square_size, square_size), 2)
                                 elif direction == "C":
@@ -585,7 +592,7 @@ class GameScene(Scene):
                                         (square_x, square_y, square_size,
                                          square_size))
                                     pygame.draw.rect(
-                                        rect, (255, 255, 255),
+                                        rect, theme.THEME_TEXT_COLOR_LIGHT,
                                         (square_x, square_y, square_size,
                                          square_size), 2)
                                 elif direction == "N":
@@ -600,7 +607,7 @@ class GameScene(Scene):
                                             (mid_x, 0, square_size,
                                              square_size))
                                         pygame.draw.rect(
-                                            rect, (255, 255, 255),
+                                            rect, theme.THEME_TEXT_COLOR_LIGHT,
                                             (mid_x, 0, square_size,
                                              square_size), 2)
                                     else:
@@ -608,7 +615,7 @@ class GameScene(Scene):
                                             rect, hover_color,
                                             (0, 0, tile_size, square_size))
                                         pygame.draw.rect(
-                                            rect, (255, 255, 255),
+                                            rect, theme.THEME_TEXT_COLOR_LIGHT,
                                             (0, 0, tile_size, square_size), 2)
                                 elif direction == "S":
                                     edge_has_corners = bool(
@@ -622,7 +629,7 @@ class GameScene(Scene):
                                             (mid_x, 2 * square_size,
                                              square_size, square_size))
                                         pygame.draw.rect(
-                                            rect, (255, 255, 255),
+                                            rect, theme.THEME_TEXT_COLOR_LIGHT,
                                             (mid_x, 2 * square_size,
                                              square_size, square_size), 2)
                                     else:
@@ -631,7 +638,7 @@ class GameScene(Scene):
                                             (0, 2 * square_size, tile_size,
                                              square_size))
                                         pygame.draw.rect(
-                                            rect, (255, 255, 255),
+                                            rect, theme.THEME_TEXT_COLOR_LIGHT,
                                             (0, 2 * square_size, tile_size,
                                              square_size), 2)
                                 elif direction == "E":
@@ -646,7 +653,7 @@ class GameScene(Scene):
                                             (2 * square_size, mid_y,
                                              square_size, square_size))
                                         pygame.draw.rect(
-                                            rect, (255, 255, 255),
+                                            rect, theme.THEME_TEXT_COLOR_LIGHT,
                                             (2 * square_size, mid_y,
                                              square_size, square_size), 2)
                                     else:
@@ -655,7 +662,7 @@ class GameScene(Scene):
                                             (2 * square_size, 0, square_size,
                                              tile_size))
                                         pygame.draw.rect(
-                                            rect, (255, 255, 255),
+                                            rect, theme.THEME_TEXT_COLOR_LIGHT,
                                             (2 * square_size, 0, square_size,
                                              tile_size), 2)
                                 elif direction == "W":
@@ -670,7 +677,7 @@ class GameScene(Scene):
                                             (0, mid_y, square_size,
                                              square_size))
                                         pygame.draw.rect(
-                                            rect, (255, 255, 255),
+                                            rect, theme.THEME_TEXT_COLOR_LIGHT,
                                             (0, mid_y, square_size,
                                              square_size), 2)
                                     else:
@@ -678,7 +685,7 @@ class GameScene(Scene):
                                             rect, hover_color,
                                             (0, 0, square_size, tile_size))
                                         pygame.draw.rect(
-                                            rect, (255, 255, 255),
+                                            rect, theme.THEME_TEXT_COLOR_LIGHT,
                                             (0, 0, square_size, tile_size), 2)
 
                             self.screen.blit(
@@ -731,7 +738,7 @@ class GameScene(Scene):
         panel_x = window_width - sidebar_width
         sidebar_center_x = panel_x + sidebar_width // 2
 
-        pygame.draw.rect(self.screen, (50, 50, 50),
+        pygame.draw.rect(self.screen, theme.THEME_GAME_SIDEBAR_BG_COLOR,
                          (panel_x, 0, sidebar_width, window_height))
         current_y = 50
         section_spacing = 25
@@ -753,12 +760,14 @@ class GameScene(Scene):
             network_mode = settings_manager.get("NETWORK_MODE")
             if network_mode == "local":
                 status_text = "Local mode"
-                status_color = (100, 100, 255)
+                status_color = theme.THEME_GAME_STATUS_LOCAL_COLOR
             else:
                 player_index = settings_manager.get("PLAYER_INDEX")
                 is_my_turn = current_player.get_index() == player_index
                 status_text = "Your Turn" if is_my_turn else "Waiting..."
-                status_color = (0, 255, 0) if is_my_turn else (200, 0, 0)
+                status_color = (theme.THEME_GAME_STATUS_TURN_COLOR
+                                if is_my_turn
+                                else theme.THEME_GAME_STATUS_WAIT_COLOR)
 
             status_surface = self.font.render(status_text, True, status_color)
             status_rect = status_surface.get_rect()
@@ -768,8 +777,9 @@ class GameScene(Scene):
                 self.screen.blit(status_surface, status_rect)
             current_y += status_rect.height + section_spacing
 
-        cards_surface = self.font.render(f"Cards left: {remaining_cards}",
-                                         True, (255, 255, 255))
+        cards_surface = self.font.render(
+            f"Cards left: {remaining_cards}", True,
+            theme.THEME_TEXT_COLOR_LIGHT)
         cards_rect = cards_surface.get_rect()
         cards_rect.centerx = sidebar_center_x
         cards_rect.y = current_y - offset_y
@@ -801,28 +811,22 @@ class GameScene(Scene):
                                              sidebar_width - 10,
                                              player_section_height)
                 if player_bg_rect.bottom > scrollable_content_start_y and player_bg_rect.top < window_height:
-                    pygame.draw.rect(self.screen, (60, 80, 120),
+                    pygame.draw.rect(self.screen,
+                                     theme.THEME_GAME_CURRENT_PLAYER_BG_COLOR,
                                      player_bg_rect)
-                    pygame.draw.rect(self.screen, (100, 150, 255),
+                    pygame.draw.rect(self.screen,
+                                     theme.THEME_GAME_CURRENT_PLAYER_BORDER_COLOR,
                                      player_bg_rect, 2)
 
             try:
                 color_string = player.get_color()
 
-                color_map = {
-                    "red": (255, 100, 100),
-                    "blue": (100, 100, 255),
-                    "green": (100, 255, 100),
-                    "yellow": (255, 255, 100),
-                    "pink": (255, 100, 255),
-                    "black": (200, 200, 200),
-                }
-
-                player_color = color_map.get(color_string, (255, 255, 255))
+                player_color = theme.THEME_PLAYER_COLOR_MAP.get(
+                    color_string, theme.THEME_TEXT_COLOR_LIGHT)
 
             except Exception as e:
                 logger.error(f"Failed to get player color: {e}")
-                player_color = (255, 255, 255)
+                player_color = theme.THEME_TEXT_COLOR_LIGHT
 
             name_text = player.get_name()
             name_surface = self.font.render(name_text, True, player_color)
@@ -833,7 +837,7 @@ class GameScene(Scene):
                 self.screen.blit(name_surface, name_rect)
             current_y += name_rect.height + 5
 
-            score_color = (200, 200, 200)
+            score_color = theme.THEME_GAME_SCORE_TEXT_COLOR
             score_surface = self.font.render(f"Score: {player.get_score()}",
                                              True, score_color)
             score_rect = score_surface.get_rect()
@@ -885,8 +889,8 @@ class GameScene(Scene):
             current_y += section_spacing
 
             thinking_text = f"AI is thinking..."
-            thinking_surface = self.font.render(thinking_text, True,
-                                                (255, 255, 100))
+            thinking_surface = self.font.render(
+                thinking_text, True, theme.THEME_GAME_AI_THINKING_COLOR)
             thinking_rect = thinking_surface.get_rect()
             thinking_rect.centerx = sidebar_center_x
             thinking_rect.y = current_y - offset_y
@@ -907,7 +911,7 @@ class GameScene(Scene):
             current_y += section_spacing
             structure_surface = self.font.render(
                 f"Structures: {len(detected_structures)}", True,
-                (255, 255, 255))
+                theme.THEME_TEXT_COLOR_LIGHT)
             structure_rect = structure_surface.get_rect()
             structure_rect.centerx = sidebar_center_x
             structure_rect.y = current_y - offset_y

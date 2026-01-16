@@ -1,6 +1,8 @@
 import pygame
 import typing
 
+from ui import theme
+
 
 class Button:
     """A clickable button UI component."""
@@ -11,9 +13,11 @@ class Button:
                  font: pygame.font.Font,
                  callback: typing.Optional[typing.Callable] = None,
                  disabled: bool = False,
-                 bg_color: tuple[int, int, int] = (200, 200, 200),
-                 hover_bg_color: tuple[int, int, int] = (220, 220, 220),
-                 pressed_bg_color: tuple[int, int, int] = (160, 160, 160)
+                 bg_color: tuple[int, int, int] = theme.THEME_BUTTON_BG_COLOR,
+                 hover_bg_color: tuple[int, int, int] = (
+                     theme.THEME_BUTTON_HOVER_BG_COLOR),
+                 pressed_bg_color: tuple[int, int, int] = (
+                     theme.THEME_BUTTON_PRESSED_BG_COLOR)
                  ) -> None:
         """
         Initialize the button.
@@ -34,7 +38,7 @@ class Button:
         self.bg_color = bg_color
         self.hover_bg_color = hover_bg_color
         self.pressed_bg_color = pressed_bg_color
-        self.text_color = (0, 0, 0)
+        self.text_color = theme.THEME_BUTTON_TEXT_COLOR
         self.disabled = disabled
         self.callback = callback
         self.is_hovered = False
@@ -43,7 +47,8 @@ class Button:
 
     def _update_render(self) -> None:
         """Update the rendered text for the button."""
-        color = (150, 150, 150) if self.disabled else self.text_color
+        color = (theme.THEME_BUTTON_TEXT_DISABLED_COLOR if self.disabled
+                 else self.text_color)
         self.rendered_text = self.font.render(self.text, True, color)
         self.text_rect = self.rendered_text.get_rect(center=self.rect.center)
 
@@ -58,7 +63,7 @@ class Button:
         draw_rect = self.rect.move(0, y_offset)
         text_rect = self.rendered_text.get_rect(center=draw_rect.center)
         if self.disabled:
-            bg = (180, 180, 180)
+            bg = theme.THEME_BUTTON_DISABLED_BG_COLOR
         elif self.is_pressed:
             bg = self.pressed_bg_color
         elif self.is_hovered:

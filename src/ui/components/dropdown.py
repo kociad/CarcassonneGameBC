@@ -1,6 +1,8 @@
 import pygame
 import typing
 
+from ui import theme
+
 
 class Dropdown:
     """A dropdown selection UI component."""
@@ -12,12 +14,12 @@ class Dropdown:
         options: list[str],
         on_select: typing.Optional[typing.Callable] = None,
         default_index: int = 0,
-        text_color: tuple = (0, 0, 0),
-        bg_color: tuple = (255, 255, 255),
-        border_color: tuple = (0, 0, 0),
-        highlight_color: tuple = (200, 200, 200),
-        hover_bg_color: tuple = (235, 235, 235),
-        hover_option_color: tuple = (230, 230, 230)
+        text_color: tuple = theme.THEME_DROPDOWN_TEXT_COLOR,
+        bg_color: tuple = theme.THEME_DROPDOWN_BG_COLOR,
+        border_color: tuple = theme.THEME_DROPDOWN_BORDER_COLOR,
+        highlight_color: tuple = theme.THEME_DROPDOWN_HIGHLIGHT_COLOR,
+        hover_bg_color: tuple = theme.THEME_DROPDOWN_HOVER_BG_COLOR,
+        hover_option_color: tuple = theme.THEME_DROPDOWN_HOVER_OPTION_COLOR
     ) -> None:
         """
         Initialize the dropdown.
@@ -130,8 +132,10 @@ class Dropdown:
             border = (*tuple(min(255, channel + 40) for channel in self.border_color), alpha)
         else:
             border = (*self.border_color, alpha)
-        text_col = (*((150, 150, 150) if self.disabled else self.text_color),
-                    alpha)
+        text_col = (*(
+            theme.THEME_DROPDOWN_DISABLED_TEXT_COLOR
+            if self.disabled else self.text_color
+        ), alpha)
         highlight = (*self.highlight_color, alpha)
         hover_option = (*self.hover_option_color, alpha)
         local_rect = pygame.Rect(0, 0, self.rect.width, self.rect.height)

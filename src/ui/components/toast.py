@@ -4,14 +4,11 @@ import math
 import logging
 import typing
 
+from ui import theme
+
 logger = logging.getLogger(__name__)
 
-TOAST_COLORS = {
-    "info": ((30, 30, 30), (255, 255, 255)),
-    "success": ((255, 255, 255), (0, 128, 0)),
-    "error": ((255, 255, 255), (128, 0, 0)),
-    "warning": ((0, 0, 0), (255, 215, 0))
-}
+TOAST_COLORS = theme.THEME_TOAST_COLORS
 
 
 class Toast:
@@ -32,7 +29,7 @@ class Toast:
         self.message = message
         self.duration = duration
         self.start_time = None
-        self.font = pygame.font.Font(None, 36)
+        self.font = theme.get_font(theme.THEME_FONT_SIZE_BODY)
         self.type = type if type in TOAST_COLORS else "info"
         self.active = False
 
