@@ -130,6 +130,7 @@ class GamePrepareScene(Scene):
         self.network_mode = network_mode
 
         x_center = screen.get_width() // 2 - 100
+        button_center_x = screen.get_width() // 2
         current_y = 60
 
         self.title_y = current_y
@@ -215,11 +216,13 @@ class GamePrepareScene(Scene):
         self.port_field.set_text(port)
         current_y += 80
 
-        self.start_button = Button((x_center, current_y, 200, 60),
-                                   "Start Game", self.button_font)
+        start_rect = pygame.Rect(0, 0, 200, 60)
+        start_rect.center = (button_center_x, current_y + 30)
+        self.start_button = Button(start_rect, "Start Game", self.button_font)
         current_y += 80
-        self.back_button = Button((x_center, current_y, 200, 60), "Back",
-                                  self.button_font)
+        back_rect = pygame.Rect(0, 0, 200, 60)
+        back_rect.center = (button_center_x, current_y + 30)
+        self.back_button = Button(back_rect, "Back", self.button_font)
 
         self._handle_network_mode_change(network_mode)
 

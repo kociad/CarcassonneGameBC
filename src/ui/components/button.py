@@ -7,6 +7,8 @@ from ui import theme
 class Button:
     """A clickable button UI component."""
 
+    HORIZONTAL_PADDING = 12
+
     def __init__(self,
                  rect: pygame.Rect,
                  text: str,
@@ -43,6 +45,8 @@ class Button:
         self.callback = callback
         self.is_hovered = False
         self.is_pressed = False
+        text_width, _ = self.font.size(self.text)
+        self._resize_to_text(text_width)
         self._update_render()
 
     def _update_render(self) -> None:
@@ -50,7 +54,14 @@ class Button:
         color = (theme.THEME_BUTTON_TEXT_DISABLED_COLOR if self.disabled
                  else self.text_color)
         self.rendered_text = self.font.render(self.text, True, color)
+        self._resize_to_text(self.rendered_text.get_width())
         self.text_rect = self.rendered_text.get_rect(center=self.rect.center)
+
+    def _resize_to_text(self, text_width: int) -> None:
+        center = self.rect.center
+        padded_width = text_width + self.HORIZONTAL_PADDING * 2
+        self.rect.width = max(self.rect.width, padded_width)
+        self.rect.center = center
 
     def set_font(self, font: pygame.font.Font) -> None:
         """Update the font used by the button."""
