@@ -15,7 +15,9 @@ class Dropdown:
         text_color: tuple = (0, 0, 0),
         bg_color: tuple = (255, 255, 255),
         border_color: tuple = (0, 0, 0),
-        highlight_color: tuple = (200, 200, 200)
+        highlight_color: tuple = (200, 200, 200),
+        hover_bg_color: tuple = (235, 235, 235),
+        hover_option_color: tuple = (230, 230, 230)
     ) -> None:
         """
         Initialize the dropdown.
@@ -30,6 +32,8 @@ class Dropdown:
             bg_color: Background color
             border_color: Border color
             highlight_color: Color for highlighting selected option
+            hover_bg_color: Background color when hovering the control
+            hover_option_color: Background color for hovered option
         """
         self.rect = pygame.Rect(rect)
         self.font = font
@@ -42,6 +46,8 @@ class Dropdown:
         self.bg_color = bg_color
         self.border_color = border_color
         self.highlight_color = highlight_color
+        self.hover_bg_color = hover_bg_color
+        self.hover_option_color = hover_option_color
         self.hovered_control = False
         self.hovered_index: typing.Optional[int] = None
 
@@ -114,7 +120,10 @@ class Dropdown:
         draw_surface = pygame.Surface((self.rect.width, full_height),
                                       pygame.SRCALPHA)
         alpha = 150 if self.disabled else 255
-        bg = (*self.bg_color, alpha)
+        bg_base = self.bg_color
+        if self.hovered_control and not self.disabled:
+            bg_base = self.hover_bg_color
+        bg = (*bg_base, alpha)
         if self.disabled:
             border = (*self.border_color, alpha)
         elif self.hovered_control:
@@ -124,7 +133,7 @@ class Dropdown:
         text_col = (*((150, 150, 150) if self.disabled else self.text_color),
                     alpha)
         highlight = (*self.highlight_color, alpha)
-        hover_option = (*tuple(min(255, channel + 20) for channel in self.bg_color), alpha)
+        hover_option = (*self.hover_option_color, alpha)
         local_rect = pygame.Rect(0, 0, self.rect.width, self.rect.height)
         pygame.draw.rect(draw_surface, bg, local_rect)
         pygame.draw.rect(draw_surface, border, local_rect, 2)
