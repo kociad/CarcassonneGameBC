@@ -29,7 +29,8 @@ class SettingsScene(Scene):
         settings_manager.subscribe("DEBUG", self._on_debug_changed)
 
         current_resolution = f"{settings_manager.get('WINDOW_WIDTH')}x{settings_manager.get('WINDOW_HEIGHT')}"
-        x_center = screen.get_width() // 2 - 100
+        self.x_center = screen.get_width() // 2 - 100
+        x_center = self.x_center
         current_y = 60
 
         self.title_y = current_y
@@ -83,20 +84,6 @@ class SettingsScene(Scene):
         current_y += 80
 
         # ===== DEBUG SETTINGS =====
-        self.debug_label_y = current_y
-        current_y += 50
-
-        self.debug_checkbox = Checkbox(
-            rect=(x_center, current_y, 20, 20),
-            checked=settings_manager.get("DEBUG"),
-            on_toggle=lambda value: [
-                self._handle_debug_toggle(value),
-                self.add_toast(
-                    Toast("In order to apply debug setting, restart the game",
-                          type="warning"))
-            ])
-        current_y += 40
-
         self.log_to_console_checkbox = Checkbox(
             rect=(x_center, current_y, 20, 20),
             checked=settings_manager.get("LOG_TO_CONSOLE", True),
@@ -222,6 +209,74 @@ class SettingsScene(Scene):
 
         self.back_button = Button((x_center, current_y, 200, 60), "Back",
                                   self.button_font)
+        self._layout_components()
+
+    def _layout_components(self) -> None:
+        x_center = self.x_center
+        current_y = 60
+
+        self.title_y = current_y
+        current_y += 60
+
+        self.display_label_y = current_y
+        current_y += 50
+
+        self.resolution_dropdown.rect.topleft = (x_center, current_y)
+        current_y += 60
+
+        self.fullscreen_checkbox.rect.topleft = (x_center, current_y)
+        current_y += 80
+
+        self.game_label_y = current_y
+        current_y += 50
+
+        self.valid_placement_checkbox.rect.topleft = (x_center, current_y)
+        current_y += 80
+
+        debug_enabled = settings_manager.get("DEBUG")
+        if debug_enabled:
+            self.debug_label_y = current_y
+            current_y += 50
+        if debug_enabled:
+            self.log_to_console_checkbox.rect.topleft = (x_center, current_y)
+            current_y += 60
+
+            self.fps_slider.rect.topleft = (x_center, current_y)
+            current_y += 40
+
+            self.grid_size_slider.rect.topleft = (x_center, current_y)
+            current_y += 40
+
+            self.tile_size_slider.rect.topleft = (x_center, current_y)
+            current_y += 40
+
+            self.figure_size_slider.rect.topleft = (x_center, current_y)
+            current_y += 40
+
+            self.sidebar_width_slider.rect.topleft = (x_center, current_y)
+            current_y += 40
+
+            self.game_log_max_entries_field.rect.topleft = (
+                x_center, current_y)
+            current_y += 80
+
+        if debug_enabled:
+            self.ai_label_y = current_y
+            current_y += 50
+            self.ai_simulation_checkbox.rect.topleft = (x_center, current_y)
+            current_y += 40
+
+            self.ai_strategic_candidates_field.rect.topleft = (
+                x_center, current_y)
+            current_y += 60
+
+            self.ai_thinking_speed_field.rect.topleft = (x_center, current_y)
+            current_y += 80
+
+        self.apply_button.rect.topleft = (x_center, current_y)
+        current_y += 80
+
+        self.back_button.rect.topleft = (x_center, current_y)
 
     def _on_tile_size_changed(self, new_tile_size):
         new_min_sidebar_width = new_tile_size + 20
@@ -258,6 +313,7 @@ class SettingsScene(Scene):
             settings_manager.set("LOG_TO_CONSOLE", False, temporary=True)
 
     def handle_events(self, events: list[pygame.event.Event]) -> None:
+        self._layout_components()
         self._apply_scroll(events)
         for event in events:
             if event.type == pygame.QUIT:
@@ -270,60 +326,61 @@ class SettingsScene(Scene):
                 continue
             self.fullscreen_checkbox.handle_event(event,
                                                   y_offset=self.scroll_offset)
-            self.debug_checkbox.handle_event(event,
-                                             y_offset=self.scroll_offset)
-            self.log_to_console_checkbox.handle_event(
-                event, y_offset=self.scroll_offset)
+            debug_enabled = settings_manager.get("DEBUG")
+            if debug_enabled:
+                self.log_to_console_checkbox.handle_event(
+                    event, y_offset=self.scroll_offset)
             self.valid_placement_checkbox.handle_event(
                 event, y_offset=self.scroll_offset)
-            self.ai_simulation_checkbox.handle_event(
-                event, y_offset=self.scroll_offset)
-            fps_was_dragging = self.fps_slider.dragging
-            grid_was_dragging = self.grid_size_slider.dragging
-            tile_was_dragging = self.tile_size_slider.dragging
-            figure_was_dragging = self.figure_size_slider.dragging
-            sidebar_was_dragging = self.sidebar_width_slider.dragging
-            self.fps_slider.handle_event(event, y_offset=self.scroll_offset)
-            self.grid_size_slider.handle_event(event,
-                                               y_offset=self.scroll_offset)
-            self.tile_size_slider.handle_event(event,
-                                               y_offset=self.scroll_offset)
-            self.figure_size_slider.handle_event(event,
-                                                 y_offset=self.scroll_offset)
-            self.sidebar_width_slider.handle_event(event,
+            if debug_enabled:
+                self.ai_simulation_checkbox.handle_event(
+                    event, y_offset=self.scroll_offset)
+                fps_was_dragging = self.fps_slider.dragging
+                grid_was_dragging = self.grid_size_slider.dragging
+                tile_was_dragging = self.tile_size_slider.dragging
+                figure_was_dragging = self.figure_size_slider.dragging
+                sidebar_was_dragging = self.sidebar_width_slider.dragging
+                self.fps_slider.handle_event(event, y_offset=self.scroll_offset)
+                self.grid_size_slider.handle_event(event,
                                                    y_offset=self.scroll_offset)
-            if event.type == pygame.MOUSEBUTTONUP:
-                if fps_was_dragging:
-                    self.add_toast(
-                        Toast(
-                            "In order to apply FPS setting, restart the game",
-                            type="warning"))
-                if grid_was_dragging:
-                    self.add_toast(
-                        Toast(
-                            "In order to apply grid size setting, restart the game",
-                            type="warning"))
-                if tile_was_dragging:
-                    self.add_toast(
-                        Toast(
-                            "In order to apply tile size setting, restart the game",
-                            type="warning"))
-                if figure_was_dragging:
-                    self.add_toast(
-                        Toast(
-                            "In order to apply figure size setting, restart the game",
-                            type="warning"))
-                if sidebar_was_dragging:
-                    self.add_toast(
-                        Toast(
-                            "In order to apply sidebar width setting, restart the game",
-                            type="warning"))
-            self.game_log_max_entries_field.handle_event(
-                event, y_offset=self.scroll_offset)
-            self.ai_strategic_candidates_field.handle_event(
-                event, y_offset=self.scroll_offset)
-            self.ai_thinking_speed_field.handle_event(
-                event, y_offset=self.scroll_offset)
+                self.tile_size_slider.handle_event(event,
+                                                   y_offset=self.scroll_offset)
+                self.figure_size_slider.handle_event(event,
+                                                     y_offset=self.scroll_offset)
+                self.sidebar_width_slider.handle_event(event,
+                                                       y_offset=self.scroll_offset)
+                if event.type == pygame.MOUSEBUTTONUP:
+                    if fps_was_dragging:
+                        self.add_toast(
+                            Toast(
+                                "In order to apply FPS setting, restart the game",
+                                type="warning"))
+                    if grid_was_dragging:
+                        self.add_toast(
+                            Toast(
+                                "In order to apply grid size setting, restart the game",
+                                type="warning"))
+                    if tile_was_dragging:
+                        self.add_toast(
+                            Toast(
+                                "In order to apply tile size setting, restart the game",
+                                type="warning"))
+                    if figure_was_dragging:
+                        self.add_toast(
+                            Toast(
+                                "In order to apply figure size setting, restart the game",
+                                type="warning"))
+                    if sidebar_was_dragging:
+                        self.add_toast(
+                            Toast(
+                                "In order to apply sidebar width setting, restart the game",
+                                type="warning"))
+                self.game_log_max_entries_field.handle_event(
+                    event, y_offset=self.scroll_offset)
+                self.ai_strategic_candidates_field.handle_event(
+                    event, y_offset=self.scroll_offset)
+                self.ai_thinking_speed_field.handle_event(
+                    event, y_offset=self.scroll_offset)
             if event.type in (pygame.MOUSEMOTION, pygame.MOUSEBUTTONUP):
                 self.back_button.handle_event(event,
                                               y_offset=self.scroll_offset)
@@ -341,9 +398,6 @@ class SettingsScene(Scene):
                         event.pos, y_offset=self.scroll_offset):
                     self._apply_settings()
 
-    def _handle_debug_toggle(self, value):
-        settings_manager.set("DEBUG", value, temporary=True)
-
     def _handle_ai_simulation_toggle(self, value):
         settings_manager.set("AI_USE_SIMULATION", value, temporary=True)
 
@@ -360,16 +414,15 @@ class SettingsScene(Scene):
         if selected_resolution:
             width, height = map(int, selected_resolution.split("x"))
             changes["WINDOW_WIDTH"] = width
-            changes["WINDOW_HEIGHT"] = height
+        changes["WINDOW_HEIGHT"] = height
 
         changes["FULLSCREEN"] = self.fullscreen_checkbox.is_checked()
-        debug_checked = self.debug_checkbox.is_checked()
-        changes["DEBUG"] = debug_checked
-        if not debug_checked:
+        debug_enabled = settings_manager.get("DEBUG")
+        if not debug_enabled:
             changes["LOG_TO_CONSOLE"] = False
         elif not self.log_to_console_checkbox.is_disabled():
-            changes[
-                "LOG_TO_CONSOLE"] = self.log_to_console_checkbox.is_checked()
+            changes["LOG_TO_CONSOLE"] = self.log_to_console_checkbox.is_checked(
+            )
         if not self.valid_placement_checkbox.is_disabled():
             changes[
                 "SHOW_VALID_PLACEMENTS"] = self.valid_placement_checkbox.is_checked(
@@ -449,11 +502,6 @@ class SettingsScene(Scene):
             if not settings_manager.set(key, value, temporary=False):
                 success = False
 
-        current_debug = settings_manager.get("DEBUG")
-        checkbox_debug = self.debug_checkbox.is_checked()
-        if current_debug != checkbox_debug:
-            settings_manager.set("DEBUG", checkbox_debug, temporary=False)
-
         if success:
             self.add_toast(Toast("Settings successfully saved",
                                  type="success"))
@@ -471,8 +519,10 @@ class SettingsScene(Scene):
 
     def draw(self) -> None:
         self.screen.fill((30, 30, 30))
+        self._layout_components()
         offset_y = self.scroll_offset
         label_font = self.dropdown_font
+        debug_enabled = settings_manager.get("DEBUG")
 
         title_text = self.font.render("Settings", True, (255, 255, 255))
         title_rect = title_text.get_rect(center=(self.screen.get_width() // 2,
@@ -493,17 +543,18 @@ class SettingsScene(Scene):
         game_label_rect.y = self.game_label_y + offset_y
         self.screen.blit(game_label, game_label_rect)
 
-        debug_label = self.dropdown_font.render("Debug", True, (255, 215, 0))
-        debug_label_rect = debug_label.get_rect()
-        debug_label_rect.centerx = self.screen.get_width() // 2
-        debug_label_rect.y = self.debug_label_y + offset_y
-        self.screen.blit(debug_label, debug_label_rect)
-
-        ai_label = self.dropdown_font.render("AI", True, (255, 215, 0))
-        ai_label_rect = ai_label.get_rect()
-        ai_label_rect.centerx = self.screen.get_width() // 2
-        ai_label_rect.y = self.ai_label_y + offset_y
-        self.screen.blit(ai_label, ai_label_rect)
+        if debug_enabled:
+            debug_label = self.dropdown_font.render("Debug", True,
+                                                    (255, 215, 0))
+            debug_label_rect = debug_label.get_rect()
+            debug_label_rect.centerx = self.screen.get_width() // 2
+            debug_label_rect.y = self.debug_label_y + offset_y
+            self.screen.blit(debug_label, debug_label_rect)
+            ai_label = self.dropdown_font.render("AI", True, (255, 215, 0))
+            ai_label_rect = ai_label.get_rect()
+            ai_label_rect.centerx = self.screen.get_width() // 2
+            ai_label_rect.y = self.ai_label_y + offset_y
+            self.screen.blit(ai_label, ai_label_rect)
 
         # Display Settings
         res_label = label_font.render("Resolution:", True, (255, 255, 255))
@@ -530,132 +581,125 @@ class SettingsScene(Scene):
             centery=self.valid_placement_checkbox.rect.centery + offset_y)
         self.screen.blit(valid_placements_label, valid_placements_label_rect)
 
-        # Debug Settings (DEBUG checkbox first)
-        db_label = label_font.render("Debug:", True, (255, 255, 255))
-        db_label_rect = db_label.get_rect(
-            right=self.debug_checkbox.rect.left - 10,
-            centery=self.debug_checkbox.rect.centery + offset_y)
-        self.screen.blit(db_label, db_label_rect)
-
-        label_color = (
-            120, 120,
-            120) if self.log_to_console_checkbox.is_disabled() else (255, 255,
-                                                                     255)
-        log_to_console_label = label_font.render("Log to console:", True,
-                                                 label_color)
-        log_to_console_label_rect = log_to_console_label.get_rect(
-            right=self.log_to_console_checkbox.rect.left - 10,
-            centery=self.log_to_console_checkbox.rect.centery + offset_y)
-        self.screen.blit(log_to_console_label, log_to_console_label_rect)
-
-        label_color = (120, 120,
-                       120) if self.fps_slider.is_disabled() else (255, 255,
-                                                                   255)
-        fps_label = label_font.render("FPS:", True, label_color)
-        fps_label_rect = fps_label.get_rect(
-            right=self.fps_slider.rect.left - 10,
-            centery=self.fps_slider.rect.centery + offset_y)
-        self.screen.blit(fps_label, fps_label_rect)
-
-        label_color = (120, 120,
-                       120) if self.grid_size_slider.is_disabled() else (255,
+        if debug_enabled:
+            label_color = (
+                120, 120,
+                120) if self.log_to_console_checkbox.is_disabled() else (255,
                                                                          255,
                                                                          255)
-        grid_label = label_font.render("Grid size:", True, label_color)
-        grid_label_rect = grid_label.get_rect(
-            right=self.grid_size_slider.rect.left - 10,
-            centery=self.grid_size_slider.rect.centery + offset_y)
-        self.screen.blit(grid_label, grid_label_rect)
+            log_to_console_label = label_font.render("Log to console:", True,
+                                                     label_color)
+            log_to_console_label_rect = log_to_console_label.get_rect(
+                right=self.log_to_console_checkbox.rect.left - 10,
+                centery=self.log_to_console_checkbox.rect.centery + offset_y)
+            self.screen.blit(log_to_console_label, log_to_console_label_rect)
 
-        label_color = (120, 120,
-                       120) if self.tile_size_slider.is_disabled() else (255,
-                                                                         255,
-                                                                         255)
-        tsz_label = label_font.render("Tile size:", True, label_color)
-        tsz_label_rect = tsz_label.get_rect(
-            right=self.tile_size_slider.rect.left - 10,
-            centery=self.tile_size_slider.rect.centery + offset_y)
-        self.screen.blit(tsz_label, tsz_label_rect)
+            label_color = (120, 120,
+                           120) if self.fps_slider.is_disabled() else (255, 255,
+                                                                       255)
+            fps_label = label_font.render("FPS:", True, label_color)
+            fps_label_rect = fps_label.get_rect(
+                right=self.fps_slider.rect.left - 10,
+                centery=self.fps_slider.rect.centery + offset_y)
+            self.screen.blit(fps_label, fps_label_rect)
 
-        label_color = (120, 120,
-                       120) if self.figure_size_slider.is_disabled() else (255,
-                                                                           255,
-                                                                           255)
-        fsz_label = label_font.render("Figure size:", True, label_color)
-        fsz_label_rect = fsz_label.get_rect(
-            right=self.figure_size_slider.rect.left - 10,
-            centery=self.figure_size_slider.rect.centery + offset_y)
-        self.screen.blit(fsz_label, fsz_label_rect)
+            label_color = (120, 120,
+                           120) if self.grid_size_slider.is_disabled() else (
+                               255, 255, 255)
+            grid_label = label_font.render("Grid size:", True, label_color)
+            grid_label_rect = grid_label.get_rect(
+                right=self.grid_size_slider.rect.left - 10,
+                centery=self.grid_size_slider.rect.centery + offset_y)
+            self.screen.blit(grid_label, grid_label_rect)
 
-        label_color = (120, 120,
-                       120) if self.sidebar_width_slider.is_disabled() else (
-                           255, 255, 255)
-        sbw_label = label_font.render("Sidebar width:", True, label_color)
-        sbw_label_rect = sbw_label.get_rect(
-            right=self.sidebar_width_slider.rect.left - 10,
-            centery=self.sidebar_width_slider.rect.centery + offset_y)
-        self.screen.blit(sbw_label, sbw_label_rect)
+            label_color = (120, 120,
+                           120) if self.tile_size_slider.is_disabled() else (
+                               255, 255, 255)
+            tsz_label = label_font.render("Tile size:", True, label_color)
+            tsz_label_rect = tsz_label.get_rect(
+                right=self.tile_size_slider.rect.left - 10,
+                centery=self.tile_size_slider.rect.centery + offset_y)
+            self.screen.blit(tsz_label, tsz_label_rect)
 
-        label_color = (
-            120, 120,
-            120) if self.game_log_max_entries_field.is_disabled() else (255,
-                                                                        255,
-                                                                        255)
-        log_label = label_font.render("Game log max entries:", True,
-                                      label_color)
-        log_label_rect = log_label.get_rect(
-            right=self.game_log_max_entries_field.rect.left - 10,
-            centery=self.game_log_max_entries_field.rect.centery + offset_y)
-        self.screen.blit(log_label, log_label_rect)
+            label_color = (120, 120,
+                           120) if self.figure_size_slider.is_disabled() else (
+                               255, 255, 255)
+            fsz_label = label_font.render("Figure size:", True, label_color)
+            fsz_label_rect = fsz_label.get_rect(
+                right=self.figure_size_slider.rect.left - 10,
+                centery=self.figure_size_slider.rect.centery + offset_y)
+            self.screen.blit(fsz_label, fsz_label_rect)
+
+            label_color = (120, 120,
+                           120) if self.sidebar_width_slider.is_disabled() else (
+                               255, 255, 255)
+            sbw_label = label_font.render("Sidebar width:", True, label_color)
+            sbw_label_rect = sbw_label.get_rect(
+                right=self.sidebar_width_slider.rect.left - 10,
+                centery=self.sidebar_width_slider.rect.centery + offset_y)
+            self.screen.blit(sbw_label, sbw_label_rect)
+
+            label_color = (
+                120, 120,
+                120) if self.game_log_max_entries_field.is_disabled() else (
+                    255, 255, 255)
+            log_label = label_font.render("Game log max entries:", True,
+                                          label_color)
+            log_label_rect = log_label.get_rect(
+                right=self.game_log_max_entries_field.rect.left - 10,
+                centery=self.game_log_max_entries_field.rect.centery + offset_y)
+            self.screen.blit(log_label, log_label_rect)
 
         # AI Settings
-        label_color = (120, 120,
-                       120) if self.ai_simulation_checkbox.is_disabled() else (
-                           255, 255, 255)
-        ai_simulation_label = label_font.render("AI simulation:", True,
-                                                label_color)
-        ai_simulation_label_rect = ai_simulation_label.get_rect(
-            right=self.ai_simulation_checkbox.rect.left - 10,
-            centery=self.ai_simulation_checkbox.rect.centery + offset_y)
-        self.screen.blit(ai_simulation_label, ai_simulation_label_rect)
+        if debug_enabled:
+            label_color = (120, 120,
+                           120) if self.ai_simulation_checkbox.is_disabled() else (
+                               255, 255, 255)
+            ai_simulation_label = label_font.render("AI simulation:", True,
+                                                    label_color)
+            ai_simulation_label_rect = ai_simulation_label.get_rect(
+                right=self.ai_simulation_checkbox.rect.left - 10,
+                centery=self.ai_simulation_checkbox.rect.centery + offset_y)
+            self.screen.blit(ai_simulation_label, ai_simulation_label_rect)
 
-        label_color = (
-            120, 120,
-            120) if self.ai_strategic_candidates_field.is_disabled() else (255,
-                                                                           255,
-                                                                           255)
-        ai_candidates_label = label_font.render("AI strategic candidates:",
-                                                True, label_color)
-        ai_candidates_label_rect = ai_candidates_label.get_rect(
-            right=self.ai_strategic_candidates_field.rect.left - 10,
-            centery=self.ai_strategic_candidates_field.rect.centery + offset_y)
-        self.screen.blit(ai_candidates_label, ai_candidates_label_rect)
+            label_color = (
+                120, 120,
+                120) if self.ai_strategic_candidates_field.is_disabled() else (
+                    255, 255, 255)
+            ai_candidates_label = label_font.render("AI strategic candidates:",
+                                                    True, label_color)
+            ai_candidates_label_rect = ai_candidates_label.get_rect(
+                right=self.ai_strategic_candidates_field.rect.left - 10,
+                centery=self.ai_strategic_candidates_field.rect.centery + offset_y)
+            self.screen.blit(ai_candidates_label, ai_candidates_label_rect)
 
-        label_color = (
-            120, 120,
-            120) if self.ai_thinking_speed_field.is_disabled() else (255, 255,
-                                                                     255)
-        thinking_speed_label = label_font.render("AI Thinking Speed (s):",
-                                                 True, label_color)
-        thinking_speed_label_rect = thinking_speed_label.get_rect(
-            right=self.ai_thinking_speed_field.rect.left - 10,
-            centery=self.ai_thinking_speed_field.rect.centery + offset_y)
-        self.screen.blit(thinking_speed_label, thinking_speed_label_rect)
+            label_color = (
+                120, 120,
+                120) if self.ai_thinking_speed_field.is_disabled() else (255,
+                                                                         255,
+                                                                         255)
+            thinking_speed_label = label_font.render("AI Thinking Speed (s):",
+                                                     True, label_color)
+            thinking_speed_label_rect = thinking_speed_label.get_rect(
+                right=self.ai_thinking_speed_field.rect.left - 10,
+                centery=self.ai_thinking_speed_field.rect.centery + offset_y)
+            self.screen.blit(thinking_speed_label, thinking_speed_label_rect)
 
         # Draw all UI components in logical order
         self.fullscreen_checkbox.draw(self.screen, y_offset=offset_y)
         self.valid_placement_checkbox.draw(self.screen, y_offset=offset_y)
-        self.debug_checkbox.draw(self.screen, y_offset=offset_y)
-        self.log_to_console_checkbox.draw(self.screen, y_offset=offset_y)
-        self.fps_slider.draw(self.screen, y_offset=offset_y)
-        self.grid_size_slider.draw(self.screen, y_offset=offset_y)
-        self.tile_size_slider.draw(self.screen, y_offset=offset_y)
-        self.figure_size_slider.draw(self.screen, y_offset=offset_y)
-        self.sidebar_width_slider.draw(self.screen, y_offset=offset_y)
-        self.game_log_max_entries_field.draw(self.screen, y_offset=offset_y)
-        self.ai_simulation_checkbox.draw(self.screen, y_offset=offset_y)
-        self.ai_strategic_candidates_field.draw(self.screen, y_offset=offset_y)
-        self.ai_thinking_speed_field.draw(self.screen, y_offset=offset_y)
+        if debug_enabled:
+            self.log_to_console_checkbox.draw(self.screen, y_offset=offset_y)
+            self.fps_slider.draw(self.screen, y_offset=offset_y)
+            self.grid_size_slider.draw(self.screen, y_offset=offset_y)
+            self.tile_size_slider.draw(self.screen, y_offset=offset_y)
+            self.figure_size_slider.draw(self.screen, y_offset=offset_y)
+            self.sidebar_width_slider.draw(self.screen, y_offset=offset_y)
+            self.game_log_max_entries_field.draw(self.screen, y_offset=offset_y)
+            self.ai_simulation_checkbox.draw(self.screen, y_offset=offset_y)
+            self.ai_strategic_candidates_field.draw(self.screen,
+                                                    y_offset=offset_y)
+            self.ai_thinking_speed_field.draw(self.screen, y_offset=offset_y)
         self.resolution_dropdown.draw(self.screen, y_offset=offset_y)
 
         self.apply_button.draw(self.screen, y_offset=offset_y)
