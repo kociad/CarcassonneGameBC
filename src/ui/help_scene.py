@@ -44,11 +44,11 @@ class HelpScene(Scene):
         line_height = 30
         self.controls_height = len(self.controls) * line_height
         current_y += self.controls_height + 40
-        rules_rect = pygame.Rect(0, 0, 200, 60)
+        rules_rect = pygame.Rect(0, 0, 0, 60)
         rules_rect.center = (center_x, current_y + 30)
         self.rules_button = Button(rules_rect, "Wiki", self.button_font)
         current_y += 80
-        back_rect = pygame.Rect(0, 0, 200, 60)
+        back_rect = pygame.Rect(0, 0, 0, 60)
         back_rect.center = (center_x, current_y + 30)
         self.back_button = Button(back_rect, "Back", self.button_font)
         self.max_scroll = max(screen.get_height(), current_y + 100)

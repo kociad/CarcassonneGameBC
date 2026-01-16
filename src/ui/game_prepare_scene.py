@@ -139,12 +139,16 @@ class GamePrepareScene(Scene):
         self.player_label_y = current_y
         current_y += 50
 
-        self.add_player_button = Button(
-            (self.screen.get_width() // 2 + 180, current_y + 60, 40, 40), "+",
-            self.button_font)
-        self.remove_player_button = Button(
-            (self.screen.get_width() // 2 + 230, current_y + 60, 40, 40), "−",
-            self.button_font)
+        add_player_rect = pygame.Rect(0, 0, 0, 40)
+        add_player_rect.center = (self.screen.get_width() // 2 + 200,
+                                  current_y + 80)
+        self.add_player_button = Button(add_player_rect, "+",
+                                        self.button_font)
+        remove_player_rect = pygame.Rect(0, 0, 0, 40)
+        remove_player_rect.center = (self.screen.get_width() // 2 + 250,
+                                     current_y + 80)
+        self.remove_player_button = Button(remove_player_rect, "−",
+                                           self.button_font)
 
         self.player_list_y = current_y
 
@@ -216,11 +220,11 @@ class GamePrepareScene(Scene):
         self.port_field.set_text(port)
         current_y += 80
 
-        start_rect = pygame.Rect(0, 0, 200, 60)
+        start_rect = pygame.Rect(0, 0, 0, 60)
         start_rect.center = (button_center_x, current_y + 30)
         self.start_button = Button(start_rect, "Start game", self.button_font)
         current_y += 80
-        back_rect = pygame.Rect(0, 0, 200, 60)
+        back_rect = pygame.Rect(0, 0, 0, 60)
         back_rect.center = (button_center_x, current_y + 30)
         self.back_button = Button(back_rect, "Back", self.button_font)
 

@@ -31,7 +31,7 @@ class LobbyScene(Scene):
         self.is_host = (getattr(self.network, 'network_mode',
                                 'local') == 'host')
         self.network_mode = getattr(self.network, 'network_mode', 'local')
-        start_rect = pygame.Rect(0, 0, 200, 60)
+        start_rect = pygame.Rect(0, 0, 0, 60)
         start_rect.center = (screen.get_width() // 2,
                              screen.get_height() - 120 + 30)
         self.start_button = Button(start_rect, "Start Game", self.button_font)

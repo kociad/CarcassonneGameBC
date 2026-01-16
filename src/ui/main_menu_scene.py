@@ -30,35 +30,37 @@ class MainMenuScene(Scene):
         self.show_confirm_dialog = False
         center_x = screen.get_width() // 2
         center_y = screen.get_height() // 2
-        continue_rect = pygame.Rect(0, 0, 200, 60)
+        continue_rect = pygame.Rect(0, 0, 0, 60)
         continue_rect.center = (center_x, center_y - 80)
         self.continue_button = Button(continue_rect, "Continue",
                                       self.button_font,
                                       None,
                                       disabled=(self.get_game_session()
                                                 is None))
-        start_rect = pygame.Rect(0, 0, 200, 60)
+        start_rect = pygame.Rect(0, 0, 0, 60)
         start_rect.center = (center_x, center_y)
         self.start_button = Button(start_rect, "New game", self.button_font)
-        how_to_play_rect = pygame.Rect(0, 0, 200, 60)
+        how_to_play_rect = pygame.Rect(0, 0, 0, 60)
         how_to_play_rect.center = (center_x, center_y + 80)
         self.how_to_play_button = Button(how_to_play_rect, "How to play",
                                          self.button_font)
-        settings_rect = pygame.Rect(0, 0, 200, 60)
+        settings_rect = pygame.Rect(0, 0, 0, 60)
         settings_rect.center = (center_x, center_y + 160)
         self.settings_button = Button(settings_rect, "Settings",
                                       self.button_font)
-        quit_rect = pygame.Rect(0, 0, 200, 60)
+        quit_rect = pygame.Rect(0, 0, 0, 60)
         quit_rect.center = (center_x, center_y + 240)
         self.quit_button = Button(quit_rect, "Quit", self.button_font)
         dialog_center_x = screen.get_width() // 2
         dialog_center_y = screen.get_height() // 2
-        self.confirm_yes_button = Button(
-            (dialog_center_x - 120, dialog_center_y + 40, 100, 40), "Yes",
-            self.dialog_font)
-        self.confirm_no_button = Button(
-            (dialog_center_x + 20, dialog_center_y + 40, 100, 40), "No",
-            self.dialog_font)
+        confirm_yes_rect = pygame.Rect(0, 0, 0, 40)
+        confirm_yes_rect.center = (dialog_center_x - 70, dialog_center_y + 60)
+        self.confirm_yes_button = Button(confirm_yes_rect, "Yes",
+                                         self.dialog_font)
+        confirm_no_rect = pygame.Rect(0, 0, 0, 40)
+        confirm_no_rect.center = (dialog_center_x + 70, dialog_center_y + 60)
+        self.confirm_no_button = Button(confirm_no_rect, "No",
+                                        self.dialog_font)
 
     def cleanup_previous_game(self):
         """Clean up resources from previous game session."""
