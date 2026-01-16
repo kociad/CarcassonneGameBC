@@ -28,22 +28,29 @@ class MainMenuScene(Scene):
         self.max_scroll = 0
         self.scroll_speed = 30
         self.show_confirm_dialog = False
-        center_x = screen.get_width() // 2 - 100
+        center_x = screen.get_width() // 2
         center_y = screen.get_height() // 2
-        self.continue_button = Button((center_x, center_y - 80, 200, 60),
-                                      "Continue",
+        continue_rect = pygame.Rect(0, 0, 200, 60)
+        continue_rect.center = (center_x, center_y - 80)
+        self.continue_button = Button(continue_rect, "Continue",
                                       self.button_font,
                                       None,
                                       disabled=(self.get_game_session()
                                                 is None))
-        self.start_button = Button((center_x, center_y, 200, 60), "New Game",
-                                   self.button_font)
-        self.how_to_play_button = Button((center_x, center_y + 80, 200, 60),
-                                         "How to play", self.button_font)
-        self.settings_button = Button((center_x, center_y + 160, 200, 60),
-                                      "Settings", self.button_font)
-        self.quit_button = Button((center_x, center_y + 240, 200, 60), "Quit",
-                                  self.button_font)
+        start_rect = pygame.Rect(0, 0, 200, 60)
+        start_rect.center = (center_x, center_y)
+        self.start_button = Button(start_rect, "New Game", self.button_font)
+        how_to_play_rect = pygame.Rect(0, 0, 200, 60)
+        how_to_play_rect.center = (center_x, center_y + 80)
+        self.how_to_play_button = Button(how_to_play_rect, "How to play",
+                                         self.button_font)
+        settings_rect = pygame.Rect(0, 0, 200, 60)
+        settings_rect.center = (center_x, center_y + 160)
+        self.settings_button = Button(settings_rect, "Settings",
+                                      self.button_font)
+        quit_rect = pygame.Rect(0, 0, 200, 60)
+        quit_rect.center = (center_x, center_y + 240)
+        self.quit_button = Button(quit_rect, "Quit", self.button_font)
         dialog_center_x = screen.get_width() // 2
         dialog_center_y = screen.get_height() // 2
         self.confirm_yes_button = Button(

@@ -31,6 +31,7 @@ class SettingsScene(Scene):
 
         current_resolution = f"{settings_manager.get('WINDOW_WIDTH')}x{settings_manager.get('WINDOW_HEIGHT')}"
         x_center = screen.get_width() // 2 - 100
+        button_center_x = screen.get_width() // 2
         current_y = 60
 
         self.title_y = current_y
@@ -206,13 +207,15 @@ class SettingsScene(Scene):
             not settings_manager.get("DEBUG"))
         current_y += 80
 
-        self.apply_button = Button((x_center, current_y, 200, 60), "Apply",
-                                   self.button_font,
+        apply_rect = pygame.Rect(0, 0, 200, 60)
+        apply_rect.center = (button_center_x, current_y + 30)
+        self.apply_button = Button(apply_rect, "Apply", self.button_font,
                                    lambda: self._apply_settings())
         current_y += 80
 
-        self.back_button = Button((x_center, current_y, 200, 60), "Back",
-                                  self.button_font,
+        back_rect = pygame.Rect(0, 0, 200, 60)
+        back_rect.center = (button_center_x, current_y + 30)
+        self.back_button = Button(back_rect, "Back", self.button_font,
                                   lambda: self.switch_scene(GameState.MENU))
 
         self._layout_controls(settings_manager.get("DEBUG"))
@@ -233,6 +236,11 @@ class SettingsScene(Scene):
         width, height = component.rect.size
         component.rect = pygame.Rect(x, y, width, height)
 
+    def _set_component_center(self, component, center_x: int, y: int) -> None:
+        width, height = component.rect.size
+        component.rect = pygame.Rect(0, 0, width, height)
+        component.rect.center = (center_x, y + height // 2)
+
     def _set_slider_rect(self, slider: Slider, x: int, y: int) -> None:
         width, height = slider.rect.size
         slider.rect = pygame.Rect(x, y, width, height)
@@ -242,6 +250,7 @@ class SettingsScene(Scene):
 
     def _layout_controls(self, debug_enabled: bool) -> None:
         x_center = self.screen.get_width() // 2 - 100
+        button_center_x = self.screen.get_width() // 2
         current_y = 60
 
         self.title_y = current_y
@@ -309,10 +318,12 @@ class SettingsScene(Scene):
         else:
             self.ai_label_y = current_y
 
-        self._set_component_rect(self.apply_button, x_center, current_y)
+        self._set_component_center(self.apply_button, button_center_x,
+                                   current_y)
         current_y += 80
 
-        self._set_component_rect(self.back_button, x_center, current_y)
+        self._set_component_center(self.back_button, button_center_x,
+                                   current_y)
 
     def _on_fullscreen_changed(self, key, old_value, new_value):
         self.resolution_dropdown.set_disabled(new_value)

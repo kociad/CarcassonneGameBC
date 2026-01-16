@@ -31,9 +31,10 @@ class LobbyScene(Scene):
         self.is_host = (getattr(self.network, 'network_mode',
                                 'local') == 'host')
         self.network_mode = getattr(self.network, 'network_mode', 'local')
-        self.start_button = Button((screen.get_width() // 2 - 100,
-                                    screen.get_height() - 120, 200, 60),
-                                   "Start Game", self.button_font)
+        start_rect = pygame.Rect(0, 0, 200, 60)
+        start_rect.center = (screen.get_width() // 2,
+                             screen.get_height() - 120 + 30)
+        self.start_button = Button(start_rect, "Start Game", self.button_font)
         self.waiting_for_host = False
         self.original_player_names = settings_manager.get("PLAYERS", [])
         if self.network_mode == "local":
