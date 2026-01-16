@@ -119,10 +119,12 @@ class InputField:
             return ""
         if isinstance(data, bytes):
             try:
-                return data.decode('utf-8')
+                text = data.decode('utf-8')
             except UnicodeDecodeError:
-                return data.decode('latin1', errors='ignore')
-        return str(data)
+                text = data.decode('latin1', errors='ignore')
+        else:
+            text = str(data)
+        return text.replace('\x00', '')
 
     def _filter_numeric_insert(self, insert_text: str,
                                base_text: str,
