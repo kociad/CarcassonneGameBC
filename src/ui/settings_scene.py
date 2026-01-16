@@ -109,7 +109,7 @@ class SettingsScene(Scene):
                                  value=settings_manager.get("FPS", 60),
                                  on_change=None)
         self.fps_slider.set_disabled(not settings_manager.get("DEBUG"))
-        current_y += 40
+        current_y += self.fps_slider.rect.height + 20
 
         self.grid_size_slider = Slider(rect=(x_center, current_y, 180, 20),
                                        font=self.dropdown_font,
@@ -119,7 +119,7 @@ class SettingsScene(Scene):
                                            "GRID_SIZE", 20),
                                        on_change=None)
         self.grid_size_slider.set_disabled(not settings_manager.get("DEBUG"))
-        current_y += 40
+        current_y += self.grid_size_slider.rect.height + 20
 
         self.tile_size_slider = Slider(rect=(x_center, current_y, 180, 20),
                                        font=self.dropdown_font,
@@ -128,7 +128,7 @@ class SettingsScene(Scene):
                                        value=settings_manager.get("TILE_SIZE"),
                                        on_change=None)
         self.tile_size_slider.set_disabled(not settings_manager.get("DEBUG"))
-        current_y += 40
+        current_y += self.tile_size_slider.rect.height + 20
 
         self.figure_size_slider = Slider(
             rect=(x_center, current_y, 180, 20),
@@ -138,7 +138,7 @@ class SettingsScene(Scene):
             value=settings_manager.get("FIGURE_SIZE"),
             on_change=None)
         self.figure_size_slider.set_disabled(not settings_manager.get("DEBUG"))
-        current_y += 40
+        current_y += self.figure_size_slider.rect.height + 20
 
         current_tile_size = settings_manager.get("TILE_SIZE")
         current_sidebar_width = settings_manager.get("SIDEBAR_WIDTH")
@@ -152,7 +152,7 @@ class SettingsScene(Scene):
                                            on_change=None)
         self.sidebar_width_slider.set_disabled(
             not settings_manager.get("DEBUG"))
-        current_y += 40
+        current_y += self.sidebar_width_slider.rect.height + 20
 
         self.game_log_max_entries_field = InputField(
             rect=(x_center, current_y, 200, 40),
@@ -281,21 +281,21 @@ class SettingsScene(Scene):
             current_y += 60
 
             self._set_slider_rect(self.fps_slider, x_center, current_y)
-            current_y += 40
+            current_y += self.fps_slider.rect.height + 20
 
             self._set_slider_rect(self.grid_size_slider, x_center, current_y)
-            current_y += 40
+            current_y += self.grid_size_slider.rect.height + 20
 
             self._set_slider_rect(self.tile_size_slider, x_center, current_y)
-            current_y += 40
+            current_y += self.tile_size_slider.rect.height + 20
 
             self._set_slider_rect(self.figure_size_slider, x_center,
                                   current_y)
-            current_y += 40
+            current_y += self.figure_size_slider.rect.height + 20
 
             self._set_slider_rect(self.sidebar_width_slider, x_center,
                                   current_y)
-            current_y += 40
+            current_y += self.sidebar_width_slider.rect.height + 20
 
             self._set_component_rect(self.game_log_max_entries_field,
                                      x_center, current_y)
