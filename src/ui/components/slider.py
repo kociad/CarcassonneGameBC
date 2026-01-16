@@ -38,10 +38,17 @@ class Slider:
         self.disabled = False
         self.handle_radius = 10
         self.dragging = False
+        self.hovered_handle = False
+        self.hovered_track = False
         self.bg_color = (200, 200, 200)
         self.fg_color = (100, 100, 255)
         self.handle_color = (255, 255, 255)
         self.border_color = (0, 0, 0)
+        self.handle_hover_color = (235, 235, 255)
+        self.handle_active_color = (180, 180, 255)
+        self.track_hover_color = (120, 120, 255)
+        self.track_active_color = (80, 80, 230)
+        self.hover_border_color = (50, 50, 50)
         self.disabled_bg_color = (100, 100, 100)
         self.disabled_fg_color = (60, 60, 60)
         self.disabled_handle_color = (150, 150, 150)
@@ -136,6 +143,8 @@ class Slider:
                 and event.key == pygame.K_RETURN):
             self._validate_and_apply_input()
         if self.disabled:
+            self.hovered_handle = False
+            self.hovered_track = False
             return
         shifted_rect = self.rect.move(0, y_offset)
         handle_rect = self._handle_rect(y_offset)
@@ -157,19 +166,22 @@ class Slider:
                             self.on_change(new_value)
         elif event.type == pygame.MOUSEBUTTONUP:
             self.dragging = False
-        elif event.type == pygame.MOUSEMOTION and self.dragging:
-            rel_x = min(max(event.pos[0], shifted_rect.left),
-                        shifted_rect.right)
-            ratio = (rel_x - shifted_rect.left) / shifted_rect.width
-            new_value = int(self.min_value + ratio *
-                            (self.max_value - self.min_value))
-            if new_value != self.value:
-                self.value = new_value
-                self.input_field.set_text(str(new_value))
-                if new_value != self.last_reported_value:
-                    self.last_reported_value = new_value
-                    if self.on_change:
-                        self.on_change(new_value)
+        elif event.type == pygame.MOUSEMOTION:
+            self.hovered_handle = handle_rect.collidepoint(event.pos)
+            self.hovered_track = shifted_rect.collidepoint(event.pos)
+            if self.dragging:
+                rel_x = min(max(event.pos[0], shifted_rect.left),
+                            shifted_rect.right)
+                ratio = (rel_x - shifted_rect.left) / shifted_rect.width
+                new_value = int(self.min_value + ratio *
+                                (self.max_value - self.min_value))
+                if new_value != self.value:
+                    self.value = new_value
+                    self.input_field.set_text(str(new_value))
+                    if new_value != self.last_reported_value:
+                        self.last_reported_value = new_value
+                        if self.on_change:
+                            self.on_change(new_value)
 
     def _handle_rect(self, y_offset: int = 0) -> pygame.Rect:
         """
@@ -208,6 +220,15 @@ class Slider:
             fg_color = self.fg_color
             handle_color = self.handle_color
             border_color = self.border_color
+            if self.hovered_track and not self.dragging:
+                fg_color = self.track_hover_color
+            if self.dragging:
+                fg_color = self.track_active_color
+            if self.hovered_handle and not self.dragging:
+                handle_color = self.handle_hover_color
+                border_color = self.hover_border_color
+            if self.dragging:
+                handle_color = self.handle_active_color
         pygame.draw.rect(surface, bg_color, shifted_rect)
         pygame.draw.rect(surface, border_color, shifted_rect, 1)
         fill_width = ((self.value - self.min_value) /
