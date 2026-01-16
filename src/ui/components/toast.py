@@ -27,7 +27,7 @@ class Toast:
         self.message = message
         self.duration = duration
         self.start_time = None
-        self.font = theme.get_font(theme.THEME_FONT_SIZE_BODY)
+        self.font = theme.get_font("body", theme.THEME_FONT_SIZE_BODY)
         self.type = type if type in theme.THEME_TOAST_COLORS else "info"
         self.active = False
 
@@ -235,7 +235,7 @@ class Toast:
     def apply_theme(self) -> None:
         """Refresh colors from the current theme."""
         self.text_color, self.bg_color = theme.THEME_TOAST_COLORS[self.type]
-        self.set_font(theme.get_font(theme.THEME_FONT_SIZE_BODY))
+        self.set_font(theme.get_font("body", theme.THEME_FONT_SIZE_BODY))
 
     @staticmethod
     def _apply_alpha(color: tuple[int, ...], override_alpha: int) -> tuple[int, int, int, int]:

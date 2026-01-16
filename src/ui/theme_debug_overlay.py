@@ -57,13 +57,13 @@ class ThemeDebugOverlay:
             screen_height - (self.panel_margin * 2),
         )
         self.title_font = theme.get_font(
-            max(18, int(theme.THEME_FONT_SIZE_BODY * 0.6))
+            "title", max(18, int(theme.THEME_FONT_SIZE_BODY * 0.6))
         )
         self.label_font = theme.get_font(
-            max(14, int(theme.THEME_FONT_SIZE_BODY * 0.45))
+            "label", max(14, int(theme.THEME_FONT_SIZE_BODY * 0.45))
         )
         self.control_font = theme.get_font(
-            max(14, int(theme.THEME_FONT_SIZE_BODY * 0.45))
+            "label", max(14, int(theme.THEME_FONT_SIZE_BODY * 0.45))
         )
         button_size = 36
         toggle_rect = pygame.Rect(0, 0, 0, button_size)
@@ -74,7 +74,7 @@ class ThemeDebugOverlay:
         self.toggle_button = Button(
             rect=toggle_rect,
             text="DBG",
-            font=theme.get_font(16),
+            font=theme.get_font("button", 16),
             callback=self.toggle,
         )
         save_rect = pygame.Rect(0, 0, 0, 36)
@@ -85,7 +85,7 @@ class ThemeDebugOverlay:
         self.save_button = Button(
             rect=save_rect,
             text="Save",
-            font=theme.get_font(18),
+            font=theme.get_font("button", 18),
             callback=self._save_theme,
         )
 
@@ -622,9 +622,15 @@ class ThemeDebugOverlay:
         return channels[:4]
 
     def _set_theme_value(self, name: str, value: typing.Any) -> None:
+        current_value = getattr(theme, name, None)
+        if current_value == value:
+            return
         setattr(theme, name, value)
         theme.refresh_theme_state()
-        theme.clear_font_cache()
+        if name.startswith("THEME_FONT_FAMILY_") or name.startswith(
+            "THEME_FONT_SIZE_"
+        ):
+            theme.clear_font_cache()
         self._on_theme_update()
         self.refresh_theme()
 
@@ -723,18 +729,18 @@ class ThemeDebugOverlay:
 
     def refresh_theme(self) -> None:
         self.title_font = theme.get_font(
-            max(18, int(theme.THEME_FONT_SIZE_BODY * 0.6))
+            "title", max(18, int(theme.THEME_FONT_SIZE_BODY * 0.6))
         )
         self.label_font = theme.get_font(
-            max(14, int(theme.THEME_FONT_SIZE_BODY * 0.45))
+            "label", max(14, int(theme.THEME_FONT_SIZE_BODY * 0.45))
         )
         self.control_font = theme.get_font(
-            max(14, int(theme.THEME_FONT_SIZE_BODY * 0.45))
+            "label", max(14, int(theme.THEME_FONT_SIZE_BODY * 0.45))
         )
         self.toggle_button.apply_theme()
         self.save_button.apply_theme()
-        self.toggle_button.set_font(theme.get_font(16))
-        self.save_button.set_font(theme.get_font(18))
+        self.toggle_button.set_font(theme.get_font("button", 16))
+        self.save_button.set_font(theme.get_font("button", 18))
         for control in self.controls:
             control.sync()
 

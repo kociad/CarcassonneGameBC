@@ -100,10 +100,12 @@ class GamePrepareScene(Scene):
 
         self.switch_scene_callback = switch_scene_callback
 
-        self.font = theme.get_font(theme.THEME_FONT_SIZE_SCENE_TITLE)
-        self.button_font = theme.get_font(theme.THEME_FONT_SIZE_BUTTON)
-        self.input_font = theme.get_font(theme.THEME_FONT_SIZE_BODY)
-        self.dropdown_font = theme.get_font(theme.THEME_FONT_SIZE_BODY)
+        self.font = theme.get_font("title", theme.THEME_FONT_SIZE_SCENE_TITLE)
+        self.button_font = theme.get_font(
+            "button", theme.THEME_FONT_SIZE_BUTTON
+        )
+        self.input_font = theme.get_font("body", theme.THEME_FONT_SIZE_BODY)
+        self.dropdown_font = theme.get_font("body", theme.THEME_FONT_SIZE_BODY)
 
         self.toast_manager = ToastManager(max_toasts=5)
 
@@ -670,10 +672,12 @@ class GamePrepareScene(Scene):
     def refresh_theme(self) -> None:
         """Refresh fonts and component styling after theme changes."""
         super().refresh_theme()
-        self.font = theme.get_font(theme.THEME_FONT_SIZE_SCENE_TITLE)
-        self.button_font = theme.get_font(theme.THEME_FONT_SIZE_BUTTON)
-        self.input_font = theme.get_font(theme.THEME_FONT_SIZE_BODY)
-        self.dropdown_font = theme.get_font(theme.THEME_FONT_SIZE_BODY)
+        self.font = theme.get_font("title", theme.THEME_FONT_SIZE_SCENE_TITLE)
+        self.button_font = theme.get_font(
+            "button", theme.THEME_FONT_SIZE_BUTTON
+        )
+        self.input_font = theme.get_font("body", theme.THEME_FONT_SIZE_BODY)
+        self.dropdown_font = theme.get_font("body", theme.THEME_FONT_SIZE_BODY)
 
         self.add_player_button.set_font(self.button_font)
         self.add_player_button.apply_theme()
