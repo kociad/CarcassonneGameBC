@@ -35,10 +35,21 @@ class Theme:
         """Return a named color from the theme palette."""
         return self.colors[key]
 
+    def set_font_name(self, font_name: Optional[str]) -> None:
+        """Update the font name and clear cached fonts."""
+        if font_name != self.font_name:
+            self.font_name = font_name
+            self._font_cache.clear()
 
-def _build_classic_theme() -> Theme:
+    def set_font_sizes(self, font_sizes: Dict[str, int]) -> None:
+        """Replace the font size map and clear cached fonts."""
+        self.font_sizes = dict(font_sizes)
+        self._font_cache.clear()
+
+
+def _build_default_theme() -> Theme:
     return Theme(
-        name="classic",
+        name="default",
         font_sizes={
             "menu_title": 100,
             "scene_title": 80,
@@ -151,28 +162,11 @@ def _build_classic_theme() -> Theme:
     )
 
 
-def _build_dark_theme() -> Theme:
-    dark = _build_classic_theme()
-    dark.name = "dark"
-    dark.colors = {
-        **dark.colors,
-        "background": (20, 20, 20),
-        "dialog_bg": (45, 45, 45),
-        "button_bg": (160, 160, 160),
-        "button_hover_bg": (180, 180, 180),
-        "button_pressed_bg": (140, 140, 140),
-        "dropdown_bg": (220, 220, 220),
-        "input_bg": (230, 230, 230),
-    }
-    return dark
-
-
 _THEMES = {
-    "classic": _build_classic_theme(),
-    "dark": _build_dark_theme(),
+    "default": _build_default_theme(),
 }
 
-_current_theme = _THEMES["classic"]
+_current_theme = _THEMES["default"]
 
 
 def get_theme() -> Theme:
@@ -180,12 +174,15 @@ def get_theme() -> Theme:
     return _current_theme
 
 
-def set_theme(name: str) -> Theme:
-    """Set the current theme by name."""
+def set_theme(theme: str | Theme) -> Theme:
+    """Set the current theme by name or by Theme instance."""
     global _current_theme
-    if name not in _THEMES:
-        raise ValueError(f"Unknown theme: {name}")
-    _current_theme = _THEMES[name]
+    if isinstance(theme, Theme):
+        _current_theme = theme
+        return _current_theme
+    if theme not in _THEMES:
+        raise ValueError(f"Unknown theme: {theme}")
+    _current_theme = _THEMES[theme]
     return _current_theme
 
 
