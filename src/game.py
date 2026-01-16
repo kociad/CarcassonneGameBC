@@ -26,6 +26,7 @@ from utils.settings_manager import settings_manager
 from ui.components.game_log import GameLog
 from utils.logging_config import set_game_log_instance
 from ui.lobby_scene import LobbyScene
+from ui.theme_debug_overlay import ThemeDebugOverlay
 
 # Configure logging with exception handling
 configure_logging()
@@ -75,6 +76,9 @@ class Game:
 
             self._current_scene = None
             self._init_scene(GameState.MENU)
+            self._theme_debug_overlay = None
+            settings_manager.subscribe("DEBUG", self._on_debug_changed)
+            self._init_theme_debug_overlay()
 
             logger.debug("Game initialized successfully")
 
@@ -93,9 +97,13 @@ class Game:
         try:
             while self._running:
                 events = pygame.event.get()
+                if self._theme_debug_overlay:
+                    events = self._theme_debug_overlay.handle_events(events)
                 self._current_scene.handle_events(events)
                 self._current_scene.update()
                 self._current_scene.draw()
+                if self._theme_debug_overlay:
+                    self._theme_debug_overlay.draw()
         except Exception as e:
             log_error("Error in main game loop", e)
             raise
@@ -196,6 +204,29 @@ class Game:
         except Exception as e:
             log_error(f"Failed to initialize scene: {state}", e)
             raise
+
+    def _init_theme_debug_overlay(self) -> None:
+        if settings_manager.get("DEBUG", False):
+            self._theme_debug_overlay = ThemeDebugOverlay(
+                self._screen, self._refresh_theme
+            )
+        else:
+            self._theme_debug_overlay = None
+
+    def _on_debug_changed(self, key: str, old_value: typing.Any,
+                          new_value: typing.Any) -> None:
+        if new_value and not self._theme_debug_overlay:
+            self._theme_debug_overlay = ThemeDebugOverlay(
+                self._screen, self._refresh_theme
+            )
+        elif not new_value:
+            self._theme_debug_overlay = None
+
+    def _refresh_theme(self) -> None:
+        if self._current_scene:
+            self._current_scene.refresh_theme()
+        if self._game_log:
+            self._game_log.refresh_theme()
 
     def _start_game(self, player_names: list[str]) -> None:
         """

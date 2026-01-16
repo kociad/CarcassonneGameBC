@@ -757,5 +757,51 @@ class SettingsScene(Scene):
 
         pygame.display.flip()
 
+    def refresh_theme(self) -> None:
+        """Refresh fonts and component styling after theme changes."""
+        super().refresh_theme()
+        self.font = theme.get_font(theme.THEME_FONT_SIZE_SCENE_TITLE)
+        self.button_font = theme.get_font(theme.THEME_FONT_SIZE_BUTTON)
+        self.input_font = theme.get_font(theme.THEME_FONT_SIZE_BODY)
+        self.dropdown_font = theme.get_font(theme.THEME_FONT_SIZE_BODY)
+
+        self.resolution_dropdown.set_font(self.dropdown_font)
+        self.resolution_dropdown.apply_theme()
+
+        checkboxes = [
+            self.fullscreen_checkbox,
+            self.valid_placement_checkbox,
+            self.log_to_console_checkbox,
+            self.ai_simulation_checkbox,
+        ]
+        for checkbox in checkboxes:
+            checkbox.apply_theme()
+
+        sliders = [
+            self.fps_slider,
+            self.grid_size_slider,
+            self.tile_size_slider,
+            self.figure_size_slider,
+            self.sidebar_width_slider,
+        ]
+        for slider in sliders:
+            slider.set_font(self.dropdown_font)
+            slider.apply_theme()
+
+        inputs = [
+            self.game_log_max_entries_field,
+            self.ai_strategic_candidates_field,
+            self.ai_thinking_speed_field,
+        ]
+        for input_field in inputs:
+            input_field.set_font(self.input_font)
+            input_field.apply_theme()
+
+        self.apply_button.set_font(self.button_font)
+        self.apply_button.apply_theme()
+        self.back_button.set_font(self.button_font)
+        self.back_button.apply_theme()
+        self.toast_manager.apply_theme()
+
     def add_toast(self, toast):
         self.toast_manager.add_toast(toast)

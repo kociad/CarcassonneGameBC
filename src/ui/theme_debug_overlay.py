@@ -1,0 +1,738 @@
+from __future__ import annotations
+
+from dataclasses import dataclass
+import typing
+
+import pygame
+
+from ui import theme
+from ui.components.button import Button
+from ui.components.checkbox import Checkbox
+from ui.components.dropdown import Dropdown
+from ui.components.input_field import InputField
+from ui.components.slider import Slider
+
+
+@dataclass
+class ThemeControl:
+    name: str
+    label: str
+    y: int
+    height: int
+    components: list[typing.Any]
+    draw: typing.Callable[[pygame.Surface, int], None]
+    handle_event: typing.Callable[[pygame.event.Event, int], None]
+    sync: typing.Callable[[], None]
+
+
+class ThemeDebugOverlay:
+    """Debug-only overlay for live theme editing."""
+
+    def __init__(
+        self,
+        screen: pygame.Surface,
+        on_theme_update: typing.Callable[[], None],
+    ) -> None:
+        self.screen = screen
+        self._on_theme_update = on_theme_update
+        self.active = False
+        self.scroll_offset = 0
+        self.max_scroll = 0
+        self.panel_width = 560
+        self.panel_margin = 20
+        self.panel_rect = pygame.Rect(0, 0, 0, 0)
+        self.toggle_button = None
+        self.save_button = None
+        self.controls: list[ThemeControl] = []
+        self._optional_values: dict[str, typing.Any] = {}
+        self._build_layout()
+        self._build_controls()
+
+    def _build_layout(self) -> None:
+        screen_width, screen_height = self.screen.get_size()
+        self.panel_rect = pygame.Rect(
+            screen_width - self.panel_width - self.panel_margin,
+            self.panel_margin,
+            self.panel_width,
+            screen_height - (self.panel_margin * 2),
+        )
+        self.title_font = theme.get_font(
+            max(18, int(theme.THEME_FONT_SIZE_BODY * 0.6))
+        )
+        self.label_font = theme.get_font(
+            max(14, int(theme.THEME_FONT_SIZE_BODY * 0.45))
+        )
+        self.control_font = theme.get_font(
+            max(14, int(theme.THEME_FONT_SIZE_BODY * 0.45))
+        )
+        button_size = 36
+        self.toggle_button = Button(
+            rect=(
+                screen_width - button_size - 12,
+                12,
+                button_size,
+                button_size,
+            ),
+            text="DBG",
+            font=theme.get_font(16),
+            callback=self.toggle,
+        )
+        self.save_button = Button(
+            rect=(
+                self.panel_rect.left + 16,
+                self.panel_rect.top + 16,
+                120,
+                36,
+            ),
+            text="Save",
+            font=theme.get_font(18),
+            callback=self._save_theme,
+        )
+
+    def _build_controls(self) -> None:
+        self.controls.clear()
+        label_x = self.panel_rect.left + 16
+        control_x = self.panel_rect.left + 260
+        current_y = self.panel_rect.top + 70
+        line_gap = 12
+        slider_width = self.panel_rect.right - control_x - 80
+        for name, value in self._theme_items():
+            label = name.replace("THEME_", "").replace("_", " ")
+            if name.endswith("_TINT_COLOR"):
+                enabled = value is not None
+                initial_value = value if value is not None else (0, 0, 0, 0)
+                control = self._build_color_control(
+                    name,
+                    label,
+                    label_x,
+                    control_x,
+                    current_y,
+                    initial_value,
+                    slider_width,
+                    optional=True,
+                    enabled=enabled,
+                )
+            elif isinstance(value, tuple):
+                control = self._build_color_control(
+                    name,
+                    label,
+                    label_x,
+                    control_x,
+                    current_y,
+                    value,
+                    slider_width,
+                    optional=False,
+                    enabled=True,
+                )
+            elif name.endswith("_IMAGE"):
+                control = self._build_image_control(
+                    name,
+                    label,
+                    label_x,
+                    control_x,
+                    current_y,
+                    value,
+                )
+            elif name.endswith("_SCALE_MODE"):
+                control = self._build_scale_mode_control(
+                    name,
+                    label,
+                    label_x,
+                    control_x,
+                    current_y,
+                    value,
+                )
+            elif isinstance(value, float) and name.endswith("_BLUR_RADIUS"):
+                control = self._build_float_control(
+                    name,
+                    label,
+                    label_x,
+                    control_x,
+                    current_y,
+                    value,
+                    min_value=0,
+                    max_value=30,
+                )
+            elif isinstance(value, int) and name.startswith("THEME_FONT_SIZE_"):
+                control = self._build_int_control(
+                    name,
+                    label,
+                    label_x,
+                    control_x,
+                    current_y,
+                    value,
+                    min_value=8,
+                    max_value=160,
+                )
+            elif isinstance(value, (int, float)):
+                control = self._build_int_control(
+                    name,
+                    label,
+                    label_x,
+                    control_x,
+                    current_y,
+                    value,
+                    min_value=0,
+                    max_value=400,
+                )
+            elif isinstance(value, str) or value is None:
+                control = self._build_text_control(
+                    name,
+                    label,
+                    label_x,
+                    control_x,
+                    current_y,
+                    value,
+                )
+            else:
+                continue
+            self.controls.append(control)
+            current_y += control.height + line_gap
+        self._update_scroll_bounds(current_y)
+
+    def _theme_items(self) -> list[tuple[str, typing.Any]]:
+        items = []
+        for name in sorted(dir(theme)):
+            if not name.startswith("THEME_"):
+                continue
+            value = getattr(theme, name)
+            if callable(value) or isinstance(value, dict):
+                continue
+            items.append((name, value))
+        return items
+
+    def _build_color_control(
+        self,
+        name: str,
+        label: str,
+        label_x: int,
+        control_x: int,
+        start_y: int,
+        value: tuple,
+        slider_width: int,
+        optional: bool = False,
+        enabled: bool = True,
+    ) -> ThemeControl:
+        channels = list(value)
+        if optional and not enabled:
+            self._optional_values[name] = channels
+        slider_height = 20
+        channel_gap = 8
+        label_height = self.label_font.get_height()
+        sliders: list[Slider] = []
+        channel_labels = ["R", "G", "B", "A"][:len(channels)]
+        checkbox = None
+
+        def build_sliders(y_offset: int) -> None:
+            for idx, channel in enumerate(channels):
+                slider_y = y_offset + label_height + 6 + idx * (slider_height + channel_gap)
+                slider = Slider(
+                    rect=(control_x + 20, slider_y, slider_width, slider_height),
+                    font=self.control_font,
+                    min_value=0,
+                    max_value=255,
+                    value=int(channel),
+                    on_change=lambda val, i=idx: self._update_color_channel(
+                        name, i, val
+                    ),
+                )
+                sliders.append(slider)
+
+        build_sliders(start_y)
+
+        if optional:
+            checkbox = Checkbox(
+                rect=(control_x, start_y, 20, 20),
+                checked=enabled,
+                on_toggle=lambda enabled: self._toggle_optional_color(
+                    name, enabled, sliders
+                ),
+            )
+            if not enabled:
+                for slider in sliders:
+                    slider.set_disabled(True)
+
+        height = label_height + (slider_height + channel_gap) * len(sliders) + 8
+        components: list[typing.Any] = sliders[:]
+        if checkbox is not None:
+            components.insert(0, checkbox)
+
+        def draw(surface: pygame.Surface, y_offset: int) -> None:
+            label_surface = self.label_font.render(label, True,
+                                                   theme.THEME_TEXT_COLOR_LIGHT)
+            surface.blit(label_surface, (label_x, start_y + y_offset))
+            if checkbox is not None:
+                checkbox.draw(surface, y_offset=y_offset)
+                enabled_label = self.label_font.render("Enabled", True,
+                                                       theme.THEME_TEXT_COLOR_LIGHT)
+                surface.blit(enabled_label,
+                             (control_x + 26, start_y + y_offset))
+            for idx, slider in enumerate(sliders):
+                channel_label = self.label_font.render(
+                    channel_labels[idx], True, theme.THEME_TEXT_COLOR_LIGHT
+                )
+                label_y = start_y + y_offset + label_height + 6 + idx * (
+                    slider_height + channel_gap
+                )
+                surface.blit(channel_label, (control_x, label_y - 2))
+                slider.draw(surface, y_offset=y_offset)
+
+        def handle_event(event: pygame.event.Event, y_offset: int) -> None:
+            if checkbox is not None:
+                checkbox.handle_event(event, y_offset=y_offset)
+            for slider in sliders:
+                slider.handle_event(event, y_offset=y_offset)
+
+        def sync() -> None:
+            current_value = getattr(theme, name)
+            if optional and current_value is None:
+                if checkbox is not None:
+                    checkbox.set_checked(False)
+                for slider in sliders:
+                    slider.set_disabled(True)
+                    slider.apply_theme()
+                    slider.set_font(self.control_font)
+                if checkbox is not None:
+                    checkbox.apply_theme()
+                return
+            if checkbox is not None:
+                checkbox.set_checked(True)
+                for slider in sliders:
+                    slider.set_disabled(False)
+            current_channels = list(current_value)
+            for idx, slider in enumerate(sliders):
+                slider.set_value(int(current_channels[idx]))
+                slider.apply_theme()
+                slider.set_font(self.control_font)
+            if checkbox is not None:
+                checkbox.apply_theme()
+
+        return ThemeControl(
+            name=name,
+            label=label,
+            y=start_y,
+            height=height,
+            components=components,
+            draw=draw,
+            handle_event=handle_event,
+            sync=sync,
+        )
+
+    def _build_int_control(
+        self,
+        name: str,
+        label: str,
+        label_x: int,
+        control_x: int,
+        start_y: int,
+        value: typing.Union[int, float],
+        min_value: int,
+        max_value: int,
+    ) -> ThemeControl:
+        slider = Slider(
+            rect=(control_x, start_y, 200, 20),
+            font=self.control_font,
+            min_value=min_value,
+            max_value=max_value,
+            value=int(value),
+            on_change=lambda val: self._set_theme_value(name, int(val)),
+        )
+
+        def draw(surface: pygame.Surface, y_offset: int) -> None:
+            label_surface = self.label_font.render(label, True,
+                                                   theme.THEME_TEXT_COLOR_LIGHT)
+            surface.blit(label_surface, (label_x, start_y + y_offset))
+            slider.draw(surface, y_offset=y_offset)
+
+        def handle_event(event: pygame.event.Event, y_offset: int) -> None:
+            slider.handle_event(event, y_offset=y_offset)
+
+        def sync() -> None:
+            slider.set_value(int(getattr(theme, name)))
+            slider.apply_theme()
+            slider.set_font(self.control_font)
+
+        return ThemeControl(
+            name=name,
+            label=label,
+            y=start_y,
+            height=28,
+            components=[slider],
+            draw=draw,
+            handle_event=handle_event,
+            sync=sync,
+        )
+
+    def _build_float_control(
+        self,
+        name: str,
+        label: str,
+        label_x: int,
+        control_x: int,
+        start_y: int,
+        value: float,
+        min_value: int,
+        max_value: int,
+    ) -> ThemeControl:
+        slider = Slider(
+            rect=(control_x, start_y, 200, 20),
+            font=self.control_font,
+            min_value=min_value,
+            max_value=max_value,
+            value=int(value),
+            on_change=lambda val: self._set_theme_value(name, float(val)),
+        )
+
+        def draw(surface: pygame.Surface, y_offset: int) -> None:
+            label_surface = self.label_font.render(label, True,
+                                                   theme.THEME_TEXT_COLOR_LIGHT)
+            surface.blit(label_surface, (label_x, start_y + y_offset))
+            slider.draw(surface, y_offset=y_offset)
+
+        def handle_event(event: pygame.event.Event, y_offset: int) -> None:
+            slider.handle_event(event, y_offset=y_offset)
+
+        def sync() -> None:
+            slider.set_value(int(getattr(theme, name)))
+            slider.apply_theme()
+            slider.set_font(self.control_font)
+
+        return ThemeControl(
+            name=name,
+            label=label,
+            y=start_y,
+            height=28,
+            components=[slider],
+            draw=draw,
+            handle_event=handle_event,
+            sync=sync,
+        )
+
+    def _build_text_control(
+        self,
+        name: str,
+        label: str,
+        label_x: int,
+        control_x: int,
+        start_y: int,
+        value: str | None,
+    ) -> ThemeControl:
+        input_field = InputField(
+            rect=(control_x, start_y, 220, 28),
+            font=self.control_font,
+            initial_text="" if value is None else str(value),
+            on_text_change=lambda text: self._set_theme_value(
+                name, text if text else None
+            ),
+        )
+
+        def draw(surface: pygame.Surface, y_offset: int) -> None:
+            label_surface = self.label_font.render(label, True,
+                                                   theme.THEME_TEXT_COLOR_LIGHT)
+            surface.blit(label_surface, (label_x, start_y + y_offset))
+            input_field.draw(surface, y_offset=y_offset)
+
+        def handle_event(event: pygame.event.Event, y_offset: int) -> None:
+            input_field.handle_event(event, y_offset=y_offset)
+
+        def sync() -> None:
+            input_field.set_text("" if getattr(theme, name) is None else
+                                 str(getattr(theme, name)))
+            input_field.apply_theme()
+            input_field.set_font(self.control_font)
+
+        return ThemeControl(
+            name=name,
+            label=label,
+            y=start_y,
+            height=32,
+            components=[input_field],
+            draw=draw,
+            handle_event=handle_event,
+            sync=sync,
+        )
+
+    def _build_image_control(
+        self,
+        name: str,
+        label: str,
+        label_x: int,
+        control_x: int,
+        start_y: int,
+        value: str | None,
+    ) -> ThemeControl:
+        checkbox = Checkbox(
+            rect=(control_x, start_y, 20, 20),
+            checked=value is not None,
+            on_toggle=lambda enabled: self._toggle_image(enabled, name),
+        )
+        input_field = InputField(
+            rect=(control_x + 80, start_y, 200, 28),
+            font=self.control_font,
+            initial_text="" if value is None else str(value),
+            on_text_change=lambda text: self._update_image_path(name, text),
+        )
+        if value is None:
+            input_field.set_disabled(True)
+
+        def draw(surface: pygame.Surface, y_offset: int) -> None:
+            label_surface = self.label_font.render(label, True,
+                                                   theme.THEME_TEXT_COLOR_LIGHT)
+            surface.blit(label_surface, (label_x, start_y + y_offset))
+            checkbox.draw(surface, y_offset=y_offset)
+            enabled_label = self.label_font.render("Enabled", True,
+                                                   theme.THEME_TEXT_COLOR_LIGHT)
+            surface.blit(enabled_label, (control_x + 26, start_y + y_offset))
+            input_field.draw(surface, y_offset=y_offset)
+
+        def handle_event(event: pygame.event.Event, y_offset: int) -> None:
+            checkbox.handle_event(event, y_offset=y_offset)
+            input_field.handle_event(event, y_offset=y_offset)
+
+        def sync() -> None:
+            current_value = getattr(theme, name)
+            checkbox.set_checked(current_value is not None)
+            input_field.set_text("" if current_value is None else
+                                 str(current_value))
+            input_field.set_disabled(current_value is None)
+            checkbox.apply_theme()
+            input_field.apply_theme()
+            input_field.set_font(self.control_font)
+
+        return ThemeControl(
+            name=name,
+            label=label,
+            y=start_y,
+            height=32,
+            components=[checkbox, input_field],
+            draw=draw,
+            handle_event=handle_event,
+            sync=sync,
+        )
+
+    def _build_scale_mode_control(
+        self,
+        name: str,
+        label: str,
+        label_x: int,
+        control_x: int,
+        start_y: int,
+        value: str,
+    ) -> ThemeControl:
+        options = ["fill", "fit", "stretch"]
+        selected = options.index(value) if value in options else 0
+        dropdown = Dropdown(
+            rect=(control_x, start_y, 160, 28),
+            font=self.control_font,
+            options=options,
+            default_index=selected,
+            on_select=lambda option: self._set_theme_value(name, option),
+        )
+
+        def draw(surface: pygame.Surface, y_offset: int) -> None:
+            label_surface = self.label_font.render(label, True,
+                                                   theme.THEME_TEXT_COLOR_LIGHT)
+            surface.blit(label_surface, (label_x, start_y + y_offset))
+            dropdown.draw(surface, y_offset=y_offset)
+
+        def handle_event(event: pygame.event.Event, y_offset: int) -> None:
+            dropdown.handle_event(event, y_offset=y_offset)
+
+        def sync() -> None:
+            current_value = getattr(theme, name)
+            if current_value in options:
+                dropdown.set_selected(options.index(current_value))
+            else:
+                dropdown.set_selected(0)
+            dropdown.apply_theme()
+            dropdown.set_font(self.control_font)
+
+        return ThemeControl(
+            name=name,
+            label=label,
+            y=start_y,
+            height=32,
+            components=[dropdown],
+            draw=draw,
+            handle_event=handle_event,
+            sync=sync,
+        )
+
+    def _toggle_optional_color(self, name: str, enabled: bool,
+                               sliders: list[Slider]) -> None:
+        if enabled:
+            restored = self._optional_values.get(name, [0, 0, 0, 0])
+            self._set_theme_value(name, tuple(restored))
+            for slider in sliders:
+                slider.set_disabled(False)
+        else:
+            current_value = getattr(theme, name)
+            if current_value is not None:
+                self._optional_values[name] = list(current_value)
+            self._set_theme_value(name, None)
+            for slider in sliders:
+                slider.set_disabled(True)
+
+    def _toggle_image(self, enabled: bool, name: str) -> None:
+        if enabled:
+            last_value = self._optional_values.get(name, "")
+            self._set_theme_value(name, last_value if last_value is not None else "")
+        else:
+            current_value = getattr(theme, name)
+            if current_value is not None:
+                self._optional_values[name] = current_value
+            self._set_theme_value(name, None)
+
+    def _update_image_path(self, name: str, text: str) -> None:
+        if getattr(theme, name) is None:
+            return
+        self._set_theme_value(name, text if text else "")
+
+    def _update_color_channel(self, name: str, channel_index: int,
+                              value: int) -> None:
+        current_value = getattr(theme, name)
+        if current_value is None:
+            current = self._optional_values.get(name, [0, 0, 0, 0])
+        else:
+            current = list(current_value)
+        current[channel_index] = int(value)
+        self._set_theme_value(name, tuple(current))
+
+    def _set_theme_value(self, name: str, value: typing.Any) -> None:
+        setattr(theme, name, value)
+        theme.refresh_theme_state()
+        theme.clear_font_cache()
+        self._on_theme_update()
+        self.refresh_theme()
+
+    def _update_scroll_bounds(self, content_end_y: int) -> None:
+        content_height = content_end_y - (self.panel_rect.top + 70)
+        view_height = self.panel_rect.height - 90
+        self.max_scroll = max(0, content_height - view_height)
+        self.scroll_offset = max(-self.max_scroll, min(0, self.scroll_offset))
+
+    def _save_theme(self) -> None:
+        theme_path = theme.__file__
+        if theme_path.endswith(".pyc"):
+            theme_path = theme_path[:-1]
+        with open(theme_path, "r", encoding="utf-8") as handle:
+            lines = handle.readlines()
+        theme_values = {name: getattr(theme, name) for name, _ in self._theme_items()}
+        for idx, line in enumerate(lines):
+            stripped = line.strip()
+            if not stripped.startswith("THEME_"):
+                continue
+            if "=" not in line:
+                continue
+            left = line.split("=")[0].rstrip()
+            name = left.split(":")[0].strip()
+            if name not in theme_values:
+                continue
+            new_value = self._format_value(theme_values[name])
+            lines[idx] = f"{left} = {new_value}\n"
+        with open(theme_path, "w", encoding="utf-8") as handle:
+            handle.writelines(lines)
+
+    def _format_value(self, value: typing.Any) -> str:
+        if isinstance(value, str):
+            escaped = value.replace("\\", "\\\\").replace("\"", "\\\"")
+            return f"\"{escaped}\""
+        if value is None:
+            return "None"
+        if isinstance(value, tuple):
+            inner = ", ".join(self._format_value(item) for item in value)
+            if len(value) == 1:
+                inner = f"{inner},"
+            return f"({inner})"
+        return repr(value)
+
+    def handle_events(
+        self, events: list[pygame.event.Event]
+    ) -> list[pygame.event.Event]:
+        remaining: list[pygame.event.Event] = []
+        for event in events:
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_F9:
+                    self.toggle()
+                    continue
+                if (event.key == pygame.K_t and
+                        (event.mod & pygame.KMOD_CTRL) and
+                        (event.mod & pygame.KMOD_SHIFT)):
+                    self.toggle()
+                    continue
+            if not self.active:
+                self.toggle_button.handle_event(event)
+                if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                    if self.toggle_button._is_clicked(event.pos):
+                        continue
+                remaining.append(event)
+                continue
+            if event.type == pygame.MOUSEWHEEL:
+                if self.panel_rect.collidepoint(pygame.mouse.get_pos()):
+                    self.scroll_offset += event.y * 20
+                    self.scroll_offset = max(-self.max_scroll,
+                                             min(0, self.scroll_offset))
+                continue
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                self.toggle()
+                continue
+            self.save_button.handle_event(event)
+            for control in self.controls:
+                control.handle_event(event, self.scroll_offset)
+        if self.active:
+            return []
+        return remaining
+
+    def refresh_theme(self) -> None:
+        self.title_font = theme.get_font(
+            max(18, int(theme.THEME_FONT_SIZE_BODY * 0.6))
+        )
+        self.label_font = theme.get_font(
+            max(14, int(theme.THEME_FONT_SIZE_BODY * 0.45))
+        )
+        self.control_font = theme.get_font(
+            max(14, int(theme.THEME_FONT_SIZE_BODY * 0.45))
+        )
+        self.toggle_button.apply_theme()
+        self.save_button.apply_theme()
+        self.toggle_button.set_font(theme.get_font(16))
+        self.save_button.set_font(theme.get_font(18))
+        for control in self.controls:
+            control.sync()
+
+    def toggle(self) -> None:
+        self.active = not self.active
+        if self.active:
+            self.scroll_offset = 0
+            self._update_scroll_bounds(self.panel_rect.top + 70 + sum(
+                control.height + 12 for control in self.controls
+            ))
+            for control in self.controls:
+                control.sync()
+
+    def draw(self) -> None:
+        if not self.active:
+            self.toggle_button.draw(self.screen)
+            pygame.display.flip()
+            return
+        overlay = pygame.Surface(self.screen.get_size(), pygame.SRCALPHA)
+        overlay.fill((0, 0, 0, 180))
+        self.screen.blit(overlay, (0, 0))
+        panel = pygame.Surface(self.panel_rect.size, pygame.SRCALPHA)
+        panel.fill((30, 30, 30, 230))
+        self.screen.blit(panel, self.panel_rect.topleft)
+        pygame.draw.rect(self.screen, (200, 200, 200), self.panel_rect, 2)
+        title_surface = self.title_font.render(
+            "Theme Debug Overlay", True, theme.THEME_TEXT_COLOR_LIGHT
+        )
+        self.screen.blit(
+            title_surface,
+            (self.panel_rect.left + 160, self.panel_rect.top + 20),
+        )
+        self.save_button.draw(self.screen)
+        previous_clip = self.screen.get_clip()
+        self.screen.set_clip(self.panel_rect)
+        for control in self.controls:
+            control.draw(self.screen, self.scroll_offset)
+        self.screen.set_clip(previous_clip)
+        pygame.display.flip()

@@ -121,3 +121,15 @@ class HelpScene(Scene):
         self.rules_button.draw(self.screen, y_offset=offset_y)
         self.back_button.draw(self.screen, y_offset=offset_y)
         pygame.display.flip()
+
+    def refresh_theme(self) -> None:
+        """Refresh fonts and component styling after theme changes."""
+        super().refresh_theme()
+        self.font = theme.get_font(theme.THEME_FONT_SIZE_SCENE_TITLE)
+        self.button_font = theme.get_font(theme.THEME_FONT_SIZE_BUTTON)
+        self.text_font = theme.get_font(theme.THEME_FONT_SIZE_BODY)
+        self.controls_font = theme.get_font(theme.THEME_FONT_SIZE_HELP_CONTROLS)
+        self.rules_button.set_font(self.button_font)
+        self.rules_button.apply_theme()
+        self.back_button.set_font(self.button_font)
+        self.back_button.apply_theme()

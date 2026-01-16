@@ -219,6 +219,17 @@ class InputField:
         if value:
             self.active = False
 
+    def set_font(self, font: pygame.font.Font) -> None:
+        """Update the font used by the input field."""
+        self.font = font
+        self.scroll_offset = 0
+
+    def apply_theme(self) -> None:
+        """Refresh colors from the current theme."""
+        self.text_color = theme.THEME_INPUT_TEXT_COLOR
+        self.bg_color = theme.THEME_INPUT_BG_COLOR
+        self.border_color = theme.THEME_INPUT_BORDER_COLOR
+
     def set_read_only(self, value: bool) -> None:
         """
         Set the input field to read-only mode.

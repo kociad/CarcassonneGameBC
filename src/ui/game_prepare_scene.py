@@ -662,5 +662,44 @@ class GamePrepareScene(Scene):
 
         pygame.display.flip()
 
+    def refresh_theme(self) -> None:
+        """Refresh fonts and component styling after theme changes."""
+        super().refresh_theme()
+        self.font = theme.get_font(theme.THEME_FONT_SIZE_SCENE_TITLE)
+        self.button_font = theme.get_font(theme.THEME_FONT_SIZE_BUTTON)
+        self.input_font = theme.get_font(theme.THEME_FONT_SIZE_BODY)
+        self.dropdown_font = theme.get_font(theme.THEME_FONT_SIZE_BODY)
+
+        self.add_player_button.set_font(self.button_font)
+        self.add_player_button.apply_theme()
+        self.remove_player_button.set_font(self.button_font)
+        self.remove_player_button.apply_theme()
+        self.start_button.set_font(self.button_font)
+        self.start_button.apply_theme()
+        self.back_button.set_font(self.button_font)
+        self.back_button.apply_theme()
+
+        self.host_ip_field.set_font(self.input_font)
+        self.host_ip_field.apply_theme()
+        self.port_field.set_font(self.input_font)
+        self.port_field.apply_theme()
+
+        self.ai_difficulty_dropdown.set_font(self.dropdown_font)
+        self.ai_difficulty_dropdown.apply_theme()
+        self.network_mode_dropdown.set_font(self.dropdown_font)
+        self.network_mode_dropdown.apply_theme()
+
+        for checkbox in self.card_set_checkboxes:
+            checkbox[1].apply_theme()
+
+        if hasattr(self, "player_fields"):
+            for name_field, ai_checkbox in self.player_fields:
+                name_field.set_font(self.input_font)
+                name_field.apply_theme()
+                if ai_checkbox is not None:
+                    ai_checkbox.apply_theme()
+
+        self.toast_manager.apply_theme()
+
     def add_toast(self, toast):
         self.toast_manager.add_toast(toast)

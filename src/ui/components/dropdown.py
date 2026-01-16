@@ -191,3 +191,16 @@ class Dropdown:
         """
         self.disabled = value
         return self
+
+    def set_font(self, font: pygame.font.Font) -> None:
+        """Update the font used by the dropdown."""
+        self.font = font
+
+    def apply_theme(self) -> None:
+        """Refresh colors from the current theme."""
+        self.text_color = theme.THEME_DROPDOWN_TEXT_COLOR
+        self.bg_color = theme.THEME_DROPDOWN_BG_COLOR
+        self.border_color = theme.THEME_DROPDOWN_BORDER_COLOR
+        self.highlight_color = theme.THEME_DROPDOWN_HIGHLIGHT_COLOR
+        self.hover_bg_color = theme.THEME_DROPDOWN_HOVER_BG_COLOR
+        self.hover_option_color = theme.THEME_DROPDOWN_HOVER_OPTION_COLOR

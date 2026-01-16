@@ -341,6 +341,33 @@ def get_font(size: int) -> pygame.font.Font:
     return _FONT_CACHE[size]
 
 
+def clear_font_cache() -> None:
+    """Clear cached pygame fonts so updated sizes take effect."""
+    _FONT_CACHE.clear()
+
+
+def refresh_theme_state() -> None:
+    """Refresh derived theme mappings after live updates."""
+    global THEME_TOAST_COLORS
+    global THEME_PLAYER_COLOR_MAP
+    THEME_TOAST_COLORS = {
+        "info": (THEME_TOAST_INFO_TEXT_COLOR, THEME_TOAST_INFO_BG_COLOR),
+        "success": (THEME_TOAST_SUCCESS_TEXT_COLOR,
+                    THEME_TOAST_SUCCESS_BG_COLOR),
+        "error": (THEME_TOAST_ERROR_TEXT_COLOR, THEME_TOAST_ERROR_BG_COLOR),
+        "warning": (THEME_TOAST_WARNING_TEXT_COLOR,
+                    THEME_TOAST_WARNING_BG_COLOR),
+    }
+    THEME_PLAYER_COLOR_MAP = {
+        "red": THEME_PLAYER_COLOR_RED,
+        "blue": THEME_PLAYER_COLOR_BLUE,
+        "green": THEME_PLAYER_COLOR_GREEN,
+        "yellow": THEME_PLAYER_COLOR_YELLOW,
+        "pink": THEME_PLAYER_COLOR_PINK,
+        "black": THEME_PLAYER_COLOR_BLACK,
+    }
+
+
 # Toast color map for toast types (text color, background color); RGB tuples.
 THEME_TOAST_COLORS: dict[str, tuple[Color, Color]] = {
     "info": (THEME_TOAST_INFO_TEXT_COLOR, THEME_TOAST_INFO_BG_COLOR),

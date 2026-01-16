@@ -134,3 +134,14 @@ class ProgressBar:
             text_rect.centerx = x + self.rect.width // 2
             text_rect.centery = y + self.rect.height // 2
             screen.blit(text_surface, text_rect)
+
+    def set_font(self, font: pygame.font.Font) -> None:
+        """Update the font used by the progress bar."""
+        self.font = font
+
+    def apply_theme(self) -> None:
+        """Refresh colors from the current theme."""
+        self.background_color = theme.THEME_PROGRESS_BAR_BG_COLOR
+        self.progress_color = theme.THEME_PROGRESS_BAR_PROGRESS_COLOR
+        self.border_color = theme.THEME_PROGRESS_BAR_BORDER_COLOR
+        self.text_color = theme.THEME_PROGRESS_BAR_TEXT_COLOR
