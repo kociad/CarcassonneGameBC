@@ -1234,8 +1234,6 @@ class GameScene(Scene):
 
         self.toast_manager.draw(self.screen)
 
-        pygame.display.flip()
-
     def refresh_theme(self) -> None:
         """Refresh fonts and component styling after theme changes."""
         super().refresh_theme()

@@ -120,7 +120,6 @@ class HelpScene(Scene):
             current_y += line_height
         self.rules_button.draw(self.screen, y_offset=offset_y)
         self.back_button.draw(self.screen, y_offset=offset_y)
-        pygame.display.flip()
 
     def refresh_theme(self) -> None:
         """Refresh fonts and component styling after theme changes."""

@@ -713,7 +713,6 @@ class ThemeDebugOverlay:
     def draw(self) -> None:
         if not self.active:
             self.toggle_button.draw(self.screen)
-            pygame.display.flip()
             return
         overlay = pygame.Surface(self.screen.get_size(), pygame.SRCALPHA)
         overlay.fill((0, 0, 0, 180))
@@ -735,4 +734,3 @@ class ThemeDebugOverlay:
         for control in self.controls:
             control.draw(self.screen, self.scroll_offset)
         self.screen.set_clip(previous_clip)
-        pygame.display.flip()

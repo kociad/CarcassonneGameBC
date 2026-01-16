@@ -155,7 +155,6 @@ class LobbyScene(Scene):
         self.toast_manager.draw(self.screen)
         if self.game_log:
             self.game_log.draw(self.screen)
-        pygame.display.flip()
 
     def refresh_theme(self) -> None:
         """Refresh fonts and component styling after theme changes."""

@@ -202,7 +202,6 @@ class MainMenuScene(Scene):
                               self.quit_button.rect.bottom + 100)
         if self.show_confirm_dialog:
             self.draw_confirm_dialog()
-        pygame.display.flip()
 
     def refresh_theme(self) -> None:
         """Refresh fonts and component styling after theme changes."""

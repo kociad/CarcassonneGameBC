@@ -104,6 +104,7 @@ class Game:
                 self._current_scene.draw()
                 if self._theme_debug_overlay:
                     self._theme_debug_overlay.draw()
+                pygame.display.flip()
         except Exception as e:
             log_error("Error in main game loop", e)
             raise
