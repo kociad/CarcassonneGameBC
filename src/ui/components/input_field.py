@@ -2,19 +2,25 @@ import pygame
 import time
 import typing
 
+from ui.theme import get_theme
+
 
 class InputField:
     """A text input field UI component."""
 
     def __init__(self,
                  rect: pygame.Rect,
-                 font: pygame.font.Font,
+                 font: pygame.font.Font | None,
                  placeholder: str = "",
                  text: str = "",
                  initial_text: str = "",
-                 text_color: tuple = (0, 0, 0),
-                 bg_color: tuple = (255, 255, 255),
-                 border_color: tuple = (0, 0, 0),
+                 text_color: tuple | None = None,
+                 bg_color: tuple | None = None,
+                 border_color: tuple | None = None,
+                 placeholder_color: tuple | None = None,
+                 disabled_text_color: tuple | None = None,
+                 disabled_bg_color: tuple | None = None,
+                 disabled_border_color: tuple | None = None,
                  on_text_change: typing.Optional[typing.Callable] = None,
                  numeric: bool = False,
                  min_value: typing.Optional[float] = None,
@@ -36,17 +42,26 @@ class InputField:
             min_value: Minimum value for numeric input
             max_value: Maximum value for numeric input
         """
+        theme = get_theme()
         self.rect = pygame.Rect(rect)
-        self.font = font
+        self.font = font or theme.font("body")
         self.placeholder = placeholder
         self.text = initial_text if initial_text else text
         self.active = False
         self.hovered = False
         self.disabled = False
         self.read_only = False
-        self.text_color = text_color
-        self.bg_color = bg_color
-        self.border_color = border_color
+        self.text_color = text_color or theme.color("input_text")
+        self.placeholder_color = (
+            placeholder_color or theme.color("input_placeholder"))
+        self.disabled_text_color = (
+            disabled_text_color or theme.color("text_disabled"))
+        self.bg_color = bg_color or theme.color("input_bg")
+        self.disabled_bg_color = (
+            disabled_bg_color or theme.color("input_disabled_bg"))
+        self.border_color = border_color or theme.color("input_border")
+        self.disabled_border_color = (
+            disabled_border_color or theme.color("input_disabled_border"))
         self.scroll_offset = 0
         self.cursor_visible = True
         self.last_blink = time.time()
@@ -75,6 +90,11 @@ class InputField:
             self.hovered = shifted_rect.collidepoint(event.pos)
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             self.active = shifted_rect.collidepoint(event.pos)
+            if not self.active:
+                try:
+                    pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
+                except pygame.error:
+                    pass
         if self.active and event.type == pygame.KEYDOWN:
             old_text = self.text
             if event.key == pygame.K_LEFT:
@@ -142,17 +162,21 @@ class InputField:
             self.cursor_visible = not self.cursor_visible
             self.last_blink = now
         draw_rect = self.rect.move(0, y_offset)
-        bg_color = (200, 200, 200) if self.disabled else self.bg_color
+        bg_color = self.disabled_bg_color if self.disabled else self.bg_color
         if self.disabled:
-            border_color = (100, 100, 100)
+            border_color = self.disabled_border_color
         else:
             if self.active or self.hovered:
                 border_color = tuple(
                     min(255, channel + 40) for channel in self.border_color)
             else:
                 border_color = self.border_color
-        text_color = (150, 150, 150) if self.disabled else (
-            self.text_color if self.text or self.active else (150, 150, 150))
+        text_color = (
+            self.disabled_text_color
+            if self.disabled
+            else (self.text_color if self.text or self.active
+                  else self.placeholder_color)
+        )
         pygame.draw.rect(surface, bg_color, draw_rect)
         pygame.draw.rect(surface, border_color, draw_rect, 2)
         display_text = self.text if self.text or self.active else self.placeholder
@@ -173,6 +197,11 @@ class InputField:
             cursor_height = draw_rect.height - 10
             pygame.draw.line(surface, text_color, (cursor_x, cursor_y),
                              (cursor_x, cursor_y + cursor_height), 2)
+        if self.active and not self.disabled and not self.read_only:
+            try:
+                pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_IBEAM)
+            except pygame.error:
+                pass
 
     def get_text(self) -> str:
         """Get the current text value."""

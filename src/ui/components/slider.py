@@ -1,6 +1,7 @@
 import pygame
 from ui.components.input_field import InputField
 from ui.components.toast import Toast
+from ui.theme import get_theme
 import typing
 
 
@@ -9,7 +10,7 @@ class Slider:
 
     def __init__(self,
                  rect: pygame.Rect,
-                 font,
+                 font: pygame.font.Font | None,
                  min_value: float,
                  max_value: float,
                  initial_value: float = None,
@@ -27,8 +28,9 @@ class Slider:
             value: Initial value
             on_change: Function to call when value changes
         """
+        theme = get_theme()
         self.rect = pygame.Rect(rect)
-        self.font = font
+        self.font = font or theme.font("body")
         self.min_value = min_value
         self.max_value = max_value
         self.value = value if value is not None else (
@@ -40,19 +42,19 @@ class Slider:
         self.dragging = False
         self.hovered_handle = False
         self.hovered_track = False
-        self.bg_color = (200, 200, 200)
-        self.fg_color = (100, 100, 255)
-        self.handle_color = (255, 255, 255)
-        self.border_color = (0, 0, 0)
-        self.handle_hover_color = (235, 235, 255)
-        self.handle_active_color = (180, 180, 255)
-        self.track_hover_color = (120, 120, 255)
-        self.track_active_color = (80, 80, 230)
-        self.hover_border_color = (50, 50, 50)
-        self.disabled_bg_color = (100, 100, 100)
-        self.disabled_fg_color = (60, 60, 60)
-        self.disabled_handle_color = (150, 150, 150)
-        self.disabled_border_color = (80, 80, 80)
+        self.bg_color = theme.color("slider_bg")
+        self.fg_color = theme.color("slider_fg")
+        self.handle_color = theme.color("slider_handle")
+        self.border_color = theme.color("slider_border")
+        self.handle_hover_color = theme.color("slider_handle_hover")
+        self.handle_active_color = theme.color("slider_handle_active")
+        self.track_hover_color = theme.color("slider_track_hover")
+        self.track_active_color = theme.color("slider_track_active")
+        self.hover_border_color = theme.color("slider_border_hover")
+        self.disabled_bg_color = theme.color("slider_disabled_bg")
+        self.disabled_fg_color = theme.color("slider_disabled_fg")
+        self.disabled_handle_color = theme.color("slider_disabled_handle")
+        self.disabled_border_color = theme.color("slider_disabled_border")
         self.toast_queue = []
         self.active_toast = None
         input_field_width = 60
@@ -61,7 +63,7 @@ class Slider:
         input_y = self.rect.y
         self.input_field = InputField(
             rect=(input_x, input_y, input_field_width, input_field_height),
-            font=font,
+            font=self.font,
             initial_text=str(self.value),
             on_text_change=None,
             numeric=True,
