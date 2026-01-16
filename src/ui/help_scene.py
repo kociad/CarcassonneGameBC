@@ -80,7 +80,13 @@ class HelpScene(Scene):
 
     def draw(self) -> None:
         """Draw the help scene."""
-        self.screen.fill(theme.THEME_SCENE_BG_COLOR)
+        self._draw_background(
+            background_color=theme.THEME_HELP_BACKGROUND_COLOR,
+            image_name=theme.THEME_HELP_BACKGROUND_IMAGE,
+            scale_mode=theme.THEME_HELP_BACKGROUND_SCALE_MODE,
+            tint_color=theme.THEME_HELP_BACKGROUND_TINT_COLOR,
+            blur_radius=theme.THEME_HELP_BACKGROUND_BLUR_RADIUS,
+        )
         offset_y = self.scroll_offset
         title_text = self.font.render("How to Play", True,
                                       theme.THEME_TEXT_COLOR_LIGHT)
