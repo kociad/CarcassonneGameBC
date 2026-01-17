@@ -3,6 +3,7 @@ import pygame
 import typing
 import settings
 from ui.components.toast import Toast
+from ui import theme
 
 if typing.TYPE_CHECKING:
     from ui.components.dropdown import Dropdown
@@ -78,6 +79,32 @@ class Scene:
         for dropdown in dropdowns:
             if dropdown.expanded == expanded_only:
                 dropdown.draw(self.screen, y_offset=y_offset)
+
+    def _get_scene_header_height(self, title_height: int) -> int:
+        """Return the height of the fixed scene header."""
+        return title_height + 2 * theme.THEME_SCENE_HEADER_TOP_PADDING
+
+    def _draw_scene_header(self, title_surface: pygame.Surface) -> int:
+        """Draw a fixed header across the top of the screen."""
+        header_height = self._get_scene_header_height(
+            title_surface.get_height()
+        )
+        header_rect = pygame.Rect(
+            0,
+            0,
+            self.screen.get_width(),
+            header_height,
+        )
+        pygame.draw.rect(
+            self.screen,
+            theme.THEME_SCENE_HEADER_BG_COLOR,
+            header_rect,
+        )
+        title_rect = title_surface.get_rect(
+            center=(self.screen.get_width() // 2, header_rect.centery)
+        )
+        self.screen.blit(title_surface, title_rect)
+        return header_height
 
     def refresh_theme(self) -> None:
         """Refresh any cached surfaces after a theme update."""

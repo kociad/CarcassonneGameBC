@@ -32,6 +32,7 @@ class MainMenuScene(Scene):
         self.max_scroll = 0
         self.scroll_speed = 30
         self.show_confirm_dialog = False
+        self.header_height = 0
         continue_rect = pygame.Rect(0, 0, 0, 60)
         self.continue_button = Button(continue_rect, "Continue",
                                       self.button_font,
@@ -195,10 +196,7 @@ class MainMenuScene(Scene):
         offset_y = self.scroll_offset
         title_text = self.font.render("Carcassonne", True,
                                       theme.THEME_TEXT_COLOR_LIGHT)
-        title_rect = title_text.get_rect(
-            center=(self.screen.get_width() // 2,
-                    self.screen.get_height() // 3 - 60 + offset_y))
-        self.screen.blit(title_text, title_rect)
+        self._draw_scene_header(title_text)
         self.continue_button.disabled = self.get_game_session() is None
         self.continue_button.draw(self.screen, y_offset=offset_y)
         self.start_button.draw(self.screen, y_offset=offset_y)
@@ -222,9 +220,15 @@ class MainMenuScene(Scene):
             self.settings_button,
             self.quit_button,
         ]
+        self.header_height = self._get_scene_header_height(
+            self.font.get_height()
+        )
         total_height = sum(button.rect.height for button in buttons)
         total_height += padding * (len(buttons) - 1)
-        current_y = (self.screen.get_height() // 2) - (total_height // 2)
+        available_height = self.screen.get_height() - self.header_height
+        current_y = self.header_height + max(
+            0, (available_height - total_height) // 2
+        )
         for button in buttons:
             width, height = button.rect.size
             button.rect = pygame.Rect(0, 0, width, height)

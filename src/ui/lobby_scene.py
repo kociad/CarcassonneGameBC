@@ -129,14 +129,12 @@ class LobbyScene(Scene):
             tint_color=theme.THEME_LOBBY_BACKGROUND_TINT_COLOR,
             blur_radius=theme.THEME_LOBBY_BACKGROUND_BLUR_RADIUS,
         )
-        offset_y = self.scroll_offset
         title_text = self.font.render("Lobby", True,
                                       theme.THEME_TEXT_COLOR_LIGHT)
-        title_rect = title_text.get_rect(center=(self.screen.get_width() // 2,
-                                                 60 + offset_y))
-        self.screen.blit(title_text, title_rect)
+        header_height = self._draw_scene_header(title_text)
+        offset_y = self.scroll_offset
         label_font = theme.get_font("label", theme.THEME_FONT_SIZE_BUTTON)
-        y = 160 + offset_y
+        y = header_height + theme.THEME_LAYOUT_VERTICAL_GAP + offset_y
         if self.is_host:
             for i, status in enumerate(self.status_list):
                 name = status["name"]

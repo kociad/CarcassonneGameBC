@@ -112,6 +112,7 @@ class GamePrepareScene(Scene):
         self.scroll_offset = 0
         self.max_scroll = 0
         self.scroll_speed = 30
+        self.header_height = 0
 
         self.original_player_names = settings_manager.get("PLAYERS", []).copy()
 
@@ -133,7 +134,6 @@ class GamePrepareScene(Scene):
 
         x_center = screen.get_width() // 2 - 100
 
-        self.title_y = 0
         self.player_label_y = 0
 
         add_player_rect = pygame.Rect(0, 0, 0, 40)
@@ -317,10 +317,10 @@ class GamePrepareScene(Scene):
         padding = theme.THEME_LAYOUT_VERTICAL_GAP
         x_center = self.screen.get_width() // 2 - 100
         button_center_x = self.screen.get_width() // 2
-        current_y = 60
-
-        self.title_y = current_y + self.font.get_height() // 2
-        current_y += self.font.get_height() + padding
+        self.header_height = self._get_scene_header_height(
+            self.font.get_height()
+        )
+        current_y = self.header_height + padding
 
         self.player_label_y = current_y
         current_y += self.dropdown_font.get_height() + padding
@@ -645,9 +645,7 @@ class GamePrepareScene(Scene):
 
         title_text = self.font.render("Game Setup", True,
                                       theme.THEME_TEXT_COLOR_LIGHT)
-        title_rect = title_text.get_rect(center=(self.screen.get_width() // 2,
-                                                 self.title_y + offset_y))
-        self.screen.blit(title_text, title_rect)
+        self._draw_scene_header(title_text)
 
         player_label = self.dropdown_font.render("Players", True,
                                                  theme.THEME_SECTION_HEADER_COLOR)
