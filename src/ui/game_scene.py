@@ -751,8 +751,9 @@ class GameScene(Scene):
 
         pygame.draw.rect(self.screen, theme.THEME_GAME_SIDEBAR_BG_COLOR,
                          (panel_x, 0, sidebar_width, window_height))
-        current_y = 50
-        section_spacing = 25
+        padding = theme.THEME_LAYOUT_VERTICAL_GAP
+        figure_gap = max(4, padding // 2)
+        current_y = padding * 2
         scrollable_content_start_y = current_y
 
         if selected_card:
@@ -762,7 +763,7 @@ class GameScene(Scene):
             card_rect.centerx = sidebar_center_x
             card_rect.y = current_y
             self.screen.blit(image_to_draw, card_rect)
-            current_y += card_rect.height + section_spacing
+            current_y += card_rect.height + padding
             scrollable_content_start_y = current_y
 
         offset_y = self.sidebar_scroll_offset
@@ -786,7 +787,7 @@ class GameScene(Scene):
             status_rect.y = current_y - offset_y
             if status_rect.bottom > scrollable_content_start_y and status_rect.top < window_height:
                 self.screen.blit(status_surface, status_rect)
-            current_y += status_rect.height + section_spacing
+            current_y += status_rect.height + padding
 
         cards_surface = self.font.render(
             f"Cards left: {remaining_cards}", True,
@@ -796,31 +797,51 @@ class GameScene(Scene):
         cards_rect.y = current_y - offset_y
         if cards_rect.bottom > scrollable_content_start_y and cards_rect.top < window_height:
             self.screen.blit(cards_surface, cards_rect)
-        current_y += cards_rect.height + section_spacing
+        current_y += cards_rect.height + padding
 
         all_players = self.session.get_players()
 
         for i, player in enumerate(all_players):
-            player_start_y = current_y
             is_current_player = (player == current_player)
 
-            player_section_height = 80
             figures = player.get_figures()
+            name_text = player.get_name()
+            try:
+                color_string = player.get_color()
+                player_color = theme.THEME_PLAYER_COLOR_MAP.get(
+                    color_string, theme.THEME_TEXT_COLOR_LIGHT)
+            except Exception as e:
+                logger.error(f"Failed to get player color: {e}")
+                player_color = theme.THEME_TEXT_COLOR_LIGHT
+            name_surface = self.font.render(name_text, True, player_color)
+            name_height = name_surface.get_height()
+
+            score_color = theme.THEME_GAME_SCORE_TEXT_COLOR
+            score_surface = self.font.render(f"Score: {player.get_score()}",
+                                             True, score_color)
+            score_height = score_surface.get_height()
+
+            grid_height = 0
             if figures:
                 figure_size = settings_manager.get("FIGURE_SIZE")
                 figures_per_row = max(1, (sidebar_width - 20) //
-                                      (figure_size + 5))
+                                      (figure_size + figure_gap))
                 figures_per_row = min(figures_per_row, len(figures))
                 total_rows = (len(figures) + figures_per_row -
                               1) // figures_per_row
-                player_section_height += total_rows * figure_size + (
-                    total_rows - 1) * 5
+                grid_height = (total_rows * figure_size
+                               + (total_rows - 1) * figure_gap)
+
+            player_section_height = (name_height + padding + score_height
+                                     + (padding if figures else 0)
+                                     + grid_height)
 
             if is_current_player:
                 player_bg_rect = pygame.Rect(panel_x + 5,
-                                             current_y - offset_y - 10,
+                                             current_y - offset_y
+                                             - (padding // 2),
                                              sidebar_width - 10,
-                                             player_section_height)
+                                             player_section_height + padding)
                 if player_bg_rect.bottom > scrollable_content_start_y and player_bg_rect.top < window_height:
                     pygame.draw.rect(self.screen,
                                      theme.THEME_GAME_CURRENT_PLAYER_BG_COLOR,
@@ -828,76 +849,59 @@ class GameScene(Scene):
                     pygame.draw.rect(self.screen,
                                      theme.THEME_GAME_CURRENT_PLAYER_BORDER_COLOR,
                                      player_bg_rect, 2)
-
-            try:
-                color_string = player.get_color()
-
-                player_color = theme.THEME_PLAYER_COLOR_MAP.get(
-                    color_string, theme.THEME_TEXT_COLOR_LIGHT)
-
-            except Exception as e:
-                logger.error(f"Failed to get player color: {e}")
-                player_color = theme.THEME_TEXT_COLOR_LIGHT
-
-            name_text = player.get_name()
-            name_surface = self.font.render(name_text, True, player_color)
             name_rect = name_surface.get_rect()
             name_rect.centerx = sidebar_center_x
             name_rect.y = current_y - offset_y
             if name_rect.bottom > scrollable_content_start_y and name_rect.top < window_height:
                 self.screen.blit(name_surface, name_rect)
-            current_y += name_rect.height + 5
+            current_y += name_rect.height + padding
 
-            score_color = theme.THEME_GAME_SCORE_TEXT_COLOR
-            score_surface = self.font.render(f"Score: {player.get_score()}",
-                                             True, score_color)
             score_rect = score_surface.get_rect()
             score_rect.centerx = sidebar_center_x
             score_rect.y = current_y - offset_y
             if score_rect.bottom > scrollable_content_start_y and score_rect.top < window_height:
                 self.screen.blit(score_surface, score_rect)
-            current_y += score_rect.height + 10
+            current_y += score_rect.height + padding
 
             if figures:
-
                 figure_size = settings_manager.get("FIGURE_SIZE")
-                padding = 10
-                available_width = sidebar_width - (2 * padding)
-                figures_per_row = max(1, available_width // (figure_size + 5))
+                figures_padding = max(10, padding)
+                available_width = sidebar_width - (2 * figures_padding)
+                figures_per_row = max(1, available_width //
+                                      (figure_size + figure_gap))
                 figures_per_row = min(figures_per_row, len(figures))
 
                 total_rows = (len(figures) + figures_per_row -
                               1) // figures_per_row
-                actual_grid_width = figures_per_row * figure_size + (
-                    figures_per_row - 1) * 5
+                actual_grid_width = (figures_per_row * figure_size
+                                     + (figures_per_row - 1) * figure_gap)
 
                 grid_start_x = sidebar_center_x - actual_grid_width // 2
                 grid_start_y = current_y - offset_y
 
                 if grid_start_y + total_rows * (
-                        figure_size + 5
+                        figure_size + figure_gap
                 ) > scrollable_content_start_y and grid_start_y < window_height:
                     for j, figure in enumerate(figures):
                         row = j // figures_per_row
                         col = j % figures_per_row
 
-                        fig_x = grid_start_x + col * (figure_size + 5)
-                        fig_y = grid_start_y + row * (figure_size + 5)
+                        fig_x = grid_start_x + col * (figure_size + figure_gap)
+                        fig_y = grid_start_y + row * (figure_size + figure_gap)
 
                         if fig_y + figure_size > scrollable_content_start_y and fig_y < window_height:
                             self.screen.blit(figure.image, (fig_x, fig_y))
 
-                grid_height = total_rows * figure_size + (total_rows - 1) * 5
-                current_y += grid_height
+                current_y += grid_height + padding
 
             if i < len(all_players) - 1:
-                current_y += section_spacing
+                current_y += padding
 
         if (current_player.get_is_ai()
                 and hasattr(current_player, 'is_thinking')
                 and current_player.is_thinking()
                 and settings_manager.get("DEBUG", False)):
-            current_y += section_spacing
+            current_y += padding
 
             thinking_text = f"AI is thinking..."
             thinking_surface = self.font.render(
@@ -907,7 +911,7 @@ class GameScene(Scene):
             thinking_rect.y = current_y - offset_y
             if thinking_rect.bottom > scrollable_content_start_y and thinking_rect.top < window_height:
                 self.screen.blit(thinking_surface, thinking_rect)
-            current_y += thinking_rect.height + 10
+            current_y += thinking_rect.height + padding
 
             progress = current_player.get_thinking_progress()
             self.ai_thinking_progress_bar.set_progress(progress)
@@ -916,10 +920,10 @@ class GameScene(Scene):
             if self.ai_thinking_progress_bar.rect.bottom > scrollable_content_start_y and self.ai_thinking_progress_bar.rect.top < window_height:
                 self.ai_thinking_progress_bar.draw(self.screen, y_offset=0)
 
-            current_y += self.ai_thinking_progress_bar.rect.height + 10
+            current_y += self.ai_thinking_progress_bar.rect.height + padding
 
         if settings_manager.get("DEBUG"):
-            current_y += section_spacing
+            current_y += padding
             structure_surface = self.font.render(
                 f"Structures: {len(detected_structures)}", True,
                 theme.THEME_TEXT_COLOR_LIGHT)
@@ -928,9 +932,9 @@ class GameScene(Scene):
             structure_rect.y = current_y - offset_y
             if structure_rect.bottom > scrollable_content_start_y and structure_rect.top < window_height:
                 self.screen.blit(structure_surface, structure_rect)
-            current_y += structure_rect.height
+            current_y += structure_rect.height + padding
 
-        max_scroll = max(0, current_y - window_height + 50)
+        max_scroll = max(0, current_y - window_height + padding * 2)
         self.sidebar_scroll_offset = min(self.sidebar_scroll_offset,
                                          max_scroll)
 

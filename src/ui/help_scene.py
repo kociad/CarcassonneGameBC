@@ -24,11 +24,8 @@ class HelpScene(Scene):
         self.scroll_offset = 0
         self.max_scroll = 0
         self.scroll_speed = 30
-        center_x = screen.get_width() // 2
-        current_y = 60
-        self.title_y = current_y
-        current_y += 80
-        self.controls_start_y = current_y
+        self.title_y = 0
+        self.controls_start_y = 0
         self.controls = [
             "GAME CONTROLS:", "",
             "WASD or ARROW KEYS - Move around the game board",
@@ -45,17 +42,54 @@ class HelpScene(Scene):
             "Meeples can only be placed on unoccupied structures",
             "Completed structures score points immediately"
         ]
-        line_height = 30
-        self.controls_height = len(self.controls) * line_height
-        current_y += self.controls_height + 40
+        self.controls_height = 0
         rules_rect = pygame.Rect(0, 0, 0, 60)
-        rules_rect.center = (center_x, current_y + 30)
         self.rules_button = Button(rules_rect, "Wiki", self.button_font)
-        current_y += 80
         back_rect = pygame.Rect(0, 0, 0, 60)
-        back_rect.center = (center_x, current_y + 30)
         self.back_button = Button(back_rect, "Back", self.button_font)
-        self.max_scroll = max(screen.get_height(), current_y + 100)
+        self._layout_controls()
+
+    def _get_line_style(self, line: str) -> tuple[pygame.font.Font, tuple]:
+        if line.endswith(":") and not line.startswith(" "):
+            return self.text_font, theme.THEME_SECTION_HEADER_COLOR
+        if line.startswith("2"):
+            return self.controls_font, theme.THEME_SUBSECTION_COLOR
+        return self.controls_font, theme.THEME_TEXT_COLOR_LIGHT
+
+    def _get_line_height(self, line: str) -> int:
+        font, _ = self._get_line_style(line)
+        return font.get_height()
+
+    def _layout_controls(self) -> None:
+        padding = theme.THEME_LAYOUT_VERTICAL_GAP
+        center_x = self.screen.get_width() // 2
+        current_y = padding * 3
+
+        self.title_y = current_y + self.font.get_height() // 2
+        current_y += self.font.get_height() + padding
+
+        self.controls_start_y = current_y
+        self.controls_height = 0
+        for line in self.controls:
+            if line == "":
+                self.controls_height += padding
+                continue
+            self.controls_height += self._get_line_height(line) + padding
+        current_y += self.controls_height + padding
+
+        rules_width, rules_height = self.rules_button.rect.size
+        self.rules_button.rect = pygame.Rect(0, 0, rules_width, rules_height)
+        self.rules_button.rect.center = (center_x,
+                                         current_y + rules_height // 2)
+        current_y += rules_height + padding
+
+        back_width, back_height = self.back_button.rect.size
+        self.back_button.rect = pygame.Rect(0, 0, back_width, back_height)
+        self.back_button.rect.center = (center_x, current_y + back_height // 2)
+        current_y += back_height + padding
+
+        self.max_scroll = max(self.screen.get_height(),
+                              current_y + padding * 2)
 
     def handle_events(self, events: list[pygame.event.Event]) -> None:
         """Handle events for the help scene."""
@@ -100,20 +134,11 @@ class HelpScene(Scene):
                                                  self.title_y + offset_y))
         self.screen.blit(title_text, title_rect)
         current_y = self.controls_start_y + offset_y
-        line_height = 35
         for line in self.controls:
             if line == "":
-                current_y += line_height // 2
+                current_y += theme.THEME_LAYOUT_VERTICAL_GAP
                 continue
-            if line.endswith(":") and not line.startswith(" "):
-                color = theme.THEME_SECTION_HEADER_COLOR
-                font = self.text_font
-            elif line.startswith("2"):
-                color = theme.THEME_SUBSECTION_COLOR
-                font = self.controls_font
-            else:
-                color = theme.THEME_TEXT_COLOR_LIGHT
-                font = self.controls_font
+            font, color = self._get_line_style(line)
             text_surface = font.render(line, True, color)
             if line.endswith(":") and not line.startswith(" "):
                 text_rect = text_surface.get_rect(
@@ -123,7 +148,7 @@ class HelpScene(Scene):
             if text_rect.bottom > 0 and text_rect.top < self.screen.get_height(
             ):
                 self.screen.blit(text_surface, text_rect)
-            current_y += line_height
+            current_y += text_rect.height + theme.THEME_LAYOUT_VERTICAL_GAP
         self.rules_button.draw(self.screen, y_offset=offset_y)
         self.back_button.draw(self.screen, y_offset=offset_y)
 
@@ -142,3 +167,4 @@ class HelpScene(Scene):
         self.rules_button.apply_theme()
         self.back_button.set_font(self.button_font)
         self.back_button.apply_theme()
+        self._layout_controls()
