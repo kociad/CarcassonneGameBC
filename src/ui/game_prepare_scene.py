@@ -301,15 +301,16 @@ class GamePrepareScene(Scene):
                               x_center: int) -> int:
         current_y = start_y
         for name_field, ai_checkbox in self.player_fields:
-            width, height = name_field.rect.size
-            name_field.rect = pygame.Rect(x_center, current_y, width, height)
+            width, field_height = name_field.rect.size
+            name_field.rect = pygame.Rect(x_center, current_y, width,
+                                          field_height)
             if ai_checkbox:
                 checkbox_width, checkbox_height = ai_checkbox.rect.size
                 checkbox_x = name_field.rect.right + 10
-                checkbox_y = current_y + (height - checkbox_height) // 2
+                checkbox_y = current_y + (field_height - checkbox_height) // 2
                 ai_checkbox.rect = pygame.Rect(checkbox_x, checkbox_y,
                                                checkbox_width, checkbox_height)
-            current_y += height + padding
+            current_y += field_height + padding
         return current_y
 
     def _layout_controls(self) -> None:
@@ -506,6 +507,7 @@ class GamePrepareScene(Scene):
                 break
 
         self._build_player_fields()
+        self._layout_controls()
 
     def _remove_player_field(self) -> None:
         """Remove a player"""
@@ -526,6 +528,7 @@ class GamePrepareScene(Scene):
                 break
 
         self._build_player_fields()
+        self._layout_controls()
 
     def _apply_settings_and_start(self) -> None:
         """Apply settings and start the game"""
