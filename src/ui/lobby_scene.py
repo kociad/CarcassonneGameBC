@@ -34,15 +34,24 @@ class LobbyScene(Scene):
                                 'local') == 'host')
         self.network_mode = getattr(self.network, 'network_mode', 'local')
         start_rect = pygame.Rect(0, 0, 0, 60)
-        start_rect.center = (screen.get_width() // 2,
-                             screen.get_height() - 120 + 30)
         self.start_button = Button(start_rect, "Start Game", self.button_font)
+        self._layout_controls()
         self.waiting_for_host = False
         self.original_player_names = settings_manager.get("PLAYERS", [])
         if self.network_mode == "local":
             self.switch_scene(GameState.GAME)
             return
         self._update_player_status()
+
+    def _layout_controls(self) -> None:
+        bottom_margin = theme.THEME_LAYOUT_VERTICAL_GAP * 3
+        center_x = self.screen.get_width() // 2
+        width, height = self.start_button.rect.size
+        self.start_button.rect = pygame.Rect(0, 0, width, height)
+        self.start_button.rect.centerx = center_x
+        self.start_button.rect.bottom = (
+            self.screen.get_height() - bottom_margin
+        )
 
     def _update_player_status(self):
         """Update the connection status of all players in the lobby."""
@@ -169,3 +178,4 @@ class LobbyScene(Scene):
         self.start_button.set_font(self.button_font)
         self.start_button.apply_theme()
         self.toast_manager.apply_theme()
+        self._layout_controls()
