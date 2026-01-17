@@ -320,7 +320,7 @@ class GamePrepareScene(Scene):
         self.header_height = self._get_scene_header_height(
             self.font.get_height()
         )
-        current_y = self.header_height + padding
+        current_y = self.header_height + theme.THEME_LAYOUT_VERTICAL_GAP
 
         self.player_label_y = current_y
         current_y += self.dropdown_font.get_height() + padding

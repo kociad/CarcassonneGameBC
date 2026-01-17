@@ -225,8 +225,8 @@ class MainMenuScene(Scene):
         )
         total_height = sum(button.rect.height for button in buttons)
         total_height += padding * (len(buttons) - 1)
-        available_height = self.screen.get_height() - self.header_height
-        current_y = self.header_height + max(
+        available_height = self.screen.get_height() - self.header_height - padding
+        current_y = self.header_height + padding + max(
             0, (available_height - total_height) // 2
         )
         for button in buttons:
