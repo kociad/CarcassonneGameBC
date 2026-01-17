@@ -146,6 +146,10 @@ class GamePrepareScene(Scene):
         self.player_list_y = 0
 
         self._build_player_fields()
+        self._layout_controls()
+        self._layout_controls()
+        self._layout_controls()
+        self._layout_controls()
 
         self.game_label_y = 0
 
@@ -297,9 +301,9 @@ class GamePrepareScene(Scene):
 
             self.player_fields.append((name_field, ai_checkbox))
 
-    def _layout_player_fields(self, start_y: int, padding: int,
-                              x_center: int) -> int:
+    def _layout_player_fields(self, start_y: int, x_center: int) -> int:
         current_y = start_y
+        padding = theme.THEME_LAYOUT_VERTICAL_GAP
         for name_field, ai_checkbox in self.player_fields:
             width, height = name_field.rect.size
             name_field.rect = pygame.Rect(x_center, current_y, width, height)
@@ -325,7 +329,7 @@ class GamePrepareScene(Scene):
         current_y += self.dropdown_font.get_height() + padding
 
         self.player_list_y = current_y
-        current_y = self._layout_player_fields(current_y, padding, x_center)
+        current_y = self._layout_player_fields(current_y, x_center)
 
         if self.player_fields:
             players_center_y = self.player_fields[0][0].rect.centery
@@ -480,7 +484,6 @@ class GamePrepareScene(Scene):
 
         self._build_player_fields()
         self._layout_controls()
-        self._layout_controls()
 
     def _toggle_card_set(self, set_name: str, checked: bool) -> None:
         """Handle card set selection toggle"""
@@ -506,6 +509,7 @@ class GamePrepareScene(Scene):
                 break
 
         self._build_player_fields()
+        self._layout_controls()
 
     def _remove_player_field(self) -> None:
         """Remove a player"""
@@ -526,6 +530,7 @@ class GamePrepareScene(Scene):
                 break
 
         self._build_player_fields()
+        self._layout_controls()
 
     def _apply_settings_and_start(self) -> None:
         """Apply settings and start the game"""
