@@ -43,6 +43,7 @@ class ThemeDebugOverlay:
         self.panel_rect = pygame.Rect(0, 0, 0, 0)
         self.toggle_button = None
         self.save_button = None
+        self._controls_start_y = 0
         self.controls: list[ThemeControl] = []
         self._optional_values: dict[str, typing.Any] = {}
         self._build_layout()
@@ -68,11 +69,12 @@ class ThemeDebugOverlay:
         self._title_surface = self.title_font.render(
             "Theme Debug Overlay", True, theme.THEME_TEXT_COLOR_LIGHT
         )
-        button_size = 36
+        padding = theme.THEME_LAYOUT_VERTICAL_GAP
+        button_size = max(24, int(self.title_font.get_height() * 0.9))
         toggle_rect = pygame.Rect(0, 0, 0, button_size)
         toggle_rect.center = (
-            screen_width - button_size // 2 - 12,
-            12 + button_size // 2,
+            screen_width - button_size // 2 - padding,
+            padding + button_size // 2,
         )
         self.toggle_button = Button(
             rect=toggle_rect,
@@ -82,8 +84,8 @@ class ThemeDebugOverlay:
         )
         save_rect = pygame.Rect(0, 0, 0, 36)
         save_rect.center = (
-            self.panel_rect.left + 16 + 60,
-            self.panel_rect.top + 16 + 18,
+            self.panel_rect.left + padding + save_rect.height // 2,
+            self.panel_rect.top + padding + save_rect.height // 2,
         )
         self.save_button = Button(
             rect=save_rect,
@@ -91,13 +93,23 @@ class ThemeDebugOverlay:
             font=theme.get_font("button", 18),
             callback=self._save_theme,
         )
+        save_width, save_height = self.save_button.rect.size
+        self.save_button.rect.center = (
+            self.panel_rect.left + padding + save_width // 2,
+            self.panel_rect.top + padding + save_height // 2,
+        )
+        header_height = max(self._title_surface.get_height(),
+                            self.save_button.rect.height)
+        self._controls_start_y = (self.panel_rect.top + header_height
+                                  + padding * 2)
 
     def _build_controls(self) -> None:
         self.controls.clear()
-        label_x = self.panel_rect.left + 16
+        padding = theme.THEME_LAYOUT_VERTICAL_GAP
+        label_x = self.panel_rect.left + padding
         control_x = self.panel_rect.left + 260
-        current_y = self.panel_rect.top + 70
-        line_gap = 12
+        current_y = self._controls_start_y
+        line_gap = padding
         slider_width = self.panel_rect.right - control_x - 80
         for name, value in self._theme_items():
             label = name.replace("THEME_", "").replace("_", " ")
@@ -219,8 +231,9 @@ class ThemeDebugOverlay:
         channels = self._normalize_color_channels(value)
         if optional and not enabled:
             self._optional_values[name] = channels
+        padding = theme.THEME_LAYOUT_VERTICAL_GAP
         slider_height = 20
-        channel_gap = 8
+        channel_gap = max(4, padding // 2)
         label_height = self.label_font.get_height()
         sliders: list[Slider] = []
         channel_labels = ["R", "G", "B", "A"]
@@ -230,7 +243,8 @@ class ThemeDebugOverlay:
 
         def build_sliders(y_offset: int) -> None:
             for idx, channel in enumerate(channels):
-                slider_y = y_offset + label_height + 6 + idx * (slider_height + channel_gap)
+                slider_y = (y_offset + label_height + padding // 2
+                            + idx * (slider_height + channel_gap))
                 slider = Slider(
                     rect=(control_x + 20, slider_y, slider_width, slider_height),
                     font=self.control_font,
@@ -257,7 +271,8 @@ class ThemeDebugOverlay:
                 for slider in sliders:
                     slider.set_disabled(True)
 
-        height = label_height + (slider_height + channel_gap) * len(sliders) + 8
+        height = (label_height + (slider_height + channel_gap) * len(sliders)
+                  + padding // 2)
         components: list[typing.Any] = sliders[:]
         if checkbox is not None:
             components.insert(0, checkbox)
@@ -269,15 +284,14 @@ class ThemeDebugOverlay:
                 surface.blit(enabled_label,
                              (control_x + 26, start_y + y_offset))
             for idx, slider in enumerate(sliders):
-                label_y = start_y + y_offset + label_height + 6 + idx * (
-                    slider_height + channel_gap
-                )
+                label_y = (start_y + y_offset + label_height + padding // 2
+                           + idx * (slider_height + channel_gap))
                 surface.blit(channel_label_surfaces[idx],
                              (control_x, label_y - 2))
                 slider.draw(surface, y_offset=y_offset)
             if checkbox is None or checkbox.checked:
                 swatch_x = control_x + slider_width + swatch_margin
-                swatch_y = start_y + y_offset + label_height + 6
+                swatch_y = start_y + y_offset + label_height + padding // 2
                 swatch_surface = pygame.Surface(
                     (swatch_size, swatch_size), pygame.SRCALPHA
                 )
@@ -394,11 +408,12 @@ class ThemeDebugOverlay:
             label, True, theme.THEME_TEXT_COLOR_LIGHT
         )
 
+        height = max(self.label_font.get_height(), slider.rect.height)
         return ThemeControl(
             name=name,
             label=label,
             y=start_y,
-            height=28,
+            height=height,
             components=[slider],
             draw=draw,
             handle_event=handle_event,
@@ -445,11 +460,12 @@ class ThemeDebugOverlay:
             label, True, theme.THEME_TEXT_COLOR_LIGHT
         )
 
+        height = max(self.label_font.get_height(), slider.rect.height)
         return ThemeControl(
             name=name,
             label=label,
             y=start_y,
-            height=28,
+            height=height,
             components=[slider],
             draw=draw,
             handle_event=handle_event,
@@ -495,11 +511,12 @@ class ThemeDebugOverlay:
             label, True, theme.THEME_TEXT_COLOR_LIGHT
         )
 
+        height = max(self.label_font.get_height(), input_field.rect.height)
         return ThemeControl(
             name=name,
             label=label,
             y=start_y,
-            height=32,
+            height=height,
             components=[input_field],
             draw=draw,
             handle_event=handle_event,
@@ -564,11 +581,16 @@ class ThemeDebugOverlay:
             "Enabled", True, theme.THEME_TEXT_COLOR_LIGHT
         )
 
+        height = max(
+            self.label_font.get_height(),
+            checkbox.rect.height,
+            input_field.rect.height,
+        )
         return ThemeControl(
             name=name,
             label=label,
             y=start_y,
-            height=32,
+            height=height,
             components=[checkbox, input_field],
             draw=draw,
             handle_event=handle_event,
@@ -618,11 +640,12 @@ class ThemeDebugOverlay:
             label, True, theme.THEME_TEXT_COLOR_LIGHT
         )
 
+        height = max(self.label_font.get_height(), dropdown.rect.height)
         return ThemeControl(
             name=name,
             label=label,
             y=start_y,
-            height=32,
+            height=height,
             components=[dropdown],
             draw=draw,
             handle_event=handle_event,
@@ -689,8 +712,11 @@ class ThemeDebugOverlay:
         self.refresh_theme()
 
     def _update_scroll_bounds(self, content_end_y: int) -> None:
-        content_height = content_end_y - (self.panel_rect.top + 70)
-        view_height = self.panel_rect.height - 90
+        padding = theme.THEME_LAYOUT_VERTICAL_GAP
+        content_height = content_end_y - self._controls_start_y
+        view_height = (self.panel_rect.height
+                       - (self._controls_start_y - self.panel_rect.top)
+                       - padding)
         self.max_scroll = max(0, content_height - view_height)
         self.scroll_offset = max(-self.max_scroll, min(0, self.scroll_offset))
 
@@ -782,18 +808,8 @@ class ThemeDebugOverlay:
         return remaining
 
     def refresh_theme(self) -> None:
-        self.title_font = theme.get_font(
-            "title", max(18, int(theme.THEME_FONT_SIZE_BODY * 0.6))
-        )
-        self.label_font = theme.get_font(
-            "label", max(14, int(theme.THEME_FONT_SIZE_BODY * 0.45))
-        )
-        self.control_font = theme.get_font(
-            "label", max(14, int(theme.THEME_FONT_SIZE_BODY * 0.45))
-        )
-        self._title_surface = self.title_font.render(
-            "Theme Debug Overlay", True, theme.THEME_TEXT_COLOR_LIGHT
-        )
+        self._build_layout()
+        self._build_controls()
         self.toggle_button.apply_theme()
         self.save_button.apply_theme()
         self.toggle_button.set_font(theme.get_font("button", 16))
@@ -805,8 +821,9 @@ class ThemeDebugOverlay:
         self.active = not self.active
         if self.active:
             self.scroll_offset = 0
-            self._update_scroll_bounds(self.panel_rect.top + 70 + sum(
-                control.height + 12 for control in self.controls
+            padding = theme.THEME_LAYOUT_VERTICAL_GAP
+            self._update_scroll_bounds(self._controls_start_y + sum(
+                control.height + padding for control in self.controls
             ))
             for control in self.controls:
                 control.sync()
@@ -822,10 +839,12 @@ class ThemeDebugOverlay:
         panel.fill((30, 30, 30, 230))
         self.screen.blit(panel, self.panel_rect.topleft)
         pygame.draw.rect(self.screen, (200, 200, 200), self.panel_rect, 2)
-        self.screen.blit(
-            self._title_surface,
-            (self.panel_rect.left + 160, self.panel_rect.top + 20),
-        )
+        padding = theme.THEME_LAYOUT_VERTICAL_GAP
+        title_x = (self.panel_rect.left +
+                   (self.panel_rect.width - self._title_surface.get_width())
+                   // 2)
+        title_y = self.panel_rect.top + padding
+        self.screen.blit(self._title_surface, (title_x, title_y))
         self.save_button.draw(self.screen)
         previous_clip = self.screen.get_clip()
         self.screen.set_clip(self.panel_rect)

@@ -36,12 +36,13 @@ class SettingsScene(Scene):
         button_center_x = screen.get_width() // 2
         current_y = 60
 
-        self.title_y = current_y
-        current_y += 60
+        self.title_y = current_y + self.font.get_height() // 2
+        current_y += self.font.get_height() + theme.THEME_LAYOUT_VERTICAL_GAP
 
         # ===== DISPLAY SETTINGS =====
         self.display_label_y = current_y
-        current_y += 50
+        current_y += (self.dropdown_font.get_height()
+                      + theme.THEME_LAYOUT_VERTICAL_GAP)
 
         resolution_options = [
             "800x600", "1024x768", "1280x720", "1366x768", "1600x900",
@@ -62,7 +63,8 @@ class SettingsScene(Scene):
         )
         self.resolution_dropdown.set_disabled(
             settings_manager.get("FULLSCREEN"))
-        current_y += 60
+        current_y += (self.resolution_dropdown.rect.height
+                      + theme.THEME_LAYOUT_VERTICAL_GAP)
 
         self.fullscreen_checkbox = Checkbox(
             rect=(x_center, current_y, 20, 20),
@@ -74,21 +76,25 @@ class SettingsScene(Scene):
                         "In order to apply fullscreen setting, restart the game",
                         type="warning"))
             ])
-        current_y += 80
+        current_y += (self.fullscreen_checkbox.rect.height
+                      + theme.THEME_LAYOUT_VERTICAL_GAP)
 
         # ===== GAME SETTINGS =====
         self.game_label_y = current_y
-        current_y += 50
+        current_y += (self.dropdown_font.get_height()
+                      + theme.THEME_LAYOUT_VERTICAL_GAP)
 
         self.valid_placement_checkbox = Checkbox(
             rect=(x_center, current_y, 20, 20),
             checked=settings_manager.get("SHOW_VALID_PLACEMENTS", True),
             on_toggle=lambda value: self._handle_valid_placement_toggle(value))
-        current_y += 80
+        current_y += (self.valid_placement_checkbox.rect.height
+                      + theme.THEME_LAYOUT_VERTICAL_GAP)
 
         # ===== DEBUG SETTINGS =====
         self.debug_label_y = current_y
-        current_y += 50
+        current_y += (self.dropdown_font.get_height()
+                      + theme.THEME_LAYOUT_VERTICAL_GAP)
 
         self.log_to_console_checkbox = Checkbox(
             rect=(x_center, current_y, 20, 20),
@@ -102,7 +108,8 @@ class SettingsScene(Scene):
             ])
         self.log_to_console_checkbox.set_disabled(
             not settings_manager.get("DEBUG"))
-        current_y += 60
+        current_y += (self.log_to_console_checkbox.rect.height
+                      + theme.THEME_LAYOUT_VERTICAL_GAP)
 
         self.fps_slider = Slider(rect=(x_center, current_y, 180, 20),
                                  font=self.dropdown_font,
@@ -111,7 +118,8 @@ class SettingsScene(Scene):
                                  value=settings_manager.get("FPS", 60),
                                  on_change=None)
         self.fps_slider.set_disabled(not settings_manager.get("DEBUG"))
-        current_y += self.fps_slider.rect.height + 20
+        current_y += (self.fps_slider.rect.height
+                      + theme.THEME_LAYOUT_VERTICAL_GAP)
 
         self.grid_size_slider = Slider(rect=(x_center, current_y, 180, 20),
                                        font=self.dropdown_font,
@@ -121,7 +129,8 @@ class SettingsScene(Scene):
                                            "GRID_SIZE", 20),
                                        on_change=None)
         self.grid_size_slider.set_disabled(not settings_manager.get("DEBUG"))
-        current_y += self.grid_size_slider.rect.height + 20
+        current_y += (self.grid_size_slider.rect.height
+                      + theme.THEME_LAYOUT_VERTICAL_GAP)
 
         self.tile_size_slider = Slider(rect=(x_center, current_y, 180, 20),
                                        font=self.dropdown_font,
@@ -130,7 +139,8 @@ class SettingsScene(Scene):
                                        value=settings_manager.get("TILE_SIZE"),
                                        on_change=None)
         self.tile_size_slider.set_disabled(not settings_manager.get("DEBUG"))
-        current_y += self.tile_size_slider.rect.height + 20
+        current_y += (self.tile_size_slider.rect.height
+                      + theme.THEME_LAYOUT_VERTICAL_GAP)
 
         self.figure_size_slider = Slider(
             rect=(x_center, current_y, 180, 20),
@@ -140,7 +150,8 @@ class SettingsScene(Scene):
             value=settings_manager.get("FIGURE_SIZE"),
             on_change=None)
         self.figure_size_slider.set_disabled(not settings_manager.get("DEBUG"))
-        current_y += self.figure_size_slider.rect.height + 20
+        current_y += (self.figure_size_slider.rect.height
+                      + theme.THEME_LAYOUT_VERTICAL_GAP)
 
         current_tile_size = settings_manager.get("TILE_SIZE")
         current_sidebar_width = settings_manager.get("SIDEBAR_WIDTH")
@@ -154,7 +165,8 @@ class SettingsScene(Scene):
                                            on_change=None)
         self.sidebar_width_slider.set_disabled(
             not settings_manager.get("DEBUG"))
-        current_y += self.sidebar_width_slider.rect.height + 20
+        current_y += (self.sidebar_width_slider.rect.height
+                      + theme.THEME_LAYOUT_VERTICAL_GAP)
 
         self.game_log_max_entries_field = InputField(
             rect=(x_center, current_y, 200, 40),
@@ -170,11 +182,13 @@ class SettingsScene(Scene):
             max_value=50000)
         self.game_log_max_entries_field.set_disabled(
             not settings_manager.get("DEBUG"))
-        current_y += 80
+        current_y += (self.game_log_max_entries_field.rect.height
+                      + theme.THEME_LAYOUT_VERTICAL_GAP)
 
         # ===== AI SETTINGS =====
         self.ai_label_y = current_y
-        current_y += 50
+        current_y += (self.dropdown_font.get_height()
+                      + theme.THEME_LAYOUT_VERTICAL_GAP)
 
         self.ai_simulation_checkbox = Checkbox(
             rect=(x_center, current_y, 20, 20),
@@ -182,7 +196,8 @@ class SettingsScene(Scene):
             on_toggle=lambda value: self._handle_ai_simulation_toggle(value))
         self.ai_simulation_checkbox.set_disabled(
             not settings_manager.get("DEBUG"))
-        current_y += 40
+        current_y += (self.ai_simulation_checkbox.rect.height
+                      + theme.THEME_LAYOUT_VERTICAL_GAP)
 
         self.ai_strategic_candidates_field = InputField(
             rect=(x_center, current_y, 80, 40),
@@ -195,7 +210,8 @@ class SettingsScene(Scene):
             max_value=20)
         self.ai_strategic_candidates_field.set_disabled(
             not settings_manager.get("DEBUG"))
-        current_y += 60
+        current_y += (self.ai_strategic_candidates_field.rect.height
+                      + theme.THEME_LAYOUT_VERTICAL_GAP)
 
         self.ai_thinking_speed_field = InputField(
             rect=(x_center, current_y, 80, 40),
@@ -207,16 +223,20 @@ class SettingsScene(Scene):
             max_value=2.0)
         self.ai_thinking_speed_field.set_disabled(
             not settings_manager.get("DEBUG"))
-        current_y += 80
+        current_y += (self.ai_thinking_speed_field.rect.height
+                      + theme.THEME_LAYOUT_VERTICAL_GAP)
 
         apply_rect = pygame.Rect(0, 0, 0, 60)
-        apply_rect.center = (button_center_x, current_y + 30)
+        apply_rect.center = (button_center_x,
+                             current_y + apply_rect.height // 2)
         self.apply_button = Button(apply_rect, "Apply", self.button_font,
                                    lambda: self._apply_settings())
-        current_y += 80
+        current_y += (self.apply_button.rect.height
+                      + theme.THEME_LAYOUT_VERTICAL_GAP)
 
         back_rect = pygame.Rect(0, 0, 0, 60)
-        back_rect.center = (button_center_x, current_y + 30)
+        back_rect.center = (button_center_x,
+                            current_y + back_rect.height // 2)
         self.back_button = Button(back_rect, "Back", self.button_font,
                                   lambda: self.switch_scene(GameState.MENU))
 
@@ -234,98 +254,90 @@ class SettingsScene(Scene):
                     f"Sidebar width adjusted to minimum ({new_min_sidebar_width}px)",
                     type="info"))
 
-    def _set_component_rect(self, component, x: int, y: int) -> None:
+    def _set_component_rect(self, component, x: int, y: int,
+                            padding: int) -> int:
         width, height = component.rect.size
         component.rect = pygame.Rect(x, y, width, height)
+        return y + height + padding
 
-    def _set_component_center(self, component, center_x: int, y: int) -> None:
+    def _set_component_center(self, component, center_x: int, y: int,
+                              padding: int) -> int:
         width, height = component.rect.size
         component.rect = pygame.Rect(0, 0, width, height)
         component.rect.center = (center_x, y + height // 2)
+        return y + height + padding
 
-    def _set_slider_rect(self, slider: Slider, x: int, y: int) -> None:
+    def _set_slider_rect(self, slider: Slider, x: int, y: int,
+                         padding: int) -> int:
         width, height = slider.rect.size
         slider.rect = pygame.Rect(x, y, width, height)
         input_width, _ = slider.input_field.rect.size
         slider.input_field.rect = pygame.Rect(slider.rect.right + 10, y,
                                               input_width, height)
+        return y + height + padding
 
     def _layout_controls(self, debug_enabled: bool) -> None:
+        padding = theme.THEME_LAYOUT_VERTICAL_GAP
         x_center = self.screen.get_width() // 2 - 100
         button_center_x = self.screen.get_width() // 2
         current_y = 60
 
-        self.title_y = current_y
-        current_y += 60
+        self.title_y = current_y + self.font.get_height() // 2
+        current_y += self.font.get_height() + padding
 
         self.display_label_y = current_y
-        current_y += 50
+        current_y += self.dropdown_font.get_height() + padding
 
-        self._set_component_rect(self.resolution_dropdown, x_center, current_y)
-        current_y += 60
+        current_y = self._set_component_rect(
+            self.resolution_dropdown, x_center, current_y, padding)
 
-        self._set_component_rect(self.fullscreen_checkbox, x_center, current_y)
-        current_y += 80
+        current_y = self._set_component_rect(
+            self.fullscreen_checkbox, x_center, current_y, padding)
 
         self.game_label_y = current_y
-        current_y += 50
+        current_y += self.dropdown_font.get_height() + padding
 
-        self._set_component_rect(self.valid_placement_checkbox, x_center,
-                                 current_y)
-        current_y += 80
+        current_y = self._set_component_rect(
+            self.valid_placement_checkbox, x_center, current_y, padding)
 
         self.debug_label_y = current_y
         if debug_enabled:
-            current_y += 50
+            current_y += self.dropdown_font.get_height() + padding
 
-            self._set_component_rect(self.log_to_console_checkbox, x_center,
-                                     current_y)
-            current_y += 60
+            current_y = self._set_component_rect(
+                self.log_to_console_checkbox, x_center, current_y, padding)
 
-            self._set_slider_rect(self.fps_slider, x_center, current_y)
-            current_y += self.fps_slider.rect.height + 20
+            current_y = self._set_slider_rect(
+                self.fps_slider, x_center, current_y, padding)
+            current_y = self._set_slider_rect(
+                self.grid_size_slider, x_center, current_y, padding)
+            current_y = self._set_slider_rect(
+                self.tile_size_slider, x_center, current_y, padding)
+            current_y = self._set_slider_rect(
+                self.figure_size_slider, x_center, current_y, padding)
+            current_y = self._set_slider_rect(
+                self.sidebar_width_slider, x_center, current_y, padding)
 
-            self._set_slider_rect(self.grid_size_slider, x_center, current_y)
-            current_y += self.grid_size_slider.rect.height + 20
-
-            self._set_slider_rect(self.tile_size_slider, x_center, current_y)
-            current_y += self.tile_size_slider.rect.height + 20
-
-            self._set_slider_rect(self.figure_size_slider, x_center,
-                                  current_y)
-            current_y += self.figure_size_slider.rect.height + 20
-
-            self._set_slider_rect(self.sidebar_width_slider, x_center,
-                                  current_y)
-            current_y += self.sidebar_width_slider.rect.height + 20
-
-            self._set_component_rect(self.game_log_max_entries_field,
-                                     x_center, current_y)
-            current_y += 80
+            current_y = self._set_component_rect(
+                self.game_log_max_entries_field, x_center, current_y, padding)
 
             self.ai_label_y = current_y
-            current_y += 50
+            current_y += self.dropdown_font.get_height() + padding
 
-            self._set_component_rect(self.ai_simulation_checkbox, x_center,
-                                     current_y)
-            current_y += 40
-
-            self._set_component_rect(self.ai_strategic_candidates_field,
-                                     x_center, current_y)
-            current_y += 60
-
-            self._set_component_rect(self.ai_thinking_speed_field, x_center,
-                                     current_y)
-            current_y += 80
+            current_y = self._set_component_rect(
+                self.ai_simulation_checkbox, x_center, current_y, padding)
+            current_y = self._set_component_rect(
+                self.ai_strategic_candidates_field, x_center, current_y,
+                padding)
+            current_y = self._set_component_rect(
+                self.ai_thinking_speed_field, x_center, current_y, padding)
         else:
             self.ai_label_y = current_y
 
-        self._set_component_center(self.apply_button, button_center_x,
-                                   current_y)
-        current_y += 80
-
-        self._set_component_center(self.back_button, button_center_x,
-                                   current_y)
+        current_y = self._set_component_center(
+            self.apply_button, button_center_x, current_y, padding)
+        self._set_component_center(
+            self.back_button, button_center_x, current_y, padding)
 
     def _on_fullscreen_changed(self, key, old_value, new_value):
         self.resolution_dropdown.set_disabled(new_value)
@@ -761,8 +773,10 @@ class SettingsScene(Scene):
         self.apply_button.draw(self.screen, y_offset=offset_y)
         self.back_button.draw(self.screen, y_offset=offset_y)
 
-        self.max_scroll = max(self.screen.get_height(),
-                              self.back_button.rect.bottom + 80)
+        self.max_scroll = max(
+            self.screen.get_height(),
+            self.back_button.rect.bottom + theme.THEME_LAYOUT_VERTICAL_GAP * 2,
+        )
 
         self.toast_manager.draw(self.screen)
         self.resolution_dropdown.draw(self.screen, y_offset=offset_y)
@@ -814,6 +828,7 @@ class SettingsScene(Scene):
         self.back_button.set_font(self.button_font)
         self.back_button.apply_theme()
         self.toast_manager.apply_theme()
+        self._layout_controls(settings_manager.get("DEBUG"))
 
     def add_toast(self, toast):
         self.toast_manager.add_toast(toast)
