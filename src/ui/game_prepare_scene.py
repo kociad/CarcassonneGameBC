@@ -132,51 +132,38 @@ class GamePrepareScene(Scene):
         self.network_mode = network_mode
 
         x_center = screen.get_width() // 2 - 100
-        button_center_x = screen.get_width() // 2
-        current_y = 60
 
-        self.title_y = current_y
-        current_y += 60
-
-        self.player_label_y = current_y
-        current_y += 50
+        self.title_y = 0
+        self.player_label_y = 0
 
         add_player_rect = pygame.Rect(0, 0, 0, 40)
-        add_player_rect.center = (self.screen.get_width() // 2 + 200,
-                                  current_y + 80)
         self.add_player_button = Button(add_player_rect, "+",
                                         self.button_font)
         remove_player_rect = pygame.Rect(0, 0, 0, 40)
-        remove_player_rect.center = (self.screen.get_width() // 2 + 250,
-                                     current_y + 80)
         self.remove_player_button = Button(remove_player_rect, "−",
                                            self.button_font)
 
-        self.player_list_y = current_y
+        self.player_list_y = 0
 
         self._build_player_fields()
-        current_y += 300 + 40
 
-        self.game_label_y = current_y
-        current_y += 50
+        self.game_label_y = 0
 
         self.ai_difficulty_dropdown = Dropdown(
-            rect=(x_center, current_y, 200, 40),
+            rect=(x_center, 0, 200, 40),
             font=self.dropdown_font,
             options=["EASY", "NORMAL", "HARD", "EXPERT"],
             default_index=1,
             on_select=self._handle_ai_difficulty_change)
-        current_y += 80
 
-        self.card_set_label_y = current_y
-        current_y += 50
+        self.card_set_label_y = 0
 
         self.available_card_sets = get_available_card_sets()
         self.default_card_sets = settings_manager.get("SELECTED_CARD_SETS",
                                                       ["base_game"])
         self.selected_card_sets = list(self.default_card_sets)
         self.card_set_checkboxes = []
-        self.card_set_section_y = current_y
+        self.card_set_section_y = 0
 
         sorted_card_sets = sorted(
             self.available_card_sets,
@@ -196,38 +183,28 @@ class GamePrepareScene(Scene):
                 checkbox.set_disabled(True)
             self.card_set_checkboxes.append((card_set, checkbox))
 
-        card_set_count = len(self.available_card_sets)
-        current_y += 30 * card_set_count + 80
-
-        self.network_label_y = current_y
-        current_y += 50
+        self.network_label_y = 0
 
         self.network_modes = ["local", "host", "client"]
         default_index = self.network_modes.index(network_mode)
         self.network_mode_dropdown = Dropdown(
-            rect=(x_center, current_y, 200, 40),
+            rect=(x_center, 0, 200, 40),
             font=self.dropdown_font,
             options=self.network_modes,
             default_index=default_index,
             on_select=self._handle_network_mode_change)
-        current_y += 60
 
-        self.host_ip_field = InputField(rect=(x_center, current_y, 200, 40),
+        self.host_ip_field = InputField(rect=(x_center, 0, 200, 40),
                                         font=self.input_font)
         self.host_ip_field.set_text(host_ip)
-        current_y += 60
 
-        self.port_field = InputField(rect=(x_center, current_y, 200, 40),
+        self.port_field = InputField(rect=(x_center, 0, 200, 40),
                                      font=self.input_font)
         self.port_field.set_text(port)
-        current_y += 80
 
         start_rect = pygame.Rect(0, 0, 0, 60)
-        start_rect.center = (button_center_x, current_y + 30)
         self.start_button = Button(start_rect, "Start game", self.button_font)
-        current_y += 80
         back_rect = pygame.Rect(0, 0, 0, 60)
-        back_rect.center = (button_center_x, current_y + 30)
         self.back_button = Button(back_rect, "Back", self.button_font)
 
         self._handle_network_mode_change(network_mode)
@@ -240,8 +217,8 @@ class GamePrepareScene(Scene):
         """Build UI fields based on current player data (single source of truth)"""
         self.player_fields = []
 
+        x_center = self.screen.get_width() // 2 - 100
         for i, player in enumerate(self.players):
-            y = self.player_list_y + (i * 50 if i == 0 else 60 + (i - 1) * 50)
 
             def _make_text_change_handler(index):
 
@@ -283,7 +260,7 @@ class GamePrepareScene(Scene):
                 return _handler
 
             name_field = InputField(
-                rect=(self.screen.get_width() // 2 - 100, y, 200, 40),
+                rect=(x_center, 0, 200, 40),
                 font=self.input_font,
                 on_text_change=_make_text_change_handler(i))
 
@@ -301,7 +278,7 @@ class GamePrepareScene(Scene):
             if i == 0:
                 can_toggle_ai = settings_manager.get("DEBUG", False)
                 ai_checkbox = Checkbox(
-                    rect=(self.screen.get_width() // 2 + 110, y + 10, 20, 20),
+                    rect=(0, 0, 20, 20),
                     checked=player.is_ai,
                     on_toggle=(lambda value, index=i: self._toggle_player_ai(
                         index, value)) if can_toggle_ai else None)
@@ -311,7 +288,7 @@ class GamePrepareScene(Scene):
             elif i != 0:
                 can_toggle_ai = (self.network_mode == "local")
                 ai_checkbox = Checkbox(
-                    rect=(self.screen.get_width() // 2 + 110, y + 10, 20, 20),
+                    rect=(0, 0, 20, 20),
                     checked=player.is_ai,
                     on_toggle=(lambda value, index=i: self._toggle_player_ai(
                         index, value)) if can_toggle_ai else None)
@@ -319,6 +296,99 @@ class GamePrepareScene(Scene):
                                          or not can_toggle_ai)
 
             self.player_fields.append((name_field, ai_checkbox))
+
+    def _layout_player_fields(self, start_y: int, padding: int,
+                              x_center: int) -> int:
+        current_y = start_y
+        for name_field, ai_checkbox in self.player_fields:
+            width, height = name_field.rect.size
+            name_field.rect = pygame.Rect(x_center, current_y, width, height)
+            if ai_checkbox:
+                checkbox_width, checkbox_height = ai_checkbox.rect.size
+                checkbox_x = name_field.rect.right + 10
+                checkbox_y = current_y + (height - checkbox_height) // 2
+                ai_checkbox.rect = pygame.Rect(checkbox_x, checkbox_y,
+                                               checkbox_width, checkbox_height)
+            current_y += height + padding
+        return current_y
+
+    def _layout_controls(self) -> None:
+        padding = theme.THEME_LAYOUT_VERTICAL_GAP
+        x_center = self.screen.get_width() // 2 - 100
+        button_center_x = self.screen.get_width() // 2
+        current_y = 60
+
+        self.title_y = current_y + self.font.get_height() // 2
+        current_y += self.font.get_height() + padding
+
+        self.player_label_y = current_y
+        current_y += self.dropdown_font.get_height() + padding
+
+        self.player_list_y = current_y
+        current_y = self._layout_player_fields(current_y, padding, x_center)
+
+        if self.player_fields:
+            players_center_y = self.player_fields[0][0].rect.centery
+        else:
+            players_center_y = current_y + self.add_player_button.rect.height // 2
+
+        add_width, add_height = self.add_player_button.rect.size
+        self.add_player_button.rect = pygame.Rect(0, 0, add_width, add_height)
+        self.add_player_button.rect.center = (
+            self.screen.get_width() // 2 + 200, players_center_y)
+
+        remove_width, remove_height = self.remove_player_button.rect.size
+        self.remove_player_button.rect = pygame.Rect(0, 0, remove_width,
+                                                     remove_height)
+        self.remove_player_button.rect.center = (
+            self.screen.get_width() // 2 + 250, players_center_y)
+
+        self.game_label_y = current_y
+        current_y += self.dropdown_font.get_height() + padding
+
+        dropdown_width, dropdown_height = self.ai_difficulty_dropdown.rect.size
+        self.ai_difficulty_dropdown.rect = pygame.Rect(
+            x_center, current_y, dropdown_width, dropdown_height)
+        current_y += dropdown_height + padding
+
+        self.card_set_label_y = current_y
+        current_y += self.dropdown_font.get_height() + padding
+
+        self.card_set_section_y = current_y
+        for _, checkbox in self.card_set_checkboxes:
+            checkbox_width, checkbox_height = checkbox.rect.size
+            checkbox.rect = pygame.Rect(x_center, current_y, checkbox_width,
+                                        checkbox_height)
+            current_y += checkbox_height + padding
+
+        self.network_label_y = current_y
+        current_y += self.dropdown_font.get_height() + padding
+
+        network_width, network_height = self.network_mode_dropdown.rect.size
+        self.network_mode_dropdown.rect = pygame.Rect(
+            x_center, current_y, network_width, network_height)
+        current_y += network_height + padding
+
+        host_width, host_height = self.host_ip_field.rect.size
+        self.host_ip_field.rect = pygame.Rect(x_center, current_y, host_width,
+                                              host_height)
+        current_y += host_height + padding
+
+        port_width, port_height = self.port_field.rect.size
+        self.port_field.rect = pygame.Rect(x_center, current_y, port_width,
+                                           port_height)
+        current_y += port_height + padding
+
+        start_width, start_height = self.start_button.rect.size
+        self.start_button.rect = pygame.Rect(0, 0, start_width, start_height)
+        self.start_button.rect.center = (button_center_x,
+                                         current_y + start_height // 2)
+        current_y += start_height + padding
+
+        back_width, back_height = self.back_button.rect.size
+        self.back_button.rect = pygame.Rect(0, 0, back_width, back_height)
+        self.back_button.rect.center = (button_center_x,
+                                        current_y + back_height // 2)
 
     def _toggle_player_ai(self, index: int, value: bool) -> None:
         """Toggle AI status for a player"""
@@ -409,6 +479,8 @@ class GamePrepareScene(Scene):
                 checkbox.set_disabled(is_client)
 
         self._build_player_fields()
+        self._layout_controls()
+        self._layout_controls()
 
     def _toggle_card_set(self, set_name: str, checked: bool) -> None:
         """Handle card set selection toggle"""
@@ -517,7 +589,7 @@ class GamePrepareScene(Scene):
             self.port_field.handle_event(event, y_offset=self.scroll_offset)
 
             for card_set, checkbox in self.card_set_checkboxes:
-                if checkbox.handle_event(event, y_offset=0):
+                if checkbox.handle_event(event, y_offset=self.scroll_offset):
                     continue
 
             for name_field, ai_checkbox in self.player_fields:
@@ -629,16 +701,14 @@ class GamePrepareScene(Scene):
             centery=self.ai_difficulty_dropdown.rect.centery + offset_y)
         self.screen.blit(ai_label, ai_label_rect)
 
-        for i, (card_set, checkbox) in enumerate(self.card_set_checkboxes):
-            y = self.card_set_section_y + 20 + i * 30 + offset_y
-            checkbox.rect.x = self.ai_difficulty_dropdown.rect.x
-            checkbox.rect.y = y - 10
-            checkbox.draw(self.screen, y_offset=0)
+        for card_set, checkbox in self.card_set_checkboxes:
+            checkbox.draw(self.screen, y_offset=offset_y)
             card_set_text = label_font.render(
                 f"{card_set['display_name']} ({card_set['card_count']} cards):",
                 True, theme.THEME_TEXT_COLOR_LIGHT)
             card_set_rect = card_set_text.get_rect(
-                right=checkbox.rect.left - 10, centery=checkbox.rect.centery)
+                right=checkbox.rect.left - 10,
+                centery=checkbox.rect.centery + offset_y)
             self.screen.blit(card_set_text, card_set_rect)
 
         ip_label = label_font.render("Host IP:", True,
@@ -662,8 +732,10 @@ class GamePrepareScene(Scene):
         self.back_button.draw(self.screen, y_offset=offset_y)
         self.start_button.draw(self.screen, y_offset=offset_y)
 
-        self.max_scroll = max(self.screen.get_height(),
-                              self.back_button.rect.bottom + 80)
+        self.max_scroll = max(
+            self.screen.get_height(),
+            self.back_button.rect.bottom + theme.THEME_LAYOUT_VERTICAL_GAP * 2,
+        )
 
         self.toast_manager.draw(self.screen)
         self.ai_difficulty_dropdown.draw(self.screen, y_offset=offset_y)
@@ -709,6 +781,7 @@ class GamePrepareScene(Scene):
                     ai_checkbox.apply_theme()
 
         self.toast_manager.apply_theme()
+        self._layout_controls()
 
     def add_toast(self, toast):
         self.toast_manager.add_toast(toast)

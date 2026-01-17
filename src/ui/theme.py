@@ -39,6 +39,10 @@ THEME_FONT_FAMILY_LABEL: str | None = None
 # Button text font family name or file in assets/fonts/; None uses default pygame font.
 THEME_FONT_FAMILY_BUTTON: str | None = None
 
+# Layout spacing
+# Vertical gap between stacked UI components; integer size in pixels.
+THEME_LAYOUT_VERTICAL_GAP: int = 20
+
 # Button colors
 # Horizontal padding applied on each side of button labels; integer size in pixels.
 THEME_BUTTON_HORIZONTAL_PADDING: int = 12

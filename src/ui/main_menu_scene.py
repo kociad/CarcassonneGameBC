@@ -32,29 +32,23 @@ class MainMenuScene(Scene):
         self.max_scroll = 0
         self.scroll_speed = 30
         self.show_confirm_dialog = False
-        center_x = screen.get_width() // 2
-        center_y = screen.get_height() // 2
         continue_rect = pygame.Rect(0, 0, 0, 60)
-        continue_rect.center = (center_x, center_y - 80)
         self.continue_button = Button(continue_rect, "Continue",
                                       self.button_font,
                                       None,
                                       disabled=(self.get_game_session()
                                                 is None))
         start_rect = pygame.Rect(0, 0, 0, 60)
-        start_rect.center = (center_x, center_y)
         self.start_button = Button(start_rect, "New game", self.button_font)
         how_to_play_rect = pygame.Rect(0, 0, 0, 60)
-        how_to_play_rect.center = (center_x, center_y + 80)
         self.how_to_play_button = Button(how_to_play_rect, "How to play",
                                          self.button_font)
         settings_rect = pygame.Rect(0, 0, 0, 60)
-        settings_rect.center = (center_x, center_y + 160)
         self.settings_button = Button(settings_rect, "Settings",
                                       self.button_font)
         quit_rect = pygame.Rect(0, 0, 0, 60)
-        quit_rect.center = (center_x, center_y + 240)
         self.quit_button = Button(quit_rect, "Quit", self.button_font)
+        self._layout_buttons()
         dialog_center_x = screen.get_width() // 2
         dialog_center_y = screen.get_height() // 2
         confirm_yes_rect = pygame.Rect(0, 0, 0, 40)
@@ -211,10 +205,32 @@ class MainMenuScene(Scene):
         self.settings_button.draw(self.screen, y_offset=offset_y)
         self.quit_button.draw(self.screen, y_offset=offset_y)
         self.how_to_play_button.draw(self.screen, y_offset=offset_y)
-        self.max_scroll = max(self.screen.get_height(),
-                              self.quit_button.rect.bottom + 100)
+        self.max_scroll = max(
+            self.screen.get_height(),
+            self.quit_button.rect.bottom + theme.THEME_LAYOUT_VERTICAL_GAP * 2,
+        )
         if self.show_confirm_dialog:
             self.draw_confirm_dialog()
+
+    def _layout_buttons(self) -> None:
+        padding = theme.THEME_LAYOUT_VERTICAL_GAP
+        center_x = self.screen.get_width() // 2
+        buttons = [
+            self.continue_button,
+            self.start_button,
+            self.how_to_play_button,
+            self.settings_button,
+            self.quit_button,
+        ]
+        total_height = sum(button.rect.height for button in buttons)
+        total_height += padding * (len(buttons) - 1)
+        current_y = (self.screen.get_height() // 2) - (total_height // 2)
+        for button in buttons:
+            width, height = button.rect.size
+            button.rect = pygame.Rect(0, 0, width, height)
+            button.rect.centerx = center_x
+            button.rect.y = current_y
+            current_y += height + padding
 
     def refresh_theme(self) -> None:
         """Refresh fonts and component styling after theme changes."""
@@ -240,3 +256,4 @@ class MainMenuScene(Scene):
         self.confirm_yes_button.apply_theme()
         self.confirm_no_button.set_font(self.dialog_font)
         self.confirm_no_button.apply_theme()
+        self._layout_buttons()
