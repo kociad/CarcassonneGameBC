@@ -44,6 +44,8 @@ THEME_FONT_FAMILY_BUTTON: str | None = None
 THEME_LAYOUT_VERTICAL_GAP: int = 20
 # Scene header padding above/below the title; integer size in pixels.
 THEME_SCENE_HEADER_TOP_PADDING: int = 12
+# Optional explicit scene header height override; 0 uses title height + padding.
+THEME_SCENE_HEADER_HEIGHT: int = 0
 
 # Button colors
 # Horizontal padding applied on each side of button labels; integer size in pixels.
@@ -227,8 +229,8 @@ THEME_GAME_LOG_SCROLL_BG_COLOR: ColorA = (0, 0, 0, 150)
 # Shared scene colors
 # Generic scene background color for menus; RGB tuple (0-255 per channel).
 THEME_SCENE_BG_COLOR: Color = (30, 30, 30, 255)
-# Scene header background color; RGB tuple (0-255 per channel).
-THEME_SCENE_HEADER_BG_COLOR: Color = (20, 20, 20, 255)
+# Scene header background color; RGBA tuple (0-255 per channel, alpha 0-255).
+THEME_SCENE_HEADER_BG_COLOR: ColorA = (20, 20, 20, 255)
 # Default background image filename for scenes (relative to settings.BACKGROUND_IMAGE_PATH).
 THEME_BACKGROUND_IMAGE: str | None = None
 # Background image scale mode: "fill", "fit", or "stretch".
