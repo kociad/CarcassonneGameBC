@@ -27,6 +27,7 @@ class SettingsScene(Scene):
         self.scroll_offset = 0
         self.max_scroll = 0
         self.scroll_speed = 30
+        self.header_height = 0
 
         settings_manager.subscribe("FULLSCREEN", self._on_fullscreen_changed)
         settings_manager.subscribe("DEBUG", self._on_debug_changed)
@@ -34,10 +35,10 @@ class SettingsScene(Scene):
         current_resolution = f"{settings_manager.get('WINDOW_WIDTH')}x{settings_manager.get('WINDOW_HEIGHT')}"
         x_center = screen.get_width() // 2 - 100
         button_center_x = screen.get_width() // 2
-        current_y = 60
-
-        self.title_y = current_y + self.font.get_height() // 2
-        current_y += self.font.get_height() + theme.THEME_LAYOUT_VERTICAL_GAP
+        self.header_height = self._get_scene_header_height(
+            self.font.get_height()
+        )
+        current_y = self.header_height + theme.THEME_LAYOUT_VERTICAL_GAP
 
         # ===== DISPLAY SETTINGS =====
         self.display_label_y = current_y
@@ -280,10 +281,10 @@ class SettingsScene(Scene):
         padding = theme.THEME_LAYOUT_VERTICAL_GAP
         x_center = self.screen.get_width() // 2 - 100
         button_center_x = self.screen.get_width() // 2
-        current_y = 60
-
-        self.title_y = current_y + self.font.get_height() // 2
-        current_y += self.font.get_height() + padding
+        self.header_height = self._get_scene_header_height(
+            self.font.get_height()
+        )
+        current_y = self.header_height + padding
 
         self.display_label_y = current_y
         current_y += self.dropdown_font.get_height() + padding
@@ -580,9 +581,7 @@ class SettingsScene(Scene):
 
         title_text = self.font.render("Settings", True,
                                       theme.THEME_TEXT_COLOR_LIGHT)
-        title_rect = title_text.get_rect(center=(self.screen.get_width() // 2,
-                                                 self.title_y + offset_y))
-        self.screen.blit(title_text, title_rect)
+        self._draw_scene_header(title_text)
 
         # Draw section headers
         display_label = self.dropdown_font.render(
