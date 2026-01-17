@@ -738,8 +738,15 @@ class GamePrepareScene(Scene):
         )
 
         self.toast_manager.draw(self.screen)
-        self.ai_difficulty_dropdown.draw(self.screen, y_offset=offset_y)
-        self.network_mode_dropdown.draw(self.screen, y_offset=offset_y)
+        self._draw_dropdowns(
+            [self.ai_difficulty_dropdown, self.network_mode_dropdown],
+            y_offset=offset_y,
+        )
+        self._draw_dropdowns(
+            [self.ai_difficulty_dropdown, self.network_mode_dropdown],
+            y_offset=offset_y,
+            expanded_only=True,
+        )
 
     def refresh_theme(self) -> None:
         """Refresh fonts and component styling after theme changes."""
