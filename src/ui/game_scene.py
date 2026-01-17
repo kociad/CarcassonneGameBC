@@ -873,8 +873,8 @@ class GameScene(Scene):
 
                 total_rows = (len(figures) + figures_per_row -
                               1) // figures_per_row
-                actual_grid_width = figures_per_row * figure_size + (
-                    figures_per_row - 1) * figure_gap)
+                actual_grid_width = (figures_per_row * figure_size
+                                     + (figures_per_row - 1) * figure_gap)
 
                 grid_start_x = sidebar_center_x - actual_grid_width // 2
                 grid_start_y = current_y - offset_y
