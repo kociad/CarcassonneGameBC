@@ -857,8 +857,19 @@ class ThemeDebugOverlay:
             control for control in self.controls
             if control not in dropdown_controls
         ]
+        expanded_dropdown_controls = [
+            control for control in dropdown_controls
+            if any(isinstance(component, Dropdown) and component.expanded
+                   for component in control.components)
+        ]
+        collapsed_dropdown_controls = [
+            control for control in dropdown_controls
+            if control not in expanded_dropdown_controls
+        ]
         for control in non_dropdown_controls:
             control.draw(self.screen, self.scroll_offset)
-        for control in dropdown_controls:
+        for control in collapsed_dropdown_controls:
+            control.draw(self.screen, self.scroll_offset)
+        for control in expanded_dropdown_controls:
             control.draw(self.screen, self.scroll_offset)
         self.screen.set_clip(previous_clip)

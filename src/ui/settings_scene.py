@@ -779,7 +779,12 @@ class SettingsScene(Scene):
         )
 
         self.toast_manager.draw(self.screen)
-        self.resolution_dropdown.draw(self.screen, y_offset=offset_y)
+        self._draw_dropdowns([self.resolution_dropdown], y_offset=offset_y)
+        self._draw_dropdowns(
+            [self.resolution_dropdown],
+            y_offset=offset_y,
+            expanded_only=True,
+        )
 
     def refresh_theme(self) -> None:
         """Refresh fonts and component styling after theme changes."""

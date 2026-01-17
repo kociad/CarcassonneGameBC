@@ -4,6 +4,9 @@ import typing
 import settings
 from ui.components.toast import Toast
 
+if typing.TYPE_CHECKING:
+    from ui.components.dropdown import Dropdown
+
 
 class Scene:
     """Base class for all scenes in the UI."""
@@ -64,6 +67,17 @@ class Scene:
     def _get_scroll_offset(self) -> int:
         """Return the current scroll offset."""
         return self.scroll_offset
+
+    def _draw_dropdowns(
+        self,
+        dropdowns: typing.Iterable["Dropdown"],
+        y_offset: int = 0,
+        expanded_only: bool = False,
+    ) -> None:
+        """Draw dropdowns, optionally restricting to expanded items."""
+        for dropdown in dropdowns:
+            if dropdown.expanded == expanded_only:
+                dropdown.draw(self.screen, y_offset=y_offset)
 
     def refresh_theme(self) -> None:
         """Refresh any cached surfaces after a theme update."""
