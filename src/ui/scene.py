@@ -82,6 +82,8 @@ class Scene:
 
     def _get_scene_header_height(self, title_height: int) -> int:
         """Return the height of the fixed scene header."""
+        if theme.THEME_SCENE_HEADER_HEIGHT > 0:
+            return theme.THEME_SCENE_HEADER_HEIGHT
         return title_height + 2 * theme.THEME_SCENE_HEADER_TOP_PADDING
 
     def _draw_scene_header(self, title_surface: pygame.Surface) -> int:
