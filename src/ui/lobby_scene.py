@@ -134,7 +134,8 @@ class LobbyScene(Scene):
         header_height = self._draw_scene_header(title_text)
         offset_y = self.scroll_offset
         label_font = theme.get_font("label", theme.THEME_FONT_SIZE_BUTTON)
-        y = header_height + theme.THEME_LAYOUT_VERTICAL_GAP + offset_y
+        content_start_y = header_height + theme.THEME_LAYOUT_VERTICAL_GAP
+        y = content_start_y + offset_y
         if self.is_host:
             for i, status in enumerate(self.status_list):
                 name = status["name"]
@@ -158,9 +159,10 @@ class LobbyScene(Scene):
             wait_text = wait_font.render(
                 "Waiting for host to start the game...", True,
                 theme.THEME_TEXT_COLOR_LIGHT)
+            available_height = self.screen.get_height() - content_start_y
             wait_rect = wait_text.get_rect(
                 center=(self.screen.get_width() // 2,
-                        self.screen.get_height() // 2 + 40 + offset_y))
+                        content_start_y + available_height // 2 + offset_y))
             self.screen.blit(wait_text, wait_rect)
         self.toast_manager.draw(self.screen)
         if self.game_log:

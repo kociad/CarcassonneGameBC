@@ -207,8 +207,22 @@ class ThemeDebugOverlay:
 
     def _theme_items(self) -> list[tuple[str, typing.Any]]:
         items = []
+        priority_items = [
+            "THEME_SCENE_HEADER_TOP_PADDING",
+            "THEME_SCENE_HEADER_HEIGHT",
+            "THEME_SCENE_HEADER_BG_COLOR",
+        ]
+        for name in priority_items:
+            if not hasattr(theme, name):
+                continue
+            value = getattr(theme, name)
+            if callable(value) or isinstance(value, dict):
+                continue
+            items.append((name, value))
         for name in sorted(dir(theme)):
             if not name.startswith("THEME_"):
+                continue
+            if name in priority_items:
                 continue
             value = getattr(theme, name)
             if callable(value) or isinstance(value, dict):
