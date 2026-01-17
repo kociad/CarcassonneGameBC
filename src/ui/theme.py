@@ -46,6 +46,8 @@ THEME_LAYOUT_VERTICAL_GAP: int = 20
 # Button colors
 # Horizontal padding applied on each side of button labels; integer size in pixels.
 THEME_BUTTON_HORIZONTAL_PADDING: int = 12
+# Vertical padding applied above/below button labels; integer size in pixels.
+THEME_BUTTON_VERTICAL_PADDING: int = 8
 # Default state
 # Background for default button state; RGB tuple (0-255 per channel).
 THEME_BUTTON_BG_COLOR: Color = (200, 200, 200, 255)

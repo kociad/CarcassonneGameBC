@@ -41,12 +41,13 @@ class Button:
         self.pressed_bg_color = pressed_bg_color
         self.text_color = theme.THEME_BUTTON_TEXT_COLOR
         self.horizontal_padding = theme.THEME_BUTTON_HORIZONTAL_PADDING
+        self.vertical_padding = theme.THEME_BUTTON_VERTICAL_PADDING
         self.disabled = disabled
         self.callback = callback
         self.is_hovered = False
         self.is_pressed = False
-        text_width, _ = self.font.size(self.text)
-        self._resize_to_text(text_width)
+        text_width, text_height = self.font.size(self.text)
+        self._resize_to_text(text_width, text_height)
         self._update_render()
 
     def _update_render(self) -> None:
@@ -54,13 +55,16 @@ class Button:
         color = (theme.THEME_BUTTON_TEXT_DISABLED_COLOR if self.disabled
                  else self.text_color)
         self.rendered_text = self.font.render(self.text, True, color)
-        self._resize_to_text(self.rendered_text.get_width())
+        self._resize_to_text(self.rendered_text.get_width(),
+                             self.rendered_text.get_height())
         self.text_rect = self.rendered_text.get_rect(center=self.rect.center)
 
-    def _resize_to_text(self, text_width: int) -> None:
+    def _resize_to_text(self, text_width: int, text_height: int) -> None:
         center = self.rect.center
         padded_width = text_width + self.horizontal_padding * 2
+        padded_height = text_height + self.vertical_padding * 2
         self.rect.width = padded_width
+        self.rect.height = padded_height
         self.rect.center = center
 
     def set_font(self, font: pygame.font.Font) -> None:
@@ -75,6 +79,7 @@ class Button:
         self.pressed_bg_color = theme.THEME_BUTTON_PRESSED_BG_COLOR
         self.text_color = theme.THEME_BUTTON_TEXT_COLOR
         self.horizontal_padding = theme.THEME_BUTTON_HORIZONTAL_PADDING
+        self.vertical_padding = theme.THEME_BUTTON_VERTICAL_PADDING
         self._update_render()
 
     def draw(self, screen: pygame.Surface, y_offset: int = 0) -> None:
