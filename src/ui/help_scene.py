@@ -141,27 +141,30 @@ class HelpScene(Scene):
         return content_left, content_right
 
     def _layout_controls(self) -> None:
-        padding = theme.THEME_LAYOUT_VERTICAL_GAP
+        section_gap = theme.THEME_LAYOUT_SECTION_GAP
+        line_gap = theme.THEME_LAYOUT_LINE_GAP
         button_center_x = self.screen.get_width() // 2
         self.header_height = self._get_scene_header_height(
             self.font.get_height()
         )
-        current_y = self.header_height + theme.THEME_LAYOUT_VERTICAL_GAP
+        current_y = self.header_height + section_gap
 
         self.section_headers_layout.clear()
         self.section_body_layout.clear()
-        for section_title, section_lines in self.sections:
+        for index, (section_title, section_lines) in enumerate(self.sections):
+            if index > 0:
+                current_y += section_gap
             self.section_headers_layout.append((section_title, current_y))
-            current_y += self.text_font.get_height() + padding
+            current_y += self.text_font.get_height() + line_gap
             for line in section_lines:
                 line_y, current_y = self._set_text_rect(
-                    line, self.controls_font, current_y, padding)
+                    line, self.controls_font, current_y, line_gap)
                 self.section_body_layout.append((line, line_y))
 
         current_y = self._set_component_center(
-            self.rules_button, button_center_x, current_y, padding)
+            self.rules_button, button_center_x, current_y, section_gap)
         self._set_component_center(
-            self.back_button, button_center_x, current_y, padding)
+            self.back_button, button_center_x, current_y, section_gap)
 
     def handle_events(self, events: list[pygame.event.Event]) -> None:
         """Handle events for the help scene."""
@@ -228,7 +231,7 @@ class HelpScene(Scene):
         self._draw_scene_header(title_text)
         self.max_scroll = max(
             self.screen.get_height(),
-            self.back_button.rect.bottom + theme.THEME_LAYOUT_VERTICAL_GAP * 2,
+            self.back_button.rect.bottom + theme.THEME_LAYOUT_SECTION_GAP * 2,
         )
 
     def refresh_theme(self) -> None:
