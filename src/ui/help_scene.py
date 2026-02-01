@@ -165,6 +165,7 @@ class HelpScene(Scene):
             divider_y = current_y - max(1, line_gap // 2)
             self.section_divider_layout.append(divider_y)
 
+        current_y += theme.THEME_LAYOUT_BUTTON_SECTION_GAP
         current_y = self._set_component_center(
             self.rules_button, button_center_x, current_y, section_gap)
         self._set_component_center(

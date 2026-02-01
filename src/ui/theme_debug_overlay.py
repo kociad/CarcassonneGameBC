@@ -210,6 +210,7 @@ class ThemeDebugOverlay:
         priority_items = [
             "THEME_LAYOUT_VERTICAL_GAP",
             "THEME_LAYOUT_SECTION_GAP",
+            "THEME_LAYOUT_BUTTON_SECTION_GAP",
             "THEME_LAYOUT_LINE_GAP",
             "THEME_SCENE_HEADER_TOP_PADDING",
             "THEME_SCENE_HEADER_HEIGHT",
