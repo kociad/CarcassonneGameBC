@@ -3,6 +3,7 @@ import webbrowser
 import typing
 from ui.scene import Scene
 from ui.components.button import Button
+from ui.utils.draw import draw_rect_alpha
 from game_state import GameState
 from ui import theme
 
@@ -243,7 +244,7 @@ class HelpScene(Scene):
                     divider_width,
                     divider_height,
                 )
-                pygame.draw.rect(
+                draw_rect_alpha(
                     self.screen,
                     theme.THEME_SECTION_DIVIDER_COLOR,
                     divider_rect,
