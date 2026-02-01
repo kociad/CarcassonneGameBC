@@ -239,7 +239,7 @@ class HelpScene(Scene):
         self._draw_scene_header(title_text)
         self.max_scroll = max(
             self.screen.get_height(),
-            self.back_button.rect.bottom + theme.THEME_LAYOUT_VERTICAL_GAP * 2,
+            self.back_button.rect.bottom + theme.THEME_LAYOUT_SECTION_GAP * 2,
         )
 
     def refresh_theme(self) -> None:
