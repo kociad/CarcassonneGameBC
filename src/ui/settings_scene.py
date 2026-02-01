@@ -447,9 +447,6 @@ class SettingsScene(Scene):
                 if self.back_button._is_clicked(event.pos,
                                                 y_offset=self.scroll_offset):
                     self.switch_scene(GameState.MENU)
-                elif self.apply_button._is_clicked(
-                        event.pos, y_offset=self.scroll_offset):
-                    self._apply_settings()
 
     def _handle_ai_simulation_toggle(self, value):
         settings_manager.set("AI_USE_SIMULATION", value, temporary=True)
