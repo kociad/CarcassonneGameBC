@@ -244,6 +244,12 @@ THEME_GAME_LOG_SCROLL_BG_COLOR: ColorA = (0, 0, 0, 150)
 # Shared scene colors
 # Scene header background color; RGBA tuple (0-255 per channel, alpha 0-255).
 THEME_SCENE_HEADER_BG_COLOR: ColorA = (42, 42, 42, 220)
+# Scene header background image filename; relative to settings.BACKGROUND_IMAGE_PATH.
+THEME_SCENE_HEADER_BACKGROUND_IMAGE: str | None = None
+# Scene header background image scale mode; one of fill/fit/stretch.
+THEME_SCENE_HEADER_BACKGROUND_SCALE_MODE: str = "fill"
+# Scene header background tint color; RGBA tuple or None to disable.
+THEME_SCENE_HEADER_BACKGROUND_TINT_COLOR: ColorA | None = None
 # Optional blur radius/strength for the scene header background; 0 disables blur.
 THEME_SCENE_HEADER_BLUR_RADIUS: float = 5.0
 # Optional blur radius/strength for UI alpha primitives; 0 disables blur.
