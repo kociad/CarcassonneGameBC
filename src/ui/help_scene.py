@@ -15,6 +15,9 @@ class HelpScene(Scene):
                  switch_scene_callback: typing.Callable) -> None:
         super().__init__(screen, switch_scene_callback)
         self.font = theme.get_font("title", theme.THEME_FONT_SIZE_SCENE_TITLE)
+        self.section_header_font = theme.get_font(
+            "section_header", theme.THEME_FONT_SIZE_SECTION_HEADER
+        )
         self.button_font = theme.get_font(
             "button", theme.THEME_FONT_SIZE_BUTTON
         )
@@ -156,7 +159,7 @@ class HelpScene(Scene):
             if index > 0:
                 current_y += section_gap
             self.section_headers_layout.append((section_title, current_y))
-            current_y += self.text_font.get_height() + line_gap
+            current_y += self.section_header_font.get_height() + line_gap
             for line in section_lines:
                 line_y, current_y = self._set_text_rect(
                     line, self.controls_font, current_y, line_gap)
@@ -211,7 +214,7 @@ class HelpScene(Scene):
         content_left, content_right = self._get_content_bounds()
 
         for section_title, header_y in self.section_headers_layout:
-            section_label = self.text_font.render(
+            section_label = self.section_header_font.render(
                 section_title, True, theme.THEME_SECTION_HEADER_COLOR)
             section_label_rect = section_label.get_rect()
             section_label_rect.center = (
@@ -260,13 +263,14 @@ class HelpScene(Scene):
         """Refresh fonts and component styling after theme changes."""
         super().refresh_theme()
         self.font = theme.get_font("title", theme.THEME_FONT_SIZE_SCENE_TITLE)
+        self.section_header_font = theme.get_font(
+            "section_header", theme.THEME_FONT_SIZE_SECTION_HEADER
+        )
         self.button_font = theme.get_font(
             "button", theme.THEME_FONT_SIZE_BUTTON
         )
         self.text_font = theme.get_font("body", theme.THEME_FONT_SIZE_BODY)
-        self.controls_font = theme.get_font(
-            "label", theme.self.text_font
-        )
+        self.controls_font = theme.get_font("body", theme.THEME_FONT_SIZE_BODY)
         self.rules_button.set_font(self.button_font)
         self.rules_button.apply_theme()
         self.back_button.set_font(self.button_font)

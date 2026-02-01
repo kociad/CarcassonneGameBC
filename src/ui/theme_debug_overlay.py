@@ -75,7 +75,7 @@ class ThemeDebugOverlay:
             "label", max(14, int(theme.THEME_FONT_SIZE_BODY * 0.45))
         )
         self.section_font = theme.get_font(
-            "label", max(16, int(theme.THEME_FONT_SIZE_BODY * 0.5))
+            "section_header", max(16, theme.THEME_FONT_SIZE_SECTION_HEADER)
         )
         self._title_surface = self.title_font.render(
             "Theme Debug Overlay", True, theme.THEME_TEXT_COLOR_LIGHT
