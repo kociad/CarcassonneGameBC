@@ -349,7 +349,7 @@ THEME_GAME_OVER_HINT_TEXT_COLOR: Color = (180, 180, 180)
 # Debug grid line color on the board; RGB tuple (0-255 per channel).
 THEME_GAME_DEBUG_GRID_COLOR: Color = (0, 0, 0, 255)
 # Sidebar panel background; RGB tuple (0-255 per channel).
-THEME_GAME_SIDEBAR_BG_COLOR: Color = (50, 50, 50, 255)
+THEME_GAME_SIDEBAR_BG_COLOR: Color = (42, 42, 42, 100)
 # Sidebar status color for local mode; RGB tuple (0-255 per channel).
 THEME_GAME_STATUS_LOCAL_COLOR: Color = (100, 100, 255)
 # Sidebar status color for active turn; RGB tuple (0-255 per channel).
@@ -367,9 +367,9 @@ THEME_GAME_AI_THINKING_COLOR: Color = (255, 255, 100)
 
 # Game scene background (image filename is relative to settings.BACKGROUND_IMAGE_PATH).
 THEME_GAME_BACKGROUND_COLOR: Color = (25, 25, 25, 255)
-THEME_GAME_BACKGROUND_IMAGE: str | None = None
+THEME_GAME_BACKGROUND_IMAGE: str | None = "game.png"
 THEME_GAME_BACKGROUND_SCALE_MODE: str = "fill"
-THEME_GAME_BACKGROUND_TINT_COLOR: ColorA | None = None
+THEME_GAME_BACKGROUND_TINT_COLOR: ColorA | None = (0, 0, 0, 160)
 THEME_GAME_BACKGROUND_BLUR_RADIUS: float = 0.0
 
 # Player color palette
