@@ -380,6 +380,7 @@ class GamePrepareScene(Scene):
                                            port_height)
         current_y += port_height + padding
 
+        current_y += theme.THEME_LAYOUT_BUTTON_SECTION_GAP
         start_width, start_height = self.start_button.rect.size
         self.start_button.rect = pygame.Rect(0, 0, start_width, start_height)
         self.start_button.rect.center = (button_center_x,

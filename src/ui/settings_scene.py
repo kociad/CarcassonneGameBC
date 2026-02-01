@@ -335,6 +335,7 @@ class SettingsScene(Scene):
         else:
             self.ai_label_y = current_y
 
+        current_y += theme.THEME_LAYOUT_BUTTON_SECTION_GAP
         current_y = self._set_component_center(
             self.apply_button, button_center_x, current_y, padding)
         self._set_component_center(
