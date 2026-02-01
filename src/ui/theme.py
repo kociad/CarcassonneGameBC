@@ -34,9 +34,9 @@ THEME_FONT_SIZE_GAME_LOG_BODY: int = 24
 
 # Font families (asset filename or system font name).
 # Title text font family name or file in assets/fonts/; None uses default pygame font.
-THEME_FONT_FAMILY_TITLE: str | None = "Cinzel-Bold.ttf"
+THEME_FONT_FAMILY_TITLE: str | None = "IMFellEnglish-Regular.ttf"
 # Section header font family name or file in assets/fonts/; None uses default pygame font.
-THEME_FONT_FAMILY_SECTION_HEADER: str | None = "Cinzel-Bold.ttf"
+THEME_FONT_FAMILY_SECTION_HEADER: str | None = "Inter_24pt-Regular.ttf"
 # Body text font family name or file in assets/fonts/; None uses default pygame font.
 THEME_FONT_FAMILY_BODY: str | None = "Inter_18pt-Regular.ttf"
 # Label text font family name or file in assets/fonts/; None uses default pygame font.
