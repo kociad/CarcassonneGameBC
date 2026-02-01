@@ -208,6 +208,9 @@ class ThemeDebugOverlay:
     def _theme_items(self) -> list[tuple[str, typing.Any]]:
         items = []
         priority_items = [
+            "THEME_LAYOUT_VERTICAL_GAP",
+            "THEME_LAYOUT_SECTION_GAP",
+            "THEME_LAYOUT_LINE_GAP",
             "THEME_SCENE_HEADER_TOP_PADDING",
             "THEME_SCENE_HEADER_HEIGHT",
             "THEME_SCENE_HEADER_BG_COLOR",
