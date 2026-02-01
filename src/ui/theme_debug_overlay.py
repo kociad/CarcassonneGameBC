@@ -23,6 +23,14 @@ class ThemeControl:
     draw: typing.Callable[[pygame.Surface, int], None]
     handle_event: typing.Callable[[pygame.event.Event, int], None]
     sync: typing.Callable[[], None]
+    is_section: bool = False
+
+
+@dataclass
+class ThemeItem:
+    name: str
+    value: typing.Any
+    is_section: bool = False
 
 
 class ThemeDebugOverlay:
@@ -65,6 +73,9 @@ class ThemeDebugOverlay:
         )
         self.control_font = theme.get_font(
             "label", max(14, int(theme.THEME_FONT_SIZE_BODY * 0.45))
+        )
+        self.section_font = theme.get_font(
+            "label", max(16, int(theme.THEME_FONT_SIZE_BODY * 0.5))
         )
         self._title_surface = self.title_font.render(
             "Theme Debug Overlay", True, theme.THEME_TEXT_COLOR_LIGHT
@@ -111,7 +122,18 @@ class ThemeDebugOverlay:
         current_y = self._controls_start_y
         line_gap = padding
         slider_width = self.panel_rect.right - control_x - 80
-        for name, value in self._theme_items():
+        for item in self._theme_items():
+            if item.is_section:
+                control = self._build_section_header_control(
+                    item.name,
+                    label_x,
+                    current_y,
+                )
+                self.controls.append(control)
+                current_y += control.height + line_gap
+                continue
+            name = item.name
+            value = item.value
             label = name.replace("THEME_", "").replace("_", " ")
             if name.endswith("_TINT_COLOR"):
                 enabled = value is not None
@@ -205,36 +227,155 @@ class ThemeDebugOverlay:
             current_y += control.height + line_gap
         self._update_scroll_bounds(current_y)
 
-    def _theme_items(self) -> list[tuple[str, typing.Any]]:
-        items = []
-        priority_items = [
-            "THEME_LAYOUT_VERTICAL_GAP",
-            "THEME_LAYOUT_SECTION_GAP",
-            "THEME_LAYOUT_BUTTON_SECTION_GAP",
-            "THEME_LAYOUT_LINE_GAP",
-            "THEME_SCENE_HEADER_TOP_PADDING",
-            "THEME_SCENE_HEADER_HEIGHT",
-            "THEME_SCENE_HEADER_BG_COLOR",
-            "THEME_SCENE_HEADER_BLUR_RADIUS",
-            "THEME_SECTION_DIVIDER_COLOR",
-        ]
-        for name in priority_items:
-            if not hasattr(theme, name):
-                continue
+    def _theme_items(self) -> list[ThemeItem]:
+        items: list[ThemeItem] = []
+        included: set[str] = set()
+
+        def add_item(name: str) -> None:
+            if name in included or not hasattr(theme, name):
+                return
             value = getattr(theme, name)
             if callable(value) or isinstance(value, dict):
-                continue
-            items.append((name, value))
-        for name in sorted(dir(theme)):
-            if not name.startswith("THEME_"):
-                continue
-            if name in priority_items:
-                continue
-            value = getattr(theme, name)
-            if callable(value) or isinstance(value, dict):
-                continue
-            items.append((name, value))
+                return
+            items.append(ThemeItem(name=name, value=value))
+            included.add(name)
+
+        def add_section(title: str, names: list[str]) -> None:
+            section_items: list[str] = []
+            for name in names:
+                if not hasattr(theme, name):
+                    continue
+                value = getattr(theme, name)
+                if callable(value) or isinstance(value, dict):
+                    continue
+                if name in included:
+                    continue
+                section_items.append(name)
+            if not section_items:
+                return
+            items.append(ThemeItem(name=title, value=None, is_section=True))
+            for name in section_items:
+                add_item(name)
+
+        def add_section_by_prefix(title: str, prefixes: list[str]) -> None:
+            names = [
+                name for name in sorted(dir(theme))
+                if name.startswith(tuple(prefixes))
+            ]
+            add_section(title, names)
+
+        add_section(
+            "Layout",
+            [
+                "THEME_LAYOUT_VERTICAL_GAP",
+                "THEME_LAYOUT_SECTION_GAP",
+                "THEME_LAYOUT_BUTTON_SECTION_GAP",
+                "THEME_LAYOUT_LINE_GAP",
+                "THEME_SCENE_HEADER_TOP_PADDING",
+                "THEME_SCENE_HEADER_HEIGHT",
+                "THEME_HELP_MAX_WIDTH",
+                "THEME_SECTION_DIVIDER_COLOR",
+            ],
+        )
+        add_section(
+            "Typography",
+            sorted([
+                name for name in dir(theme)
+                if name.startswith("THEME_FONT_SIZE_")
+                or name.startswith("THEME_FONT_FAMILY_")
+            ]) + [
+                "THEME_TEXT_COLOR_LIGHT",
+                "THEME_SECTION_HEADER_COLOR",
+                "THEME_SUBSECTION_COLOR",
+                "THEME_LABEL_DISABLED_COLOR",
+            ],
+        )
+        add_section(
+            "Scene Headers",
+            [
+                "THEME_SCENE_HEADER_BG_COLOR",
+                "THEME_SCENE_HEADER_BLUR_RADIUS",
+            ],
+        )
+        add_section(
+            "Scene Backgrounds",
+            [
+                name for name in sorted(dir(theme))
+                if name.startswith(
+                    (
+                        "THEME_MAIN_MENU_BACKGROUND_",
+                        "THEME_SETTINGS_BACKGROUND_",
+                        "THEME_HELP_BACKGROUND_",
+                        "THEME_LOBBY_BACKGROUND_",
+                        "THEME_PREPARE_BACKGROUND_",
+                        "THEME_GAME_BACKGROUND_",
+                    )
+                )
+            ],
+        )
+        add_section_by_prefix("Buttons", ["THEME_BUTTON_"])
+        add_section_by_prefix("Inputs", ["THEME_INPUT_"])
+        add_section_by_prefix("Checkboxes", ["THEME_CHECKBOX_"])
+        add_section_by_prefix("Dropdowns", ["THEME_DROPDOWN_"])
+        add_section_by_prefix("Sliders", ["THEME_SLIDER_"])
+        add_section_by_prefix("Progress Bars", ["THEME_PROGRESS_BAR_"])
+        add_section_by_prefix("Menu Dialogs", ["THEME_MENU_"])
+        add_section_by_prefix("Lobby Status", ["THEME_LOBBY_STATUS_"])
+        add_section(
+            "Game UI",
+            [
+                name for name in sorted(dir(theme))
+                if name.startswith("THEME_GAME_")
+                and not name.startswith("THEME_GAME_LOG_")
+            ],
+        )
+        add_section_by_prefix("Game Log", ["THEME_GAME_LOG_"])
+        add_section_by_prefix("Toasts", ["THEME_TOAST_"])
+        add_section_by_prefix("Player Colors", ["THEME_PLAYER_COLOR_"])
+        add_section(
+            "Miscellaneous",
+            [
+                name for name in sorted(dir(theme))
+                if name.startswith("THEME_") and name not in included
+            ],
+        )
         return items
+
+    def _build_section_header_control(
+        self,
+        title: str,
+        label_x: int,
+        start_y: int,
+    ) -> ThemeControl:
+        padding = theme.THEME_LAYOUT_VERTICAL_GAP
+        label_surface = self.section_font.render(
+            title, True, theme.THEME_SECTION_HEADER_COLOR
+        )
+
+        def draw(surface: pygame.Surface, y_offset: int) -> None:
+            surface.blit(label_surface, (label_x, start_y + y_offset))
+
+        def handle_event(event: pygame.event.Event, y_offset: int) -> None:
+            return
+
+        def sync() -> None:
+            nonlocal label_surface
+            label_surface = self.section_font.render(
+                title, True, theme.THEME_SECTION_HEADER_COLOR
+            )
+
+        height = label_surface.get_height() + padding // 2
+        return ThemeControl(
+            name=title,
+            label=title,
+            y=start_y,
+            height=height,
+            components=[],
+            draw=draw,
+            handle_event=handle_event,
+            sync=sync,
+            is_section=True,
+        )
 
     def _build_color_control(
         self,
@@ -746,7 +887,11 @@ class ThemeDebugOverlay:
             theme_path = theme_path[:-1]
         with open(theme_path, "r", encoding="utf-8") as handle:
             lines = handle.readlines()
-        theme_values = {name: getattr(theme, name) for name, _ in self._theme_items()}
+        theme_values = {
+            item.name: getattr(theme, item.name)
+            for item in self._theme_items()
+            if not item.is_section and hasattr(theme, item.name)
+        }
         for idx, line in enumerate(lines):
             stripped = line.strip()
             if not stripped.startswith("THEME_"):
@@ -835,6 +980,8 @@ class ThemeDebugOverlay:
         self.toggle_button.set_font(theme.get_font("button", 16))
         self.save_button.set_font(theme.get_font("button", 18))
         for control in self.controls:
+            if control.is_section:
+                continue
             control.sync()
 
     def toggle(self) -> None:
@@ -846,6 +993,8 @@ class ThemeDebugOverlay:
                 control.height + padding for control in self.controls
             ))
             for control in self.controls:
+                if control.is_section:
+                    continue
                 control.sync()
 
     def draw(self) -> None:
