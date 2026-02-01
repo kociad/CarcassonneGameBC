@@ -366,6 +366,12 @@ class ThemeDebugOverlay:
             ],
         )
         add_section(
+            "UI Effects",
+            [
+                "THEME_UI_ALPHA_BLUR_RADIUS",
+            ],
+        )
+        add_section(
             "Scene Backgrounds",
             [
                 name for name in sorted(dir(theme))
