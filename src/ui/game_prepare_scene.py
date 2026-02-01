@@ -116,6 +116,12 @@ class GamePrepareScene(Scene):
         self.max_scroll = 0
         self.scroll_speed = 30
         self.header_height = 0
+        self._title_text = "Game Setup"
+        self._title_surface: pygame.Surface | None = None
+        self._cached_title_text: str | None = None
+        self._section_header_surfaces: dict[str, pygame.Surface] = {}
+        self._label_surfaces: dict[tuple[int, str, tuple[int, int, int]],
+                                   pygame.Surface] = {}
 
         self.original_player_names = settings_manager.get("PLAYERS", []).copy()
 
@@ -396,6 +402,19 @@ class GamePrepareScene(Scene):
         self.back_button.rect.center = (button_center_x,
                                         current_y + back_height // 2)
 
+    def _get_label_surface(
+        self,
+        font: pygame.font.Font,
+        text: str,
+        color: tuple[int, int, int],
+    ) -> pygame.Surface:
+        cache_key = (id(font), text, color)
+        cached = self._label_surfaces.get(cache_key)
+        if cached is None:
+            cached = font.render(text, True, color)
+            self._label_surfaces[cache_key] = cached
+        return cached
+
     def _toggle_player_ai(self, index: int, value: bool) -> None:
         """Toggle AI status for a player"""
         self.players[index].set_ai(value)
@@ -648,33 +667,49 @@ class GamePrepareScene(Scene):
         )
         offset_y = self.scroll_offset
 
-        title_text = self.font.render("Game Setup", True,
-                                      theme.THEME_TEXT_COLOR_LIGHT)
+        if (self._title_surface is None
+                or self._cached_title_text != self._title_text):
+            self._title_surface = self.font.render(
+                self._title_text, True, theme.THEME_TEXT_COLOR_LIGHT
+            )
+            self._cached_title_text = self._title_text
 
-        player_label = self.section_header_font.render(
-            "Players", True, theme.THEME_SECTION_HEADER_COLOR
-        )
+        player_label = self._section_header_surfaces.get("Players")
+        if player_label is None:
+            player_label = self.section_header_font.render(
+                "Players", True, theme.THEME_SECTION_HEADER_COLOR
+            )
+            self._section_header_surfaces["Players"] = player_label
         player_label_rect = player_label.get_rect()
         player_label_rect.centerx = self.screen.get_width() // 2
         player_label_rect.y = self.player_label_y + offset_y
         self.screen.blit(player_label, player_label_rect)
 
-        game_label = self.section_header_font.render(
-            "Game", True, theme.THEME_SECTION_HEADER_COLOR)
+        game_label = self._section_header_surfaces.get("Game")
+        if game_label is None:
+            game_label = self.section_header_font.render(
+                "Game", True, theme.THEME_SECTION_HEADER_COLOR)
+            self._section_header_surfaces["Game"] = game_label
         game_label_rect = game_label.get_rect()
         game_label_rect.centerx = self.screen.get_width() // 2
         game_label_rect.y = self.game_label_y + offset_y
         self.screen.blit(game_label, game_label_rect)
 
-        card_set_label = self.section_header_font.render(
-            "Card Sets", True, theme.THEME_SECTION_HEADER_COLOR)
+        card_set_label = self._section_header_surfaces.get("Card Sets")
+        if card_set_label is None:
+            card_set_label = self.section_header_font.render(
+                "Card Sets", True, theme.THEME_SECTION_HEADER_COLOR)
+            self._section_header_surfaces["Card Sets"] = card_set_label
         card_set_label_rect = card_set_label.get_rect()
         card_set_label_rect.centerx = self.screen.get_width() // 2
         card_set_label_rect.y = self.card_set_label_y + offset_y
         self.screen.blit(card_set_label, card_set_label_rect)
 
-        network_label = self.section_header_font.render(
-            "Network", True, theme.THEME_SECTION_HEADER_COLOR)
+        network_label = self._section_header_surfaces.get("Network")
+        if network_label is None:
+            network_label = self.section_header_font.render(
+                "Network", True, theme.THEME_SECTION_HEADER_COLOR)
+            self._section_header_surfaces["Network"] = network_label
         network_label_rect = network_label.get_rect()
         network_label_rect.centerx = self.screen.get_width() // 2
         network_label_rect.y = self.network_label_y + offset_y
@@ -684,8 +719,8 @@ class GamePrepareScene(Scene):
 
         for i, (name_field, ai_checkbox) in enumerate(self.player_fields):
             label_text = "Your name:" if i == 0 else f"Player {i + 1}:"
-            label = label_font.render(
-                label_text, True, theme.THEME_TEXT_COLOR_LIGHT)
+            label = self._get_label_surface(
+                label_font, label_text, theme.THEME_TEXT_COLOR_LIGHT)
             label_rect = label.get_rect(right=name_field.rect.left - 10,
                                         centery=name_field.rect.centery +
                                         offset_y)
@@ -693,15 +728,15 @@ class GamePrepareScene(Scene):
             name_field.draw(self.screen, y_offset=offset_y)
             ai_checkbox.draw(self.screen, y_offset=offset_y)
 
-        net_label = label_font.render(
-            "Network mode:", True, theme.THEME_TEXT_COLOR_LIGHT)
+        net_label = self._get_label_surface(
+            label_font, "Network mode:", theme.THEME_TEXT_COLOR_LIGHT)
         net_label_rect = net_label.get_rect(
             right=self.network_mode_dropdown.rect.left - 10,
             centery=self.network_mode_dropdown.rect.centery + offset_y)
         self.screen.blit(net_label, net_label_rect)
 
-        ai_label = label_font.render(
-            "AI Difficulty:", True, theme.THEME_TEXT_COLOR_LIGHT)
+        ai_label = self._get_label_surface(
+            label_font, "AI Difficulty:", theme.THEME_TEXT_COLOR_LIGHT)
         ai_label_rect = ai_label.get_rect(
             right=self.ai_difficulty_dropdown.rect.left - 10,
             centery=self.ai_difficulty_dropdown.rect.centery + offset_y)
@@ -709,24 +744,26 @@ class GamePrepareScene(Scene):
 
         for card_set, checkbox in self.card_set_checkboxes:
             checkbox.draw(self.screen, y_offset=offset_y)
-            card_set_text = label_font.render(
+            card_set_text = self._get_label_surface(
+                label_font,
                 f"{card_set['display_name']} ({card_set['card_count']} cards):",
-                True, theme.THEME_TEXT_COLOR_LIGHT)
+                theme.THEME_TEXT_COLOR_LIGHT,
+            )
             card_set_rect = card_set_text.get_rect(
                 right=checkbox.rect.left - 10,
                 centery=checkbox.rect.centery + offset_y)
             self.screen.blit(card_set_text, card_set_rect)
 
-        ip_label = label_font.render("Host IP:", True,
-                                     theme.THEME_TEXT_COLOR_LIGHT)
+        ip_label = self._get_label_surface(
+            label_font, "Host IP:", theme.THEME_TEXT_COLOR_LIGHT)
         ip_label_rect = ip_label.get_rect(
             right=self.host_ip_field.rect.left - 10,
             centery=self.host_ip_field.rect.centery + offset_y)
         self.screen.blit(ip_label, ip_label_rect)
         self.host_ip_field.draw(self.screen, y_offset=offset_y)
 
-        port_label = label_font.render(
-            "Port:", True, theme.THEME_TEXT_COLOR_LIGHT)
+        port_label = self._get_label_surface(
+            label_font, "Port:", theme.THEME_TEXT_COLOR_LIGHT)
         port_label_rect = port_label.get_rect(
             right=self.port_field.rect.left - 10,
             centery=self.port_field.rect.centery + offset_y)
@@ -753,7 +790,7 @@ class GamePrepareScene(Scene):
             y_offset=offset_y,
             expanded_only=True,
         )
-        self._draw_scene_header(title_text)
+        self._draw_scene_header(self._title_surface)
 
     def refresh_theme(self) -> None:
         """Refresh fonts and component styling after theme changes."""
@@ -767,6 +804,10 @@ class GamePrepareScene(Scene):
         )
         self.input_font = theme.get_font("body", theme.THEME_FONT_SIZE_BODY)
         self.dropdown_font = theme.get_font("body", theme.THEME_FONT_SIZE_BODY)
+        self._title_surface = None
+        self._cached_title_text = None
+        self._section_header_surfaces.clear()
+        self._label_surfaces.clear()
 
         self.add_player_button.set_font(self.button_font)
         self.add_player_button.apply_theme()
