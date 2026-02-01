@@ -200,7 +200,7 @@ THEME_TOAST_INFO_BG_COLOR: Color = (255, 255, 255, 255)
 # Toast "success" text color; RGB tuple (0-255 per channel).
 THEME_TOAST_SUCCESS_TEXT_COLOR: Color = (255, 255, 255)
 # Toast "success" background color; RGB tuple (0-255 per channel).
-THEME_TOAST_SUCCESS_BG_COLOR: Color = (0, 128, 0, 255)
+THEME_TOAST_SUCCESS_BG_COLOR: Color = (0, 128, 0, 100)
 # Error state
 # Toast "error" text color; RGB tuple (0-255 per channel).
 THEME_TOAST_ERROR_TEXT_COLOR: Color = (255, 255, 255)
