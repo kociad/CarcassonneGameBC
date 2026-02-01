@@ -516,6 +516,8 @@ _PLAYER_COLOR_UPDATE: dict[str, str] = {
 
 def apply_theme_update(name: str, value: typing.Any) -> bool:
     """Update a single theme property and refresh derived caches as needed."""
+    if name.startswith("THEME_FONT_FAMILY_"):
+        return False
     current_value = globals().get(name, None)
     if current_value == value:
         return False

@@ -312,6 +312,8 @@ class ThemeDebugOverlay:
         def add_item(name: str) -> None:
             if name in included or not hasattr(theme, name):
                 return
+            if name.startswith("THEME_FONT_FAMILY_"):
+                return
             value = getattr(theme, name)
             if callable(value) or isinstance(value, dict):
                 return
@@ -322,6 +324,8 @@ class ThemeDebugOverlay:
             section_items: list[str] = []
             for name in names:
                 if not hasattr(theme, name):
+                    continue
+                if name.startswith("THEME_FONT_FAMILY_"):
                     continue
                 value = getattr(theme, name)
                 if callable(value) or isinstance(value, dict):
@@ -361,7 +365,6 @@ class ThemeDebugOverlay:
             sorted([
                 name for name in dir(theme)
                 if name.startswith("THEME_FONT_SIZE_")
-                or name.startswith("THEME_FONT_FAMILY_")
             ]) + [
                 "THEME_TEXT_COLOR_LIGHT",
                 "THEME_SECTION_HEADER_COLOR",
