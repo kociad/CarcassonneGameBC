@@ -58,6 +58,8 @@ THEME_SCENE_HEADER_TOP_PADDING: int = 12
 THEME_SCENE_HEADER_HEIGHT: int = 0
 # Help content max width cap; integer size in pixels.
 THEME_HELP_MAX_WIDTH: int = 900
+# Padding above/below help section dividers; integer size in pixels.
+THEME_SECTION_DIVIDER_PADDING: int = 6
 
 # Button colors
 # Horizontal padding applied on each side of button labels; integer size in pixels.
