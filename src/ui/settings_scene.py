@@ -301,8 +301,8 @@ class SettingsScene(Scene):
         current_y = self._set_component_rect(
             self.valid_placement_checkbox, x_center, current_y, padding)
 
-        self.debug_label_y = current_y
         if debug_enabled:
+            self.debug_label_y = current_y
             current_y += self.dropdown_font.get_height() + padding
 
             current_y = self._set_component_rect(
@@ -333,7 +333,8 @@ class SettingsScene(Scene):
             current_y = self._set_component_rect(
                 self.ai_thinking_speed_field, x_center, current_y, padding)
         else:
-            self.ai_label_y = current_y
+            self.debug_label_y = None
+            self.ai_label_y = None
 
         current_y += theme.THEME_LAYOUT_BUTTON_SECTION_GAP
         current_y = self._set_component_center(
