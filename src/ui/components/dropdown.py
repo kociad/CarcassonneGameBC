@@ -2,6 +2,7 @@ import pygame
 import typing
 
 from ui import theme
+from ui.utils.draw import draw_rect_alpha
 
 
 class Dropdown:
@@ -150,8 +151,8 @@ class Dropdown:
         highlight = apply_alpha(self.highlight_color, alpha)
         hover_option = apply_alpha(self.hover_option_color, alpha)
         local_rect = pygame.Rect(0, 0, self.rect.width, self.rect.height)
-        pygame.draw.rect(draw_surface, bg, local_rect)
-        pygame.draw.rect(draw_surface, border, local_rect, 2)
+        draw_rect_alpha(draw_surface, bg, local_rect)
+        draw_rect_alpha(draw_surface, border, local_rect, 2)
         selected_text = self.font.render(self.options[self.selected_index],
                                          True, text_col)
         draw_surface.blit(
@@ -167,8 +168,8 @@ class Dropdown:
                     option_bg = hover_option
                 else:
                     option_bg = bg
-                pygame.draw.rect(draw_surface, option_bg, option_rect)
-                pygame.draw.rect(draw_surface, border, option_rect, 1)
+                draw_rect_alpha(draw_surface, option_bg, option_rect)
+                draw_rect_alpha(draw_surface, border, option_rect, 1)
                 option_text = self.font.render(option, True, text_col)
                 draw_surface.blit(
                     option_text,
