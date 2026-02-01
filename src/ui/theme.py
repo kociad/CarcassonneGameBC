@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import typing
 
 import pygame
 
@@ -470,3 +471,47 @@ THEME_PLAYER_COLOR_MAP: dict[str, Color] = {
     "pink": THEME_PLAYER_COLOR_PINK,
     "black": THEME_PLAYER_COLOR_BLACK,
 }
+
+_TOAST_COLOR_UPDATE: dict[str, tuple[str, int]] = {
+    "THEME_TOAST_INFO_TEXT_COLOR": ("info", 0),
+    "THEME_TOAST_INFO_BG_COLOR": ("info", 1),
+    "THEME_TOAST_SUCCESS_TEXT_COLOR": ("success", 0),
+    "THEME_TOAST_SUCCESS_BG_COLOR": ("success", 1),
+    "THEME_TOAST_ERROR_TEXT_COLOR": ("error", 0),
+    "THEME_TOAST_ERROR_BG_COLOR": ("error", 1),
+    "THEME_TOAST_WARNING_TEXT_COLOR": ("warning", 0),
+    "THEME_TOAST_WARNING_BG_COLOR": ("warning", 1),
+}
+
+_PLAYER_COLOR_UPDATE: dict[str, str] = {
+    "THEME_PLAYER_COLOR_RED": "red",
+    "THEME_PLAYER_COLOR_BLUE": "blue",
+    "THEME_PLAYER_COLOR_GREEN": "green",
+    "THEME_PLAYER_COLOR_YELLOW": "yellow",
+    "THEME_PLAYER_COLOR_PINK": "pink",
+    "THEME_PLAYER_COLOR_BLACK": "black",
+}
+
+
+def apply_theme_update(name: str, value: typing.Any) -> bool:
+    """Update a single theme property and refresh derived caches as needed."""
+    current_value = globals().get(name, None)
+    if current_value == value:
+        return False
+    globals()[name] = value
+    if name in _TOAST_COLOR_UPDATE:
+        toast_type, index = _TOAST_COLOR_UPDATE[name]
+        text_color, bg_color = THEME_TOAST_COLORS[toast_type]
+        if index == 0:
+            text_color = value
+        else:
+            bg_color = value
+        THEME_TOAST_COLORS[toast_type] = (text_color, bg_color)
+    if name in _PLAYER_COLOR_UPDATE:
+        player_key = _PLAYER_COLOR_UPDATE[name]
+        THEME_PLAYER_COLOR_MAP[player_key] = value
+    if name.startswith("THEME_FONT_FAMILY_") or name.startswith(
+        "THEME_FONT_SIZE_"
+    ):
+        clear_font_cache()
+    return True

@@ -54,6 +54,10 @@ class ThemeDebugOverlay:
         self._controls_start_y = 0
         self.controls: list[ThemeControl] = []
         self._optional_values: dict[str, typing.Any] = {}
+        self._pending_values: dict[str, typing.Any] = {}
+        self._dirty_names: set[str] = set()
+        self._apply_buttons: dict[str, Button] = {}
+        self._control_map: dict[str, ThemeControl] = {}
         self._title_text = "Theme Debug Overlay"
         self._title_surface: pygame.Surface | None = None
         self._cached_title_text: str | None = None
@@ -80,6 +84,9 @@ class ThemeDebugOverlay:
         )
         self.section_font = theme.get_font(
             "section_header", max(16, theme.THEME_FONT_SIZE_SECTION_HEADER)
+        )
+        self.apply_font = theme.get_font(
+            "button", max(12, int(theme.THEME_FONT_SIZE_BODY * 0.35))
         )
         if (self._title_surface is None
                 or self._cached_title_text != self._title_text
@@ -125,12 +132,14 @@ class ThemeDebugOverlay:
 
     def _build_controls(self) -> None:
         self.controls.clear()
+        self._control_map.clear()
+        self._apply_buttons.clear()
         padding = theme.THEME_LAYOUT_VERTICAL_GAP
         label_x = self.panel_rect.left + padding
         control_x = self.panel_rect.left + 260
         current_y = self._controls_start_y
         line_gap = padding
-        slider_width = self.panel_rect.right - control_x - 80
+        slider_width = self.panel_rect.right - control_x - 140
         for item in self._theme_items():
             if item.is_section:
                 control = self._build_section_header_control(
@@ -143,6 +152,8 @@ class ThemeDebugOverlay:
                 continue
             name = item.name
             value = item.value
+            if name not in self._pending_values:
+                self._pending_values[name] = value
             label = name.replace("THEME_", "").replace("_", " ")
             if name.endswith("_TINT_COLOR"):
                 enabled = value is not None
@@ -233,8 +244,54 @@ class ThemeDebugOverlay:
             else:
                 continue
             self.controls.append(control)
+            self._control_map[name] = control
             current_y += control.height + line_gap
         self._update_scroll_bounds(current_y)
+
+    def _get_pending_value(self, name: str) -> typing.Any:
+        if name in self._pending_values:
+            return self._pending_values[name]
+        return getattr(theme, name)
+
+    def _set_pending_value(self, name: str, value: typing.Any) -> None:
+        self._pending_values[name] = value
+        if getattr(theme, name, None) == value:
+            self._dirty_names.discard(name)
+        else:
+            self._dirty_names.add(name)
+        self._update_apply_button_state(name)
+
+    def _update_apply_button_state(self, name: str) -> None:
+        apply_button = self._apply_buttons.get(name)
+        if not apply_button:
+            return
+        apply_button.set_disabled(name not in self._dirty_names)
+
+    def _apply_pending_value(self, name: str) -> None:
+        if name not in self._pending_values:
+            return
+        value = self._pending_values[name]
+        if not theme.apply_theme_update(name, value):
+            self._dirty_names.discard(name)
+            self._update_apply_button_state(name)
+            return
+        self._dirty_names.discard(name)
+        self._update_apply_button_state(name)
+        self._on_theme_update()
+        if self._needs_full_refresh(name):
+            self.refresh_theme()
+        else:
+            control = self._control_map.get(name)
+            if control and not control.is_section:
+                control.sync()
+
+    @staticmethod
+    def _needs_full_refresh(name: str) -> bool:
+        if name == "THEME_TEXT_COLOR_LIGHT":
+            return True
+        return name.startswith("THEME_FONT_") or name.startswith(
+            "THEME_LAYOUT_"
+        )
 
     def _theme_items(self) -> list[ThemeItem]:
         items: list[ThemeItem] = []
@@ -399,9 +456,14 @@ class ThemeDebugOverlay:
         optional: bool = False,
         enabled: bool = True,
     ) -> ThemeControl:
-        channels = self._normalize_color_channels(value)
-        if optional and not enabled:
-            self._optional_values[name] = channels
+        display_value = self._get_pending_value(name)
+        enabled = display_value is not None
+        if display_value is None:
+            channels = self._normalize_color_channels(
+                self._optional_values.get(name, [0, 0, 0, 255])
+            )
+        else:
+            channels = self._normalize_color_channels(display_value)
         padding = theme.THEME_LAYOUT_VERTICAL_GAP
         slider_height = 20
         channel_gap = max(4, padding // 2)
@@ -444,9 +506,22 @@ class ThemeDebugOverlay:
 
         height = (label_height + (slider_height + channel_gap) * len(sliders)
                   + padding // 2)
+        apply_button = Button(
+            rect=pygame.Rect(0, 0, 0, 24),
+            text="Apply",
+            font=self.apply_font,
+            callback=lambda: self._apply_pending_value(name),
+        )
+        apply_button.rect.center = (
+            self.panel_rect.right - padding - apply_button.rect.width // 2,
+            start_y + height // 2,
+        )
+        self._apply_buttons[name] = apply_button
+        self._update_apply_button_state(name)
         components: list[typing.Any] = sliders[:]
         if checkbox is not None:
             components.insert(0, checkbox)
+        components.append(apply_button)
 
         def draw(surface: pygame.Surface, y_offset: int) -> None:
             surface.blit(label_surface, (label_x, start_y + y_offset))
@@ -475,12 +550,14 @@ class ThemeDebugOverlay:
                     pygame.Rect(swatch_x, swatch_y, swatch_size, swatch_size),
                     1,
                 )
+            apply_button.draw(surface, y_offset=y_offset)
 
         def handle_event(event: pygame.event.Event, y_offset: int) -> None:
             if checkbox is not None:
                 checkbox.handle_event(event, y_offset=y_offset)
             for slider in sliders:
                 slider.handle_event(event, y_offset=y_offset)
+            apply_button.handle_event(event, y_offset=y_offset)
 
         def _refresh_label_surfaces() -> None:
             nonlocal label_surface
@@ -505,7 +582,9 @@ class ThemeDebugOverlay:
 
         def sync() -> None:
             _refresh_label_surfaces()
-            current_value = getattr(theme, name)
+            current_value = (self._get_pending_value(name)
+                             if name in self._dirty_names else
+                             getattr(theme, name))
             if optional and current_value is None:
                 if checkbox is not None:
                     checkbox.set_checked(False)
@@ -515,6 +594,9 @@ class ThemeDebugOverlay:
                     slider.set_font(self.control_font)
                 if checkbox is not None:
                     checkbox.apply_theme()
+                apply_button.apply_theme()
+                apply_button.set_font(self.apply_font)
+                self._update_apply_button_state(name)
                 return
             if checkbox is not None:
                 checkbox.set_checked(True)
@@ -527,6 +609,9 @@ class ThemeDebugOverlay:
                 slider.set_font(self.control_font)
             if checkbox is not None:
                 checkbox.apply_theme()
+            apply_button.apply_theme()
+            apply_button.set_font(self.apply_font)
+            self._update_apply_button_state(name)
 
         return ThemeControl(
             name=name,
@@ -550,42 +635,64 @@ class ThemeDebugOverlay:
         min_value: int,
         max_value: int,
     ) -> ThemeControl:
+        display_value = self._get_pending_value(name)
         slider = Slider(
             rect=(control_x, start_y, 200, 20),
             font=self.control_font,
             min_value=min_value,
             max_value=max_value,
-            value=int(value),
-            on_change=lambda val: self._set_theme_value(name, int(val)),
+            value=int(display_value),
+            on_change=lambda val: self._set_pending_value(name, int(val)),
         )
+        padding = theme.THEME_LAYOUT_VERTICAL_GAP
+        height = max(self.label_font.get_height(), slider.rect.height)
+        apply_button = Button(
+            rect=pygame.Rect(0, 0, 0, 24),
+            text="Apply",
+            font=self.apply_font,
+            callback=lambda: self._apply_pending_value(name),
+        )
+        apply_button.rect.center = (
+            self.panel_rect.right - padding - apply_button.rect.width // 2,
+            start_y + height // 2,
+        )
+        self._apply_buttons[name] = apply_button
+        self._update_apply_button_state(name)
 
         def draw(surface: pygame.Surface, y_offset: int) -> None:
             surface.blit(label_surface, (label_x, start_y + y_offset))
             slider.draw(surface, y_offset=y_offset)
+            apply_button.draw(surface, y_offset=y_offset)
 
         def handle_event(event: pygame.event.Event, y_offset: int) -> None:
             slider.handle_event(event, y_offset=y_offset)
+            apply_button.handle_event(event, y_offset=y_offset)
 
         def sync() -> None:
             nonlocal label_surface
             label_surface = self.label_font.render(
                 label, True, theme.THEME_TEXT_COLOR_LIGHT
             )
-            slider.set_value(int(getattr(theme, name)))
+            current_value = (self._get_pending_value(name)
+                             if name in self._dirty_names else
+                             getattr(theme, name))
+            slider.set_value(int(current_value))
             slider.apply_theme()
             slider.set_font(self.control_font)
+            apply_button.apply_theme()
+            apply_button.set_font(self.apply_font)
+            self._update_apply_button_state(name)
 
         label_surface = self.label_font.render(
             label, True, theme.THEME_TEXT_COLOR_LIGHT
         )
 
-        height = max(self.label_font.get_height(), slider.rect.height)
         return ThemeControl(
             name=name,
             label=label,
             y=start_y,
             height=height,
-            components=[slider],
+            components=[slider, apply_button],
             draw=draw,
             handle_event=handle_event,
             sync=sync,
@@ -602,42 +709,64 @@ class ThemeDebugOverlay:
         min_value: int,
         max_value: int,
     ) -> ThemeControl:
+        display_value = self._get_pending_value(name)
         slider = Slider(
             rect=(control_x, start_y, 200, 20),
             font=self.control_font,
             min_value=min_value,
             max_value=max_value,
-            value=int(value),
-            on_change=lambda val: self._set_theme_value(name, float(val)),
+            value=int(display_value),
+            on_change=lambda val: self._set_pending_value(name, float(val)),
         )
+        padding = theme.THEME_LAYOUT_VERTICAL_GAP
+        height = max(self.label_font.get_height(), slider.rect.height)
+        apply_button = Button(
+            rect=pygame.Rect(0, 0, 0, 24),
+            text="Apply",
+            font=self.apply_font,
+            callback=lambda: self._apply_pending_value(name),
+        )
+        apply_button.rect.center = (
+            self.panel_rect.right - padding - apply_button.rect.width // 2,
+            start_y + height // 2,
+        )
+        self._apply_buttons[name] = apply_button
+        self._update_apply_button_state(name)
 
         def draw(surface: pygame.Surface, y_offset: int) -> None:
             surface.blit(label_surface, (label_x, start_y + y_offset))
             slider.draw(surface, y_offset=y_offset)
+            apply_button.draw(surface, y_offset=y_offset)
 
         def handle_event(event: pygame.event.Event, y_offset: int) -> None:
             slider.handle_event(event, y_offset=y_offset)
+            apply_button.handle_event(event, y_offset=y_offset)
 
         def sync() -> None:
             nonlocal label_surface
             label_surface = self.label_font.render(
                 label, True, theme.THEME_TEXT_COLOR_LIGHT
             )
-            slider.set_value(int(getattr(theme, name)))
+            current_value = (self._get_pending_value(name)
+                             if name in self._dirty_names else
+                             getattr(theme, name))
+            slider.set_value(int(current_value))
             slider.apply_theme()
             slider.set_font(self.control_font)
+            apply_button.apply_theme()
+            apply_button.set_font(self.apply_font)
+            self._update_apply_button_state(name)
 
         label_surface = self.label_font.render(
             label, True, theme.THEME_TEXT_COLOR_LIGHT
         )
 
-        height = max(self.label_font.get_height(), slider.rect.height)
         return ThemeControl(
             name=name,
             label=label,
             y=start_y,
             height=height,
-            components=[slider],
+            components=[slider, apply_button],
             draw=draw,
             handle_event=handle_event,
             sync=sync,
@@ -652,44 +781,66 @@ class ThemeDebugOverlay:
         start_y: int,
         value: str | None,
     ) -> ThemeControl:
+        display_value = self._get_pending_value(name)
         input_field = InputField(
             rect=(control_x, start_y, 220, 28),
             font=self.control_font,
-            initial_text="" if value is None else str(value),
-            on_text_change=lambda text: self._set_theme_value(
+            initial_text="" if display_value is None else str(display_value),
+            on_text_change=lambda text: self._set_pending_value(
                 name, text if text else None
             ),
             commit_on_blur=True,
         )
+        padding = theme.THEME_LAYOUT_VERTICAL_GAP
+        height = max(self.label_font.get_height(), input_field.rect.height)
+        apply_button = Button(
+            rect=pygame.Rect(0, 0, 0, 24),
+            text="Apply",
+            font=self.apply_font,
+            callback=lambda: self._apply_pending_value(name),
+        )
+        apply_button.rect.center = (
+            self.panel_rect.right - padding - apply_button.rect.width // 2,
+            start_y + height // 2,
+        )
+        self._apply_buttons[name] = apply_button
+        self._update_apply_button_state(name)
 
         def draw(surface: pygame.Surface, y_offset: int) -> None:
             surface.blit(label_surface, (label_x, start_y + y_offset))
             input_field.draw(surface, y_offset=y_offset)
+            apply_button.draw(surface, y_offset=y_offset)
 
         def handle_event(event: pygame.event.Event, y_offset: int) -> None:
             input_field.handle_event(event, y_offset=y_offset)
+            apply_button.handle_event(event, y_offset=y_offset)
 
         def sync() -> None:
             nonlocal label_surface
             label_surface = self.label_font.render(
                 label, True, theme.THEME_TEXT_COLOR_LIGHT
             )
-            input_field.set_text("" if getattr(theme, name) is None else
-                                 str(getattr(theme, name)))
+            current_value = (self._get_pending_value(name)
+                             if name in self._dirty_names else
+                             getattr(theme, name))
+            input_field.set_text("" if current_value is None else
+                                 str(current_value))
             input_field.apply_theme()
             input_field.set_font(self.control_font)
+            apply_button.apply_theme()
+            apply_button.set_font(self.apply_font)
+            self._update_apply_button_state(name)
 
         label_surface = self.label_font.render(
             label, True, theme.THEME_TEXT_COLOR_LIGHT
         )
 
-        height = max(self.label_font.get_height(), input_field.rect.height)
         return ThemeControl(
             name=name,
             label=label,
             y=start_y,
             height=height,
-            components=[input_field],
+            components=[input_field, apply_button],
             draw=draw,
             handle_event=handle_event,
             sync=sync,
@@ -704,30 +855,55 @@ class ThemeDebugOverlay:
         start_y: int,
         value: str | None,
     ) -> ThemeControl:
+        display_value = self._get_pending_value(name)
+        def handle_toggle(enabled: bool) -> None:
+            self._toggle_image(enabled, name)
+            input_field.set_disabled(not enabled)
+
         checkbox = Checkbox(
             rect=(control_x, start_y, 20, 20),
-            checked=value is not None,
-            on_toggle=lambda enabled: self._toggle_image(enabled, name),
+            checked=display_value is not None,
+            on_toggle=handle_toggle,
         )
         input_field = InputField(
             rect=(control_x + 80, start_y, 200, 28),
             font=self.control_font,
-            initial_text="" if value is None else str(value),
+            initial_text="" if display_value is None else str(display_value),
             on_text_change=lambda text: self._update_image_path(name, text),
             commit_on_blur=True,
         )
-        if value is None:
+        if display_value is None:
             input_field.set_disabled(True)
+        padding = theme.THEME_LAYOUT_VERTICAL_GAP
+        height = max(
+            self.label_font.get_height(),
+            checkbox.rect.height,
+            input_field.rect.height,
+        )
+        apply_button = Button(
+            rect=pygame.Rect(0, 0, 0, 24),
+            text="Apply",
+            font=self.apply_font,
+            callback=lambda: self._apply_pending_value(name),
+        )
+        apply_button.rect.center = (
+            self.panel_rect.right - padding - apply_button.rect.width // 2,
+            start_y + height // 2,
+        )
+        self._apply_buttons[name] = apply_button
+        self._update_apply_button_state(name)
 
         def draw(surface: pygame.Surface, y_offset: int) -> None:
             surface.blit(label_surface, (label_x, start_y + y_offset))
             checkbox.draw(surface, y_offset=y_offset)
             surface.blit(enabled_label, (control_x + 26, start_y + y_offset))
             input_field.draw(surface, y_offset=y_offset)
+            apply_button.draw(surface, y_offset=y_offset)
 
         def handle_event(event: pygame.event.Event, y_offset: int) -> None:
             checkbox.handle_event(event, y_offset=y_offset)
             input_field.handle_event(event, y_offset=y_offset)
+            apply_button.handle_event(event, y_offset=y_offset)
 
         def sync() -> None:
             nonlocal label_surface
@@ -738,7 +914,9 @@ class ThemeDebugOverlay:
             enabled_label = self.label_font.render(
                 "Enabled", True, theme.THEME_TEXT_COLOR_LIGHT
             )
-            current_value = getattr(theme, name)
+            current_value = (self._get_pending_value(name)
+                             if name in self._dirty_names else
+                             getattr(theme, name))
             checkbox.set_checked(current_value is not None)
             input_field.set_text("" if current_value is None else
                                  str(current_value))
@@ -746,6 +924,9 @@ class ThemeDebugOverlay:
             checkbox.apply_theme()
             input_field.apply_theme()
             input_field.set_font(self.control_font)
+            apply_button.apply_theme()
+            apply_button.set_font(self.apply_font)
+            self._update_apply_button_state(name)
 
         label_surface = self.label_font.render(
             label, True, theme.THEME_TEXT_COLOR_LIGHT
@@ -754,17 +935,12 @@ class ThemeDebugOverlay:
             "Enabled", True, theme.THEME_TEXT_COLOR_LIGHT
         )
 
-        height = max(
-            self.label_font.get_height(),
-            checkbox.rect.height,
-            input_field.rect.height,
-        )
         return ThemeControl(
             name=name,
             label=label,
             y=start_y,
             height=height,
-            components=[checkbox, input_field],
+            components=[checkbox, input_field, apply_button],
             draw=draw,
             handle_event=handle_event,
             sync=sync,
@@ -780,46 +956,67 @@ class ThemeDebugOverlay:
         value: str,
     ) -> ThemeControl:
         options = ["fill", "fit", "stretch"]
-        selected = options.index(value) if value in options else 0
+        display_value = self._get_pending_value(name)
+        selected = options.index(display_value) if display_value in options else 0
         dropdown = Dropdown(
             rect=(control_x, start_y, 160, 28),
             font=self.control_font,
             options=options,
             default_index=selected,
-            on_select=lambda option: self._set_theme_value(name, option),
+            on_select=lambda option: self._set_pending_value(name, option),
         )
+        padding = theme.THEME_LAYOUT_VERTICAL_GAP
+        height = max(self.label_font.get_height(), dropdown.rect.height)
+        apply_button = Button(
+            rect=pygame.Rect(0, 0, 0, 24),
+            text="Apply",
+            font=self.apply_font,
+            callback=lambda: self._apply_pending_value(name),
+        )
+        apply_button.rect.center = (
+            self.panel_rect.right - padding - apply_button.rect.width // 2,
+            start_y + height // 2,
+        )
+        self._apply_buttons[name] = apply_button
+        self._update_apply_button_state(name)
 
         def draw(surface: pygame.Surface, y_offset: int) -> None:
             surface.blit(label_surface, (label_x, start_y + y_offset))
             dropdown.draw(surface, y_offset=y_offset)
+            apply_button.draw(surface, y_offset=y_offset)
 
         def handle_event(event: pygame.event.Event, y_offset: int) -> None:
             dropdown.handle_event(event, y_offset=y_offset)
+            apply_button.handle_event(event, y_offset=y_offset)
 
         def sync() -> None:
             nonlocal label_surface
             label_surface = self.label_font.render(
                 label, True, theme.THEME_TEXT_COLOR_LIGHT
             )
-            current_value = getattr(theme, name)
+            current_value = (self._get_pending_value(name)
+                             if name in self._dirty_names else
+                             getattr(theme, name))
             if current_value in options:
                 dropdown.set_selected(options.index(current_value))
             else:
                 dropdown.set_selected(0)
             dropdown.apply_theme()
             dropdown.set_font(self.control_font)
+            apply_button.apply_theme()
+            apply_button.set_font(self.apply_font)
+            self._update_apply_button_state(name)
 
         label_surface = self.label_font.render(
             label, True, theme.THEME_TEXT_COLOR_LIGHT
         )
 
-        height = max(self.label_font.get_height(), dropdown.rect.height)
         return ThemeControl(
             name=name,
             label=label,
             y=start_y,
             height=height,
-            components=[dropdown],
+            components=[dropdown, apply_button],
             draw=draw,
             handle_event=handle_event,
             sync=sync,
@@ -829,60 +1026,49 @@ class ThemeDebugOverlay:
                                sliders: list[Slider]) -> None:
         if enabled:
             restored = self._optional_values.get(name, [0, 0, 0, 255])
-            self._set_theme_value(name, tuple(restored))
+            self._set_pending_value(name, tuple(restored))
             for slider in sliders:
                 slider.set_disabled(False)
         else:
-            current_value = getattr(theme, name)
+            current_value = self._get_pending_value(name)
             if current_value is not None:
                 self._optional_values[name] = list(current_value)
-            self._set_theme_value(name, None)
+            self._set_pending_value(name, None)
             for slider in sliders:
                 slider.set_disabled(True)
 
     def _toggle_image(self, enabled: bool, name: str) -> None:
         if enabled:
             last_value = self._optional_values.get(name, "")
-            self._set_theme_value(name, last_value if last_value is not None else "")
+            self._set_pending_value(
+                name, last_value if last_value is not None else ""
+            )
         else:
-            current_value = getattr(theme, name)
+            current_value = self._get_pending_value(name)
             if current_value is not None:
                 self._optional_values[name] = current_value
-            self._set_theme_value(name, None)
+            self._set_pending_value(name, None)
 
     def _update_image_path(self, name: str, text: str) -> None:
-        if getattr(theme, name) is None:
+        if self._get_pending_value(name) is None:
             return
-        self._set_theme_value(name, text if text else "")
+        self._set_pending_value(name, text if text else "")
 
     def _update_color_channel(self, name: str, channel_index: int,
                               value: int) -> None:
-        current_value = getattr(theme, name)
+        current_value = self._get_pending_value(name)
         if current_value is None:
             current = self._optional_values.get(name, [0, 0, 0, 255])
         else:
             current = self._normalize_color_channels(current_value)
         current[channel_index] = int(value)
-        self._set_theme_value(name, tuple(current))
+        self._set_pending_value(name, tuple(current))
 
     def _normalize_color_channels(self, value: tuple) -> list[int]:
         channels = list(value)
         if len(channels) < 3:
             channels.extend([0] * (3 - len(channels)))
         return channels[:4]
-
-    def _set_theme_value(self, name: str, value: typing.Any) -> None:
-        current_value = getattr(theme, name, None)
-        if current_value == value:
-            return
-        setattr(theme, name, value)
-        theme.refresh_theme_state()
-        if name.startswith("THEME_FONT_FAMILY_") or name.startswith(
-            "THEME_FONT_SIZE_"
-        ):
-            theme.clear_font_cache()
-        self._on_theme_update()
-        self.refresh_theme()
 
     def _update_scroll_bounds(self, content_end_y: int) -> None:
         padding = theme.THEME_LAYOUT_VERTICAL_GAP
