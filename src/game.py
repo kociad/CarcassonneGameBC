@@ -27,6 +27,7 @@ from ui.components.game_log import GameLog
 from utils.logging_config import set_game_log_instance
 from ui.lobby_scene import LobbyScene
 from ui.theme_debug_overlay import ThemeDebugOverlay
+from ui import theme
 
 # Configure logging with exception handling
 configure_logging()
@@ -62,6 +63,7 @@ class Game:
                 self._screen = pygame.display.set_mode((width, height))
 
             pygame.display.set_caption("Carcassonne")
+            theme.preload_theme_fonts()
 
             self._clock = pygame.time.Clock()
             self._running = True
