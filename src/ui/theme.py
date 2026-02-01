@@ -16,6 +16,8 @@ ColorA = tuple[int, int, int, int]
 THEME_FONT_SIZE_MAIN_MENU_TITLE: int = 96
 # Scene title size (help/lobby/setup/settings); integer size typically 48-120.
 THEME_FONT_SIZE_SCENE_TITLE: int = 72
+# Section header size for in-scene group headers; integer size typically 20-48.
+THEME_FONT_SIZE_SECTION_HEADER: int = 26
 # Large game-over headline size; integer size typically 56-96.
 THEME_FONT_SIZE_GAME_OVER_TITLE: int = 48
 # Button/label size for menu controls and score table headers; integer size 32-64.
@@ -32,6 +34,8 @@ THEME_FONT_SIZE_GAME_LOG_BODY: int = 24
 # Font families (asset filename or system font name).
 # Title text font family name or file in assets/fonts/; None uses default pygame font.
 THEME_FONT_FAMILY_TITLE: str | None = "Cinzel-Bold.ttf"
+# Section header font family name or file in assets/fonts/; None uses default pygame font.
+THEME_FONT_FAMILY_SECTION_HEADER: str | None = "Cinzel-Bold.ttf"
 # Body text font family name or file in assets/fonts/; None uses default pygame font.
 THEME_FONT_FAMILY_BODY: str | None = "Inter_18pt-Regular.ttf"
 # Label text font family name or file in assets/fonts/; None uses default pygame font.
@@ -383,6 +387,8 @@ def resolve_font_path(font_name: str | None) -> str | None:
 def _get_font_family(role: str) -> str | None:
     if role == "title":
         return THEME_FONT_FAMILY_TITLE
+    if role == "section_header":
+        return THEME_FONT_FAMILY_SECTION_HEADER
     if role == "label":
         return THEME_FONT_FAMILY_LABEL
     if role == "button":

@@ -101,6 +101,9 @@ class GamePrepareScene(Scene):
         self.switch_scene_callback = switch_scene_callback
 
         self.font = theme.get_font("title", theme.THEME_FONT_SIZE_SCENE_TITLE)
+        self.section_header_font = theme.get_font(
+            "section_header", theme.THEME_FONT_SIZE_SECTION_HEADER
+        )
         self.button_font = theme.get_font(
             "button", theme.THEME_FONT_SIZE_BUTTON
         )
@@ -323,7 +326,7 @@ class GamePrepareScene(Scene):
         current_y = self.header_height + theme.THEME_LAYOUT_VERTICAL_GAP
 
         self.player_label_y = current_y
-        current_y += self.dropdown_font.get_height() + padding
+        current_y += self.section_header_font.get_height() + padding
 
         self.player_list_y = current_y
         current_y = self._layout_player_fields(current_y, padding, x_center)
@@ -345,7 +348,7 @@ class GamePrepareScene(Scene):
             self.screen.get_width() // 2 + 250, players_center_y)
 
         self.game_label_y = current_y
-        current_y += self.dropdown_font.get_height() + padding
+        current_y += self.section_header_font.get_height() + padding
 
         dropdown_width, dropdown_height = self.ai_difficulty_dropdown.rect.size
         self.ai_difficulty_dropdown.rect = pygame.Rect(
@@ -353,7 +356,7 @@ class GamePrepareScene(Scene):
         current_y += dropdown_height + padding
 
         self.card_set_label_y = current_y
-        current_y += self.dropdown_font.get_height() + padding
+        current_y += self.section_header_font.get_height() + padding
 
         self.card_set_section_y = current_y
         for _, checkbox in self.card_set_checkboxes:
@@ -363,7 +366,7 @@ class GamePrepareScene(Scene):
             current_y += checkbox_height + padding
 
         self.network_label_y = current_y
-        current_y += self.dropdown_font.get_height() + padding
+        current_y += self.section_header_font.get_height() + padding
 
         network_width, network_height = self.network_mode_dropdown.rect.size
         self.network_mode_dropdown.rect = pygame.Rect(
@@ -647,28 +650,29 @@ class GamePrepareScene(Scene):
         title_text = self.font.render("Game Setup", True,
                                       theme.THEME_TEXT_COLOR_LIGHT)
 
-        player_label = self.dropdown_font.render("Players", True,
-                                                 theme.THEME_SECTION_HEADER_COLOR)
+        player_label = self.section_header_font.render(
+            "Players", True, theme.THEME_SECTION_HEADER_COLOR
+        )
         player_label_rect = player_label.get_rect()
         player_label_rect.centerx = self.screen.get_width() // 2
         player_label_rect.y = self.player_label_y + offset_y
         self.screen.blit(player_label, player_label_rect)
 
-        game_label = self.dropdown_font.render(
+        game_label = self.section_header_font.render(
             "Game", True, theme.THEME_SECTION_HEADER_COLOR)
         game_label_rect = game_label.get_rect()
         game_label_rect.centerx = self.screen.get_width() // 2
         game_label_rect.y = self.game_label_y + offset_y
         self.screen.blit(game_label, game_label_rect)
 
-        card_set_label = self.dropdown_font.render(
+        card_set_label = self.section_header_font.render(
             "Card Sets", True, theme.THEME_SECTION_HEADER_COLOR)
         card_set_label_rect = card_set_label.get_rect()
         card_set_label_rect.centerx = self.screen.get_width() // 2
         card_set_label_rect.y = self.card_set_label_y + offset_y
         self.screen.blit(card_set_label, card_set_label_rect)
 
-        network_label = self.dropdown_font.render(
+        network_label = self.section_header_font.render(
             "Network", True, theme.THEME_SECTION_HEADER_COLOR)
         network_label_rect = network_label.get_rect()
         network_label_rect.centerx = self.screen.get_width() // 2
@@ -754,6 +758,9 @@ class GamePrepareScene(Scene):
         """Refresh fonts and component styling after theme changes."""
         super().refresh_theme()
         self.font = theme.get_font("title", theme.THEME_FONT_SIZE_SCENE_TITLE)
+        self.section_header_font = theme.get_font(
+            "section_header", theme.THEME_FONT_SIZE_SECTION_HEADER
+        )
         self.button_font = theme.get_font(
             "button", theme.THEME_FONT_SIZE_BUTTON
         )

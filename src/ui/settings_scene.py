@@ -18,6 +18,9 @@ class SettingsScene(Scene):
                  switch_scene_callback: typing.Callable) -> None:
         super().__init__(screen, switch_scene_callback)
         self.font = theme.get_font("title", theme.THEME_FONT_SIZE_SCENE_TITLE)
+        self.section_header_font = theme.get_font(
+            "section_header", theme.THEME_FONT_SIZE_SECTION_HEADER
+        )
         self.button_font = theme.get_font(
             "button", theme.THEME_FONT_SIZE_BUTTON
         )
@@ -42,7 +45,7 @@ class SettingsScene(Scene):
 
         # ===== DISPLAY SETTINGS =====
         self.display_label_y = current_y
-        current_y += (self.dropdown_font.get_height()
+        current_y += (self.section_header_font.get_height()
                       + theme.THEME_LAYOUT_VERTICAL_GAP)
 
         resolution_options = [
@@ -82,7 +85,7 @@ class SettingsScene(Scene):
 
         # ===== GAME SETTINGS =====
         self.game_label_y = current_y
-        current_y += (self.dropdown_font.get_height()
+        current_y += (self.section_header_font.get_height()
                       + theme.THEME_LAYOUT_VERTICAL_GAP)
 
         self.valid_placement_checkbox = Checkbox(
@@ -94,7 +97,7 @@ class SettingsScene(Scene):
 
         # ===== DEBUG SETTINGS =====
         self.debug_label_y = current_y
-        current_y += (self.dropdown_font.get_height()
+        current_y += (self.section_header_font.get_height()
                       + theme.THEME_LAYOUT_VERTICAL_GAP)
 
         self.log_to_console_checkbox = Checkbox(
@@ -188,7 +191,7 @@ class SettingsScene(Scene):
 
         # ===== AI SETTINGS =====
         self.ai_label_y = current_y
-        current_y += (self.dropdown_font.get_height()
+        current_y += (self.section_header_font.get_height()
                       + theme.THEME_LAYOUT_VERTICAL_GAP)
 
         self.ai_simulation_checkbox = Checkbox(
@@ -287,7 +290,7 @@ class SettingsScene(Scene):
         current_y = self.header_height + theme.THEME_LAYOUT_VERTICAL_GAP
 
         self.display_label_y = current_y
-        current_y += self.dropdown_font.get_height() + padding
+        current_y += self.section_header_font.get_height() + padding
 
         current_y = self._set_component_rect(
             self.resolution_dropdown, x_center, current_y, padding)
@@ -296,14 +299,14 @@ class SettingsScene(Scene):
             self.fullscreen_checkbox, x_center, current_y, padding)
 
         self.game_label_y = current_y
-        current_y += self.dropdown_font.get_height() + padding
+        current_y += self.section_header_font.get_height() + padding
 
         current_y = self._set_component_rect(
             self.valid_placement_checkbox, x_center, current_y, padding)
 
         if debug_enabled:
             self.debug_label_y = current_y
-            current_y += self.dropdown_font.get_height() + padding
+            current_y += self.section_header_font.get_height() + padding
 
             current_y = self._set_component_rect(
                 self.log_to_console_checkbox, x_center, current_y, padding)
@@ -323,7 +326,7 @@ class SettingsScene(Scene):
                 self.game_log_max_entries_field, x_center, current_y, padding)
 
             self.ai_label_y = current_y
-            current_y += self.dropdown_font.get_height() + padding
+            current_y += self.section_header_font.get_height() + padding
 
             current_y = self._set_component_rect(
                 self.ai_simulation_checkbox, x_center, current_y, padding)
@@ -582,14 +585,14 @@ class SettingsScene(Scene):
                                       theme.THEME_TEXT_COLOR_LIGHT)
 
         # Draw section headers
-        display_label = self.dropdown_font.render(
+        display_label = self.section_header_font.render(
             "Display", True, theme.THEME_SECTION_HEADER_COLOR)
         display_label_rect = display_label.get_rect()
         display_label_rect.centerx = self.screen.get_width() // 2
         display_label_rect.y = self.display_label_y + offset_y
         self.screen.blit(display_label, display_label_rect)
 
-        game_label = self.dropdown_font.render(
+        game_label = self.section_header_font.render(
             "Game", True, theme.THEME_SECTION_HEADER_COLOR)
         game_label_rect = game_label.get_rect()
         game_label_rect.centerx = self.screen.get_width() // 2
@@ -598,7 +601,7 @@ class SettingsScene(Scene):
 
         debug_enabled = settings_manager.get("DEBUG")
         if debug_enabled:
-            debug_label = self.dropdown_font.render(
+            debug_label = self.section_header_font.render(
                 "Debug", True, theme.THEME_SECTION_HEADER_COLOR)
             debug_label_rect = debug_label.get_rect()
             debug_label_rect.centerx = self.screen.get_width() // 2
@@ -606,7 +609,7 @@ class SettingsScene(Scene):
             self.screen.blit(debug_label, debug_label_rect)
 
         if debug_enabled:
-            ai_label = self.dropdown_font.render(
+            ai_label = self.section_header_font.render(
                 "AI", True, theme.THEME_SECTION_HEADER_COLOR)
             ai_label_rect = ai_label.get_rect()
             ai_label_rect.centerx = self.screen.get_width() // 2
@@ -788,6 +791,9 @@ class SettingsScene(Scene):
         """Refresh fonts and component styling after theme changes."""
         super().refresh_theme()
         self.font = theme.get_font("title", theme.THEME_FONT_SIZE_SCENE_TITLE)
+        self.section_header_font = theme.get_font(
+            "section_header", theme.THEME_FONT_SIZE_SECTION_HEADER
+        )
         self.button_font = theme.get_font(
             "button", theme.THEME_FONT_SIZE_BUTTON
         )
