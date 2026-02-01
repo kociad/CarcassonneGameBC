@@ -34,9 +34,9 @@ THEME_FONT_SIZE_GAME_LOG_BODY: int = 24
 
 # Font families (asset filename or system font name).
 # Title text font family name or file in assets/fonts/; None uses default pygame font.
-THEME_FONT_FAMILY_TITLE: str | None = "Cinzel-Bold.ttf"
+THEME_FONT_FAMILY_TITLE: str | None = "IMFellEnglish-Regular.ttf"
 # Section header font family name or file in assets/fonts/; None uses default pygame font.
-THEME_FONT_FAMILY_SECTION_HEADER: str | None = "Cinzel-Bold.ttf"
+THEME_FONT_FAMILY_SECTION_HEADER: str | None = "Inter_24pt-Regular.ttf"
 # Body text font family name or file in assets/fonts/; None uses default pygame font.
 THEME_FONT_FAMILY_BODY: str | None = "Inter_18pt-Regular.ttf"
 # Label text font family name or file in assets/fonts/; None uses default pygame font.
@@ -243,9 +243,9 @@ THEME_GAME_LOG_SCROLL_BG_COLOR: ColorA = (0, 0, 0, 150)
 
 # Shared scene colors
 # Scene header background color; RGBA tuple (0-255 per channel, alpha 0-255).
-THEME_SCENE_HEADER_BG_COLOR: ColorA = (42, 42, 42, 220)
+THEME_SCENE_HEADER_BG_COLOR: ColorA = (42, 42, 42, 100)
 # Optional blur radius/strength for the scene header background; 0 disables blur.
-THEME_SCENE_HEADER_BLUR_RADIUS: float = 0.0
+THEME_SCENE_HEADER_BLUR_RADIUS: float = 5.0
 # Primary light text for titles and labels; RGB tuple (0-255 per channel).
 THEME_TEXT_COLOR_LIGHT: Color = (242, 242, 242)
 # Section header highlight color (gold); RGB tuple (0-255 per channel).
