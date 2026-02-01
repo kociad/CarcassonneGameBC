@@ -69,13 +69,13 @@ THEME_BUTTON_HORIZONTAL_PADDING: int = 12
 THEME_BUTTON_VERTICAL_PADDING: int = 6
 # Default state
 # Background for default button state; RGB tuple (0-255 per channel).
-THEME_BUTTON_BG_COLOR: Color = (42, 42, 42, 180)
+THEME_BUTTON_BG_COLOR: Color = (42, 42, 42, 100)
 # Hover state
 # Background for hovered button state; RGB tuple (0-255 per channel).
-THEME_BUTTON_HOVER_BG_COLOR: Color = (32, 32, 32, 220)
+THEME_BUTTON_HOVER_BG_COLOR: Color = (32, 32, 32, 180)
 # Active/pressed state
 # Background for pressed button state; RGB tuple (0-255 per channel).
-THEME_BUTTON_PRESSED_BG_COLOR: Color = (22, 22, 22, 220)
+THEME_BUTTON_PRESSED_BG_COLOR: Color = (22, 22, 22, 180)
 # Default text
 # Text color for enabled buttons; RGB tuple (0-255 per channel).
 THEME_BUTTON_TEXT_COLOR: Color = (190, 190, 190)
@@ -83,7 +83,7 @@ THEME_BUTTON_TEXT_COLOR: Color = (190, 190, 190)
 # Text color for disabled buttons; RGB tuple (0-255 per channel).
 THEME_BUTTON_TEXT_DISABLED_COLOR: Color = (130, 130, 130)
 # Background for disabled buttons; RGB tuple (0-255 per channel).
-THEME_BUTTON_DISABLED_BG_COLOR: Color = (110, 110, 110, 180)
+THEME_BUTTON_DISABLED_BG_COLOR: Color = (110, 110, 110, 100)
 
 # Checkbox colors
 # Default state
@@ -243,7 +243,7 @@ THEME_GAME_LOG_SCROLL_BG_COLOR: ColorA = (0, 0, 0, 150)
 
 # Shared scene colors
 # Scene header background color; RGBA tuple (0-255 per channel, alpha 0-255).
-THEME_SCENE_HEADER_BG_COLOR: ColorA = (42, 42, 42, 220)
+THEME_SCENE_HEADER_BG_COLOR: ColorA = (42, 42, 42, 100)
 # Optional blur radius/strength for the scene header background; 0 disables blur.
 THEME_SCENE_HEADER_BLUR_RADIUS: float = 5.0
 # Optional blur radius/strength for UI alpha primitives; 0 disables blur.
