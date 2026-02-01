@@ -135,9 +135,10 @@ class LobbyScene(Scene):
             title_text.get_height()
         )
         offset_y = self.scroll_offset
-        label_font = theme.get_font("label", theme.THEME_FONT_SIZE_BUTTON)
+        label_font = theme.get_font("body", theme.THEME_FONT_SIZE_BODY)
         content_start_y = header_height + theme.THEME_LAYOUT_VERTICAL_GAP
         y = content_start_y + offset_y
+        row_height = label_font.get_linesize() + theme.THEME_LAYOUT_VERTICAL_GAP
         if self.is_host:
             for i, status in enumerate(self.status_list):
                 name = status["name"]
@@ -154,7 +155,7 @@ class LobbyScene(Scene):
                 self.screen.blit(
                     status_surf,
                     (start_x + name_surf.get_width() + spacing, y))
-                y += 60
+                y += row_height
             self.start_button.draw(self.screen, y_offset=offset_y)
         else:
             wait_font = theme.get_font("body", theme.THEME_FONT_SIZE_BODY)
