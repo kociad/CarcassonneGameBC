@@ -17,12 +17,28 @@ def _apply_blur(surface: pygame.Surface, blur_radius: float) -> pygame.Surface:
         return surface
     width, height = surface.get_size()
     strength = max(1.0, float(blur_radius))
-    divisor = max(1, int(strength * 2))
-    downscaled = pygame.transform.smoothscale(
-        surface,
-        (max(1, width // divisor), max(1, height // divisor)),
+    quality_factor = max(
+        0.1,
+        min(1.0, float(theme.THEME_UI_ALPHA_BLUR_DOWNSCALE_FACTOR)),
     )
-    return pygame.transform.smoothscale(downscaled, (width, height))
+    target_scale = max(1.0 / (strength * 2.0), quality_factor)
+    passes = max(1, int(round(strength)))
+    blurred = surface
+    for step in range(1, passes + 1):
+        scale = 1.0 - (1.0 - target_scale) * (step / passes)
+        target_size = (
+            max(1, int(width * scale)),
+            max(1, int(height * scale)),
+        )
+        blurred = pygame.transform.smoothscale(blurred, target_size)
+    for step in range(passes - 1, -1, -1):
+        scale = 1.0 - (1.0 - target_scale) * (step / passes)
+        target_size = (
+            max(1, int(width * scale)),
+            max(1, int(height * scale)),
+        )
+        blurred = pygame.transform.smoothscale(blurred, target_size)
+    return blurred
 
 
 def _blur_surface_region(
@@ -47,6 +63,8 @@ def draw_rect_alpha(
     width: int = 0,
 ) -> None:
     rgb, alpha = _split_color(color)
+    if alpha <= 0:
+        return
     if alpha >= 255:
         pygame.draw.rect(surface, (*rgb, alpha), rect, width)
         return
@@ -66,6 +84,8 @@ def draw_circle_alpha(
     width: int = 0,
 ) -> None:
     rgb, alpha = _split_color(color)
+    if alpha <= 0:
+        return
     if alpha >= 255:
         pygame.draw.circle(surface, (*rgb, alpha), center, radius, width)
         return
@@ -92,6 +112,8 @@ def draw_line_alpha(
     width: int = 1,
 ) -> None:
     rgb, alpha = _split_color(color)
+    if alpha <= 0:
+        return
     if alpha >= 255:
         pygame.draw.line(surface, (*rgb, alpha), start_pos, end_pos, width)
         return
