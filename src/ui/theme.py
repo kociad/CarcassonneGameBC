@@ -52,6 +52,8 @@ THEME_SCENE_HEADER_TOP_PADDING: int = 12
 THEME_SCENE_HEADER_HEIGHT: int = 0
 # Help content max width cap; integer size in pixels.
 THEME_HELP_MAX_WIDTH: int = 900
+# Extra left indent for bullet lines in the help scene; integer size in pixels.
+THEME_HELP_BULLET_INDENT: int = 24
 
 # Button colors
 # Horizontal padding applied on each side of button labels; integer size in pixels.

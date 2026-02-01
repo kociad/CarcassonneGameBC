@@ -213,6 +213,7 @@ class ThemeDebugOverlay:
             "THEME_LAYOUT_LINE_GAP",
             "THEME_SCENE_HEADER_TOP_PADDING",
             "THEME_SCENE_HEADER_HEIGHT",
+            "THEME_HELP_BULLET_INDENT",
             "THEME_SCENE_HEADER_BG_COLOR",
             "THEME_SCENE_HEADER_BLUR_RADIUS",
         ]

@@ -27,81 +27,81 @@ class HelpScene(Scene):
         self.header_height = 0
         self.sections = [
             ("Objective", [
-                "Score more points than your opponents by placing cards,",
-                "completing structures, and wisely placing your figures.",
-                "The game ends when the deck runs out of cards.",
+                "• Score more points than your opponents by placing cards,",
+                "• completing structures, and wisely placing your figures.",
+                "• The game ends when the deck runs out of cards.",
             ]),
             ("Starting a New Game", [
-                "Select New Game from the main menu.",
-                "Set player names and choose which players are controlled by AI.",
-                "Select AI difficulty and card sets.",
-                "Press Start Game.",
-                "The starting card is placed automatically in the center of the"
+                "• Select New Game from the main menu.",
+                "• Set player names and choose which players are controlled by AI.",
+                "• Select AI difficulty and card sets.",
+                "• Press Start Game.",
+                "• The starting card is placed automatically in the center of the"
                 " board.",
             ]),
             ("Turn Structure", [
-                "Players take turns clockwise. Each turn has two phases.",
-                "Phase 1: Place a Card",
-                "Draw one card and place it so all touching edges match.",
-                "You may rotate the card before placing it.",
-                "If multiple positions are valid, choose any of them.",
-                "If no valid placement is available, press SPACE to discard.",
-                "Phase 2: Place a Figure (Optional)",
-                "The figure must be placed on the card you just played.",
-                "The selected region must not already contain another figure.",
-                "Only one figure may be placed per turn.",
-                "You may skip this phase by pressing SPACE.",
-                "Figures remain until the structure is completed.",
+                "• Players take turns clockwise. Each turn has two phases.",
+                "• Phase 1: Place a Card",
+                "• Draw one card and place it so all touching edges match.",
+                "• You may rotate the card before placing it.",
+                "• If multiple positions are valid, choose any of them.",
+                "• If no valid placement is available, press SPACE to discard.",
+                "• Phase 2: Place a Figure (Optional)",
+                "• The figure must be placed on the card you just played.",
+                "• The selected region must not already contain another figure.",
+                "• Only one figure may be placed per turn.",
+                "• You may skip this phase by pressing SPACE.",
+                "• Figures remain until the structure is completed.",
             ]),
             ("Scoring", [
-                "Points are awarded automatically when a structure is completed.",
-                "Completed structures return all figures to their owners.",
-                "Unfinished structures are scored at the end of the game.",
-                "Current scores are always visible in the sidebar.",
+                "• Points are awarded automatically when a structure is completed.",
+                "• Completed structures return all figures to their owners.",
+                "• Unfinished structures are scored at the end of the game.",
+                "• Current scores are always visible in the sidebar.",
             ]),
             ("Controls", [
-                "Mouse: place cards and figures.",
-                "Right Mouse Button: rotate card.",
-                "WASD / Arrow Keys: move the camera.",
-                "SPACE: skip figure placement or discard card.",
-                "TAB: show or hide the game log.",
-                "ESC: return to the main menu.",
+                "• Mouse: place cards and figures.",
+                "• Right Mouse Button: rotate card.",
+                "• WASD / Arrow Keys: move the camera.",
+                "• SPACE: skip figure placement or discard card.",
+                "• TAB: show or hide the game log.",
+                "• ESC: return to the main menu.",
             ]),
             ("User Interface", [
-                "Game Board: main playing area.",
-                "Sidebar: current card, remaining deck, player list and scores.",
-                "Valid Placement Highlight: shows legal card positions.",
-                "Toast Messages: short feedback and warning messages.",
-                "Game Log: history of important game events.",
+                "• Game Board: main playing area.",
+                "• Sidebar: current card, remaining deck, player list and scores.",
+                "• Valid Placement Highlight: shows legal card positions.",
+                "• Toast Messages: short feedback and warning messages.",
+                "• Game Log: history of important game events.",
             ]),
             ("End of the Game", [
-                "The game ends when the deck is empty.",
-                "Final scoring applies to all unfinished structures.",
-                "Final scores and player ranking are displayed.",
+                "• The game ends when the deck is empty.",
+                "• Final scoring applies to all unfinished structures.",
+                "• Final scores and player ranking are displayed.",
             ]),
             ("Network Play (Local Network Only)", [
-                "Network games are supported only on the same local network.",
-                "Online play over the internet is not supported.",
+                "• Network games are supported only on the same local network.",
+                "• Online play over the internet is not supported.",
             ]),
             ("Hosting a Game", [
-                "Open New Game and set Network Mode to Host.",
-                "Configure players and game options.",
-                "The game shows your local IP address.",
-                "Share the IP address and port with other players.",
-                "Wait until all players are connected.",
-                "Press Start Game to begin.",
-                "Only the host can start the game.",
+                "• Open New Game and set Network Mode to Host.",
+                "• Configure players and game options.",
+                "• The game shows your local IP address.",
+                "• Share the IP address and port with other players.",
+                "• Wait until all players are connected.",
+                "• Press Start Game to begin.",
+                "• Only the host can start the game.",
             ]),
             ("Joining a Game", [
-                "Open New Game and set Network Mode to Client.",
-                "Enter the host’s IP address and port.",
-                "Press Start Game.",
-                "Wait in the lobby until the host starts the game.",
+                "• Open New Game and set Network Mode to Client.",
+                "• Enter the host’s IP address and port.",
+                "• Press Start Game.",
+                "• Wait in the lobby until the host starts the game.",
             ]),
             ("Lobby", [
-                "Before the game starts, all players wait in a lobby.",
-                "The lobby displays connected players, waiting players, and AI.",
-                "The game can only start once all required players connect.",
+                "• Before the game starts, all players wait in a lobby.",
+                "• The lobby displays connected players, waiting players, and AI.",
+                "• The game can only start once all required players connect.",
             ]),
         ]
 
@@ -220,7 +220,10 @@ class HelpScene(Scene):
             font, color = self._get_line_style(line)
             text_surface = font.render(line, True, color)
             draw_rect = text_surface.get_rect()
-            draw_rect.left = content_left
+            if line.lstrip().startswith("•"):
+                draw_rect.left = content_left + theme.THEME_HELP_BULLET_INDENT
+            else:
+                draw_rect.left = content_left
             draw_rect.y = line_y + offset_y
             if draw_rect.bottom > 0 and draw_rect.top < self.screen.get_height(
             ):
