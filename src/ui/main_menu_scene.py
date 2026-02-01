@@ -32,6 +32,11 @@ class MainMenuScene(Scene):
         self.cleanup_callback = cleanup_previous_game
         self.show_confirm_dialog = False
         self.header_height = 0
+        self._title_text = "Carcassonne"
+        self._title_surface: pygame.Surface | None = None
+        self._cached_title_text: str | None = None
+        self._dialog_text_surfaces: dict[tuple[str, tuple[int, int, int]],
+                                         pygame.Surface] = {}
         continue_rect = pygame.Rect(0, 0, 0, 60)
         self.continue_button = Button(continue_rect, "Continue",
                                       self.button_font,
@@ -176,15 +181,29 @@ class MainMenuScene(Scene):
             dialog_rect,
             2,
         )
-        message_text = self.dialog_font.render(
-            "Starting a new game will end the current game.", True,
-            theme.THEME_MENU_DIALOG_TEXT_COLOR)
+        dialog_color = theme.THEME_MENU_DIALOG_TEXT_COLOR
+        message_text = self._dialog_text_surfaces.get(
+            ("Starting a new game will end the current game.", dialog_color)
+        )
+        if message_text is None:
+            message_text = self.dialog_font.render(
+                "Starting a new game will end the current game.", True,
+                dialog_color)
+            self._dialog_text_surfaces[
+                ("Starting a new game will end the current game.", dialog_color)
+            ] = message_text
         message_rect = message_text.get_rect(center=(self.screen.get_width() //
                                                      2, dialog_y + 35))
         self.screen.blit(message_text, message_rect)
-        confirm_text = self.dialog_font.render(
-            "Do you want to continue?", True,
-            theme.THEME_MENU_DIALOG_TEXT_COLOR)
+        confirm_text = self._dialog_text_surfaces.get(
+            ("Do you want to continue?", dialog_color)
+        )
+        if confirm_text is None:
+            confirm_text = self.dialog_font.render(
+                "Do you want to continue?", True, dialog_color)
+            self._dialog_text_surfaces[
+                ("Do you want to continue?", dialog_color)
+            ] = confirm_text
         confirm_rect = confirm_text.get_rect(center=(self.screen.get_width() //
                                                      2, dialog_y + 70))
         self.screen.blit(confirm_text, confirm_rect)
@@ -201,8 +220,12 @@ class MainMenuScene(Scene):
             blur_radius=theme.THEME_MAIN_MENU_BACKGROUND_BLUR_RADIUS,
         )
         offset_y = self.scroll_offset
-        title_text = self.font.render("Carcassonne", True,
-                                      theme.THEME_TEXT_COLOR_LIGHT)
+        if (self._title_surface is None
+                or self._cached_title_text != self._title_text):
+            self._title_surface = self.font.render(
+                self._title_text, True, theme.THEME_TEXT_COLOR_LIGHT
+            )
+            self._cached_title_text = self._title_text
         self.continue_button.disabled = self.get_game_session() is None
         self.continue_button.draw(self.screen, y_offset=offset_y)
         self.start_button.draw(self.screen, y_offset=offset_y)
@@ -215,7 +238,7 @@ class MainMenuScene(Scene):
         )
         if self.show_confirm_dialog:
             self.draw_confirm_dialog()
-        self._draw_scene_header(title_text)
+        self._draw_scene_header(self._title_surface)
 
     def _layout_buttons(self) -> None:
         padding = theme.THEME_LAYOUT_VERTICAL_GAP
@@ -253,6 +276,9 @@ class MainMenuScene(Scene):
             "button", theme.THEME_FONT_SIZE_BUTTON
         )
         self.dialog_font = theme.get_font("body", theme.THEME_FONT_SIZE_BODY)
+        self._title_surface = None
+        self._cached_title_text = None
+        self._dialog_text_surfaces.clear()
         buttons = [
             self.continue_button,
             self.start_button,
