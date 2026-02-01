@@ -28,9 +28,6 @@ class MainMenuScene(Scene):
         self.dialog_font = theme.get_font("body", theme.THEME_FONT_SIZE_BODY)
         self.get_game_session = get_game_session
         self.cleanup_callback = cleanup_previous_game
-        self.scroll_offset = 0
-        self.max_scroll = 0
-        self.scroll_speed = 30
         self.show_confirm_dialog = False
         self.header_height = 0
         continue_rect = pygame.Rect(0, 0, 0, 60)
