@@ -196,7 +196,6 @@ class MainMenuScene(Scene):
         offset_y = self.scroll_offset
         title_text = self.font.render("Carcassonne", True,
                                       theme.THEME_TEXT_COLOR_LIGHT)
-        self._draw_scene_header(title_text)
         self.continue_button.disabled = self.get_game_session() is None
         self.continue_button.draw(self.screen, y_offset=offset_y)
         self.start_button.draw(self.screen, y_offset=offset_y)
@@ -209,6 +208,7 @@ class MainMenuScene(Scene):
         )
         if self.show_confirm_dialog:
             self.draw_confirm_dialog()
+        self._draw_scene_header(title_text)
 
     def _layout_buttons(self) -> None:
         padding = theme.THEME_LAYOUT_VERTICAL_GAP

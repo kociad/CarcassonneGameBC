@@ -645,7 +645,6 @@ class GamePrepareScene(Scene):
 
         title_text = self.font.render("Game Setup", True,
                                       theme.THEME_TEXT_COLOR_LIGHT)
-        self._draw_scene_header(title_text)
 
         player_label = self.dropdown_font.render("Players", True,
                                                  theme.THEME_SECTION_HEADER_COLOR)
@@ -748,6 +747,7 @@ class GamePrepareScene(Scene):
             y_offset=offset_y,
             expanded_only=True,
         )
+        self._draw_scene_header(title_text)
 
     def refresh_theme(self) -> None:
         """Refresh fonts and component styling after theme changes."""
