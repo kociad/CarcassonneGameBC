@@ -39,7 +39,7 @@ class ThemeDebugOverlay:
     def __init__(
         self,
         screen: pygame.Surface,
-        on_theme_update: typing.Callable[[], None],
+        on_theme_update: typing.Callable[[str | None], None],
     ) -> None:
         self.screen = screen
         self._on_theme_update = on_theme_update
@@ -277,7 +277,7 @@ class ThemeDebugOverlay:
             return
         self._dirty_names.discard(name)
         self._update_apply_button_state(name)
-        self._on_theme_update()
+        self._on_theme_update(name)
         if self._needs_full_refresh(name):
             self.refresh_theme()
         else:

@@ -113,9 +113,22 @@ class Scene:
         self.screen.blit(title_surface, title_rect)
         return header_height
 
-    def refresh_theme(self) -> None:
+    def refresh_theme(self, theme_name: str | None = None) -> None:
         """Refresh any cached surfaces after a theme update."""
-        self._background_cache.clear()
+        if theme_name is None or self._should_clear_background_cache(
+            theme_name
+        ):
+            self._background_cache.clear()
+
+    @staticmethod
+    def _should_clear_background_cache(theme_name: str) -> bool:
+        background_suffixes = (
+            "_BACKGROUND_IMAGE",
+            "_BACKGROUND_SCALE_MODE",
+            "_BACKGROUND_TINT_COLOR",
+            "_BACKGROUND_BLUR_RADIUS",
+        )
+        return theme_name.endswith(background_suffixes)
 
     def _draw_background(
         self,

@@ -300,9 +300,9 @@ class HelpScene(Scene):
             self.back_button.rect.bottom + theme.THEME_LAYOUT_SECTION_GAP * 2,
         )
 
-    def refresh_theme(self) -> None:
+    def refresh_theme(self, theme_name: str | None = None) -> None:
         """Refresh fonts and component styling after theme changes."""
-        super().refresh_theme()
+        super().refresh_theme(theme_name)
         self.font = theme.get_font("title", theme.THEME_FONT_SIZE_SCENE_TITLE)
         self.section_header_font = theme.get_font(
             "section_header", theme.THEME_FONT_SIZE_SECTION_HEADER
