@@ -282,8 +282,8 @@ THEME_PREPARE_BACKGROUND_TINT_COLOR: ColorA | None = None
 THEME_PREPARE_BACKGROUND_BLUR_RADIUS: float = 0.0
 
 # Main menu dialog colors
-# Main menu confirmation overlay fill; RGB tuple (0-255 per channel).
-THEME_MENU_OVERLAY_COLOR: Color = (0, 0, 0, 255)
+# Main menu confirmation overlay fill; RGBA tuple (0-255 per channel, alpha 0-255).
+THEME_MENU_OVERLAY_COLOR: ColorA = (0, 0, 0, 128)
 # Main menu dialog background; RGB tuple (0-255 per channel).
 THEME_MENU_DIALOG_BG_COLOR: Color = (60, 60, 60, 255)
 # Main menu dialog border; RGB tuple (0-255 per channel).
