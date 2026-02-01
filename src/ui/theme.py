@@ -31,7 +31,7 @@ THEME_FONT_SIZE_GAME_LOG_BODY: int = 28
 
 # Font families (asset filename or system font name).
 # Title text font family name or file in assets/fonts/; None uses default pygame font.
-THEME_FONT_FAMILY_TITLE: str | None = None
+THEME_FONT_FAMILY_TITLE: str | None = "Cinzel-Bold.ttf"
 # Body text font family name or file in assets/fonts/; None uses default pygame font.
 THEME_FONT_FAMILY_BODY: str | None = None
 # Label text font family name or file in assets/fonts/; None uses default pygame font.
@@ -340,7 +340,7 @@ THEME_GAME_SCORE_TEXT_COLOR: Color = (200, 200, 200, 255)
 THEME_GAME_AI_THINKING_COLOR: Color = (255, 255, 100, 255)
 
 # Game scene background (image filename is relative to settings.BACKGROUND_IMAGE_PATH).
-THEME_GAME_BACKGROUND_COLOR: Color = THEME_GAME_BOARD_BG_COLOR
+THEME_GAME_BACKGROUND_COLOR: Color = (25, 25, 25, 255)
 THEME_GAME_BACKGROUND_IMAGE: str | None = None
 THEME_GAME_BACKGROUND_SCALE_MODE: str = "fill"
 THEME_GAME_BACKGROUND_TINT_COLOR: ColorA | None = None
