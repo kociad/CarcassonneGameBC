@@ -212,7 +212,7 @@ class ThemeDebugOverlay:
                 )
             elif (isinstance(value, float)
                   and name.endswith("_BLUR_DOWNSCALE_FACTOR")):
-                control = self._build_float_control(
+                control = self._build_decimal_control(
                     name,
                     label,
                     label_x,
@@ -384,6 +384,7 @@ class ThemeDebugOverlay:
             "UI Effects",
             [
                 "THEME_UI_ALPHA_BLUR_RADIUS",
+                "THEME_UI_ALPHA_BLUR_DOWNSCALE_FACTOR",
             ],
         )
         add_section(
@@ -869,6 +870,96 @@ class ThemeDebugOverlay:
             handle_event=handle_event,
             sync=sync,
         )
+
+    def _build_decimal_control(
+        self,
+        name: str,
+        label: str,
+        label_x: int,
+        control_x: int,
+        start_y: int,
+        value: float,
+        min_value: float,
+        max_value: float,
+    ) -> ThemeControl:
+        display_value = self._get_pending_value(name)
+        input_field = InputField(
+            rect=(control_x, start_y, 160, 28),
+            font=self.control_font,
+            initial_text=f"{float(display_value):.2f}",
+            on_text_change=lambda text: self._set_pending_value(
+                name, self._clamp_decimal(text, min_value, max_value)
+            ),
+            commit_on_blur=True,
+            numeric=True,
+            min_value=min_value,
+            max_value=max_value,
+        )
+        padding = theme.THEME_LAYOUT_VERTICAL_GAP
+        height = max(self.label_font.get_height(), input_field.rect.height)
+        apply_button = Button(
+            rect=pygame.Rect(0, 0, 0, 24),
+            text="Apply",
+            font=self.apply_font,
+            callback=lambda: self._apply_pending_value(name),
+        )
+        apply_button.rect.center = (
+            self.panel_rect.right - padding - apply_button.rect.width // 2,
+            start_y + height // 2,
+        )
+        self._apply_buttons[name] = apply_button
+        self._update_apply_button_state(name)
+
+        def draw(surface: pygame.Surface, y_offset: int) -> None:
+            surface.blit(label_surface, (label_x, start_y + y_offset))
+            input_field.draw(surface, y_offset=y_offset)
+            apply_button.draw(surface, y_offset=y_offset)
+
+        def handle_event(event: pygame.event.Event, y_offset: int) -> None:
+            input_field.handle_event(event, y_offset=y_offset)
+            apply_button.handle_event(event, y_offset=y_offset)
+
+        def sync() -> None:
+            nonlocal label_surface
+            label_surface = self.label_font.render(
+                label, True, theme.THEME_TEXT_COLOR_LIGHT
+            )
+            current_value = (self._get_pending_value(name)
+                             if name in self._dirty_names else
+                             getattr(theme, name))
+            input_field.set_text(f"{float(current_value):.2f}")
+            input_field.apply_theme()
+            input_field.set_font(self.control_font)
+            apply_button.apply_theme()
+            apply_button.set_font(self.apply_font)
+            self._update_apply_button_state(name)
+
+        label_surface = self.label_font.render(
+            label, True, theme.THEME_TEXT_COLOR_LIGHT
+        )
+
+        return ThemeControl(
+            name=name,
+            label=label,
+            y=start_y,
+            height=height,
+            components=[input_field, apply_button],
+            draw=draw,
+            handle_event=handle_event,
+            sync=sync,
+        )
+
+    @staticmethod
+    def _clamp_decimal(
+        text: str,
+        min_value: float,
+        max_value: float,
+    ) -> float:
+        try:
+            value = float(text.replace(",", "."))
+        except (TypeError, ValueError):
+            return min_value
+        return max(min_value, min(max_value, value))
 
     def _build_image_control(
         self,
