@@ -5,6 +5,7 @@ import logging
 import typing
 
 from ui import theme
+from ui.utils.draw import draw_rect_alpha
 
 logger = logging.getLogger(__name__)
 
@@ -244,9 +245,8 @@ class Toast:
                 progress = min(elapsed / self.animation_duration, 1.0)
                 alpha = int(255 * progress)
 
-        base_bg_alpha = self.bg_color[3] if len(self.bg_color) == 4 else 255
-        self._bg_surface.set_alpha(int(base_bg_alpha * (alpha / 255)))
-        screen.blit(self._bg_surface, bg_rect.topleft)
+        bg_color = self._apply_alpha(self.bg_color, alpha)
+        draw_rect_alpha(screen, bg_color, bg_rect)
 
         base_text_alpha = self.text_color[3] if len(self.text_color) == 4 else 255
         self._text_surface.set_alpha(int(base_text_alpha * (alpha / 255)))
