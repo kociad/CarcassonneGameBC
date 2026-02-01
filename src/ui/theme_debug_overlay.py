@@ -361,6 +361,9 @@ class ThemeDebugOverlay:
             "Scene Headers",
             [
                 "THEME_SCENE_HEADER_BG_COLOR",
+                "THEME_SCENE_HEADER_BACKGROUND_IMAGE",
+                "THEME_SCENE_HEADER_BACKGROUND_SCALE_MODE",
+                "THEME_SCENE_HEADER_BACKGROUND_TINT_COLOR",
                 "THEME_SCENE_HEADER_BLUR_RADIUS",
                 "THEME_SCENE_HEADER_TEXT_COLOR",
             ],

@@ -105,8 +105,22 @@ class Scene:
             )
             self.screen.blit(blurred, header_rect.topleft)
         header_surface = pygame.Surface(header_rect.size, pygame.SRCALPHA)
-        header_surface.fill(theme.THEME_SCENE_HEADER_BG_COLOR)
+        header_image = self._get_background_surface(
+            image_name=theme.THEME_SCENE_HEADER_BACKGROUND_IMAGE,
+            target_size=header_rect.size,
+            scale_mode=theme.THEME_SCENE_HEADER_BACKGROUND_SCALE_MODE,
+            blur_radius=theme.THEME_SCENE_HEADER_BLUR_RADIUS,
+        )
+        if header_image is not None:
+            header_surface.blit(header_image, (0, 0))
+        if theme.THEME_SCENE_HEADER_BACKGROUND_TINT_COLOR is not None:
+            tint_overlay = pygame.Surface(header_rect.size, pygame.SRCALPHA)
+            tint_overlay.fill(theme.THEME_SCENE_HEADER_BACKGROUND_TINT_COLOR)
+            header_surface.blit(tint_overlay, (0, 0))
         self.screen.blit(header_surface, header_rect.topleft)
+        header_overlay = pygame.Surface(header_rect.size, pygame.SRCALPHA)
+        header_overlay.fill(theme.THEME_SCENE_HEADER_BG_COLOR)
+        self.screen.blit(header_overlay, header_rect.topleft)
         title_rect = title_surface.get_rect(
             center=(self.screen.get_width() // 2, header_rect.centery)
         )
