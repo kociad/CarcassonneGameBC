@@ -9,6 +9,7 @@ from utils.settings_manager import settings_manager
 from ui.components.toast import Toast, ToastManager
 from ui.components.button import Button
 from ui.components.progress_bar import ProgressBar
+from ui.utils.draw import draw_rect_alpha
 from ui import theme
 
 logger = logging.getLogger(__name__)
@@ -749,8 +750,8 @@ class GameScene(Scene):
         panel_x = window_width - sidebar_width
         sidebar_center_x = panel_x + sidebar_width // 2
 
-        pygame.draw.rect(self.screen, theme.THEME_GAME_SIDEBAR_BG_COLOR,
-                         (panel_x, 0, sidebar_width, window_height))
+        draw_rect_alpha(self.screen, theme.THEME_GAME_SIDEBAR_BG_COLOR,
+                        (panel_x, 0, sidebar_width, window_height))
         padding = theme.THEME_LAYOUT_VERTICAL_GAP
         figure_gap = max(4, padding // 2)
         current_y = padding * 2
@@ -843,12 +844,15 @@ class GameScene(Scene):
                                              sidebar_width - 10,
                                              player_section_height + padding)
                 if player_bg_rect.bottom > scrollable_content_start_y and player_bg_rect.top < window_height:
-                    pygame.draw.rect(self.screen,
-                                     theme.THEME_GAME_CURRENT_PLAYER_BG_COLOR,
-                                     player_bg_rect)
-                    pygame.draw.rect(self.screen,
-                                     theme.THEME_GAME_CURRENT_PLAYER_BORDER_COLOR,
-                                     player_bg_rect, 2)
+                    draw_rect_alpha(
+                        self.screen,
+                        theme.THEME_GAME_CURRENT_PLAYER_BG_COLOR,
+                        player_bg_rect)
+                    draw_rect_alpha(
+                        self.screen,
+                        theme.THEME_GAME_CURRENT_PLAYER_BORDER_COLOR,
+                        player_bg_rect,
+                        2)
             name_rect = name_surface.get_rect()
             name_rect.centerx = sidebar_center_x
             name_rect.y = current_y - offset_y
