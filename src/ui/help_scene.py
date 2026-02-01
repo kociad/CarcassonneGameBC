@@ -25,30 +25,88 @@ class HelpScene(Scene):
         self.max_scroll = 0
         self.scroll_speed = 30
         self.header_height = 0
-        self.controls_label_y = 0
-        self.rules_label_y = 0
-
-        self.controls_lines = [
-            "Use WASD or the Arrow Keys to move around the board.",
-            "Left-click to place a tile.",
-            "Right-click to rotate a tile.",
-            "Press Space to discard an unplaceable tile or skip meeple placement.",
-            "Press Esc to return to the main menu.",
-            "Press Tab to toggle the game log.",
-            "Use the mouse wheel to scroll menus and the sidebar.",
+        self.sections = [
+            ("Objective", [
+                "Score more points than your opponents by placing cards,",
+                "completing structures, and wisely placing your figures.",
+                "The game ends when the deck runs out of cards.",
+            ]),
+            ("Starting a New Game", [
+                "Select New Game from the main menu.",
+                "Set player names and choose which players are controlled by AI.",
+                "Select AI difficulty and card sets.",
+                "Press Start Game.",
+                "The starting card is placed automatically in the center of the"
+                " board.",
+            ]),
+            ("Turn Structure", [
+                "Players take turns clockwise. Each turn has two phases.",
+                "Phase 1: Place a Card",
+                "Draw one card and place it so all touching edges match.",
+                "You may rotate the card before placing it.",
+                "If multiple positions are valid, choose any of them.",
+                "If no valid placement is available, press SPACE to discard.",
+                "Phase 2: Place a Figure (Optional)",
+                "The figure must be placed on the card you just played.",
+                "The selected region must not already contain another figure.",
+                "Only one figure may be placed per turn.",
+                "You may skip this phase by pressing SPACE.",
+                "Figures remain until the structure is completed.",
+            ]),
+            ("Scoring", [
+                "Points are awarded automatically when a structure is completed.",
+                "Completed structures return all figures to their owners.",
+                "Unfinished structures are scored at the end of the game.",
+                "Current scores are always visible in the sidebar.",
+            ]),
+            ("Controls", [
+                "Mouse: place cards and figures.",
+                "Right Mouse Button: rotate card.",
+                "WASD / Arrow Keys: move the camera.",
+                "SPACE: skip figure placement or discard card.",
+                "TAB: show or hide the game log.",
+                "ESC: return to the main menu.",
+            ]),
+            ("User Interface", [
+                "Game Board: main playing area.",
+                "Sidebar: current card, remaining deck, player list and scores.",
+                "Valid Placement Highlight: shows legal card positions.",
+                "Toast Messages: short feedback and warning messages.",
+                "Game Log: history of important game events.",
+            ]),
+            ("End of the Game", [
+                "The game ends when the deck is empty.",
+                "Final scoring applies to all unfinished structures.",
+                "Final scores and player ranking are displayed.",
+            ]),
+            ("Network Play (Local Network Only)", [
+                "Network games are supported only on the same local network.",
+                "Online play over the internet is not supported.",
+            ]),
+            ("Hosting a Game", [
+                "Open New Game and set Network Mode to Host.",
+                "Configure players and game options.",
+                "The game shows your local IP address.",
+                "Share the IP address and port with other players.",
+                "Wait until all players are connected.",
+                "Press Start Game to begin.",
+                "Only the host can start the game.",
+            ]),
+            ("Joining a Game", [
+                "Open New Game and set Network Mode to Client.",
+                "Enter the host’s IP address and port.",
+                "Press Start Game.",
+                "Wait in the lobby until the host starts the game.",
+            ]),
+            ("Lobby", [
+                "Before the game starts, all players wait in a lobby.",
+                "The lobby displays connected players, waiting players, and AI.",
+                "The game can only start once all required players connect.",
+            ]),
         ]
-        self.rules_lines = [
-            "Phase 1: place the drawn tile on the board.",
-            "Phase 2: you may place a meeple on the tile.",
-            "Tiles must be placed next to existing tiles.",
-            "Terrain types must match along touching edges.",
-            "You can only discard when no valid placement exists.",
-            "Meeples can only be placed on unoccupied features.",
-            "Completed features score points immediately.",
-        ]
 
-        self.controls_layout: list[tuple[str, int]] = []
-        self.rules_layout: list[tuple[str, int]] = []
+        self.section_headers_layout: list[tuple[str, int]] = []
+        self.section_body_layout: list[tuple[str, int]] = []
 
         self.rules_button = Button(pygame.Rect(0, 0, 0, 60), "Wiki",
                                    self.button_font)
@@ -80,23 +138,15 @@ class HelpScene(Scene):
         )
         current_y = self.header_height + theme.THEME_LAYOUT_VERTICAL_GAP
 
-        self.controls_label_y = current_y
-        current_y += self.text_font.get_height() + padding
-
-        self.controls_layout.clear()
-        for line in self.controls_lines:
-            line_y, current_y = self._set_text_rect(
-                line, self.controls_font, current_y, padding)
-            self.controls_layout.append((line, line_y))
-
-        self.rules_label_y = current_y
-        current_y += self.text_font.get_height() + padding
-
-        self.rules_layout.clear()
-        for line in self.rules_lines:
-            line_y, current_y = self._set_text_rect(
-                line, self.controls_font, current_y, padding)
-            self.rules_layout.append((line, line_y))
+        self.section_headers_layout.clear()
+        self.section_body_layout.clear()
+        for section_title, section_lines in self.sections:
+            self.section_headers_layout.append((section_title, current_y))
+            current_y += self.text_font.get_height() + padding
+            for line in section_lines:
+                line_y, current_y = self._set_text_rect(
+                    line, self.controls_font, current_y, padding)
+                self.section_body_layout.append((line, line_y))
 
         current_y = self._set_component_center(
             self.rules_button, button_center_x, current_y, padding)
@@ -142,31 +192,18 @@ class HelpScene(Scene):
                                       theme.THEME_TEXT_COLOR_LIGHT)
         offset_y = self.scroll_offset
 
-        controls_label = self.text_font.render(
-            "Game Controls", True, theme.THEME_SECTION_HEADER_COLOR)
-        controls_label_rect = controls_label.get_rect()
-        controls_label_rect.centerx = self.screen.get_width() // 2
-        controls_label_rect.y = self.controls_label_y + offset_y
-        self.screen.blit(controls_label, controls_label_rect)
-
-        rules_label = self.text_font.render(
-            "Game Rules", True, theme.THEME_SECTION_HEADER_COLOR)
-        rules_label_rect = rules_label.get_rect()
-        rules_label_rect.centerx = self.screen.get_width() // 2
-        rules_label_rect.y = self.rules_label_y + offset_y
-        self.screen.blit(rules_label, rules_label_rect)
-
-        for line, line_y in self.controls_layout:
-            font, color = self._get_line_style(line)
-            text_surface = font.render(line, True, color)
-            draw_rect = text_surface.get_rect()
-            draw_rect.centerx = self.screen.get_width() // 2
-            draw_rect.y = line_y + offset_y
-            if draw_rect.bottom > 0 and draw_rect.top < self.screen.get_height(
+        for section_title, header_y in self.section_headers_layout:
+            section_label = self.text_font.render(
+                section_title, True, theme.THEME_SECTION_HEADER_COLOR)
+            section_label_rect = section_label.get_rect()
+            section_label_rect.centerx = self.screen.get_width() // 2
+            section_label_rect.y = header_y + offset_y
+            if section_label_rect.bottom > 0 and section_label_rect.top < (
+                self.screen.get_height()
             ):
-                self.screen.blit(text_surface, draw_rect)
+                self.screen.blit(section_label, section_label_rect)
 
-        for line, line_y in self.rules_layout:
+        for line, line_y in self.section_body_layout:
             font, color = self._get_line_style(line)
             text_surface = font.render(line, True, color)
             draw_rect = text_surface.get_rect()
