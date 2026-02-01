@@ -207,12 +207,11 @@ class HelpScene(Scene):
             section_label = self.text_font.render(
                 section_title, True, theme.THEME_SECTION_HEADER_COLOR)
             section_label_rect = section_label.get_rect()
-            section_label_rect.left = content_left
-            section_label_rect.y = header_y + offset_y
-            if section_label_rect.bottom > 0 and section_label_rect.top < (
-                self.screen.get_height()
-            ):
-                self.screen.blit(section_label, section_label_rect)
+            section_label_rect.center = (
+                self.screen.get_width() // 2,
+                header_y + offset_y + section_label_rect.height // 2,
+            )
+            self.screen.blit(section_label, section_label_rect)
 
         for line, line_y in self.section_body_layout:
             font, color = self._get_line_style(line)
