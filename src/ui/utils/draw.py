@@ -42,3 +42,28 @@ def draw_circle_alpha(
     temp_center = (diameter // 2, diameter // 2)
     pygame.draw.circle(temp, (*rgb, alpha), temp_center, radius, width)
     surface.blit(temp, (center[0] - temp_center[0], center[1] - temp_center[1]))
+
+
+def draw_line_alpha(
+    surface: pygame.Surface,
+    color: tuple[int, ...],
+    start_pos: tuple[int, int],
+    end_pos: tuple[int, int],
+    width: int = 1,
+) -> None:
+    rgb, alpha = _split_color(color)
+    if alpha >= 255:
+        pygame.draw.line(surface, (*rgb, alpha), start_pos, end_pos, width)
+        return
+    min_x = min(start_pos[0], end_pos[0])
+    min_y = min(start_pos[1], end_pos[1])
+    max_x = max(start_pos[0], end_pos[0])
+    max_y = max(start_pos[1], end_pos[1])
+    pad = max(1, width)
+    temp_width = max(1, max_x - min_x + pad * 2)
+    temp_height = max(1, max_y - min_y + pad * 2)
+    temp = pygame.Surface((temp_width, temp_height), pygame.SRCALPHA)
+    local_start = (start_pos[0] - min_x + pad, start_pos[1] - min_y + pad)
+    local_end = (end_pos[0] - min_x + pad, end_pos[1] - min_y + pad)
+    pygame.draw.line(temp, (*rgb, alpha), local_start, local_end, width)
+    surface.blit(temp, (min_x - pad, min_y - pad))

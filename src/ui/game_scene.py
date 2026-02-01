@@ -9,7 +9,7 @@ from utils.settings_manager import settings_manager
 from ui.components.toast import Toast, ToastManager
 from ui.components.button import Button
 from ui.components.progress_bar import ProgressBar
-from ui.utils.draw import draw_rect_alpha
+from ui.utils.draw import draw_rect_alpha, draw_line_alpha
 from ui import theme
 
 logger = logging.getLogger(__name__)
@@ -249,8 +249,11 @@ class GameScene(Scene):
             col1_x = window_width // 2 - 150
             col2_x = window_width // 2 + 150
 
-            pygame.draw.rect(self.screen, theme.THEME_GAME_OVER_TABLE_BG_COLOR,
-                             (table_x, table_y, table_width, table_height))
+            draw_rect_alpha(
+                self.screen,
+                theme.THEME_GAME_OVER_TABLE_BG_COLOR,
+                (table_x, table_y, table_width, table_height),
+            )
             header_y = table_y + row_height // 2
             header_player = table_font.render(
                 "Player", True, theme.THEME_TEXT_COLOR_LIGHT)
@@ -260,10 +263,13 @@ class GameScene(Scene):
                              header_player.get_rect(center=(col1_x, header_y)))
             self.screen.blit(header_score,
                              header_score.get_rect(center=(col2_x, header_y)))
-            pygame.draw.line(
-                self.screen, theme.THEME_GAME_OVER_TABLE_LINE_COLOR,
+            draw_line_alpha(
+                self.screen,
+                theme.THEME_GAME_OVER_TABLE_LINE_COLOR,
                 (table_x + 10, table_y + row_height),
-                (table_x + table_width - 10, table_y + row_height), 2)
+                (table_x + table_width - 10, table_y + row_height),
+                2,
+            )
 
             for i, player in enumerate(sorted_players):
                 row_y = table_y + row_height * (i + 1) + row_height // 2
@@ -279,11 +285,14 @@ class GameScene(Scene):
                     score_surface,
                     score_surface.get_rect(center=(col2_x, row_y)))
                 if i < len(sorted_players) - 1:
-                    pygame.draw.line(
-                        self.screen, theme.THEME_GAME_OVER_ROW_LINE_COLOR,
+                    draw_line_alpha(
+                        self.screen,
+                        theme.THEME_GAME_OVER_ROW_LINE_COLOR,
                         (table_x + 10, table_y + row_height * (i + 2)),
-                        (table_x + table_width - 10, table_y + row_height *
-                         (i + 2)), 1)
+                        (table_x + table_width - 10,
+                         table_y + row_height * (i + 2)),
+                        1,
+                    )
 
             esc_message_font = theme.get_font("body",
                                               theme.THEME_FONT_SIZE_BODY)
@@ -299,17 +308,22 @@ class GameScene(Scene):
             tile_size = settings_manager.get("TILE_SIZE")
             for x in range(0, (game_board.get_grid_size() + 1) * tile_size,
                            tile_size):
-                pygame.draw.line(
-                    self.screen, theme.THEME_GAME_DEBUG_GRID_COLOR,
+                draw_line_alpha(
+                    self.screen,
+                    theme.THEME_GAME_DEBUG_GRID_COLOR,
                     (x - self.offset_x, 0 - self.offset_y),
                     (x - self.offset_x,
-                     game_board.get_grid_size() * tile_size - self.offset_y))
+                     game_board.get_grid_size() * tile_size - self.offset_y),
+                )
             for y in range(0, (game_board.get_grid_size() + 1) * tile_size,
                            tile_size):
-                pygame.draw.line(self.screen, theme.THEME_GAME_DEBUG_GRID_COLOR,
-                                 (0 - self.offset_x, y - self.offset_y),
-                                 (game_board.get_grid_size() * tile_size -
-                                  self.offset_x, y - self.offset_y))
+                draw_line_alpha(
+                    self.screen,
+                    theme.THEME_GAME_DEBUG_GRID_COLOR,
+                    (0 - self.offset_x, y - self.offset_y),
+                    (game_board.get_grid_size() * tile_size - self.offset_x,
+                     y - self.offset_y),
+                )
 
         tile_size = settings_manager.get("TILE_SIZE")
         center_x, center_y = game_board.get_center_position()
