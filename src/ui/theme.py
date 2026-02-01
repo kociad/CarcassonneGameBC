@@ -8,7 +8,7 @@ import pygame
 
 import settings
 
-Color = tuple[int, int, int, int]
+Color = tuple[int, int, int] | tuple[int, int, int, int]
 ColorA = tuple[int, int, int, int]
 
 # Font sizes
@@ -71,10 +71,10 @@ THEME_BUTTON_HOVER_BG_COLOR: Color = (220, 220, 220, 255)
 THEME_BUTTON_PRESSED_BG_COLOR: Color = (160, 160, 160, 255)
 # Default text
 # Text color for enabled buttons; RGB tuple (0-255 per channel).
-THEME_BUTTON_TEXT_COLOR: Color = (0, 0, 0, 255)
+THEME_BUTTON_TEXT_COLOR: Color = (0, 0, 0)
 # Disabled state
 # Text color for disabled buttons; RGB tuple (0-255 per channel).
-THEME_BUTTON_TEXT_DISABLED_COLOR: Color = (150, 150, 150, 255)
+THEME_BUTTON_TEXT_DISABLED_COLOR: Color = (150, 150, 150)
 # Background for disabled buttons; RGB tuple (0-255 per channel).
 THEME_BUTTON_DISABLED_BG_COLOR: Color = (180, 180, 180, 255)
 
@@ -98,7 +98,7 @@ THEME_CHECKBOX_DISABLED_COLOR: Color = (100, 100, 100, 255)
 # Dropdown colors
 # Default state
 # Dropdown text color; RGB tuple (0-255 per channel).
-THEME_DROPDOWN_TEXT_COLOR: Color = (0, 0, 0, 255)
+THEME_DROPDOWN_TEXT_COLOR: Color = (0, 0, 0)
 # Dropdown background color; RGB tuple (0-255 per channel).
 THEME_DROPDOWN_BG_COLOR: Color = (255, 255, 255, 255)
 # Dropdown border color; RGB tuple (0-255 per channel).
@@ -113,12 +113,12 @@ THEME_DROPDOWN_HOVER_BG_COLOR: Color = (235, 235, 235, 255)
 THEME_DROPDOWN_HOVER_OPTION_COLOR: Color = (230, 230, 230, 255)
 # Disabled state
 # Dropdown disabled text color; RGB tuple (0-255 per channel).
-THEME_DROPDOWN_DISABLED_TEXT_COLOR: Color = (150, 150, 150, 255)
+THEME_DROPDOWN_DISABLED_TEXT_COLOR: Color = (150, 150, 150)
 
 # Input field colors
 # Default state
 # Input text color; RGB tuple (0-255 per channel).
-THEME_INPUT_TEXT_COLOR: Color = (0, 0, 0, 255)
+THEME_INPUT_TEXT_COLOR: Color = (0, 0, 0)
 # Input background color; RGB tuple (0-255 per channel).
 THEME_INPUT_BG_COLOR: Color = (255, 255, 255, 255)
 # Input border color; RGB tuple (0-255 per channel).
@@ -129,10 +129,10 @@ THEME_INPUT_DISABLED_BG_COLOR: Color = (200, 200, 200, 255)
 # Input border when disabled; RGB tuple (0-255 per channel).
 THEME_INPUT_DISABLED_BORDER_COLOR: Color = (100, 100, 100, 255)
 # Input text when disabled; RGB tuple (0-255 per channel).
-THEME_INPUT_DISABLED_TEXT_COLOR: Color = (150, 150, 150, 255)
+THEME_INPUT_DISABLED_TEXT_COLOR: Color = (150, 150, 150)
 # Placeholder
 # Placeholder text color for empty inputs; RGB tuple (0-255 per channel).
-THEME_INPUT_PLACEHOLDER_COLOR: Color = (150, 150, 150, 255)
+THEME_INPUT_PLACEHOLDER_COLOR: Color = (150, 150, 150)
 
 # Slider colors
 # Default state
@@ -178,41 +178,41 @@ THEME_PROGRESS_BAR_PROGRESS_COLOR: Color = (100, 255, 100, 255)
 # Progress bar border; RGB tuple (0-255 per channel).
 THEME_PROGRESS_BAR_BORDER_COLOR: Color = (150, 150, 150, 255)
 # Progress bar text color; RGB tuple (0-255 per channel).
-THEME_PROGRESS_BAR_TEXT_COLOR: Color = (255, 255, 255, 255)
+THEME_PROGRESS_BAR_TEXT_COLOR: Color = (255, 255, 255)
 
 # Toast colors
 # Default state
 # Toast "info" text color; RGB tuple (0-255 per channel).
-THEME_TOAST_INFO_TEXT_COLOR: Color = (30, 30, 30, 255)
+THEME_TOAST_INFO_TEXT_COLOR: Color = (30, 30, 30)
 # Toast "info" background color; RGB tuple (0-255 per channel).
 THEME_TOAST_INFO_BG_COLOR: Color = (255, 255, 255, 255)
 # Success state
 # Toast "success" text color; RGB tuple (0-255 per channel).
-THEME_TOAST_SUCCESS_TEXT_COLOR: Color = (255, 255, 255, 255)
+THEME_TOAST_SUCCESS_TEXT_COLOR: Color = (255, 255, 255)
 # Toast "success" background color; RGB tuple (0-255 per channel).
 THEME_TOAST_SUCCESS_BG_COLOR: Color = (0, 128, 0, 255)
 # Error state
 # Toast "error" text color; RGB tuple (0-255 per channel).
-THEME_TOAST_ERROR_TEXT_COLOR: Color = (255, 255, 255, 255)
+THEME_TOAST_ERROR_TEXT_COLOR: Color = (255, 255, 255)
 # Toast "error" background color; RGB tuple (0-255 per channel).
 THEME_TOAST_ERROR_BG_COLOR: Color = (128, 0, 0, 255)
 # Warning state
 # Toast "warning" text color; RGB tuple (0-255 per channel).
-THEME_TOAST_WARNING_TEXT_COLOR: Color = (0, 0, 0, 255)
+THEME_TOAST_WARNING_TEXT_COLOR: Color = (0, 0, 0)
 # Toast "warning" background color; RGB tuple (0-255 per channel).
 THEME_TOAST_WARNING_BG_COLOR: Color = (255, 215, 0, 255)
 
 # Game log colors
 # Game log info text color; RGB tuple (0-255 per channel).
-THEME_GAME_LOG_INFO_COLOR: Color = (240, 240, 240, 255)
+THEME_GAME_LOG_INFO_COLOR: Color = (240, 240, 240)
 # Game log debug text color; RGB tuple (0-255 per channel).
-THEME_GAME_LOG_DEBUG_COLOR: Color = (150, 200, 255, 255)
+THEME_GAME_LOG_DEBUG_COLOR: Color = (150, 200, 255)
 # Game log scoring text color; RGB tuple (0-255 per channel).
-THEME_GAME_LOG_SCORING_COLOR: Color = (255, 255, 0, 255)
+THEME_GAME_LOG_SCORING_COLOR: Color = (255, 255, 0)
 # Game log warning text color; RGB tuple (0-255 per channel).
-THEME_GAME_LOG_WARNING_COLOR: Color = (255, 220, 100, 255)
+THEME_GAME_LOG_WARNING_COLOR: Color = (255, 220, 100)
 # Game log error text color; RGB tuple (0-255 per channel).
-THEME_GAME_LOG_ERROR_COLOR: Color = (255, 120, 120, 255)
+THEME_GAME_LOG_ERROR_COLOR: Color = (255, 120, 120)
 # Game log info row background; RGBA tuple (0-255 per channel, alpha 0-255).
 THEME_GAME_LOG_INFO_BG: ColorA = (0, 0, 0, 0)
 # Game log debug row background; RGBA tuple (0-255 per channel, alpha 0-255).
@@ -226,11 +226,11 @@ THEME_GAME_LOG_ERROR_BG: ColorA = (100, 0, 0, 50)
 # Game log overlay dim color; RGBA tuple (0-255 per channel, alpha 0-255).
 THEME_GAME_LOG_OVERLAY_COLOR: ColorA = (0, 0, 0, 200)
 # Game log title text color; RGB tuple (0-255 per channel).
-THEME_GAME_LOG_TITLE_TEXT_COLOR: Color = (255, 255, 255, 255)
+THEME_GAME_LOG_TITLE_TEXT_COLOR: Color = (255, 255, 255)
 # Game log title background; RGBA tuple (0-255 per channel, alpha 0-255).
 THEME_GAME_LOG_TITLE_BG_COLOR: ColorA = (50, 50, 50, 180)
 # Game log scroll info text color; RGB tuple (0-255 per channel).
-THEME_GAME_LOG_SCROLL_TEXT_COLOR: Color = (180, 180, 180, 255)
+THEME_GAME_LOG_SCROLL_TEXT_COLOR: Color = (180, 180, 180)
 # Game log scroll info background; RGBA tuple (0-255 per channel, alpha 0-255).
 THEME_GAME_LOG_SCROLL_BG_COLOR: ColorA = (0, 0, 0, 150)
 
@@ -240,15 +240,15 @@ THEME_SCENE_HEADER_BG_COLOR: ColorA = (42, 42, 42, 220)
 # Optional blur radius/strength for the scene header background; 0 disables blur.
 THEME_SCENE_HEADER_BLUR_RADIUS: float = 0.0
 # Primary light text for titles and labels; RGB tuple (0-255 per channel).
-THEME_TEXT_COLOR_LIGHT: Color = (242, 242, 242, 255)
+THEME_TEXT_COLOR_LIGHT: Color = (242, 242, 242)
 # Section header highlight color (gold); RGB tuple (0-255 per channel).
-THEME_SECTION_HEADER_COLOR: Color = (212, 175, 55, 255)
+THEME_SECTION_HEADER_COLOR: Color = (212, 175, 55)
 # Section divider color for help sections; RGBA tuple (0-255 per channel, alpha).
 THEME_SECTION_DIVIDER_COLOR: ColorA = (255, 255, 255, 40)
 # Subsection highlight color (light blue); RGB tuple (0-255 per channel).
-THEME_SUBSECTION_COLOR: Color = (143, 170, 214, 255)
+THEME_SUBSECTION_COLOR: Color = (143, 170, 214)
 # Disabled label text color in settings; RGB tuple (0-255 per channel).
-THEME_LABEL_DISABLED_COLOR: Color = (138, 138, 138, 255)
+THEME_LABEL_DISABLED_COLOR: Color = (138, 138, 138)
 
 # Scene-specific backgrounds (image filenames are relative to settings.BACKGROUND_IMAGE_PATH).
 THEME_MAIN_MENU_BACKGROUND_COLOR: Color = (30, 30, 30, 255)
@@ -289,15 +289,15 @@ THEME_MENU_DIALOG_BG_COLOR: Color = (60, 60, 60, 255)
 # Main menu dialog border; RGB tuple (0-255 per channel).
 THEME_MENU_DIALOG_BORDER_COLOR: Color = (200, 200, 200, 255)
 # Main menu dialog text color; RGB tuple (0-255 per channel).
-THEME_MENU_DIALOG_TEXT_COLOR: Color = (255, 255, 255, 255)
+THEME_MENU_DIALOG_TEXT_COLOR: Color = (255, 255, 255)
 
 # Lobby status colors
 # Lobby status color for AI players; RGB tuple (0-255 per channel).
-THEME_LOBBY_STATUS_AI_COLOR: Color = (120, 120, 120, 255)
+THEME_LOBBY_STATUS_AI_COLOR: Color = (120, 120, 120)
 # Lobby status color for connected players; RGB tuple (0-255 per channel).
-THEME_LOBBY_STATUS_CONNECTED_COLOR: Color = (0, 200, 0, 255)
+THEME_LOBBY_STATUS_CONNECTED_COLOR: Color = (0, 200, 0)
 # Lobby status color for waiting players; RGB tuple (0-255 per channel).
-THEME_LOBBY_STATUS_WAITING_COLOR: Color = (200, 200, 0, 255)
+THEME_LOBBY_STATUS_WAITING_COLOR: Color = (200, 200, 0)
 
 # Game scene colors
 # Game board background; RGB tuple (0-255 per channel).
@@ -317,27 +317,27 @@ THEME_GAME_OVER_TABLE_LINE_COLOR: Color = (100, 100, 100, 255)
 # Game over row separator line; RGB tuple (0-255 per channel).
 THEME_GAME_OVER_ROW_LINE_COLOR: Color = (70, 70, 70, 255)
 # Game over player row text color; RGB tuple (0-255 per channel).
-THEME_GAME_OVER_ROW_TEXT_COLOR: Color = (220, 220, 220, 255)
+THEME_GAME_OVER_ROW_TEXT_COLOR: Color = (220, 220, 220)
 # Game over hint text color; RGB tuple (0-255 per channel).
-THEME_GAME_OVER_HINT_TEXT_COLOR: Color = (180, 180, 180, 255)
+THEME_GAME_OVER_HINT_TEXT_COLOR: Color = (180, 180, 180)
 # Debug grid line color on the board; RGB tuple (0-255 per channel).
 THEME_GAME_DEBUG_GRID_COLOR: Color = (0, 0, 0, 255)
 # Sidebar panel background; RGB tuple (0-255 per channel).
 THEME_GAME_SIDEBAR_BG_COLOR: Color = (50, 50, 50, 255)
 # Sidebar status color for local mode; RGB tuple (0-255 per channel).
-THEME_GAME_STATUS_LOCAL_COLOR: Color = (100, 100, 255, 255)
+THEME_GAME_STATUS_LOCAL_COLOR: Color = (100, 100, 255)
 # Sidebar status color for active turn; RGB tuple (0-255 per channel).
-THEME_GAME_STATUS_TURN_COLOR: Color = (0, 255, 0, 255)
+THEME_GAME_STATUS_TURN_COLOR: Color = (0, 255, 0)
 # Sidebar status color for waiting turn; RGB tuple (0-255 per channel).
-THEME_GAME_STATUS_WAIT_COLOR: Color = (200, 0, 0, 255)
+THEME_GAME_STATUS_WAIT_COLOR: Color = (200, 0, 0)
 # Sidebar highlight background for current player; RGB tuple (0-255 per channel).
 THEME_GAME_CURRENT_PLAYER_BG_COLOR: Color = (60, 80, 120, 255)
 # Sidebar highlight border for current player; RGB tuple (0-255 per channel).
 THEME_GAME_CURRENT_PLAYER_BORDER_COLOR: Color = (100, 150, 255, 255)
 # Sidebar score text color; RGB tuple (0-255 per channel).
-THEME_GAME_SCORE_TEXT_COLOR: Color = (200, 200, 200, 255)
+THEME_GAME_SCORE_TEXT_COLOR: Color = (200, 200, 200)
 # AI thinking text color; RGB tuple (0-255 per channel).
-THEME_GAME_AI_THINKING_COLOR: Color = (255, 255, 100, 255)
+THEME_GAME_AI_THINKING_COLOR: Color = (255, 255, 100)
 
 # Game scene background (image filename is relative to settings.BACKGROUND_IMAGE_PATH).
 THEME_GAME_BACKGROUND_COLOR: Color = (25, 25, 25, 255)
@@ -348,17 +348,17 @@ THEME_GAME_BACKGROUND_BLUR_RADIUS: float = 0.0
 
 # Player color palette
 # Player "red" tint; RGB tuple (0-255 per channel).
-THEME_PLAYER_COLOR_RED: Color = (255, 100, 100, 255)
+THEME_PLAYER_COLOR_RED: Color = (255, 100, 100)
 # Player "blue" tint; RGB tuple (0-255 per channel).
-THEME_PLAYER_COLOR_BLUE: Color = (100, 100, 255, 255)
+THEME_PLAYER_COLOR_BLUE: Color = (100, 100, 255)
 # Player "green" tint; RGB tuple (0-255 per channel).
-THEME_PLAYER_COLOR_GREEN: Color = (100, 255, 100, 255)
+THEME_PLAYER_COLOR_GREEN: Color = (100, 255, 100)
 # Player "yellow" tint; RGB tuple (0-255 per channel).
-THEME_PLAYER_COLOR_YELLOW: Color = (255, 255, 100, 255)
+THEME_PLAYER_COLOR_YELLOW: Color = (255, 255, 100)
 # Player "pink" tint; RGB tuple (0-255 per channel).
-THEME_PLAYER_COLOR_PINK: Color = (255, 100, 255, 255)
+THEME_PLAYER_COLOR_PINK: Color = (255, 100, 255)
 # Player "black" tint (light gray fallback); RGB tuple (0-255 per channel).
-THEME_PLAYER_COLOR_BLACK: Color = (200, 200, 200, 255)
+THEME_PLAYER_COLOR_BLACK: Color = (200, 200, 200)
 
 # Cache for pygame font instances keyed by role, size, and font family.
 _FONT_CACHE: dict[tuple[str, int, str | None], pygame.font.Font] = {}

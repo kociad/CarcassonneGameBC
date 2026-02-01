@@ -397,7 +397,7 @@ class ThemeDebugOverlay:
         channel_gap = max(4, padding // 2)
         label_height = self.label_font.get_height()
         sliders: list[Slider] = []
-        channel_labels = ["R", "G", "B", "A"]
+        channel_labels = ["R", "G", "B", "A"][:len(channels)]
         checkbox = None
         swatch_size = 26
         swatch_margin = 10
@@ -855,8 +855,8 @@ class ThemeDebugOverlay:
 
     def _normalize_color_channels(self, value: tuple) -> list[int]:
         channels = list(value)
-        if len(channels) < 4:
-            channels.extend([255] * (4 - len(channels)))
+        if len(channels) < 3:
+            channels.extend([0] * (3 - len(channels)))
         return channels[:4]
 
     def _set_theme_value(self, name: str, value: typing.Any) -> None:
