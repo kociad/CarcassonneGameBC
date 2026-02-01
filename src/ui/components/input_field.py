@@ -64,6 +64,10 @@ class InputField:
         self.on_text_change = on_text_change
         self.commit_on_blur = commit_on_blur
         self._last_committed_text = self.text
+        self._cached_render_text: str | None = None
+        self._cached_render_color: tuple[int, ...] | None = None
+        self._cached_render_font_id: int | None = None
+        self._cached_render_surface: pygame.Surface | None = None
         self.cursor_pos = len(self.text)
         self.selection_start: typing.Optional[int] = None
         self.selection_end: typing.Optional[int] = None
@@ -92,6 +96,7 @@ class InputField:
         self.text = self.text[:start] + self.text[end:]
         self.cursor_pos = start
         self._clear_selection()
+        self._invalidate_cached_surface()
         return True
 
     @staticmethod
@@ -174,6 +179,7 @@ class InputField:
         self.text = self.text[:self.cursor_pos] + insert_text + self.text[
             self.cursor_pos:]
         self.cursor_pos += len(insert_text)
+        self._invalidate_cached_surface()
         return True
 
     def _ensure_cursor_visible(self) -> None:
@@ -277,12 +283,14 @@ class InputField:
                             self.text = self.text[:self.cursor_pos -
                                                   1] + self.text[self.cursor_pos:]
                             self.cursor_pos -= 1
+                            self._invalidate_cached_surface()
             elif event.key == pygame.K_DELETE:
                 if not self.read_only:
                     if not self._delete_selection():
                         if self.cursor_pos < len(self.text):
                             self.text = self.text[:self.cursor_pos] + self.text[
                                 self.cursor_pos + 1:]
+                            self._invalidate_cached_surface()
             elif event.key == pygame.K_RETURN:
                 self.active = False
                 if self.commit_on_blur:
@@ -327,7 +335,7 @@ class InputField:
         draw_rect_alpha(surface, bg_color, draw_rect)
         draw_rect_alpha(surface, border_color, draw_rect, 2)
         display_text = self.text if self.text or self.active else self.placeholder
-        text_surface = self.font.render(display_text, True, text_color)
+        text_surface = self._get_text_surface(display_text, text_color)
         clamped_width = max(
             0,
             min(self.rect.width - 10,
@@ -389,6 +397,7 @@ class InputField:
         """
         self.text = str(value)
         self._last_committed_text = self.text
+        self._invalidate_cached_surface()
         self.cursor_pos = len(self.text)
         self.scroll_offset = 0
         self._clear_selection()
@@ -410,6 +419,7 @@ class InputField:
     def set_font(self, font: pygame.font.Font) -> None:
         """Update the font used by the input field."""
         self.font = font
+        self._invalidate_cached_surface()
         self.scroll_offset = 0
 
     def apply_theme(self) -> None:
@@ -417,6 +427,7 @@ class InputField:
         self.text_color = theme.THEME_INPUT_TEXT_COLOR
         self.bg_color = theme.THEME_INPUT_BG_COLOR
         self.border_color = theme.THEME_INPUT_BORDER_COLOR
+        self._invalidate_cached_surface()
 
     def set_read_only(self, value: bool) -> None:
         """
@@ -436,6 +447,25 @@ class InputField:
             return
         self._last_committed_text = self.text
         self.on_text_change(self.text)
+
+    def _invalidate_cached_surface(self) -> None:
+        self._cached_render_text = None
+        self._cached_render_color = None
+        self._cached_render_font_id = None
+        self._cached_render_surface = None
+
+    def _get_text_surface(self, text: str,
+                          color: tuple[int, ...]) -> pygame.Surface:
+        font_id = id(self.font)
+        if (self._cached_render_surface is None
+                or self._cached_render_text != text
+                or self._cached_render_color != color
+                or self._cached_render_font_id != font_id):
+            self._cached_render_surface = self.font.render(text, True, color)
+            self._cached_render_text = text
+            self._cached_render_color = color
+            self._cached_render_font_id = font_id
+        return self._cached_render_surface
 
     def is_disabled(self) -> bool:
         """Check if the input field is disabled."""
