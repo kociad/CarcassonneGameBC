@@ -63,7 +63,8 @@ class HelpScene(Scene):
     def _set_text_rect(self, line: str, font: pygame.font.Font, x: int, y: int,
                        padding: int) -> tuple[pygame.Rect, int]:
         line_width, line_height = font.size(line)
-        line_rect = pygame.Rect(x, y, line_width, line_height)
+        line_rect = pygame.Rect(0, y, line_width, line_height)
+        line_rect.centerx = x
         return line_rect, y + line_height + padding
 
     def _set_component_center(self, component, center_x: int, y: int,
@@ -75,7 +76,7 @@ class HelpScene(Scene):
 
     def _layout_controls(self) -> None:
         padding = theme.THEME_LAYOUT_VERTICAL_GAP
-        x_center = self.screen.get_width() // 2 - 100
+        x_center = self.screen.get_width() // 2
         button_center_x = self.screen.get_width() // 2
         self.header_height = self._get_scene_header_height(
             self.font.get_height()
