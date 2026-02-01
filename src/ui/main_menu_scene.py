@@ -155,8 +155,9 @@ class MainMenuScene(Scene):
     def draw_confirm_dialog(self) -> None:
         """Draw the confirmation dialog overlay."""
         overlay = pygame.Surface(
-            (self.screen.get_width(), self.screen.get_height()))
-        overlay.set_alpha(128)
+            (self.screen.get_width(), self.screen.get_height()),
+            pygame.SRCALPHA,
+        )
         overlay.fill(theme.THEME_MENU_OVERLAY_COLOR)
         self.screen.blit(overlay, (0, 0))
         dialog_width = 580
