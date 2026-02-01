@@ -210,6 +210,18 @@ class ThemeDebugOverlay:
                     min_value=0,
                     max_value=30,
                 )
+            elif (isinstance(value, float)
+                  and name.endswith("_BLUR_DOWNSCALE_FACTOR")):
+                control = self._build_float_control(
+                    name,
+                    label,
+                    label_x,
+                    control_x,
+                    current_y,
+                    value,
+                    min_value=0.1,
+                    max_value=1.0,
+                )
             elif isinstance(value, int) and name.startswith("THEME_FONT_SIZE_"):
                 control = self._build_int_control(
                     name,
@@ -388,6 +400,8 @@ class ThemeDebugOverlay:
                         "THEME_GAME_BACKGROUND_",
                     )
                 )
+            ] + [
+                "THEME_BACKGROUND_BLUR_DOWNSCALE_FACTOR",
             ],
         )
         add_section_by_prefix("Buttons", ["THEME_BUTTON_"])
