@@ -1,10 +1,10 @@
 import pygame
 import webbrowser
+import typing
 from ui.scene import Scene
 from ui.components.button import Button
 from game_state import GameState
 from ui import theme
-import typing
 
 
 class HelpScene(Scene):
@@ -25,7 +25,7 @@ class HelpScene(Scene):
         self.max_scroll = 0
         self.scroll_speed = 30
         self.header_height = 0
-        self.controls_start_y = 0
+        self.controls_layout: list[tuple[str, pygame.Rect]] = []
         self.controls = [
             "GAME CONTROLS:", "",
             "WASD or ARROW KEYS - Move around the game board",
@@ -40,13 +40,12 @@ class HelpScene(Scene):
             "Terrain types must match on adjacent edges",
             "You can only discard if no valid placement exists",
             "Meeples can only be placed on unoccupied structures",
-            "Completed structures score points immediately"
+            "Completed structures score points immediately",
         ]
-        self.controls_height = 0
-        rules_rect = pygame.Rect(0, 0, 0, 60)
-        self.rules_button = Button(rules_rect, "Wiki", self.button_font)
-        back_rect = pygame.Rect(0, 0, 0, 60)
-        self.back_button = Button(back_rect, "Back", self.button_font)
+        self.rules_button = Button(pygame.Rect(0, 0, 0, 60), "Wiki",
+                                   self.button_font)
+        self.back_button = Button(pygame.Rect(0, 0, 0, 60), "Back",
+                                  self.button_font)
         self._layout_controls()
 
     def _get_line_style(self, line: str) -> tuple[pygame.font.Font, tuple]:
@@ -56,9 +55,12 @@ class HelpScene(Scene):
             return self.controls_font, theme.THEME_SUBSECTION_COLOR
         return self.controls_font, theme.THEME_TEXT_COLOR_LIGHT
 
-    def _get_line_height(self, line: str) -> int:
-        font, _ = self._get_line_style(line)
-        return font.get_height()
+    def _set_component_center(self, component, center_x: int, y: int,
+                              padding: int) -> int:
+        width, height = component.rect.size
+        component.rect = pygame.Rect(0, 0, width, height)
+        component.rect.center = (center_x, y + height // 2)
+        return y + height + padding
 
     def _layout_controls(self) -> None:
         padding = theme.THEME_LAYOUT_VERTICAL_GAP
@@ -68,28 +70,22 @@ class HelpScene(Scene):
         )
         current_y = self.header_height + theme.THEME_LAYOUT_VERTICAL_GAP
 
-        self.controls_start_y = current_y
-        self.controls_height = 0
+        self.controls_layout.clear()
         for line in self.controls:
             if line == "":
-                self.controls_height += padding
+                current_y += padding
                 continue
-            self.controls_height += self._get_line_height(line) + padding
-        current_y += self.controls_height + padding
+            font, _ = self._get_line_style(line)
+            line_width, line_height = font.size(line)
+            line_rect = pygame.Rect(0, 0, line_width, line_height)
+            line_rect.center = (center_x, current_y + line_height // 2)
+            self.controls_layout.append((line, line_rect))
+            current_y += line_height + padding
 
-        rules_width, rules_height = self.rules_button.rect.size
-        self.rules_button.rect = pygame.Rect(0, 0, rules_width, rules_height)
-        self.rules_button.rect.center = (center_x,
-                                         current_y + rules_height // 2)
-        current_y += rules_height + padding
-
-        back_width, back_height = self.back_button.rect.size
-        self.back_button.rect = pygame.Rect(0, 0, back_width, back_height)
-        self.back_button.rect.center = (center_x, current_y + back_height // 2)
-        current_y += back_height + padding
-
-        self.max_scroll = max(self.screen.get_height(),
-                              current_y + padding * 2)
+        current_y = self._set_component_center(
+            self.rules_button, center_x, current_y, padding)
+        self._set_component_center(
+            self.back_button, center_x, current_y, padding)
 
     def handle_events(self, events: list[pygame.event.Event]) -> None:
         """Handle events for the help scene."""
@@ -130,25 +126,20 @@ class HelpScene(Scene):
         title_text = self.font.render("How to Play", True,
                                       theme.THEME_TEXT_COLOR_LIGHT)
         offset_y = self.scroll_offset
-        current_y = self.controls_start_y + offset_y
-        for line in self.controls:
-            if line == "":
-                current_y += theme.THEME_LAYOUT_VERTICAL_GAP
-                continue
+        for line, line_rect in self.controls_layout:
             font, color = self._get_line_style(line)
             text_surface = font.render(line, True, color)
-            if line.endswith(":") and not line.startswith(" "):
-                text_rect = text_surface.get_rect(
-                    center=(self.screen.get_width() // 2, current_y))
-            else:
-                text_rect = text_surface.get_rect(left=50, centery=current_y)
-            if text_rect.bottom > 0 and text_rect.top < self.screen.get_height(
+            draw_rect = line_rect.move(0, offset_y)
+            if draw_rect.bottom > 0 and draw_rect.top < self.screen.get_height(
             ):
-                self.screen.blit(text_surface, text_rect)
-            current_y += text_rect.height + theme.THEME_LAYOUT_VERTICAL_GAP
+                self.screen.blit(text_surface, draw_rect)
         self.rules_button.draw(self.screen, y_offset=offset_y)
         self.back_button.draw(self.screen, y_offset=offset_y)
         self._draw_scene_header(title_text)
+        self.max_scroll = max(
+            self.screen.get_height(),
+            self.back_button.rect.bottom + theme.THEME_LAYOUT_VERTICAL_GAP * 2,
+        )
 
     def refresh_theme(self) -> None:
         """Refresh fonts and component styling after theme changes."""
