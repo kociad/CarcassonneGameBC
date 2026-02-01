@@ -97,6 +97,13 @@ class Scene:
             self.screen.get_width(),
             header_height,
         )
+        if theme.THEME_SCENE_HEADER_BLUR_RADIUS > 0:
+            header_snapshot = self.screen.subsurface(header_rect).copy()
+            blurred = self._apply_background_blur(
+                header_snapshot,
+                theme.THEME_SCENE_HEADER_BLUR_RADIUS,
+            )
+            self.screen.blit(blurred, header_rect.topleft)
         header_surface = pygame.Surface(header_rect.size, pygame.SRCALPHA)
         header_surface.fill(theme.THEME_SCENE_HEADER_BG_COLOR)
         self.screen.blit(header_surface, header_rect.topleft)
