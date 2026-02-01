@@ -8,6 +8,8 @@ from ui import theme
 import logging
 import typing
 
+from ui.utils.draw import draw_rect_alpha
+
 logger = logging.getLogger(__name__)
 
 
@@ -163,10 +165,17 @@ class MainMenuScene(Scene):
         dialog_y = (self.screen.get_height() - dialog_height) // 2
         dialog_rect = pygame.Rect(dialog_x, dialog_y, dialog_width,
                                   dialog_height)
-        pygame.draw.rect(self.screen, theme.THEME_MENU_DIALOG_BG_COLOR,
-                         dialog_rect)
-        pygame.draw.rect(self.screen, theme.THEME_MENU_DIALOG_BORDER_COLOR,
-                         dialog_rect, 2)
+        draw_rect_alpha(
+            self.screen,
+            theme.THEME_MENU_DIALOG_BG_COLOR,
+            dialog_rect,
+        )
+        draw_rect_alpha(
+            self.screen,
+            theme.THEME_MENU_DIALOG_BORDER_COLOR,
+            dialog_rect,
+            2,
+        )
         message_text = self.dialog_font.render(
             "Starting a new game will end the current game.", True,
             theme.THEME_MENU_DIALOG_TEXT_COLOR)
