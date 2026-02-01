@@ -130,6 +130,16 @@ class HelpScene(Scene):
         component.rect.center = (center_x, y + height // 2)
         return y + height + padding
 
+    def _get_content_bounds(self) -> tuple[int, int]:
+        screen_width = self.screen.get_width()
+        max_width = min(
+            int(screen_width * 0.7),
+            theme.THEME_HELP_MAX_WIDTH,
+        )
+        content_left = (screen_width - max_width) // 2
+        content_right = content_left + max_width
+        return content_left, content_right
+
     def _layout_controls(self) -> None:
         padding = theme.THEME_LAYOUT_VERTICAL_GAP
         button_center_x = self.screen.get_width() // 2
@@ -191,23 +201,23 @@ class HelpScene(Scene):
         title_text = self.font.render("How to Play", True,
                                       theme.THEME_TEXT_COLOR_LIGHT)
         offset_y = self.scroll_offset
+        content_left, _ = self._get_content_bounds()
 
         for section_title, header_y in self.section_headers_layout:
             section_label = self.text_font.render(
                 section_title, True, theme.THEME_SECTION_HEADER_COLOR)
             section_label_rect = section_label.get_rect()
-            section_label_rect.centerx = self.screen.get_width() // 2
-            section_label_rect.y = header_y + offset_y
-            if section_label_rect.bottom > 0 and section_label_rect.top < (
-                self.screen.get_height()
-            ):
-                self.screen.blit(section_label, section_label_rect)
+            section_label_rect.center = (
+                self.screen.get_width() // 2,
+                header_y + offset_y + section_label_rect.height // 2,
+            )
+            self.screen.blit(section_label, section_label_rect)
 
         for line, line_y in self.section_body_layout:
             font, color = self._get_line_style(line)
             text_surface = font.render(line, True, color)
             draw_rect = text_surface.get_rect()
-            draw_rect.centerx = self.screen.get_width() // 2
+            draw_rect.left = content_left
             draw_rect.y = line_y + offset_y
             if draw_rect.bottom > 0 and draw_rect.top < self.screen.get_height(
             ):
