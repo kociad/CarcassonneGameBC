@@ -97,11 +97,9 @@ class Scene:
             self.screen.get_width(),
             header_height,
         )
-        pygame.draw.rect(
-            self.screen,
-            theme.THEME_SCENE_HEADER_BG_COLOR,
-            header_rect,
-        )
+        header_surface = pygame.Surface(header_rect.size, pygame.SRCALPHA)
+        header_surface.fill(theme.THEME_SCENE_HEADER_BG_COLOR)
+        self.screen.blit(header_surface, header_rect.topleft)
         title_rect = title_surface.get_rect(
             center=(self.screen.get_width() // 2, header_rect.centery)
         )
