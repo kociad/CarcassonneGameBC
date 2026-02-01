@@ -146,6 +146,7 @@ class HelpScene(Scene):
     def _layout_controls(self) -> None:
         section_gap = theme.THEME_LAYOUT_SECTION_GAP
         line_gap = theme.THEME_LAYOUT_LINE_GAP
+        divider_padding = theme.THEME_SECTION_DIVIDER_PADDING
         button_center_x = self.screen.get_width() // 2
         self.header_height = self._get_scene_header_height(
             self.font.get_height()
@@ -164,8 +165,10 @@ class HelpScene(Scene):
                 line_y, current_y = self._set_text_rect(
                     line, self.controls_font, current_y, line_gap)
                 self.section_body_layout.append((line, line_y))
-            divider_y = current_y - max(1, line_gap // 2)
+            current_y += divider_padding
+            divider_y = current_y
             self.section_divider_layout.append(divider_y)
+            current_y += divider_padding
 
         current_y += theme.THEME_LAYOUT_BUTTON_SECTION_GAP
         current_y = self._set_component_center(

@@ -274,6 +274,7 @@ class ThemeDebugOverlay:
                 "THEME_SCENE_HEADER_TOP_PADDING",
                 "THEME_SCENE_HEADER_HEIGHT",
                 "THEME_HELP_MAX_WIDTH",
+                "THEME_SECTION_DIVIDER_PADDING",
                 "THEME_SECTION_DIVIDER_COLOR",
             ],
         )
