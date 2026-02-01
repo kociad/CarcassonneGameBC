@@ -21,6 +21,7 @@ class InputField:
                  bg_color: tuple = theme.THEME_INPUT_BG_COLOR,
                  border_color: tuple = theme.THEME_INPUT_BORDER_COLOR,
                  on_text_change: typing.Optional[typing.Callable] = None,
+                 commit_on_blur: bool = False,
                  numeric: bool = False,
                  min_value: typing.Optional[float] = None,
                  max_value: typing.Optional[float] = None) -> None:
@@ -37,6 +38,7 @@ class InputField:
             bg_color: Background color
             border_color: Border color
             on_text_change: Function to call when text changes
+            commit_on_blur: Call on_text_change only on enter or focus loss
             numeric: Whether to only allow numeric input
             min_value: Minimum value for numeric input
             max_value: Maximum value for numeric input
@@ -60,6 +62,8 @@ class InputField:
         self.min_value = min_value
         self.max_value = max_value
         self.on_text_change = on_text_change
+        self.commit_on_blur = commit_on_blur
+        self._last_committed_text = self.text
         self.cursor_pos = len(self.text)
         self.selection_start: typing.Optional[int] = None
         self.selection_end: typing.Optional[int] = None
@@ -207,9 +211,12 @@ class InputField:
             else:
                 pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            was_active = self.active
             self.active = shifted_rect.collidepoint(event.pos)
             if self.active:
                 self._clear_selection()
+            if was_active and not self.active and self.commit_on_blur:
+                self._commit_text()
             any_hovered = any(
                 field.hovered or field.active for field in InputField._instances)
             if any_hovered:
@@ -278,13 +285,18 @@ class InputField:
                                 self.cursor_pos + 1:]
             elif event.key == pygame.K_RETURN:
                 self.active = False
+                if self.commit_on_blur:
+                    self._commit_text()
             else:
                 if not self.read_only:
                     if event.unicode and event.unicode.isprintable():
                         self._insert_text(event.unicode)
             self.cursor_pos = max(0, min(self.cursor_pos, len(self.text)))
             if self.on_text_change and self.text != old_text:
-                self.on_text_change(self.text)
+                if self.commit_on_blur:
+                    pass
+                else:
+                    self.on_text_change(self.text)
             self._ensure_cursor_visible()
 
     def draw(self, surface: pygame.Surface, y_offset: int = 0) -> None:
@@ -376,6 +388,7 @@ class InputField:
             value: Text value to set
         """
         self.text = str(value)
+        self._last_committed_text = self.text
         self.cursor_pos = len(self.text)
         self.scroll_offset = 0
         self._clear_selection()
@@ -389,6 +402,8 @@ class InputField:
         """
         self.disabled = value
         if value:
+            if self.commit_on_blur:
+                self._commit_text()
             self.active = False
             self._clear_selection()
 
@@ -413,6 +428,14 @@ class InputField:
         self.read_only = value
         if value:
             self._clear_selection()
+
+    def _commit_text(self) -> None:
+        if not self.on_text_change:
+            return
+        if self.text == self._last_committed_text:
+            return
+        self._last_committed_text = self.text
+        self.on_text_change(self.text)
 
     def is_disabled(self) -> bool:
         """Check if the input field is disabled."""

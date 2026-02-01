@@ -27,6 +27,14 @@ class HelpScene(Scene):
         self.max_scroll = 0
         self.scroll_speed = 30
         self.header_height = 0
+        self._title_text = "How to Play"
+        self._title_surface: pygame.Surface | None = None
+        self._cached_title_text: str | None = None
+        self._section_header_surfaces: dict[str, pygame.Surface] = {}
+        self._section_titles_cache: tuple[str, ...] = ()
+        self._section_lines_cache: tuple[str, ...] = ()
+        self._line_surfaces: dict[tuple[int, str, tuple[int, int, int]],
+                                  pygame.Surface] = {}
         self.sections = [
             ("Objective", [
                 "Score more points than your opponents by placing cards,",
@@ -121,6 +129,19 @@ class HelpScene(Scene):
     def _get_line_style(self, line: str) -> tuple[pygame.font.Font, tuple]:
         return self.controls_font, theme.THEME_TEXT_COLOR_LIGHT
 
+    def _get_line_surface(
+        self,
+        font: pygame.font.Font,
+        line: str,
+        color: tuple[int, int, int],
+    ) -> pygame.Surface:
+        cache_key = (id(font), line, color)
+        cached = self._line_surfaces.get(cache_key)
+        if cached is None:
+            cached = font.render(line, True, color)
+            self._line_surfaces[cache_key] = cached
+        return cached
+
     def _set_text_rect(self, line: str, font: pygame.font.Font, y: int,
                        padding: int) -> tuple[int, int]:
         _, line_height = font.size(line)
@@ -211,14 +232,31 @@ class HelpScene(Scene):
             tint_color=theme.THEME_HELP_BACKGROUND_TINT_COLOR,
             blur_radius=theme.THEME_HELP_BACKGROUND_BLUR_RADIUS,
         )
-        title_text = self.font.render("How to Play", True,
-                                      theme.THEME_TEXT_COLOR_LIGHT)
+        if (self._title_surface is None
+                or self._cached_title_text != self._title_text):
+            self._title_surface = self.font.render(
+                self._title_text, True, theme.THEME_TEXT_COLOR_LIGHT
+            )
+            self._cached_title_text = self._title_text
         offset_y = self.scroll_offset
         content_left, content_right = self._get_content_bounds()
+        section_titles = tuple(title for title, _ in self.sections)
+        section_lines = tuple(
+            line for _, lines in self.sections for line in lines
+        )
+        if section_titles != self._section_titles_cache:
+            self._section_titles_cache = section_titles
+            self._section_header_surfaces.clear()
+        if section_lines != self._section_lines_cache:
+            self._section_lines_cache = section_lines
+            self._line_surfaces.clear()
 
         for section_title, header_y in self.section_headers_layout:
-            section_label = self.section_header_font.render(
-                section_title, True, theme.THEME_SECTION_HEADER_COLOR)
+            section_label = self._section_header_surfaces.get(section_title)
+            if section_label is None:
+                section_label = self.section_header_font.render(
+                    section_title, True, theme.THEME_SECTION_HEADER_COLOR)
+                self._section_header_surfaces[section_title] = section_label
             section_label_rect = section_label.get_rect()
             section_label_rect.center = (
                 self.screen.get_width() // 2,
@@ -228,7 +266,7 @@ class HelpScene(Scene):
 
         for line, line_y in self.section_body_layout:
             font, color = self._get_line_style(line)
-            text_surface = font.render(line, True, color)
+            text_surface = self._get_line_surface(font, line, color)
             draw_rect = text_surface.get_rect()
             draw_rect.left = content_left
             draw_rect.y = line_y + offset_y
@@ -256,7 +294,7 @@ class HelpScene(Scene):
 
         self.rules_button.draw(self.screen, y_offset=offset_y)
         self.back_button.draw(self.screen, y_offset=offset_y)
-        self._draw_scene_header(title_text)
+        self._draw_scene_header(self._title_surface)
         self.max_scroll = max(
             self.screen.get_height(),
             self.back_button.rect.bottom + theme.THEME_LAYOUT_SECTION_GAP * 2,
@@ -274,6 +312,10 @@ class HelpScene(Scene):
         )
         self.text_font = theme.get_font("body", theme.THEME_FONT_SIZE_BODY)
         self.controls_font = theme.get_font("body", theme.THEME_FONT_SIZE_BODY)
+        self._title_surface = None
+        self._cached_title_text = None
+        self._section_header_surfaces.clear()
+        self._line_surfaces.clear()
         self.rules_button.set_font(self.button_font)
         self.rules_button.apply_theme()
         self.back_button.set_font(self.button_font)

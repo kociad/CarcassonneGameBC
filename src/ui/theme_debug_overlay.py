@@ -54,6 +54,10 @@ class ThemeDebugOverlay:
         self._controls_start_y = 0
         self.controls: list[ThemeControl] = []
         self._optional_values: dict[str, typing.Any] = {}
+        self._title_text = "Theme Debug Overlay"
+        self._title_surface: pygame.Surface | None = None
+        self._cached_title_text: str | None = None
+        self._cached_title_font_id: int | None = None
         self._build_layout()
         self._build_controls()
 
@@ -77,9 +81,14 @@ class ThemeDebugOverlay:
         self.section_font = theme.get_font(
             "section_header", max(16, theme.THEME_FONT_SIZE_SECTION_HEADER)
         )
-        self._title_surface = self.title_font.render(
-            "Theme Debug Overlay", True, theme.THEME_TEXT_COLOR_LIGHT
-        )
+        if (self._title_surface is None
+                or self._cached_title_text != self._title_text
+                or self._cached_title_font_id != id(self.title_font)):
+            self._title_surface = self.title_font.render(
+                self._title_text, True, theme.THEME_TEXT_COLOR_LIGHT
+            )
+            self._cached_title_text = self._title_text
+            self._cached_title_font_id = id(self.title_font)
         padding = theme.THEME_LAYOUT_VERTICAL_GAP
         button_size = max(24, int(self.title_font.get_height() * 0.9))
         toggle_rect = pygame.Rect(0, 0, 0, button_size)
@@ -650,6 +659,7 @@ class ThemeDebugOverlay:
             on_text_change=lambda text: self._set_theme_value(
                 name, text if text else None
             ),
+            commit_on_blur=True,
         )
 
         def draw(surface: pygame.Surface, y_offset: int) -> None:
@@ -704,6 +714,7 @@ class ThemeDebugOverlay:
             font=self.control_font,
             initial_text="" if value is None else str(value),
             on_text_change=lambda text: self._update_image_path(name, text),
+            commit_on_blur=True,
         )
         if value is None:
             input_field.set_disabled(True)

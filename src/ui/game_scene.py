@@ -70,6 +70,9 @@ class GameScene(Scene):
         self._render_cache = {}
         self._render_cache_valid = False
         self._last_render_state = None
+        self._text_surface_cache: dict[
+            tuple[int, str, tuple[int, int, int]], pygame.Surface
+        ] = {}
 
         bar_width = sidebar_width - 40
         bar_height = 20
@@ -130,6 +133,19 @@ class GameScene(Scene):
         result = render_func()
         self._render_cache[cache_key] = result
         return result
+
+    def _get_cached_text(
+        self,
+        font: pygame.font.Font,
+        text: str,
+        color: tuple[int, int, int],
+    ) -> pygame.Surface:
+        cache_key = (id(font), text, color)
+        cached = self._text_surface_cache.get(cache_key)
+        if cached is None:
+            cached = font.render(text, True, color)
+            self._text_surface_cache[cache_key] = cached
+        return cached
 
     def _apply_sidebar_scroll(self, events: list[pygame.event.Event]) -> None:
         """Handle sidebar scrolling events"""
@@ -255,10 +271,10 @@ class GameScene(Scene):
                 (table_x, table_y, table_width, table_height),
             )
             header_y = table_y + row_height // 2
-            header_player = table_font.render(
-                "Player", True, theme.THEME_TEXT_COLOR_LIGHT)
-            header_score = table_font.render(
-                "Score", True, theme.THEME_TEXT_COLOR_LIGHT)
+            header_player = self._get_cached_text(
+                table_font, "Player", theme.THEME_TEXT_COLOR_LIGHT)
+            header_score = self._get_cached_text(
+                table_font, "Score", theme.THEME_TEXT_COLOR_LIGHT)
             self.screen.blit(header_player,
                              header_player.get_rect(center=(col1_x, header_y)))
             self.screen.blit(header_score,
@@ -297,8 +313,9 @@ class GameScene(Scene):
             esc_message_font = theme.get_font("body",
                                               theme.THEME_FONT_SIZE_BODY)
             esc_message = "Press ESC to return to menu"
-            esc_message_surface = esc_message_font.render(
-                esc_message, True, theme.THEME_GAME_OVER_HINT_TEXT_COLOR)
+            esc_message_surface = self._get_cached_text(
+                esc_message_font, esc_message,
+                theme.THEME_GAME_OVER_HINT_TEXT_COLOR)
             esc_message_rect = esc_message_surface.get_rect(
                 center=(window_width // 2, table_y + table_height + 50))
             self.screen.blit(esc_message_surface, esc_message_rect)
@@ -796,7 +813,8 @@ class GameScene(Scene):
                                 if is_my_turn
                                 else theme.THEME_GAME_STATUS_WAIT_COLOR)
 
-            status_surface = self.font.render(status_text, True, status_color)
+            status_surface = self._get_cached_text(
+                self.font, status_text, status_color)
             status_rect = status_surface.get_rect()
             status_rect.centerx = sidebar_center_x
             status_rect.y = current_y - offset_y
@@ -922,8 +940,8 @@ class GameScene(Scene):
             current_y += padding
 
             thinking_text = f"AI is thinking..."
-            thinking_surface = self.font.render(
-                thinking_text, True, theme.THEME_GAME_AI_THINKING_COLOR)
+            thinking_surface = self._get_cached_text(
+                self.font, thinking_text, theme.THEME_GAME_AI_THINKING_COLOR)
             thinking_rect = thinking_surface.get_rect()
             thinking_rect.centerx = sidebar_center_x
             thinking_rect.y = current_y - offset_y
@@ -1267,3 +1285,4 @@ class GameScene(Scene):
         self.ai_thinking_progress_bar.apply_theme()
         self.toast_manager.apply_theme()
         self._invalidate_render_cache()
+        self._text_surface_cache.clear()

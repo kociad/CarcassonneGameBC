@@ -31,6 +31,12 @@ class SettingsScene(Scene):
         self.max_scroll = 0
         self.scroll_speed = 30
         self.header_height = 0
+        self._title_text = "Settings"
+        self._title_surface: pygame.Surface | None = None
+        self._cached_title_text: str | None = None
+        self._section_header_surfaces: dict[str, pygame.Surface] = {}
+        self._label_surfaces: dict[tuple[int, str, tuple[int, int, int]],
+                                   pygame.Surface] = {}
 
         settings_manager.subscribe("FULLSCREEN", self._on_fullscreen_changed)
         settings_manager.subscribe("DEBUG", self._on_debug_changed)
@@ -347,6 +353,19 @@ class SettingsScene(Scene):
         self._set_component_center(
             self.back_button, button_center_x, current_y, padding)
 
+    def _get_label_surface(
+        self,
+        font: pygame.font.Font,
+        text: str,
+        color: tuple[int, int, int],
+    ) -> pygame.Surface:
+        cache_key = (id(font), text, color)
+        cached = self._label_surfaces.get(cache_key)
+        if cached is None:
+            cached = font.render(text, True, color)
+            self._label_surfaces[cache_key] = cached
+        return cached
+
     def _on_fullscreen_changed(self, key, old_value, new_value):
         self.resolution_dropdown.set_disabled(new_value)
 
@@ -583,19 +602,29 @@ class SettingsScene(Scene):
         offset_y = self.scroll_offset
         label_font = self.dropdown_font
 
-        title_text = self.font.render("Settings", True,
-                                      theme.THEME_TEXT_COLOR_LIGHT)
+        if (self._title_surface is None
+                or self._cached_title_text != self._title_text):
+            self._title_surface = self.font.render(
+                self._title_text, True, theme.THEME_TEXT_COLOR_LIGHT
+            )
+            self._cached_title_text = self._title_text
 
         # Draw section headers
-        display_label = self.section_header_font.render(
-            "Display", True, theme.THEME_SECTION_HEADER_COLOR)
+        display_label = self._section_header_surfaces.get("Display")
+        if display_label is None:
+            display_label = self.section_header_font.render(
+                "Display", True, theme.THEME_SECTION_HEADER_COLOR)
+            self._section_header_surfaces["Display"] = display_label
         display_label_rect = display_label.get_rect()
         display_label_rect.centerx = self.screen.get_width() // 2
         display_label_rect.y = self.display_label_y + offset_y
         self.screen.blit(display_label, display_label_rect)
 
-        game_label = self.section_header_font.render(
-            "Game", True, theme.THEME_SECTION_HEADER_COLOR)
+        game_label = self._section_header_surfaces.get("Game")
+        if game_label is None:
+            game_label = self.section_header_font.render(
+                "Game", True, theme.THEME_SECTION_HEADER_COLOR)
+            self._section_header_surfaces["Game"] = game_label
         game_label_rect = game_label.get_rect()
         game_label_rect.centerx = self.screen.get_width() // 2
         game_label_rect.y = self.game_label_y + offset_y
@@ -603,31 +632,37 @@ class SettingsScene(Scene):
 
         debug_enabled = settings_manager.get("DEBUG")
         if debug_enabled:
-            debug_label = self.section_header_font.render(
-                "Debug", True, theme.THEME_SECTION_HEADER_COLOR)
+            debug_label = self._section_header_surfaces.get("Debug")
+            if debug_label is None:
+                debug_label = self.section_header_font.render(
+                    "Debug", True, theme.THEME_SECTION_HEADER_COLOR)
+                self._section_header_surfaces["Debug"] = debug_label
             debug_label_rect = debug_label.get_rect()
             debug_label_rect.centerx = self.screen.get_width() // 2
             debug_label_rect.y = self.debug_label_y + offset_y
             self.screen.blit(debug_label, debug_label_rect)
 
         if debug_enabled:
-            ai_label = self.section_header_font.render(
-                "AI", True, theme.THEME_SECTION_HEADER_COLOR)
+            ai_label = self._section_header_surfaces.get("AI")
+            if ai_label is None:
+                ai_label = self.section_header_font.render(
+                    "AI", True, theme.THEME_SECTION_HEADER_COLOR)
+                self._section_header_surfaces["AI"] = ai_label
             ai_label_rect = ai_label.get_rect()
             ai_label_rect.centerx = self.screen.get_width() // 2
             ai_label_rect.y = self.ai_label_y + offset_y
             self.screen.blit(ai_label, ai_label_rect)
 
         # Display Settings
-        res_label = label_font.render(
-            "Resolution:", True, theme.THEME_TEXT_COLOR_LIGHT)
+        res_label = self._get_label_surface(
+            label_font, "Resolution:", theme.THEME_TEXT_COLOR_LIGHT)
         res_label_rect = res_label.get_rect(
             right=self.resolution_dropdown.rect.left - 10,
             centery=self.resolution_dropdown.rect.centery + offset_y)
         self.screen.blit(res_label, res_label_rect)
 
-        fs_label = label_font.render(
-            "Fullscreen:", True, theme.THEME_TEXT_COLOR_LIGHT)
+        fs_label = self._get_label_surface(
+            label_font, "Fullscreen:", theme.THEME_TEXT_COLOR_LIGHT)
         fs_label_rect = fs_label.get_rect(
             right=self.fullscreen_checkbox.rect.left - 10,
             centery=self.fullscreen_checkbox.rect.centery + offset_y)
@@ -638,8 +673,8 @@ class SettingsScene(Scene):
             theme.THEME_LABEL_DISABLED_COLOR
             if self.valid_placement_checkbox.is_disabled()
             else theme.THEME_TEXT_COLOR_LIGHT)
-        valid_placements_label = label_font.render(
-            "Show valid card placements:", True, label_color)
+        valid_placements_label = self._get_label_surface(
+            label_font, "Show valid card placements:", label_color)
         valid_placements_label_rect = valid_placements_label.get_rect(
             right=self.valid_placement_checkbox.rect.left - 10,
             centery=self.valid_placement_checkbox.rect.centery + offset_y)
@@ -651,8 +686,8 @@ class SettingsScene(Scene):
                 theme.THEME_LABEL_DISABLED_COLOR
                 if self.log_to_console_checkbox.is_disabled()
                 else theme.THEME_TEXT_COLOR_LIGHT)
-            log_to_console_label = label_font.render("Log to console:", True,
-                                                     label_color)
+            log_to_console_label = self._get_label_surface(
+                label_font, "Log to console:", label_color)
             log_to_console_label_rect = log_to_console_label.get_rect(
                 right=self.log_to_console_checkbox.rect.left - 10,
                 centery=self.log_to_console_checkbox.rect.centery + offset_y)
@@ -662,7 +697,8 @@ class SettingsScene(Scene):
                 theme.THEME_LABEL_DISABLED_COLOR
                 if self.fps_slider.is_disabled()
                 else theme.THEME_TEXT_COLOR_LIGHT)
-            fps_label = label_font.render("FPS:", True, label_color)
+            fps_label = self._get_label_surface(
+                label_font, "FPS:", label_color)
             fps_label_rect = fps_label.get_rect(
                 right=self.fps_slider.rect.left - 10,
                 centery=self.fps_slider.rect.centery + offset_y)
@@ -672,7 +708,8 @@ class SettingsScene(Scene):
                 theme.THEME_LABEL_DISABLED_COLOR
                 if self.grid_size_slider.is_disabled()
                 else theme.THEME_TEXT_COLOR_LIGHT)
-            grid_label = label_font.render("Grid size:", True, label_color)
+            grid_label = self._get_label_surface(
+                label_font, "Grid size:", label_color)
             grid_label_rect = grid_label.get_rect(
                 right=self.grid_size_slider.rect.left - 10,
                 centery=self.grid_size_slider.rect.centery + offset_y)
@@ -682,7 +719,8 @@ class SettingsScene(Scene):
                 theme.THEME_LABEL_DISABLED_COLOR
                 if self.tile_size_slider.is_disabled()
                 else theme.THEME_TEXT_COLOR_LIGHT)
-            tsz_label = label_font.render("Tile size:", True, label_color)
+            tsz_label = self._get_label_surface(
+                label_font, "Tile size:", label_color)
             tsz_label_rect = tsz_label.get_rect(
                 right=self.tile_size_slider.rect.left - 10,
                 centery=self.tile_size_slider.rect.centery + offset_y)
@@ -692,7 +730,8 @@ class SettingsScene(Scene):
                 theme.THEME_LABEL_DISABLED_COLOR
                 if self.figure_size_slider.is_disabled()
                 else theme.THEME_TEXT_COLOR_LIGHT)
-            fsz_label = label_font.render("Figure size:", True, label_color)
+            fsz_label = self._get_label_surface(
+                label_font, "Figure size:", label_color)
             fsz_label_rect = fsz_label.get_rect(
                 right=self.figure_size_slider.rect.left - 10,
                 centery=self.figure_size_slider.rect.centery + offset_y)
@@ -702,7 +741,8 @@ class SettingsScene(Scene):
                 theme.THEME_LABEL_DISABLED_COLOR
                 if self.sidebar_width_slider.is_disabled()
                 else theme.THEME_TEXT_COLOR_LIGHT)
-            sbw_label = label_font.render("Sidebar width:", True, label_color)
+            sbw_label = self._get_label_surface(
+                label_font, "Sidebar width:", label_color)
             sbw_label_rect = sbw_label.get_rect(
                 right=self.sidebar_width_slider.rect.left - 10,
                 centery=self.sidebar_width_slider.rect.centery + offset_y)
@@ -712,8 +752,8 @@ class SettingsScene(Scene):
                 theme.THEME_LABEL_DISABLED_COLOR
                 if self.game_log_max_entries_field.is_disabled()
                 else theme.THEME_TEXT_COLOR_LIGHT)
-            log_label = label_font.render("Game log max entries:", True,
-                                          label_color)
+            log_label = self._get_label_surface(
+                label_font, "Game log max entries:", label_color)
             log_label_rect = log_label.get_rect(
                 right=self.game_log_max_entries_field.rect.left - 10,
                 centery=self.game_log_max_entries_field.rect.centery + offset_y)
@@ -725,8 +765,8 @@ class SettingsScene(Scene):
                 theme.THEME_LABEL_DISABLED_COLOR
                 if self.ai_simulation_checkbox.is_disabled()
                 else theme.THEME_TEXT_COLOR_LIGHT)
-            ai_simulation_label = label_font.render("AI simulation:", True,
-                                                    label_color)
+            ai_simulation_label = self._get_label_surface(
+                label_font, "AI simulation:", label_color)
             ai_simulation_label_rect = ai_simulation_label.get_rect(
                 right=self.ai_simulation_checkbox.rect.left - 10,
                 centery=self.ai_simulation_checkbox.rect.centery + offset_y)
@@ -736,8 +776,8 @@ class SettingsScene(Scene):
                 theme.THEME_LABEL_DISABLED_COLOR
                 if self.ai_strategic_candidates_field.is_disabled()
                 else theme.THEME_TEXT_COLOR_LIGHT)
-            ai_candidates_label = label_font.render(
-                "AI strategic candidates:", True, label_color)
+            ai_candidates_label = self._get_label_surface(
+                label_font, "AI strategic candidates:", label_color)
             ai_candidates_label_rect = ai_candidates_label.get_rect(
                 right=self.ai_strategic_candidates_field.rect.left - 10,
                 centery=self.ai_strategic_candidates_field.rect.centery +
@@ -749,8 +789,8 @@ class SettingsScene(Scene):
                 theme.THEME_LABEL_DISABLED_COLOR
                 if self.ai_thinking_speed_field.is_disabled()
                 else theme.THEME_TEXT_COLOR_LIGHT)
-            thinking_speed_label = label_font.render(
-                "AI Thinking Speed (s):", True, label_color)
+            thinking_speed_label = self._get_label_surface(
+                label_font, "AI Thinking Speed (s):", label_color)
             thinking_speed_label_rect = thinking_speed_label.get_rect(
                 right=self.ai_thinking_speed_field.rect.left - 10,
                 centery=self.ai_thinking_speed_field.rect.centery + offset_y)
@@ -787,7 +827,7 @@ class SettingsScene(Scene):
             y_offset=offset_y,
             expanded_only=True,
         )
-        self._draw_scene_header(title_text)
+        self._draw_scene_header(self._title_surface)
 
     def refresh_theme(self) -> None:
         """Refresh fonts and component styling after theme changes."""
@@ -801,6 +841,10 @@ class SettingsScene(Scene):
         )
         self.input_font = theme.get_font("body", theme.THEME_FONT_SIZE_BODY)
         self.dropdown_font = theme.get_font("body", theme.THEME_FONT_SIZE_BODY)
+        self._title_surface = None
+        self._cached_title_text = None
+        self._section_header_surfaces.clear()
+        self._label_surfaces.clear()
 
         self.resolution_dropdown.set_font(self.dropdown_font)
         self.resolution_dropdown.apply_theme()

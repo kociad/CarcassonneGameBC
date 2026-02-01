@@ -33,6 +33,12 @@ class LobbyScene(Scene):
         self.is_host = (getattr(self.network, 'network_mode',
                                 'local') == 'host')
         self.network_mode = getattr(self.network, 'network_mode', 'local')
+        self._title_text = "Lobby"
+        self._title_surface: pygame.Surface | None = None
+        self._cached_title_text: str | None = None
+        self._wait_text = "Waiting for host to start the game..."
+        self._wait_text_surface: pygame.Surface | None = None
+        self._cached_wait_text: str | None = None
         start_rect = pygame.Rect(0, 0, 0, 60)
         self.start_button = Button(start_rect, "Start Game", self.button_font)
         self._layout_controls()
@@ -129,10 +135,14 @@ class LobbyScene(Scene):
             tint_color=theme.THEME_LOBBY_BACKGROUND_TINT_COLOR,
             blur_radius=theme.THEME_LOBBY_BACKGROUND_BLUR_RADIUS,
         )
-        title_text = self.font.render("Lobby", True,
-                                      theme.THEME_TEXT_COLOR_LIGHT)
+        if (self._title_surface is None
+                or self._cached_title_text != self._title_text):
+            self._title_surface = self.font.render(
+                self._title_text, True, theme.THEME_TEXT_COLOR_LIGHT
+            )
+            self._cached_title_text = self._title_text
         header_height = self._get_scene_header_height(
-            title_text.get_height()
+            self._title_surface.get_height()
         )
         offset_y = self.scroll_offset
         label_font = theme.get_font("body", theme.THEME_FONT_SIZE_BODY)
@@ -159,18 +169,20 @@ class LobbyScene(Scene):
             self.start_button.draw(self.screen, y_offset=offset_y)
         else:
             wait_font = theme.get_font("body", theme.THEME_FONT_SIZE_BODY)
-            wait_text = wait_font.render(
-                "Waiting for host to start the game...", True,
-                theme.THEME_TEXT_COLOR_LIGHT)
+            if (self._wait_text_surface is None
+                    or self._cached_wait_text != self._wait_text):
+                self._wait_text_surface = wait_font.render(
+                    self._wait_text, True, theme.THEME_TEXT_COLOR_LIGHT)
+                self._cached_wait_text = self._wait_text
             available_height = self.screen.get_height() - content_start_y
-            wait_rect = wait_text.get_rect(
+            wait_rect = self._wait_text_surface.get_rect(
                 center=(self.screen.get_width() // 2,
                         content_start_y + available_height // 2 + offset_y))
-            self.screen.blit(wait_text, wait_rect)
+            self.screen.blit(self._wait_text_surface, wait_rect)
         self.toast_manager.draw(self.screen)
         if self.game_log:
             self.game_log.draw(self.screen)
-        self._draw_scene_header(title_text)
+        self._draw_scene_header(self._title_surface)
 
     def refresh_theme(self) -> None:
         """Refresh fonts and component styling after theme changes."""
@@ -179,6 +191,10 @@ class LobbyScene(Scene):
         self.button_font = theme.get_font(
             "button", theme.THEME_FONT_SIZE_BUTTON
         )
+        self._title_surface = None
+        self._cached_title_text = None
+        self._wait_text_surface = None
+        self._cached_wait_text = None
         self.start_button.set_font(self.button_font)
         self.start_button.apply_theme()
         self.toast_manager.apply_theme()
