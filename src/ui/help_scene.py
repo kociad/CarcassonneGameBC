@@ -19,9 +19,7 @@ class HelpScene(Scene):
             "button", theme.THEME_FONT_SIZE_BUTTON
         )
         self.text_font = theme.get_font("body", theme.THEME_FONT_SIZE_BODY)
-        self.controls_font = theme.get_font(
-            "label", theme.THEME_FONT_SIZE_HELP_CONTROLS
-        )
+        self.controls_font = self.text_font
         self.scroll_offset = 0
         self.max_scroll = 0
         self.scroll_speed = 30
@@ -267,7 +265,7 @@ class HelpScene(Scene):
         )
         self.text_font = theme.get_font("body", theme.THEME_FONT_SIZE_BODY)
         self.controls_font = theme.get_font(
-            "label", theme.THEME_FONT_SIZE_HELP_CONTROLS
+            "label", theme.self.text_font
         )
         self.rules_button.set_font(self.button_font)
         self.rules_button.apply_theme()

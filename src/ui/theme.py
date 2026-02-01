@@ -13,41 +13,41 @@ ColorA = tuple[int, int, int, int]
 
 # Font sizes
 # Main menu title text size in pixels; integer size typically between 48-140.
-THEME_FONT_SIZE_MAIN_MENU_TITLE: int = 100
+THEME_FONT_SIZE_MAIN_MENU_TITLE: int = 96
 # Scene title size (help/lobby/setup/settings); integer size typically 48-120.
-THEME_FONT_SIZE_SCENE_TITLE: int = 80
+THEME_FONT_SIZE_SCENE_TITLE: int = 72
 # Large game-over headline size; integer size typically 56-96.
-THEME_FONT_SIZE_GAME_OVER_TITLE: int = 72
+THEME_FONT_SIZE_GAME_OVER_TITLE: int = 48
 # Button/label size for menu controls and score table headers; integer size 32-64.
-THEME_FONT_SIZE_BUTTON: int = 48
+THEME_FONT_SIZE_BUTTON: int = 24
 # Score table row font size in the game-over panel; integer size 28-56.
-THEME_FONT_SIZE_GAME_OVER_ROW: int = 42
+THEME_FONT_SIZE_GAME_OVER_ROW: int = 24
 # Standard UI body text size (dialogs, inputs, toast, game HUD); integer size 24-48.
-THEME_FONT_SIZE_BODY: int = 36
+THEME_FONT_SIZE_BODY: int = 18
 # Help scene control text size; integer size 20-40.
-THEME_FONT_SIZE_HELP_CONTROLS: int = 32
+THEME_FONT_SIZE_HELP_CONTROLS: int = 24
 # Game log body text size; integer size 18-32.
-THEME_FONT_SIZE_GAME_LOG_BODY: int = 28
+THEME_FONT_SIZE_GAME_LOG_BODY: int = 24
 
 # Font families (asset filename or system font name).
 # Title text font family name or file in assets/fonts/; None uses default pygame font.
 THEME_FONT_FAMILY_TITLE: str | None = "Cinzel-Bold.ttf"
 # Body text font family name or file in assets/fonts/; None uses default pygame font.
-THEME_FONT_FAMILY_BODY: str | None = None
+THEME_FONT_FAMILY_BODY: str | None = "Inter_18pt-Regular.ttf"
 # Label text font family name or file in assets/fonts/; None uses default pygame font.
-THEME_FONT_FAMILY_LABEL: str | None = None
+THEME_FONT_FAMILY_LABEL: str | None = "Inter_24pt-Regular.ttf"
 # Button text font family name or file in assets/fonts/; None uses default pygame font.
-THEME_FONT_FAMILY_BUTTON: str | None = None
+THEME_FONT_FAMILY_BUTTON: str | None = "Inter_24pt-Regular.ttf"
 
 # Layout spacing
 # Vertical gap between stacked UI components; integer size in pixels.
-THEME_LAYOUT_VERTICAL_GAP: int = 20
+THEME_LAYOUT_VERTICAL_GAP: int = 12
 # Extra vertical spacing between help sections; integer size in pixels.
-THEME_LAYOUT_SECTION_GAP: int = 28
+THEME_LAYOUT_SECTION_GAP: int = 24
 # Extra vertical spacing between content and bottom action buttons.
 THEME_LAYOUT_BUTTON_SECTION_GAP: int = 36
 # Vertical spacing between help body text lines; integer size in pixels.
-THEME_LAYOUT_LINE_GAP: int = 12
+THEME_LAYOUT_LINE_GAP: int = 8
 # Scene header padding above/below the title; integer size in pixels.
 THEME_SCENE_HEADER_TOP_PADDING: int = 12
 # Optional explicit scene header height override; 0 uses title height + padding.
@@ -236,25 +236,25 @@ THEME_GAME_LOG_SCROLL_BG_COLOR: ColorA = (0, 0, 0, 150)
 
 # Shared scene colors
 # Scene header background color; RGBA tuple (0-255 per channel, alpha 0-255).
-THEME_SCENE_HEADER_BG_COLOR: ColorA = (20, 20, 20, 255)
+THEME_SCENE_HEADER_BG_COLOR: ColorA = (42, 42, 42, 220)
 # Optional blur radius/strength for the scene header background; 0 disables blur.
 THEME_SCENE_HEADER_BLUR_RADIUS: float = 0.0
 # Primary light text for titles and labels; RGB tuple (0-255 per channel).
-THEME_TEXT_COLOR_LIGHT: Color = (255, 255, 255, 255)
+THEME_TEXT_COLOR_LIGHT: Color = (242, 242, 242, 255)
 # Section header highlight color (gold); RGB tuple (0-255 per channel).
-THEME_SECTION_HEADER_COLOR: Color = (255, 215, 0, 255)
+THEME_SECTION_HEADER_COLOR: Color = (212, 175, 55, 255)
 # Section divider color for help sections; RGBA tuple (0-255 per channel, alpha).
 THEME_SECTION_DIVIDER_COLOR: ColorA = (255, 255, 255, 40)
 # Subsection highlight color (light blue); RGB tuple (0-255 per channel).
-THEME_SUBSECTION_COLOR: Color = (200, 200, 255, 255)
+THEME_SUBSECTION_COLOR: Color = (143, 170, 214, 255)
 # Disabled label text color in settings; RGB tuple (0-255 per channel).
-THEME_LABEL_DISABLED_COLOR: Color = (120, 120, 120, 255)
+THEME_LABEL_DISABLED_COLOR: Color = (138, 138, 138, 255)
 
 # Scene-specific backgrounds (image filenames are relative to settings.BACKGROUND_IMAGE_PATH).
 THEME_MAIN_MENU_BACKGROUND_COLOR: Color = (30, 30, 30, 255)
-THEME_MAIN_MENU_BACKGROUND_IMAGE: str | None = None
+THEME_MAIN_MENU_BACKGROUND_IMAGE: str | None = "main_menu.png"
 THEME_MAIN_MENU_BACKGROUND_SCALE_MODE: str = "fill"
-THEME_MAIN_MENU_BACKGROUND_TINT_COLOR: ColorA | None = None
+THEME_MAIN_MENU_BACKGROUND_TINT_COLOR: ColorA | None = (0, 0, 0, 100)
 THEME_MAIN_MENU_BACKGROUND_BLUR_RADIUS: float = 0.0
 
 THEME_SETTINGS_BACKGROUND_COLOR: Color = (30, 30, 30, 255)
