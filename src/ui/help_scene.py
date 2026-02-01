@@ -201,13 +201,14 @@ class HelpScene(Scene):
         title_text = self.font.render("How to Play", True,
                                       theme.THEME_TEXT_COLOR_LIGHT)
         offset_y = self.scroll_offset
-        content_left, _ = self._get_content_bounds()
+        content_left, content_right = self._get_content_bounds()
+        content_center = (content_left + content_right) // 2
 
         for section_title, header_y in self.section_headers_layout:
             section_label = self.text_font.render(
                 section_title, True, theme.THEME_SECTION_HEADER_COLOR)
             section_label_rect = section_label.get_rect()
-            section_label_rect.left = content_left
+            section_label_rect.centerx = content_center
             section_label_rect.y = header_y + offset_y
             if section_label_rect.bottom > 0 and section_label_rect.top < (
                 self.screen.get_height()
