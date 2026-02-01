@@ -25,47 +25,46 @@ class HelpScene(Scene):
         self.max_scroll = 0
         self.scroll_speed = 30
         self.header_height = 0
-        self.game_controls_label_y = 0
-        self.game_phases_label_y = 0
+        self.controls_label_y = 0
         self.rules_label_y = 0
-        self.game_controls_lines = [
-            "WASD or Arrow Keys to move around the board",
-            "Left Click to place a tile",
-            "Right Click to rotate a tile",
-            "Spacebar to discard an unplaceable tile or skip meeple placement",
-            "Esc to return to the main menu",
-            "Tab to toggle the game log",
-            "Mouse Wheel to scroll menus and the sidebar",
-        ]
-        self.game_phases_lines = [
-            "Phase 1 Place the drawn tile on the board",
-            "Phase 2 Optionally place a meeple on the tile",
+
+        self.controls_lines = [
+            "Use WASD or the Arrow Keys to move around the board.",
+            "Left-click to place a tile.",
+            "Right-click to rotate a tile.",
+            "Press Space to discard an unplaceable tile or skip meeple placement.",
+            "Press Esc to return to the main menu.",
+            "Press Tab to toggle the game log.",
+            "Use the mouse wheel to scroll menus and the sidebar.",
         ]
         self.rules_lines = [
-            "Tiles must be placed adjacent to existing tiles",
-            "Terrain types must match on adjacent edges",
-            "You can only discard if no valid placement exists",
-            "Meeples can only be placed on unoccupied features",
-            "Completed features score points immediately",
+            "Phase 1: place the drawn tile on the board.",
+            "Phase 2: you may place a meeple on the tile.",
+            "Tiles must be placed next to existing tiles.",
+            "Terrain types must match along touching edges.",
+            "You can only discard when no valid placement exists.",
+            "Meeples can only be placed on unoccupied features.",
+            "Completed features score points immediately.",
         ]
-        self.game_controls_layout: list[tuple[str, pygame.Rect]] = []
-        self.game_phases_layout: list[tuple[str, pygame.Rect]] = []
+
+        self.controls_layout: list[tuple[str, pygame.Rect]] = []
         self.rules_layout: list[tuple[str, pygame.Rect]] = []
+
         self.rules_button = Button(pygame.Rect(0, 0, 0, 60), "Wiki",
                                    self.button_font)
         self.back_button = Button(pygame.Rect(0, 0, 0, 60), "Back",
                                   self.button_font)
+
         self._layout_controls()
 
     def _get_line_style(self, line: str) -> tuple[pygame.font.Font, tuple]:
-        if line.startswith("Phase "):
-            return self.controls_font, theme.THEME_SUBSECTION_COLOR
         return self.controls_font, theme.THEME_TEXT_COLOR_LIGHT
 
     def _set_text_rect(self, line: str, font: pygame.font.Font, x: int, y: int,
                        padding: int) -> tuple[pygame.Rect, int]:
         line_width, line_height = font.size(line)
-        line_rect = pygame.Rect(x, y, line_width, line_height)
+        line_rect = pygame.Rect(0, y, line_width, line_height)
+        line_rect.centerx = x
         return line_rect, y + line_height + padding
 
     def _set_component_center(self, component, center_x: int, y: int,
@@ -77,30 +76,21 @@ class HelpScene(Scene):
 
     def _layout_controls(self) -> None:
         padding = theme.THEME_LAYOUT_VERTICAL_GAP
-        center_x = self.screen.get_width() // 2
-        x_center = center_x - 100
+        x_center = self.screen.get_width() // 2
+        button_center_x = self.screen.get_width() // 2
         self.header_height = self._get_scene_header_height(
             self.font.get_height()
         )
         current_y = self.header_height + theme.THEME_LAYOUT_VERTICAL_GAP
 
-        self.game_controls_label_y = current_y
+        self.controls_label_y = current_y
         current_y += self.text_font.get_height() + padding
 
-        self.game_controls_layout.clear()
-        for line in self.game_controls_lines:
+        self.controls_layout.clear()
+        for line in self.controls_lines:
             line_rect, current_y = self._set_text_rect(
                 line, self.controls_font, x_center, current_y, padding)
-            self.game_controls_layout.append((line, line_rect))
-
-        self.game_phases_label_y = current_y
-        current_y += self.text_font.get_height() + padding
-
-        self.game_phases_layout.clear()
-        for line in self.game_phases_lines:
-            line_rect, current_y = self._set_text_rect(
-                line, self.controls_font, x_center, current_y, padding)
-            self.game_phases_layout.append((line, line_rect))
+            self.controls_layout.append((line, line_rect))
 
         self.rules_label_y = current_y
         current_y += self.text_font.get_height() + padding
@@ -112,9 +102,9 @@ class HelpScene(Scene):
             self.rules_layout.append((line, line_rect))
 
         current_y = self._set_component_center(
-            self.rules_button, center_x, current_y, padding)
+            self.rules_button, button_center_x, current_y, padding)
         self._set_component_center(
-            self.back_button, center_x, current_y, padding)
+            self.back_button, button_center_x, current_y, padding)
 
     def handle_events(self, events: list[pygame.event.Event]) -> None:
         """Handle events for the help scene."""
@@ -123,9 +113,8 @@ class HelpScene(Scene):
             if event.type == pygame.QUIT:
                 pygame.quit()
                 exit()
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_ESCAPE:
-                    self.switch_scene(GameState.MENU)
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                self.switch_scene(GameState.MENU)
             if event.type in (pygame.MOUSEMOTION, pygame.MOUSEBUTTONUP):
                 self.back_button.handle_event(event,
                                               y_offset=self.scroll_offset)
@@ -155,43 +144,28 @@ class HelpScene(Scene):
         title_text = self.font.render("How to Play", True,
                                       theme.THEME_TEXT_COLOR_LIGHT)
         offset_y = self.scroll_offset
-        label_color = theme.THEME_SECTION_HEADER_COLOR
 
-        game_controls_label = self.text_font.render(
-            "Game Controls", True, label_color)
-        game_controls_label_rect = game_controls_label.get_rect()
-        game_controls_label_rect.centerx = self.screen.get_width() // 2
-        game_controls_label_rect.y = self.game_controls_label_y + offset_y
-        self.screen.blit(game_controls_label, game_controls_label_rect)
+        controls_label = self.text_font.render(
+            "Game Controls", True, theme.THEME_SECTION_HEADER_COLOR)
+        controls_label_rect = controls_label.get_rect()
+        controls_label_rect.centerx = self.screen.get_width() // 2
+        controls_label_rect.y = self.controls_label_y + offset_y
+        self.screen.blit(controls_label, controls_label_rect)
 
-        for line, line_rect in self.game_controls_layout:
-            font, color = self._get_line_style(line)
-            text_surface = font.render(line, True, color)
-            draw_rect = line_rect.move(0, offset_y)
-            if draw_rect.bottom > 0 and draw_rect.top < self.screen.get_height(
-            ):
-                self.screen.blit(text_surface, draw_rect)
-
-        game_phases_label = self.text_font.render(
-            "Game Phases", True, label_color)
-        game_phases_label_rect = game_phases_label.get_rect()
-        game_phases_label_rect.centerx = self.screen.get_width() // 2
-        game_phases_label_rect.y = self.game_phases_label_y + offset_y
-        self.screen.blit(game_phases_label, game_phases_label_rect)
-
-        for line, line_rect in self.game_phases_layout:
-            font, color = self._get_line_style(line)
-            text_surface = font.render(line, True, color)
-            draw_rect = line_rect.move(0, offset_y)
-            if draw_rect.bottom > 0 and draw_rect.top < self.screen.get_height(
-            ):
-                self.screen.blit(text_surface, draw_rect)
-
-        rules_label = self.text_font.render("Rules", True, label_color)
+        rules_label = self.text_font.render(
+            "Game Rules", True, theme.THEME_SECTION_HEADER_COLOR)
         rules_label_rect = rules_label.get_rect()
         rules_label_rect.centerx = self.screen.get_width() // 2
         rules_label_rect.y = self.rules_label_y + offset_y
         self.screen.blit(rules_label, rules_label_rect)
+
+        for line, line_rect in self.controls_layout:
+            font, color = self._get_line_style(line)
+            text_surface = font.render(line, True, color)
+            draw_rect = line_rect.move(0, offset_y)
+            if draw_rect.bottom > 0 and draw_rect.top < self.screen.get_height(
+            ):
+                self.screen.blit(text_surface, draw_rect)
 
         for line, line_rect in self.rules_layout:
             font, color = self._get_line_style(line)
@@ -200,6 +174,7 @@ class HelpScene(Scene):
             if draw_rect.bottom > 0 and draw_rect.top < self.screen.get_height(
             ):
                 self.screen.blit(text_surface, draw_rect)
+
         self.rules_button.draw(self.screen, y_offset=offset_y)
         self.back_button.draw(self.screen, y_offset=offset_y)
         self._draw_scene_header(title_text)
