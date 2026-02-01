@@ -58,7 +58,7 @@ THEME_SCENE_HEADER_TOP_PADDING: int = 12
 # Optional explicit scene header height override; 0 uses title height + padding.
 THEME_SCENE_HEADER_HEIGHT: int = 0
 # Help content max width cap; integer size in pixels.
-THEME_HELP_MAX_WIDTH: int = 900
+THEME_HELP_MAX_WIDTH: int = 600
 # Padding above/below help section dividers; integer size in pixels.
 THEME_SECTION_DIVIDER_PADDING: int = 6
 
