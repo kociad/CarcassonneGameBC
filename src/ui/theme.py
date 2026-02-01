@@ -42,6 +42,10 @@ THEME_FONT_FAMILY_BUTTON: str | None = None
 # Layout spacing
 # Vertical gap between stacked UI components; integer size in pixels.
 THEME_LAYOUT_VERTICAL_GAP: int = 20
+# Extra vertical spacing between help sections; integer size in pixels.
+THEME_LAYOUT_SECTION_GAP: int = 28
+# Vertical spacing between help body text lines; integer size in pixels.
+THEME_LAYOUT_LINE_GAP: int = 12
 # Scene header padding above/below the title; integer size in pixels.
 THEME_SCENE_HEADER_TOP_PADDING: int = 12
 # Optional explicit scene header height override; 0 uses title height + padding.
