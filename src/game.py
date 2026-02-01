@@ -223,9 +223,9 @@ class Game:
         elif not new_value:
             self._theme_debug_overlay = None
 
-    def _refresh_theme(self) -> None:
+    def _refresh_theme(self, theme_name: str | None = None) -> None:
         if self._current_scene:
-            self._current_scene.refresh_theme()
+            self._current_scene.refresh_theme(theme_name)
         if self._game_log:
             self._game_log.refresh_theme()
 

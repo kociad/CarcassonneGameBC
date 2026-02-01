@@ -266,9 +266,9 @@ class MainMenuScene(Scene):
             button.rect.y = current_y
             current_y += height + padding
 
-    def refresh_theme(self) -> None:
+    def refresh_theme(self, theme_name: str | None = None) -> None:
         """Refresh fonts and component styling after theme changes."""
-        super().refresh_theme()
+        super().refresh_theme(theme_name)
         self.font = theme.get_font(
             "title", theme.THEME_FONT_SIZE_MAIN_MENU_TITLE
         )
