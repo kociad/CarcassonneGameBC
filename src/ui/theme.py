@@ -246,6 +246,8 @@ THEME_GAME_LOG_SCROLL_BG_COLOR: ColorA = (0, 0, 0, 150)
 THEME_SCENE_HEADER_BG_COLOR: ColorA = (42, 42, 42, 220)
 # Optional blur radius/strength for the scene header background; 0 disables blur.
 THEME_SCENE_HEADER_BLUR_RADIUS: float = 0.0
+# Scene header text color; RGB tuple (0-255 per channel).
+THEME_SCENE_HEADER_TEXT_COLOR: Color = (242, 242, 242)
 # Primary light text for titles and labels; RGB tuple (0-255 per channel).
 THEME_TEXT_COLOR_LIGHT: Color = (242, 242, 242)
 # Section header highlight color (gold); RGB tuple (0-255 per channel).
