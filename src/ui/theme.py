@@ -12,6 +12,22 @@ import settings
 Color = tuple[int, int, int] | tuple[int, int, int, int]
 ColorA = tuple[int, int, int, int]
 
+
+def resolve_font_path(font_name: str | None) -> str | None:
+    """Resolve a font name to an assets/fonts path if it exists."""
+    if not font_name:
+        return None
+    font_name = font_name.strip()
+    if not font_name:
+        return None
+    if os.path.isabs(font_name) and os.path.isfile(font_name):
+        return font_name
+    asset_font_path = os.path.join(settings.ASSETS_PATH, "fonts", font_name)
+    if os.path.isfile(asset_font_path):
+        return asset_font_path
+    return None
+
+
 # Font sizes
 # Main menu title text size in pixels; integer size typically between 48-140.
 THEME_FONT_SIZE_MAIN_MENU_TITLE: int = 96
@@ -34,15 +50,19 @@ THEME_FONT_SIZE_GAME_LOG_BODY: int = 24
 
 # Font families (asset filename or system font name).
 # Title text font family name or file in assets/fonts/; None uses default pygame font.
-THEME_FONT_FAMILY_TITLE: str | None = "CinzelDecorative-Bold.ttf"
+THEME_FONT_FAMILY_TITLE: str | None = resolve_font_path(
+    "CinzelDecorative-Bold.ttf"
+)
 # Section header font family name or file in assets/fonts/; None uses default pygame font.
-THEME_FONT_FAMILY_SECTION_HEADER: str | None = "Marcellus-Regular.ttf"
+THEME_FONT_FAMILY_SECTION_HEADER: str | None = resolve_font_path(
+    "Marcellus-Regular.ttf"
+)
 # Body text font family name or file in assets/fonts/; None uses default pygame font.
-THEME_FONT_FAMILY_BODY: str | None = "EBGaramond-Regular.ttf"
+THEME_FONT_FAMILY_BODY: str | None = resolve_font_path("EBGaramond-Regular.ttf")
 # Label text font family name or file in assets/fonts/; None uses default pygame font.
-THEME_FONT_FAMILY_LABEL: str | None = "EBGaramond-Regular.ttf"
+THEME_FONT_FAMILY_LABEL: str | None = resolve_font_path("EBGaramond-Regular.ttf")
 # Button text font family name or file in assets/fonts/; None uses default pygame font.
-THEME_FONT_FAMILY_BUTTON: str | None = "EBGaramond-Bold.ttf"
+THEME_FONT_FAMILY_BUTTON: str | None = resolve_font_path("EBGaramond-Bold.ttf")
 
 # Layout spacing
 # Vertical gap between stacked UI components; integer size in pixels.
@@ -388,22 +408,6 @@ THEME_PLAYER_COLOR_BLACK: Color = (200, 200, 200)
 
 # Cache for pygame font instances keyed by role, size, and font family.
 _FONT_CACHE: dict[tuple[str, int, str | None], pygame.font.Font] = {}
-_SYSTEM_FONT_MATCH_CACHE: dict[str, str | None] = {}
-
-
-def resolve_font_path(font_name: str | None) -> str | None:
-    """Resolve a font name to an assets/fonts path if it exists."""
-    if not font_name:
-        return None
-    font_name = font_name.strip()
-    if not font_name:
-        return None
-    if os.path.isabs(font_name) and os.path.isfile(font_name):
-        return font_name
-    asset_font_path = os.path.join(settings.ASSETS_PATH, "fonts", font_name)
-    if os.path.isfile(asset_font_path):
-        return asset_font_path
-    return None
 
 
 def _get_font_family(role: str) -> str | None:
@@ -422,18 +426,6 @@ def _load_font(font_name: str | None, size: int) -> pygame.font.Font:
     font_path = resolve_font_path(font_name)
     if font_path:
         return pygame.font.Font(font_path, size)
-    if font_name:
-        _, extension = os.path.splitext(font_name.lower())
-        if extension in {".ttf", ".otf", ".ttc", ".otc"}:
-            return pygame.font.Font(None, size)
-        if font_name in _SYSTEM_FONT_MATCH_CACHE:
-            matched = _SYSTEM_FONT_MATCH_CACHE[font_name]
-        else:
-            matched = pygame.font.match_font(font_name)
-            _SYSTEM_FONT_MATCH_CACHE[font_name] = matched
-        if matched:
-            return pygame.font.Font(matched, size)
-        return pygame.font.SysFont(font_name, size)
     return pygame.font.Font(None, size)
 
 
