@@ -152,7 +152,7 @@ class GameScene(Scene):
         self,
         font: pygame.font.Font,
         text: str,
-        color: tuple[int, int, int],
+        color: tuple[int, ...],
     ) -> pygame.Surface:
         cache_key = (id(font), text, color)
         cached = self._text_surface_cache.get(cache_key)
@@ -409,8 +409,11 @@ class GameScene(Scene):
                             )
 
                 if settings_manager.get("DEBUG"):
-                    text_surface = self.font.render(
-                        f"{x},{y}", True, theme.THEME_TEXT_COLOR_LIGHT)
+                    text_surface = self._get_cached_text(
+                        self.font,
+                        f"{x},{y}",
+                        theme.THEME_TEXT_COLOR_LIGHT,
+                    )
                     text_x = x * tile_size - self.offset_x + tile_size // 3
                     text_y = y * tile_size - self.offset_y + tile_size // 3
                     self.screen.blit(text_surface, (text_x, text_y))
@@ -852,9 +855,11 @@ class GameScene(Scene):
                 self.screen.blit(status_surface, status_rect)
             current_y += status_rect.height + padding
 
-        cards_surface = self.font.render(
-            f"Cards left: {remaining_cards}", True,
-            theme.THEME_TEXT_COLOR_LIGHT)
+        cards_surface = self._get_cached_text(
+            self.font,
+            f"Cards left: {remaining_cards}",
+            theme.THEME_TEXT_COLOR_LIGHT,
+        )
         cards_rect = cards_surface.get_rect()
         cards_rect.centerx = sidebar_center_x
         cards_rect.y = current_y - offset_y
@@ -876,12 +881,19 @@ class GameScene(Scene):
             except Exception as e:
                 logger.error(f"Failed to get player color: {e}")
                 player_color = theme.THEME_TEXT_COLOR_LIGHT
-            name_surface = self.font.render(name_text, True, player_color)
+            name_surface = self._get_cached_text(
+                self.font,
+                name_text,
+                player_color,
+            )
             name_height = name_surface.get_height()
 
             score_color = theme.THEME_GAME_SCORE_TEXT_COLOR
-            score_surface = self.font.render(f"Score: {player.get_score()}",
-                                             True, score_color)
+            score_surface = self._get_cached_text(
+                self.font,
+                f"Score: {player.get_score()}",
+                score_color,
+            )
             score_height = score_surface.get_height()
 
             grid_height = 0
@@ -990,9 +1002,11 @@ class GameScene(Scene):
 
         if settings_manager.get("DEBUG"):
             current_y += padding
-            structure_surface = self.font.render(
-                f"Structures: {len(detected_structures)}", True,
-                theme.THEME_TEXT_COLOR_LIGHT)
+            structure_surface = self._get_cached_text(
+                self.font,
+                f"Structures: {len(detected_structures)}",
+                theme.THEME_TEXT_COLOR_LIGHT,
+            )
             structure_rect = structure_surface.get_rect()
             structure_rect.centerx = sidebar_center_x
             structure_rect.y = current_y - offset_y
@@ -1323,8 +1337,8 @@ class GameScene(Scene):
         self.game_over_hint_font = theme.get_font(
             "body", theme.THEME_FONT_SIZE_BODY
         )
+        self._text_surface_cache.clear()
         self.ai_thinking_progress_bar.set_font(self.font)
         self.ai_thinking_progress_bar.apply_theme()
         self.toast_manager.apply_theme()
         self._invalidate_render_cache()
-        self._text_surface_cache.clear()
