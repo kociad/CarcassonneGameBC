@@ -22,7 +22,7 @@ THEME_FONT_SIZE_SECTION_HEADER: int = 26
 # Large game-over headline size; integer size typically 56-96.
 THEME_FONT_SIZE_GAME_OVER_TITLE: int = 48
 # Button/label size for menu controls and score table headers; integer size 32-64.
-THEME_FONT_SIZE_BUTTON: int = 24
+THEME_FONT_SIZE_BUTTON: int = 28
 # Score table row font size in the game-over panel; integer size 28-56.
 THEME_FONT_SIZE_GAME_OVER_ROW: int = 24
 # Standard UI body text size (dialogs, inputs, toast, game HUD); integer size 24-48.
@@ -34,15 +34,15 @@ THEME_FONT_SIZE_GAME_LOG_BODY: int = 24
 
 # Font families (asset filename or system font name).
 # Title text font family name or file in assets/fonts/; None uses default pygame font.
-THEME_FONT_FAMILY_TITLE: str | None = "IMFellEnglish-Regular.ttf"
+THEME_FONT_FAMILY_TITLE: str | None = "CinzelDecorative-Bold.ttf"
 # Section header font family name or file in assets/fonts/; None uses default pygame font.
-THEME_FONT_FAMILY_SECTION_HEADER: str | None = "Inter_24pt-Regular.ttf"
+THEME_FONT_FAMILY_SECTION_HEADER: str | None = "Marcellus-Regular.ttf"
 # Body text font family name or file in assets/fonts/; None uses default pygame font.
-THEME_FONT_FAMILY_BODY: str | None = "Inter_18pt-Regular.ttf"
+THEME_FONT_FAMILY_BODY: str | None = "EBGaramond-Regular.ttf"
 # Label text font family name or file in assets/fonts/; None uses default pygame font.
-THEME_FONT_FAMILY_LABEL: str | None = "Inter_24pt-Regular.ttf"
+THEME_FONT_FAMILY_LABEL: str | None = "EBGaramond-Regular.ttf"
 # Button text font family name or file in assets/fonts/; None uses default pygame font.
-THEME_FONT_FAMILY_BUTTON: str | None = "Inter_24pt-Regular.ttf"
+THEME_FONT_FAMILY_BUTTON: str | None = "EBGaramond-Bold.ttf"
 
 # Layout spacing
 # Vertical gap between stacked UI components; integer size in pixels.
@@ -66,24 +66,24 @@ THEME_SECTION_DIVIDER_PADDING: int = 6
 # Horizontal padding applied on each side of button labels; integer size in pixels.
 THEME_BUTTON_HORIZONTAL_PADDING: int = 12
 # Vertical padding applied above/below button labels; integer size in pixels.
-THEME_BUTTON_VERTICAL_PADDING: int = 8
+THEME_BUTTON_VERTICAL_PADDING: int = 6
 # Default state
 # Background for default button state; RGB tuple (0-255 per channel).
-THEME_BUTTON_BG_COLOR: Color = (200, 200, 200, 255)
+THEME_BUTTON_BG_COLOR: Color = (42, 42, 42, 180)
 # Hover state
 # Background for hovered button state; RGB tuple (0-255 per channel).
-THEME_BUTTON_HOVER_BG_COLOR: Color = (220, 220, 220, 255)
+THEME_BUTTON_HOVER_BG_COLOR: Color = (32, 32, 32, 220)
 # Active/pressed state
 # Background for pressed button state; RGB tuple (0-255 per channel).
-THEME_BUTTON_PRESSED_BG_COLOR: Color = (160, 160, 160, 255)
+THEME_BUTTON_PRESSED_BG_COLOR: Color = (22, 22, 22, 220)
 # Default text
 # Text color for enabled buttons; RGB tuple (0-255 per channel).
-THEME_BUTTON_TEXT_COLOR: Color = (0, 0, 0)
+THEME_BUTTON_TEXT_COLOR: Color = (190, 190, 190)
 # Disabled state
 # Text color for disabled buttons; RGB tuple (0-255 per channel).
-THEME_BUTTON_TEXT_DISABLED_COLOR: Color = (150, 150, 150)
+THEME_BUTTON_TEXT_DISABLED_COLOR: Color = (130, 130, 130)
 # Background for disabled buttons; RGB tuple (0-255 per channel).
-THEME_BUTTON_DISABLED_BG_COLOR: Color = (180, 180, 180, 255)
+THEME_BUTTON_DISABLED_BG_COLOR: Color = (110, 110, 110, 180)
 
 # Checkbox colors
 # Default state
@@ -243,11 +243,11 @@ THEME_GAME_LOG_SCROLL_BG_COLOR: ColorA = (0, 0, 0, 150)
 
 # Shared scene colors
 # Scene header background color; RGBA tuple (0-255 per channel, alpha 0-255).
-THEME_SCENE_HEADER_BG_COLOR: ColorA = (42, 42, 42, 220)
+THEME_SCENE_HEADER_BG_COLOR: ColorA = (42, 42, 42, 180)
 # Optional blur radius/strength for the scene header background; 0 disables blur.
-THEME_SCENE_HEADER_BLUR_RADIUS: float = 0.0
+THEME_SCENE_HEADER_BLUR_RADIUS: float = 5.0
 # Scene header text color; RGB tuple (0-255 per channel).
-THEME_SCENE_HEADER_TEXT_COLOR: Color = (242, 242, 242)
+THEME_SCENE_HEADER_TEXT_COLOR: Color = (212, 175, 55)
 # Primary light text for titles and labels; RGB tuple (0-255 per channel).
 THEME_TEXT_COLOR_LIGHT: Color = (242, 242, 242)
 # Section header highlight color (gold); RGB tuple (0-255 per channel).
@@ -263,31 +263,31 @@ THEME_LABEL_DISABLED_COLOR: Color = (138, 138, 138)
 THEME_MAIN_MENU_BACKGROUND_COLOR: Color = (30, 30, 30, 255)
 THEME_MAIN_MENU_BACKGROUND_IMAGE: str | None = "main_menu.png"
 THEME_MAIN_MENU_BACKGROUND_SCALE_MODE: str = "fill"
-THEME_MAIN_MENU_BACKGROUND_TINT_COLOR: ColorA | None = (0, 0, 0, 100)
+THEME_MAIN_MENU_BACKGROUND_TINT_COLOR: ColorA | None = (0, 0, 0, 160)
 THEME_MAIN_MENU_BACKGROUND_BLUR_RADIUS: float = 0.0
 
 THEME_SETTINGS_BACKGROUND_COLOR: Color = (30, 30, 30, 255)
-THEME_SETTINGS_BACKGROUND_IMAGE: str | None = None
+THEME_SETTINGS_BACKGROUND_IMAGE: str | None = "settings.png"
 THEME_SETTINGS_BACKGROUND_SCALE_MODE: str = "fill"
-THEME_SETTINGS_BACKGROUND_TINT_COLOR: ColorA | None = None
+THEME_SETTINGS_BACKGROUND_TINT_COLOR: ColorA | None = (0, 0, 0, 160)
 THEME_SETTINGS_BACKGROUND_BLUR_RADIUS: float = 0.0
 
 THEME_HELP_BACKGROUND_COLOR: Color = (30, 30, 30, 255)
-THEME_HELP_BACKGROUND_IMAGE: str | None = None
+THEME_HELP_BACKGROUND_IMAGE: str | None = "how_to_play.png"
 THEME_HELP_BACKGROUND_SCALE_MODE: str = "fill"
-THEME_HELP_BACKGROUND_TINT_COLOR: ColorA | None = None
+THEME_HELP_BACKGROUND_TINT_COLOR: ColorA | None = (0, 0, 0, 160)
 THEME_HELP_BACKGROUND_BLUR_RADIUS: float = 0.0
 
 THEME_LOBBY_BACKGROUND_COLOR: Color = (30, 30, 30, 255)
-THEME_LOBBY_BACKGROUND_IMAGE: str | None = None
+THEME_LOBBY_BACKGROUND_IMAGE: str | None = "lobby.png"
 THEME_LOBBY_BACKGROUND_SCALE_MODE: str = "fill"
-THEME_LOBBY_BACKGROUND_TINT_COLOR: ColorA | None = None
+THEME_LOBBY_BACKGROUND_TINT_COLOR: ColorA | None = (0, 0, 0, 160)
 THEME_LOBBY_BACKGROUND_BLUR_RADIUS: float = 0.0
 
 THEME_PREPARE_BACKGROUND_COLOR: Color = (30, 30, 30, 255)
-THEME_PREPARE_BACKGROUND_IMAGE: str | None = None
+THEME_PREPARE_BACKGROUND_IMAGE: str | None = "game_prepare.png"
 THEME_PREPARE_BACKGROUND_SCALE_MODE: str = "fill"
-THEME_PREPARE_BACKGROUND_TINT_COLOR: ColorA | None = None
+THEME_PREPARE_BACKGROUND_TINT_COLOR: ColorA | None = (0, 0, 0, 160)
 THEME_PREPARE_BACKGROUND_BLUR_RADIUS: float = 0.0
 
 # Main menu dialog colors
