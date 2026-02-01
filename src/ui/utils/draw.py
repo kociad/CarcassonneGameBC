@@ -63,6 +63,8 @@ def draw_rect_alpha(
     width: int = 0,
 ) -> None:
     rgb, alpha = _split_color(color)
+    if alpha <= 0:
+        return
     if alpha >= 255:
         pygame.draw.rect(surface, (*rgb, alpha), rect, width)
         return
@@ -82,6 +84,8 @@ def draw_circle_alpha(
     width: int = 0,
 ) -> None:
     rgb, alpha = _split_color(color)
+    if alpha <= 0:
+        return
     if alpha >= 255:
         pygame.draw.circle(surface, (*rgb, alpha), center, radius, width)
         return
@@ -108,6 +112,8 @@ def draw_line_alpha(
     width: int = 1,
 ) -> None:
     rgb, alpha = _split_color(color)
+    if alpha <= 0:
+        return
     if alpha >= 255:
         pygame.draw.line(surface, (*rgb, alpha), start_pos, end_pos, width)
         return
