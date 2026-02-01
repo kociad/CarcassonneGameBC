@@ -47,8 +47,8 @@ class HelpScene(Scene):
             "Completed features score points immediately.",
         ]
 
-        self.controls_layout: list[tuple[str, pygame.Rect]] = []
-        self.rules_layout: list[tuple[str, pygame.Rect]] = []
+        self.controls_layout: list[tuple[str, int]] = []
+        self.rules_layout: list[tuple[str, int]] = []
 
         self.rules_button = Button(pygame.Rect(0, 0, 0, 60), "Wiki",
                                    self.button_font)
@@ -60,11 +60,10 @@ class HelpScene(Scene):
     def _get_line_style(self, line: str) -> tuple[pygame.font.Font, tuple]:
         return self.controls_font, theme.THEME_TEXT_COLOR_LIGHT
 
-    def _set_text_rect(self, line: str, font: pygame.font.Font, x: int, y: int,
-                       padding: int) -> tuple[pygame.Rect, int]:
-        line_width, line_height = font.size(line)
-        line_rect = pygame.Rect(x, y, line_width, line_height)
-        return line_rect, y + line_height + padding
+    def _set_text_rect(self, line: str, font: pygame.font.Font, y: int,
+                       padding: int) -> tuple[int, int]:
+        _, line_height = font.size(line)
+        return y, y + line_height + padding
 
     def _set_component_center(self, component, center_x: int, y: int,
                               padding: int) -> int:
@@ -75,7 +74,6 @@ class HelpScene(Scene):
 
     def _layout_controls(self) -> None:
         padding = theme.THEME_LAYOUT_VERTICAL_GAP
-        x_center = self.screen.get_width() // 2 - 100
         button_center_x = self.screen.get_width() // 2
         self.header_height = self._get_scene_header_height(
             self.font.get_height()
@@ -87,18 +85,18 @@ class HelpScene(Scene):
 
         self.controls_layout.clear()
         for line in self.controls_lines:
-            line_rect, current_y = self._set_text_rect(
-                line, self.controls_font, x_center, current_y, padding)
-            self.controls_layout.append((line, line_rect))
+            line_y, current_y = self._set_text_rect(
+                line, self.controls_font, current_y, padding)
+            self.controls_layout.append((line, line_y))
 
         self.rules_label_y = current_y
         current_y += self.text_font.get_height() + padding
 
         self.rules_layout.clear()
         for line in self.rules_lines:
-            line_rect, current_y = self._set_text_rect(
-                line, self.controls_font, x_center, current_y, padding)
-            self.rules_layout.append((line, line_rect))
+            line_y, current_y = self._set_text_rect(
+                line, self.controls_font, current_y, padding)
+            self.rules_layout.append((line, line_y))
 
         current_y = self._set_component_center(
             self.rules_button, button_center_x, current_y, padding)
@@ -158,18 +156,22 @@ class HelpScene(Scene):
         rules_label_rect.y = self.rules_label_y + offset_y
         self.screen.blit(rules_label, rules_label_rect)
 
-        for line, line_rect in self.controls_layout:
+        for line, line_y in self.controls_layout:
             font, color = self._get_line_style(line)
             text_surface = font.render(line, True, color)
-            draw_rect = line_rect.move(0, offset_y)
+            draw_rect = text_surface.get_rect()
+            draw_rect.centerx = self.screen.get_width() // 2
+            draw_rect.y = line_y + offset_y
             if draw_rect.bottom > 0 and draw_rect.top < self.screen.get_height(
             ):
                 self.screen.blit(text_surface, draw_rect)
 
-        for line, line_rect in self.rules_layout:
+        for line, line_y in self.rules_layout:
             font, color = self._get_line_style(line)
             text_surface = font.render(line, True, color)
-            draw_rect = line_rect.move(0, offset_y)
+            draw_rect = text_surface.get_rect()
+            draw_rect.centerx = self.screen.get_width() // 2
+            draw_rect.y = line_y + offset_y
             if draw_rect.bottom > 0 and draw_rect.top < self.screen.get_height(
             ):
                 self.screen.blit(text_surface, draw_rect)
