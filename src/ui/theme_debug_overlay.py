@@ -659,6 +659,7 @@ class ThemeDebugOverlay:
             on_text_change=lambda text: self._set_theme_value(
                 name, text if text else None
             ),
+            commit_on_blur=True,
         )
 
         def draw(surface: pygame.Surface, y_offset: int) -> None:
@@ -713,6 +714,7 @@ class ThemeDebugOverlay:
             font=self.control_font,
             initial_text="" if value is None else str(value),
             on_text_change=lambda text: self._update_image_path(name, text),
+            commit_on_blur=True,
         )
         if value is None:
             input_field.set_disabled(True)
