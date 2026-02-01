@@ -215,6 +215,7 @@ class ThemeDebugOverlay:
             "THEME_SCENE_HEADER_HEIGHT",
             "THEME_SCENE_HEADER_BG_COLOR",
             "THEME_SCENE_HEADER_BLUR_RADIUS",
+            "THEME_SECTION_DIVIDER_COLOR",
         ]
         for name in priority_items:
             if not hasattr(theme, name):

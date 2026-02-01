@@ -251,6 +251,8 @@ THEME_BACKGROUND_BLUR_RADIUS: float = 0.0
 THEME_TEXT_COLOR_LIGHT: Color = (255, 255, 255, 255)
 # Section header highlight color (gold); RGB tuple (0-255 per channel).
 THEME_SECTION_HEADER_COLOR: Color = (255, 215, 0, 255)
+# Section divider color for help sections; RGBA tuple (0-255 per channel, alpha).
+THEME_SECTION_DIVIDER_COLOR: ColorA = (255, 255, 255, 40)
 # Subsection highlight color (light blue); RGB tuple (0-255 per channel).
 THEME_SUBSECTION_COLOR: Color = (200, 200, 255, 255)
 # Disabled label text color in settings; RGB tuple (0-255 per channel).
