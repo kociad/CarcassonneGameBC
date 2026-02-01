@@ -107,6 +107,7 @@ class HelpScene(Scene):
 
         self.section_headers_layout: list[tuple[str, int]] = []
         self.section_body_layout: list[tuple[str, int]] = []
+        self.section_divider_layout: list[int] = []
 
         self.rules_button = Button(pygame.Rect(0, 0, 0, 60), "Wiki",
                                    self.button_font)
@@ -151,6 +152,7 @@ class HelpScene(Scene):
 
         self.section_headers_layout.clear()
         self.section_body_layout.clear()
+        self.section_divider_layout.clear()
         for index, (section_title, section_lines) in enumerate(self.sections):
             if index > 0:
                 current_y += section_gap
@@ -160,6 +162,8 @@ class HelpScene(Scene):
                 line_y, current_y = self._set_text_rect(
                     line, self.controls_font, current_y, line_gap)
                 self.section_body_layout.append((line, line_y))
+            divider_y = current_y - max(1, line_gap // 2)
+            self.section_divider_layout.append(divider_y)
 
         current_y = self._set_component_center(
             self.rules_button, button_center_x, current_y, section_gap)
@@ -204,7 +208,7 @@ class HelpScene(Scene):
         title_text = self.font.render("How to Play", True,
                                       theme.THEME_TEXT_COLOR_LIGHT)
         offset_y = self.scroll_offset
-        content_left, _ = self._get_content_bounds()
+        content_left, content_right = self._get_content_bounds()
 
         for section_title, header_y in self.section_headers_layout:
             section_label = self.text_font.render(
@@ -225,6 +229,24 @@ class HelpScene(Scene):
             if draw_rect.bottom > 0 and draw_rect.top < self.screen.get_height(
             ):
                 self.screen.blit(text_surface, draw_rect)
+
+        divider_height = 2
+        divider_width = content_right - content_left
+        for divider_y in self.section_divider_layout:
+            draw_y = divider_y + offset_y
+            if (draw_y + divider_height > 0
+                    and draw_y < self.screen.get_height()):
+                divider_rect = pygame.Rect(
+                    content_left,
+                    draw_y,
+                    divider_width,
+                    divider_height,
+                )
+                pygame.draw.rect(
+                    self.screen,
+                    theme.THEME_SECTION_DIVIDER_COLOR,
+                    divider_rect,
+                )
 
         self.rules_button.draw(self.screen, y_offset=offset_y)
         self.back_button.draw(self.screen, y_offset=offset_y)
