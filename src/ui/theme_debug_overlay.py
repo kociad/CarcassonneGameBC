@@ -287,7 +287,7 @@ class ThemeDebugOverlay:
 
     @staticmethod
     def _needs_full_refresh(name: str) -> bool:
-        if name == "THEME_TEXT_COLOR_LIGHT":
+        if name in {"THEME_TEXT_COLOR_LIGHT", "THEME_SCENE_HEADER_TEXT_COLOR"}:
             return True
         return name.startswith("THEME_FONT_") or name.startswith(
             "THEME_LAYOUT_"
@@ -362,6 +362,7 @@ class ThemeDebugOverlay:
             [
                 "THEME_SCENE_HEADER_BG_COLOR",
                 "THEME_SCENE_HEADER_BLUR_RADIUS",
+                "THEME_SCENE_HEADER_TEXT_COLOR",
             ],
         )
         add_section(

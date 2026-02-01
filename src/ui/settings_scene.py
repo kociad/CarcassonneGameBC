@@ -605,7 +605,7 @@ class SettingsScene(Scene):
         if (self._title_surface is None
                 or self._cached_title_text != self._title_text):
             self._title_surface = self.font.render(
-                self._title_text, True, theme.THEME_TEXT_COLOR_LIGHT
+                self._title_text, True, theme.THEME_SCENE_HEADER_TEXT_COLOR
             )
             self._cached_title_text = self._title_text
 
