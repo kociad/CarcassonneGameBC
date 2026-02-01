@@ -29,6 +29,20 @@ class GameScene(Scene):
 
         self.scroll_speed = 10
         self.font = theme.get_font("body", theme.THEME_FONT_SIZE_BODY)
+        self.game_over_title_font = theme.get_font(
+            "title", theme.THEME_FONT_SIZE_GAME_OVER_TITLE
+        )
+        self.game_over_table_font = theme.get_font(
+            "label", theme.THEME_FONT_SIZE_BUTTON
+        )
+        self.game_over_row_font = theme.get_font(
+            "body", theme.THEME_FONT_SIZE_GAME_OVER_ROW
+        )
+        self.game_over_hint_font = theme.get_font(
+            "body", theme.THEME_FONT_SIZE_BODY
+        )
+        self._compass_surface: pygame.Surface | None = None
+        self._compass_tile_size: int | None = None
 
         self.toast_manager = ToastManager(max_toasts=5)
 
@@ -147,6 +161,26 @@ class GameScene(Scene):
             self._text_surface_cache[cache_key] = cached
         return cached
 
+    def _get_compass_surface(self, tile_size: int) -> pygame.Surface | None:
+        if (self._compass_surface is not None
+                and self._compass_tile_size == tile_size):
+            return self._compass_surface
+        try:
+            compass_image = pygame.image.load(
+                settings.ICONS_PATH + "compass.png"
+            ).convert_alpha()
+        except Exception as exc:
+            logger.error(f"Failed to load compass icon: {exc}")
+            self._compass_surface = None
+            self._compass_tile_size = tile_size
+            return None
+        compass_size = max(1, tile_size // 4)
+        self._compass_surface = pygame.transform.smoothscale(
+            compass_image, (compass_size, compass_size)
+        )
+        self._compass_tile_size = tile_size
+        return self._compass_surface
+
     def _apply_sidebar_scroll(self, events: list[pygame.event.Event]) -> None:
         """Handle sidebar scrolling events"""
         for event in events:
@@ -238,21 +272,18 @@ class GameScene(Scene):
         if is_game_over:
             winner = max(players, key=lambda p: p.get_score())
             message = f"{winner.get_name()} wins with {winner.get_score()} points!"
-            game_over_font = theme.get_font(
-                "title", theme.THEME_FONT_SIZE_GAME_OVER_TITLE)
             window_width = settings_manager.get("WINDOW_WIDTH")
             window_height = settings_manager.get("WINDOW_HEIGHT")
             winner_y = window_height // 3 - 40
-            text_surface = game_over_font.render(message, True,
-                                                 theme.THEME_TEXT_COLOR_LIGHT)
+            text_surface = self._get_cached_text(
+                self.game_over_title_font,
+                message,
+                theme.THEME_TEXT_COLOR_LIGHT,
+            )
             text_rect = text_surface.get_rect(center=(window_width // 2,
                                                       winner_y))
             self.screen.blit(text_surface, text_rect)
 
-            table_font = theme.get_font("label",
-                                        theme.THEME_FONT_SIZE_BUTTON)
-            row_font = theme.get_font(
-                "body", theme.THEME_FONT_SIZE_GAME_OVER_ROW)
             sorted_players = sorted(players,
                                     key=lambda p:
                                     (-p.get_score(), p.get_name()))
@@ -272,9 +303,11 @@ class GameScene(Scene):
             )
             header_y = table_y + row_height // 2
             header_player = self._get_cached_text(
-                table_font, "Player", theme.THEME_TEXT_COLOR_LIGHT)
+                self.game_over_table_font, "Player", theme.THEME_TEXT_COLOR_LIGHT
+            )
             header_score = self._get_cached_text(
-                table_font, "Score", theme.THEME_TEXT_COLOR_LIGHT)
+                self.game_over_table_font, "Score", theme.THEME_TEXT_COLOR_LIGHT
+            )
             self.screen.blit(header_player,
                              header_player.get_rect(center=(col1_x, header_y)))
             self.screen.blit(header_score,
@@ -289,12 +322,16 @@ class GameScene(Scene):
 
             for i, player in enumerate(sorted_players):
                 row_y = table_y + row_height * (i + 1) + row_height // 2
-                name_surface = row_font.render(
-                    player.get_name(), True,
-                    theme.THEME_GAME_OVER_ROW_TEXT_COLOR)
-                score_surface = row_font.render(
-                    str(player.get_score()), True,
-                    theme.THEME_GAME_OVER_ROW_TEXT_COLOR)
+                name_surface = self._get_cached_text(
+                    self.game_over_row_font,
+                    player.get_name(),
+                    theme.THEME_GAME_OVER_ROW_TEXT_COLOR,
+                )
+                score_surface = self._get_cached_text(
+                    self.game_over_row_font,
+                    str(player.get_score()),
+                    theme.THEME_GAME_OVER_ROW_TEXT_COLOR,
+                )
                 self.screen.blit(name_surface,
                                  name_surface.get_rect(center=(col1_x, row_y)))
                 self.screen.blit(
@@ -310,11 +347,9 @@ class GameScene(Scene):
                         1,
                     )
 
-            esc_message_font = theme.get_font("body",
-                                              theme.THEME_FONT_SIZE_BODY)
             esc_message = "Press ESC to return to menu"
             esc_message_surface = self._get_cached_text(
-                esc_message_font, esc_message,
+                self.game_over_hint_font, esc_message,
                 theme.THEME_GAME_OVER_HINT_TEXT_COLOR)
             esc_message_rect = esc_message_surface.get_rect(
                 center=(window_width // 2, table_y + table_height + 50))
@@ -365,18 +400,13 @@ class GameScene(Scene):
                                          highlight_rect, 5)
 
                     if x == center_x and y == center_y:
-                        try:
-                            compass_image = pygame.image.load(
-                                settings.ICONS_PATH + "compass.png")
-                            compass_size = tile_size // 4
-                            compass_image = pygame.transform.scale(
-                                compass_image, (compass_size, compass_size))
+                        compass_surface = self._get_compass_surface(tile_size)
+                        if compass_surface is not None:
                             compass_x = x * tile_size - self.offset_x + 5
                             compass_y = y * tile_size - self.offset_y + 5
-                            self.screen.blit(compass_image,
-                                             (compass_x, compass_y))
-                        except Exception as e:
-                            logger.error(f"Failed to load compass icon: {e}")
+                            self.screen.blit(
+                                compass_surface, (compass_x, compass_y)
+                            )
 
                 if settings_manager.get("DEBUG"):
                     text_surface = self.font.render(
@@ -1281,6 +1311,18 @@ class GameScene(Scene):
         """Refresh fonts and component styling after theme changes."""
         super().refresh_theme(theme_name)
         self.font = theme.get_font("body", theme.THEME_FONT_SIZE_BODY)
+        self.game_over_title_font = theme.get_font(
+            "title", theme.THEME_FONT_SIZE_GAME_OVER_TITLE
+        )
+        self.game_over_table_font = theme.get_font(
+            "label", theme.THEME_FONT_SIZE_BUTTON
+        )
+        self.game_over_row_font = theme.get_font(
+            "body", theme.THEME_FONT_SIZE_GAME_OVER_ROW
+        )
+        self.game_over_hint_font = theme.get_font(
+            "body", theme.THEME_FONT_SIZE_BODY
+        )
         self.ai_thinking_progress_bar.set_font(self.font)
         self.ai_thinking_progress_bar.apply_theme()
         self.toast_manager.apply_theme()
