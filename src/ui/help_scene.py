@@ -29,20 +29,22 @@ class HelpScene(Scene):
         self.rules_label_y = 0
 
         self.controls_lines = [
-            "WASD or Arrow Keys to move around the board",
-            "Left Click to place a tile",
-            "Right Click to rotate a tile",
-            "Spacebar to discard an unplaceable tile or skip meeple placement",
-            "Esc to return to the main menu",
-            "Tab to toggle the game log",
-            "Mouse Wheel to scroll menus and the sidebar",
+            "Use WASD or the Arrow Keys to move around the board.",
+            "Left-click to place a tile.",
+            "Right-click to rotate a tile.",
+            "Press Space to discard an unplaceable tile or skip meeple placement.",
+            "Press Esc to return to the main menu.",
+            "Press Tab to toggle the game log.",
+            "Use the mouse wheel to scroll menus and the sidebar.",
         ]
         self.rules_lines = [
-            "Tiles must be placed adjacent to existing tiles",
-            "Terrain types must match on adjacent edges",
-            "You can only discard if no valid placement exists",
-            "Meeples can only be placed on unoccupied features",
-            "Completed features score points immediately",
+            "Phase 1: place the drawn tile on the board.",
+            "Phase 2: you may place a meeple on the tile.",
+            "Tiles must be placed next to existing tiles.",
+            "Terrain types must match along touching edges.",
+            "You can only discard when no valid placement exists.",
+            "Meeples can only be placed on unoccupied features.",
+            "Completed features score points immediately.",
         ]
 
         self.controls_layout: list[tuple[str, pygame.Rect]] = []
