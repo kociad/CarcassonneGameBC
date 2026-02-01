@@ -39,6 +39,10 @@ class LobbyScene(Scene):
         self._wait_text = "Waiting for host to start the game..."
         self._wait_text_surface: pygame.Surface | None = None
         self._cached_wait_text: str | None = None
+        self._player_status_cache: dict[
+            tuple[str, str, tuple[int, int, int], int],
+            tuple[pygame.Surface, pygame.Surface],
+        ] = {}
         start_rect = pygame.Rect(0, 0, 0, 60)
         self.start_button = Button(start_rect, "Start Game", self.button_font)
         self._layout_controls()
@@ -63,6 +67,10 @@ class LobbyScene(Scene):
         """Update the connection status of all players in the lobby."""
         session = self.get_game_session()
         self.players = session.get_players() if session else []
+        previous_snapshot = [
+            (status["name"], status["status"], status["color"])
+            for status in getattr(self, "status_list", [])
+        ]
         self.status_list = []
         for i, origName in enumerate(self.original_player_names):
             player = next((p for p in self.players if p.get_index() == i),
@@ -84,6 +92,12 @@ class LobbyScene(Scene):
                 "status": status,
                 "color": color
             })
+        new_snapshot = [
+            (status["name"], status["status"], status["color"])
+            for status in self.status_list
+        ]
+        if previous_snapshot != new_snapshot:
+            self._player_status_cache.clear()
         self.required_humans = sum(1 for s in self.status_list
                                    if s["status"] != "AI")
         self.connected_humans = sum(1 for s in self.status_list
@@ -154,9 +168,19 @@ class LobbyScene(Scene):
                 name = status["name"]
                 stat = status["status"]
                 color = status["color"]
-                name_surf = label_font.render(
-                    f"{name}", True, theme.THEME_TEXT_COLOR_LIGHT)
-                status_surf = label_font.render(stat, True, color)
+                cache_key = (name, stat, color, id(label_font))
+                if cache_key not in self._player_status_cache:
+                    name_surf = label_font.render(
+                        f"{name}", True, theme.THEME_TEXT_COLOR_LIGHT)
+                    status_surf = label_font.render(stat, True, color)
+                    self._player_status_cache[cache_key] = (
+                        name_surf,
+                        status_surf,
+                    )
+                else:
+                    name_surf, status_surf = self._player_status_cache[
+                        cache_key
+                    ]
                 spacing = 32
                 total_width = name_surf.get_width(
                 ) + spacing + status_surf.get_width()
@@ -195,6 +219,7 @@ class LobbyScene(Scene):
         self._cached_title_text = None
         self._wait_text_surface = None
         self._cached_wait_text = None
+        self._player_status_cache.clear()
         self.start_button.set_font(self.button_font)
         self.start_button.apply_theme()
         self.toast_manager.apply_theme()
