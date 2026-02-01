@@ -1277,9 +1277,9 @@ class GameScene(Scene):
 
         self.toast_manager.draw(self.screen)
 
-    def refresh_theme(self) -> None:
+    def refresh_theme(self, theme_name: str | None = None) -> None:
         """Refresh fonts and component styling after theme changes."""
-        super().refresh_theme()
+        super().refresh_theme(theme_name)
         self.font = theme.get_font("body", theme.THEME_FONT_SIZE_BODY)
         self.ai_thinking_progress_bar.set_font(self.font)
         self.ai_thinking_progress_bar.apply_theme()

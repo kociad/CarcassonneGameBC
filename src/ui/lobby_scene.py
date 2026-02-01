@@ -184,9 +184,9 @@ class LobbyScene(Scene):
             self.game_log.draw(self.screen)
         self._draw_scene_header(self._title_surface)
 
-    def refresh_theme(self) -> None:
+    def refresh_theme(self, theme_name: str | None = None) -> None:
         """Refresh fonts and component styling after theme changes."""
-        super().refresh_theme()
+        super().refresh_theme(theme_name)
         self.font = theme.get_font("title", theme.THEME_FONT_SIZE_SCENE_TITLE)
         self.button_font = theme.get_font(
             "button", theme.THEME_FONT_SIZE_BUTTON

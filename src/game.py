@@ -223,11 +223,38 @@ class Game:
         elif not new_value:
             self._theme_debug_overlay = None
 
-    def _refresh_theme(self) -> None:
-        if self._current_scene:
-            self._current_scene.refresh_theme()
-        if self._game_log:
+    def _refresh_theme(self, theme_name: str | None = None) -> None:
+        if self._current_scene and self._should_refresh_scene(theme_name):
+            self._current_scene.refresh_theme(theme_name)
+        if self._game_log and self._should_refresh_game_log(theme_name):
             self._game_log.refresh_theme()
+
+    def _should_refresh_scene(self, theme_name: str | None) -> bool:
+        if theme_name is None or not self._current_scene:
+            return True
+        scene_specific_prefixes: dict[type[Scene], tuple[str, ...]] = {
+            MainMenuScene: ("THEME_MAIN_MENU_", "THEME_MENU_"),
+            SettingsScene: ("THEME_SETTINGS_",),
+            GamePrepareScene: ("THEME_PREPARE_",),
+            LobbyScene: ("THEME_LOBBY_",),
+            HelpScene: ("THEME_HELP_",),
+            GameScene: ("THEME_GAME_", "THEME_GAME_LOG_"),
+        }
+        for scene_type, prefixes in scene_specific_prefixes.items():
+            if theme_name.startswith(prefixes):
+                return isinstance(self._current_scene, scene_type)
+        return True
+
+    @staticmethod
+    def _should_refresh_game_log(theme_name: str | None) -> bool:
+        if theme_name is None:
+            return True
+        return theme_name.startswith(
+            ("THEME_GAME_LOG_", "THEME_FONT_")
+        ) or theme_name in (
+            "THEME_TEXT_COLOR_LIGHT",
+            "THEME_TRANSPARENT_COLOR",
+        )
 
     def _start_game(self, player_names: list[str]) -> None:
         """
