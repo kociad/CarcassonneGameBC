@@ -446,6 +446,25 @@ def get_font(role: str, size: int) -> pygame.font.Font:
     return _FONT_CACHE[cache_key]
 
 
+def preload_theme_fonts() -> None:
+    """Preload common theme fonts to avoid first-frame stalls."""
+    font_pairs = (
+        ("title", THEME_FONT_SIZE_MAIN_MENU_TITLE),
+        ("title", THEME_FONT_SIZE_SCENE_TITLE),
+        ("section_header", THEME_FONT_SIZE_SECTION_HEADER),
+        ("button", THEME_FONT_SIZE_BUTTON),
+        ("label", THEME_FONT_SIZE_BUTTON),
+        ("body", THEME_FONT_SIZE_BODY),
+        ("title", THEME_FONT_SIZE_BODY),
+        ("title", THEME_FONT_SIZE_GAME_OVER_TITLE),
+        ("body", THEME_FONT_SIZE_GAME_OVER_ROW),
+        ("body", THEME_FONT_SIZE_GAME_LOG_BODY),
+        ("body", THEME_FONT_SIZE_HELP_CONTROLS),
+    )
+    for role, size in font_pairs:
+        get_font(role, size)
+
+
 def clear_font_cache() -> None:
     """Clear cached pygame fonts so updated sizes take effect."""
     _FONT_CACHE.clear()
