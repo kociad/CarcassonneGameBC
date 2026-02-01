@@ -255,8 +255,14 @@ THEME_SCENE_HEADER_BACKGROUND_SCALE_MODE: str = "fill"
 THEME_SCENE_HEADER_BACKGROUND_TINT_COLOR: ColorA | None = None
 # Optional blur radius/strength for the scene header background; 0 disables blur.
 THEME_SCENE_HEADER_BLUR_RADIUS: float = 5.0
+# Downscale factor for multi-pass background blur; lower values blur more but
+# introduce blockiness, while higher values preserve more detail (0.1-1.0).
+THEME_BACKGROUND_BLUR_DOWNSCALE_FACTOR: float = 0.35
 # Optional blur radius/strength for UI alpha primitives; 0 disables blur.
 THEME_UI_ALPHA_BLUR_RADIUS: float = 5.0
+# Downscale factor for UI alpha blur; lower values blur more but introduce
+# blockiness, while higher values preserve more detail (0.1-1.0).
+THEME_UI_ALPHA_BLUR_DOWNSCALE_FACTOR: float = 0.35
 # Scene header text color; RGB tuple (0-255 per channel).
 THEME_SCENE_HEADER_TEXT_COLOR: Color = (212, 175, 55)
 # Primary light text for titles and labels; RGB tuple (0-255 per channel).

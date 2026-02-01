@@ -141,6 +141,7 @@ class Scene:
             "_BACKGROUND_SCALE_MODE",
             "_BACKGROUND_TINT_COLOR",
             "_BACKGROUND_BLUR_RADIUS",
+            "_BACKGROUND_BLUR_DOWNSCALE_FACTOR",
         )
         return theme_name.endswith(background_suffixes)
 
@@ -184,7 +185,13 @@ class Scene:
             return None
 
         image_path = os.path.join(settings.BACKGROUND_IMAGE_PATH, image_name)
-        cache_key = (image_path, target_size, scale_mode, blur_radius)
+        cache_key = (
+            image_path,
+            target_size,
+            scale_mode,
+            blur_radius,
+            theme.THEME_BACKGROUND_BLUR_DOWNSCALE_FACTOR,
+        )
         cached = self._background_cache.get(cache_key)
         if cached is not None:
             return cached
@@ -242,9 +249,25 @@ class Scene:
 
         width, height = image.get_size()
         strength = max(1.0, float(blur_radius))
-        divisor = max(1, int(strength * 2))
-        downscaled = pygame.transform.smoothscale(
-            image,
-            (max(1, width // divisor), max(1, height // divisor)),
+        quality_factor = max(
+            0.1,
+            min(1.0, float(theme.THEME_BACKGROUND_BLUR_DOWNSCALE_FACTOR)),
         )
-        return pygame.transform.smoothscale(downscaled, (width, height))
+        target_scale = max(1.0 / (strength * 2.0), quality_factor)
+        passes = max(1, int(round(strength)))
+        surface = image
+        for step in range(1, passes + 1):
+            scale = 1.0 - (1.0 - target_scale) * (step / passes)
+            target_size = (
+                max(1, int(width * scale)),
+                max(1, int(height * scale)),
+            )
+            surface = pygame.transform.smoothscale(surface, target_size)
+        for step in range(passes - 1, -1, -1):
+            scale = 1.0 - (1.0 - target_scale) * (step / passes)
+            target_size = (
+                max(1, int(width * scale)),
+                max(1, int(height * scale)),
+            )
+            surface = pygame.transform.smoothscale(surface, target_size)
+        return surface
