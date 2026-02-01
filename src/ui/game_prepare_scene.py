@@ -318,15 +318,16 @@ class GamePrepareScene(Scene):
 
     def _layout_controls(self) -> None:
         padding = theme.THEME_LAYOUT_VERTICAL_GAP
+        section_gap = theme.THEME_LAYOUT_SECTION_GAP
         x_center = self.screen.get_width() // 2 - 100
         button_center_x = self.screen.get_width() // 2
         self.header_height = self._get_scene_header_height(
             self.font.get_height()
         )
-        current_y = self.header_height + theme.THEME_LAYOUT_VERTICAL_GAP
+        current_y = self.header_height + section_gap
 
         self.player_label_y = current_y
-        current_y += self.section_header_font.get_height() + padding
+        current_y += self.section_header_font.get_height() + section_gap
 
         self.player_list_y = current_y
         current_y = self._layout_player_fields(current_y, padding, x_center)
@@ -348,7 +349,7 @@ class GamePrepareScene(Scene):
             self.screen.get_width() // 2 + 250, players_center_y)
 
         self.game_label_y = current_y
-        current_y += self.section_header_font.get_height() + padding
+        current_y += self.section_header_font.get_height() + section_gap
 
         dropdown_width, dropdown_height = self.ai_difficulty_dropdown.rect.size
         self.ai_difficulty_dropdown.rect = pygame.Rect(
@@ -356,7 +357,7 @@ class GamePrepareScene(Scene):
         current_y += dropdown_height + padding
 
         self.card_set_label_y = current_y
-        current_y += self.section_header_font.get_height() + padding
+        current_y += self.section_header_font.get_height() + section_gap
 
         self.card_set_section_y = current_y
         for _, checkbox in self.card_set_checkboxes:
@@ -366,7 +367,7 @@ class GamePrepareScene(Scene):
             current_y += checkbox_height + padding
 
         self.network_label_y = current_y
-        current_y += self.section_header_font.get_height() + padding
+        current_y += self.section_header_font.get_height() + section_gap
 
         network_width, network_height = self.network_mode_dropdown.rect.size
         self.network_mode_dropdown.rect = pygame.Rect(
@@ -739,7 +740,7 @@ class GamePrepareScene(Scene):
 
         self.max_scroll = max(
             self.screen.get_height(),
-            self.back_button.rect.bottom + theme.THEME_LAYOUT_VERTICAL_GAP * 2,
+            self.back_button.rect.bottom + theme.THEME_LAYOUT_SECTION_GAP * 2,
         )
 
         self.toast_manager.draw(self.screen)

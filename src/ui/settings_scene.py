@@ -41,12 +41,13 @@ class SettingsScene(Scene):
         self.header_height = self._get_scene_header_height(
             self.font.get_height()
         )
-        current_y = self.header_height + theme.THEME_LAYOUT_VERTICAL_GAP
+        section_gap = theme.THEME_LAYOUT_SECTION_GAP
+        current_y = self.header_height + section_gap
 
         # ===== DISPLAY SETTINGS =====
         self.display_label_y = current_y
         current_y += (self.section_header_font.get_height()
-                      + theme.THEME_LAYOUT_VERTICAL_GAP)
+                      + section_gap)
 
         resolution_options = [
             "800x600", "1024x768", "1280x720", "1366x768", "1600x900",
@@ -86,7 +87,7 @@ class SettingsScene(Scene):
         # ===== GAME SETTINGS =====
         self.game_label_y = current_y
         current_y += (self.section_header_font.get_height()
-                      + theme.THEME_LAYOUT_VERTICAL_GAP)
+                      + section_gap)
 
         self.valid_placement_checkbox = Checkbox(
             rect=(x_center, current_y, 20, 20),
@@ -98,7 +99,7 @@ class SettingsScene(Scene):
         # ===== DEBUG SETTINGS =====
         self.debug_label_y = current_y
         current_y += (self.section_header_font.get_height()
-                      + theme.THEME_LAYOUT_VERTICAL_GAP)
+                      + section_gap)
 
         self.log_to_console_checkbox = Checkbox(
             rect=(x_center, current_y, 20, 20),
@@ -192,7 +193,7 @@ class SettingsScene(Scene):
         # ===== AI SETTINGS =====
         self.ai_label_y = current_y
         current_y += (self.section_header_font.get_height()
-                      + theme.THEME_LAYOUT_VERTICAL_GAP)
+                      + section_gap)
 
         self.ai_simulation_checkbox = Checkbox(
             rect=(x_center, current_y, 20, 20),
@@ -287,10 +288,11 @@ class SettingsScene(Scene):
         self.header_height = self._get_scene_header_height(
             self.font.get_height()
         )
-        current_y = self.header_height + theme.THEME_LAYOUT_VERTICAL_GAP
+        section_gap = theme.THEME_LAYOUT_SECTION_GAP
+        current_y = self.header_height + section_gap
 
         self.display_label_y = current_y
-        current_y += self.section_header_font.get_height() + padding
+        current_y += self.section_header_font.get_height() + section_gap
 
         current_y = self._set_component_rect(
             self.resolution_dropdown, x_center, current_y, padding)
@@ -299,14 +301,14 @@ class SettingsScene(Scene):
             self.fullscreen_checkbox, x_center, current_y, padding)
 
         self.game_label_y = current_y
-        current_y += self.section_header_font.get_height() + padding
+        current_y += self.section_header_font.get_height() + section_gap
 
         current_y = self._set_component_rect(
             self.valid_placement_checkbox, x_center, current_y, padding)
 
         if debug_enabled:
             self.debug_label_y = current_y
-            current_y += self.section_header_font.get_height() + padding
+            current_y += self.section_header_font.get_height() + section_gap
 
             current_y = self._set_component_rect(
                 self.log_to_console_checkbox, x_center, current_y, padding)
@@ -326,7 +328,7 @@ class SettingsScene(Scene):
                 self.game_log_max_entries_field, x_center, current_y, padding)
 
             self.ai_label_y = current_y
-            current_y += self.section_header_font.get_height() + padding
+            current_y += self.section_header_font.get_height() + section_gap
 
             current_y = self._set_component_rect(
                 self.ai_simulation_checkbox, x_center, current_y, padding)
@@ -775,7 +777,7 @@ class SettingsScene(Scene):
 
         self.max_scroll = max(
             self.screen.get_height(),
-            self.back_button.rect.bottom + theme.THEME_LAYOUT_VERTICAL_GAP * 2,
+            self.back_button.rect.bottom + theme.THEME_LAYOUT_SECTION_GAP * 2,
         )
 
         self.toast_manager.draw(self.screen)
