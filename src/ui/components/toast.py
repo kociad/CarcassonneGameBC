@@ -62,8 +62,7 @@ class Toast:
         bg_color = self.bg_color if len(self.bg_color) == 4 else (*self.bg_color, 255)
         pygame.draw.rect(self._bg_surface,
                          bg_color,
-                         self._bg_surface.get_rect(),
-                         border_radius=8)
+                         self._bg_surface.get_rect())
         self._bg_rect = bg_rect
         self._cached_message = self.message
         self._cached_font_id = id(self.font)
