@@ -131,7 +131,9 @@ class LobbyScene(Scene):
         )
         title_text = self.font.render("Lobby", True,
                                       theme.THEME_TEXT_COLOR_LIGHT)
-        header_height = self._draw_scene_header(title_text)
+        header_height = self._get_scene_header_height(
+            title_text.get_height()
+        )
         offset_y = self.scroll_offset
         label_font = theme.get_font("label", theme.THEME_FONT_SIZE_BUTTON)
         content_start_y = header_height + theme.THEME_LAYOUT_VERTICAL_GAP
@@ -167,6 +169,7 @@ class LobbyScene(Scene):
         self.toast_manager.draw(self.screen)
         if self.game_log:
             self.game_log.draw(self.screen)
+        self._draw_scene_header(title_text)
 
     def refresh_theme(self) -> None:
         """Refresh fonts and component styling after theme changes."""

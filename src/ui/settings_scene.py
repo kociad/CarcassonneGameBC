@@ -581,7 +581,6 @@ class SettingsScene(Scene):
 
         title_text = self.font.render("Settings", True,
                                       theme.THEME_TEXT_COLOR_LIGHT)
-        self._draw_scene_header(title_text)
 
         # Draw section headers
         display_label = self.dropdown_font.render(
@@ -784,6 +783,7 @@ class SettingsScene(Scene):
             y_offset=offset_y,
             expanded_only=True,
         )
+        self._draw_scene_header(title_text)
 
     def refresh_theme(self) -> None:
         """Refresh fonts and component styling after theme changes."""

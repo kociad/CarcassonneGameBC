@@ -129,7 +129,6 @@ class HelpScene(Scene):
         )
         title_text = self.font.render("How to Play", True,
                                       theme.THEME_TEXT_COLOR_LIGHT)
-        self._draw_scene_header(title_text)
         offset_y = self.scroll_offset
         current_y = self.controls_start_y + offset_y
         for line in self.controls:
@@ -149,6 +148,7 @@ class HelpScene(Scene):
             current_y += text_rect.height + theme.THEME_LAYOUT_VERTICAL_GAP
         self.rules_button.draw(self.screen, y_offset=offset_y)
         self.back_button.draw(self.screen, y_offset=offset_y)
+        self._draw_scene_header(title_text)
 
     def refresh_theme(self) -> None:
         """Refresh fonts and component styling after theme changes."""
