@@ -42,6 +42,39 @@ class Toast:
         self.bottom_start_time = None
         self.base_y = 50
         self.manager = None
+        self._text_surface = None
+        self._text_rect = None
+        self._bg_surface = None
+        self._bg_rect = None
+        self._cached_message = None
+        self._cached_font_id = None
+        self._cached_colors = None
+        self._rebuild_cache()
+
+    def _rebuild_cache(self) -> None:
+        text_rgb = self.text_color[:3] if len(self.text_color) == 4 else self.text_color
+        self._text_surface = self.font.render(self.message, True, text_rgb)
+        self._text_rect = self._text_surface.get_rect()
+
+        bg_rect = self._text_rect.inflate(20, 10)
+        self._bg_surface = pygame.Surface((bg_rect.width, bg_rect.height),
+                                          pygame.SRCALPHA)
+        bg_color = self.bg_color if len(self.bg_color) == 4 else (*self.bg_color, 255)
+        pygame.draw.rect(self._bg_surface,
+                         bg_color,
+                         self._bg_surface.get_rect(),
+                         border_radius=8)
+        self._bg_rect = bg_rect
+        self._cached_message = self.message
+        self._cached_font_id = id(self.font)
+        self._cached_colors = (self.text_color, self.bg_color)
+
+    def _ensure_cache(self) -> None:
+        if (self._text_surface is None
+                or self._cached_message != self.message
+                or self._cached_font_id != id(self.font)
+                or self._cached_colors != (self.text_color, self.bg_color)):
+            self._rebuild_cache()
 
     def start(self, target_y: int = 0) -> None:
         """
@@ -195,12 +228,11 @@ class Toast:
 
         self.update()
 
-        text_rgb = self.text_color[:3] if len(self.text_color) == 4 else self.text_color
-        text_surf = self.font.render(self.message, True, text_rgb)
-        text_rect = text_surf.get_rect(center=(screen.get_width() // 2,
-                                               self.current_y))
-
-        bg_rect = text_rect.inflate(20, 10)
+        self._ensure_cache()
+        text_rect = self._text_rect.copy()
+        text_rect.center = (screen.get_width() // 2, self.current_y)
+        bg_rect = self._bg_rect.copy()
+        bg_rect.center = text_rect.center
 
         alpha = 255
         if self.is_sliding or (self.sliding_out and self.slide_out_start_time):
@@ -213,24 +245,18 @@ class Toast:
                 progress = min(elapsed / self.animation_duration, 1.0)
                 alpha = int(255 * progress)
 
-        bg_surf = pygame.Surface((bg_rect.width, bg_rect.height),
-                                 pygame.SRCALPHA)
-        bg_color = self._apply_alpha(self.bg_color, alpha)
-        pygame.draw.rect(bg_surf,
-                         bg_color,
-                         bg_surf.get_rect(),
-                         border_radius=8)
-        screen.blit(bg_surf, bg_rect.topleft)
+        base_bg_alpha = self.bg_color[3] if len(self.bg_color) == 4 else 255
+        self._bg_surface.set_alpha(int(base_bg_alpha * (alpha / 255)))
+        screen.blit(self._bg_surface, bg_rect.topleft)
 
-        text_color = self._apply_alpha(self.text_color, alpha)
-        if text_color[3] < 255:
-            text_surf.set_alpha(text_color[3])
-
-        screen.blit(text_surf, text_rect)
+        base_text_alpha = self.text_color[3] if len(self.text_color) == 4 else 255
+        self._text_surface.set_alpha(int(base_text_alpha * (alpha / 255)))
+        screen.blit(self._text_surface, text_rect)
 
     def set_font(self, font: pygame.font.Font) -> None:
         """Update the font used by the toast."""
         self.font = font
+        self._rebuild_cache()
 
     def apply_theme(self) -> None:
         """Refresh colors from the current theme."""
