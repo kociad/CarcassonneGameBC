@@ -195,12 +195,14 @@ class HelpScene(Scene):
                 exit()
             if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                 self.switch_scene(GameState.MENU)
-            if event.type in (pygame.MOUSEMOTION, pygame.MOUSEBUTTONUP):
+            if event.type in (pygame.MOUSEMOTION,
+                              pygame.MOUSEBUTTONDOWN,
+                              pygame.MOUSEBUTTONUP):
                 self.back_button.handle_event(event,
                                               y_offset=self.scroll_offset)
                 self.rules_button.handle_event(event,
                                                y_offset=self.scroll_offset)
-            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
                 self.back_button.handle_event(event,
                                               y_offset=self.scroll_offset)
                 self.rules_button.handle_event(event,
