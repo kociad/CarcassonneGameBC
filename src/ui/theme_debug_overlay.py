@@ -408,7 +408,8 @@ class ThemeDebugOverlay:
                 "THEME_BACKGROUND_BLUR_DOWNSCALE_FACTOR",
             ],
         )
-        add_section_by_prefix("Buttons", ["THEME_BUTTON_"])
+        button_prefixes = ["THEME_BUTTON_"]
+        add_section_by_prefix("Buttons", button_prefixes)
         add_section_by_prefix("Inputs", ["THEME_INPUT_"])
         add_section_by_prefix("Checkboxes", ["THEME_CHECKBOX_"])
         add_section_by_prefix("Dropdowns", ["THEME_DROPDOWN_"])

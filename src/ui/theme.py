@@ -82,6 +82,9 @@ THEME_BUTTON_TEXT_COLOR: Color = (220, 220, 220)
 # Hover text
 # Text color for hovered buttons; RGB tuple (0-255 per channel).
 THEME_BUTTON_HOVER_TEXT_COLOR: Color = (223, 185, 84)
+# Pressed text
+# Text color for pressed buttons; RGB tuple (0-255 per channel).
+THEME_BUTTON_PRESSED_TEXT_COLOR: Color = (245, 220, 150)
 # Disabled state
 # Text color for disabled buttons; RGB tuple (0-255 per channel).
 THEME_BUTTON_TEXT_DISABLED_COLOR: Color = (130, 130, 130)

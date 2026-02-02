@@ -41,6 +41,7 @@ class Button:
         self.pressed_bg_color = pressed_bg_color
         self.text_color = theme.THEME_BUTTON_TEXT_COLOR
         self.hover_text_color = theme.THEME_BUTTON_HOVER_TEXT_COLOR
+        self.pressed_text_color = theme.THEME_BUTTON_PRESSED_TEXT_COLOR
         self.horizontal_padding = theme.THEME_BUTTON_HORIZONTAL_PADDING
         self.vertical_padding = theme.THEME_BUTTON_VERTICAL_PADDING
         self.disabled = disabled
@@ -54,7 +55,9 @@ class Button:
     def _get_text_color(self) -> tuple[int, ...]:
         if self.disabled:
             return theme.THEME_BUTTON_TEXT_DISABLED_COLOR
-        if self.is_hovered and not self.is_pressed:
+        if self.is_pressed:
+            return self.pressed_text_color
+        if self.is_hovered:
             return self.hover_text_color
         return self.text_color
 
@@ -86,6 +89,7 @@ class Button:
         self.pressed_bg_color = theme.THEME_BUTTON_PRESSED_BG_COLOR
         self.text_color = theme.THEME_BUTTON_TEXT_COLOR
         self.hover_text_color = theme.THEME_BUTTON_HOVER_TEXT_COLOR
+        self.pressed_text_color = theme.THEME_BUTTON_PRESSED_TEXT_COLOR
         self.horizontal_padding = theme.THEME_BUTTON_HORIZONTAL_PADDING
         self.vertical_padding = theme.THEME_BUTTON_VERTICAL_PADDING
         self._update_render()
@@ -136,12 +140,14 @@ class Button:
             self.is_pressed = self._is_clicked(event.pos, y_offset=y_offset)
             if was_pressed != self.is_pressed:
                 self._update_render()
-            if self.is_pressed and self.callback:
-                self.callback()
         elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
             if self.is_pressed:
+                should_trigger = self._is_clicked(event.pos,
+                                                  y_offset=y_offset)
                 self.is_pressed = False
                 self._update_render()
+                if should_trigger and self.callback:
+                    self.callback()
 
     def _is_clicked(self, pos: tuple[int, int], y_offset: int = 0) -> bool:
         """
