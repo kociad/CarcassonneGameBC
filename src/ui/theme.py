@@ -75,7 +75,7 @@ THEME_BUTTON_BG_COLOR: Color = (42, 42, 42, 0)
 THEME_BUTTON_HOVER_BG_COLOR: Color = (42, 42, 42, 0)
 # Active/pressed state
 # Background for pressed button state; RGB tuple (0-255 per channel).
-THEME_BUTTON_PRESSED_BG_COLOR: Color = (22, 22, 22, 180)
+THEME_BUTTON_PRESSED_BG_COLOR: Color = (22, 22, 22, 0)
 # Default text
 # Text color for enabled buttons; RGB tuple (0-255 per channel).
 THEME_BUTTON_TEXT_COLOR: Color = (220, 220, 220)
@@ -84,7 +84,7 @@ THEME_BUTTON_TEXT_COLOR: Color = (220, 220, 220)
 THEME_BUTTON_HOVER_TEXT_COLOR: Color = (223, 185, 84)
 # Pressed text
 # Text color for pressed buttons; RGB tuple (0-255 per channel).
-THEME_BUTTON_PRESSED_TEXT_COLOR: Color = (245, 220, 150)
+THEME_BUTTON_PRESSED_TEXT_COLOR: Color = (193, 155, 34)
 # Disabled state
 # Text color for disabled buttons; RGB tuple (0-255 per channel).
 THEME_BUTTON_TEXT_DISABLED_COLOR: Color = (130, 130, 130)
