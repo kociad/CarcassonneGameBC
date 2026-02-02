@@ -140,12 +140,13 @@ class Button:
             self.is_pressed = self._is_clicked(event.pos, y_offset=y_offset)
             if was_pressed != self.is_pressed:
                 self._update_render()
-            if self.is_pressed and self.callback:
-                self.callback()
         elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
             if self.is_pressed:
+                was_clicked = self._is_clicked(event.pos, y_offset=y_offset)
                 self.is_pressed = False
                 self._update_render()
+                if was_clicked and self.callback:
+                    self.callback()
 
     def _is_clicked(self, pos: tuple[int, int], y_offset: int = 0) -> bool:
         """
