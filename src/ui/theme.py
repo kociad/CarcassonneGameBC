@@ -69,24 +69,24 @@ THEME_BUTTON_HORIZONTAL_PADDING: int = 12
 THEME_BUTTON_VERTICAL_PADDING: int = 6
 # Default state
 # Background for default button state; RGB tuple (0-255 per channel).
-THEME_BUTTON_BG_COLOR: Color = (42, 42, 42, 100)
+THEME_BUTTON_BG_COLOR: Color = (42, 42, 42, 0)
 # Hover state
 # Background for hovered button state; RGB tuple (0-255 per channel).
-THEME_BUTTON_HOVER_BG_COLOR: Color = (32, 32, 32, 180)
+THEME_BUTTON_HOVER_BG_COLOR: Color = (42, 42, 42, 0)
 # Active/pressed state
 # Background for pressed button state; RGB tuple (0-255 per channel).
 THEME_BUTTON_PRESSED_BG_COLOR: Color = (22, 22, 22, 180)
 # Default text
 # Text color for enabled buttons; RGB tuple (0-255 per channel).
-THEME_BUTTON_TEXT_COLOR: Color = (190, 190, 190)
+THEME_BUTTON_TEXT_COLOR: Color = (220, 220, 220)
 # Hover text
 # Text color for hovered buttons; RGB tuple (0-255 per channel).
-THEME_BUTTON_HOVER_TEXT_COLOR: Color = (225, 225, 225)
+THEME_BUTTON_HOVER_TEXT_COLOR: Color = (223, 185, 84)
 # Disabled state
 # Text color for disabled buttons; RGB tuple (0-255 per channel).
 THEME_BUTTON_TEXT_DISABLED_COLOR: Color = (130, 130, 130)
 # Background for disabled buttons; RGB tuple (0-255 per channel).
-THEME_BUTTON_DISABLED_BG_COLOR: Color = (110, 110, 110, 100)
+THEME_BUTTON_DISABLED_BG_COLOR: Color = (110, 110, 110, 0)
 
 # Checkbox colors
 # Default state
@@ -264,11 +264,11 @@ THEME_UI_ALPHA_BLUR_RADIUS: float = 5.0
 # blockiness, while higher values preserve more detail (0.1-1.0).
 THEME_UI_ALPHA_BLUR_DOWNSCALE_FACTOR: float = 0.35
 # Scene header text color; RGB tuple (0-255 per channel).
-THEME_SCENE_HEADER_TEXT_COLOR: Color = (212, 175, 55)
+THEME_SCENE_HEADER_TEXT_COLOR: Color = (223, 185, 84)
 # Primary light text for titles and labels; RGB tuple (0-255 per channel).
 THEME_TEXT_COLOR_LIGHT: Color = (242, 242, 242)
 # Section header highlight color (gold); RGB tuple (0-255 per channel).
-THEME_SECTION_HEADER_COLOR: Color = (212, 175, 55)
+THEME_SECTION_HEADER_COLOR: Color = (212, 185, 84)
 # Section divider color for help sections; RGBA tuple (0-255 per channel, alpha).
 THEME_SECTION_DIVIDER_COLOR: ColorA = (255, 255, 255, 40)
 # Subsection highlight color (light blue); RGB tuple (0-255 per channel).
