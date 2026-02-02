@@ -1253,7 +1253,7 @@ class ThemeDebugOverlay:
                     continue
             if not self.active:
                 self.toggle_button.handle_event(event)
-                if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
                     if self.toggle_button._is_clicked(event.pos):
                         continue
                 remaining.append(event)
@@ -1277,7 +1277,7 @@ class ThemeDebugOverlay:
                 if any(component.expanded for component in control.components
                        if isinstance(component, Dropdown))
             ]
-            if (event.type == pygame.MOUSEBUTTONDOWN and event.button == 1
+            if (event.type == pygame.MOUSEBUTTONUP and event.button == 1
                     and expanded_dropdowns):
                 for control in expanded_dropdowns:
                     control.handle_event(event, self.scroll_offset)
