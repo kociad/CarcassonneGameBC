@@ -92,28 +92,28 @@ THEME_BUTTON_DISABLED_BG_COLOR: Color = (110, 110, 110, 0)
 # Checkbox colors
 # Default state
 # Checkbox fill when unchecked; RGB tuple (0-255 per channel).
-THEME_CHECKBOX_BOX_COLOR: Color = (255, 255, 255, 255)
+THEME_CHECKBOX_BOX_COLOR: Color = (250, 250, 250, 255)
 # Active/checked state
 # Checkbox checkmark fill; RGB tuple (0-255 per channel).
-THEME_CHECKBOX_CHECK_COLOR: Color = (0, 200, 0, 255)
+THEME_CHECKBOX_CHECK_COLOR: Color = (13, 65, 126, 255)
 # Default border
 # Checkbox border color; RGB tuple (0-255 per channel).
-THEME_CHECKBOX_BORDER_COLOR: Color = (255, 255, 255, 255)
+THEME_CHECKBOX_BORDER_COLOR: Color = (30, 30, 30, 255)
 # Hover state
 # Checkbox hover fill when unchecked; RGB tuple (0-255 per channel).
-THEME_CHECKBOX_HOVER_BOX_COLOR: Color = (235, 235, 235, 255)
+THEME_CHECKBOX_HOVER_BOX_COLOR: Color = (250, 250, 250, 100)
 # Disabled state
 # Checkbox color when disabled (border/check); RGB tuple (0-255 per channel).
-THEME_CHECKBOX_DISABLED_COLOR: Color = (100, 100, 100, 255)
+THEME_CHECKBOX_DISABLED_COLOR: Color = (150, 150, 150, 100)
 
 # Dropdown colors
 # Default state
 # Dropdown text color; RGB tuple (0-255 per channel).
 THEME_DROPDOWN_TEXT_COLOR: Color = (0, 0, 0)
 # Dropdown background color; RGB tuple (0-255 per channel).
-THEME_DROPDOWN_BG_COLOR: Color = (255, 255, 255, 255)
+THEME_DROPDOWN_BG_COLOR: Color = (250, 250, 250, 255)
 # Dropdown border color; RGB tuple (0-255 per channel).
-THEME_DROPDOWN_BORDER_COLOR: Color = (0, 0, 0, 255)
+THEME_DROPDOWN_BORDER_COLOR: Color = (30, 30, 30, 255)
 # Active/selected state
 # Dropdown selected option highlight; RGB tuple (0-255 per channel).
 THEME_DROPDOWN_HIGHLIGHT_COLOR: Color = (200, 200, 200, 255)
@@ -124,7 +124,7 @@ THEME_DROPDOWN_HOVER_BG_COLOR: Color = (235, 235, 235, 255)
 THEME_DROPDOWN_HOVER_OPTION_COLOR: Color = (230, 230, 230, 255)
 # Disabled state
 # Dropdown disabled text color; RGB tuple (0-255 per channel).
-THEME_DROPDOWN_DISABLED_TEXT_COLOR: Color = (150, 150, 150)
+THEME_DROPDOWN_DISABLED_TEXT_COLOR: Color = (60, 60, 60)
 
 # Input field colors
 # Default state
@@ -133,14 +133,14 @@ THEME_INPUT_TEXT_COLOR: Color = (0, 0, 0)
 # Input background color; RGB tuple (0-255 per channel).
 THEME_INPUT_BG_COLOR: Color = (255, 255, 255, 255)
 # Input border color; RGB tuple (0-255 per channel).
-THEME_INPUT_BORDER_COLOR: Color = (0, 0, 0, 255)
+THEME_INPUT_BORDER_COLOR: Color = (30, 30, 30, 255)
 # Disabled state
 # Input background when disabled; RGB tuple (0-255 per channel).
-THEME_INPUT_DISABLED_BG_COLOR: Color = (200, 200, 200, 255)
+THEME_INPUT_DISABLED_BG_COLOR: Color = (150, 150, 150, 255)
 # Input border when disabled; RGB tuple (0-255 per channel).
-THEME_INPUT_DISABLED_BORDER_COLOR: Color = (100, 100, 100, 255)
+THEME_INPUT_DISABLED_BORDER_COLOR: Color = (60, 60, 60, 255)
 # Input text when disabled; RGB tuple (0-255 per channel).
-THEME_INPUT_DISABLED_TEXT_COLOR: Color = (150, 150, 150)
+THEME_INPUT_DISABLED_TEXT_COLOR: Color = (80, 80, 80)
 # Placeholder
 # Placeholder text color for empty inputs; RGB tuple (0-255 per channel).
 THEME_INPUT_PLACEHOLDER_COLOR: Color = (150, 150, 150)
@@ -150,7 +150,7 @@ THEME_INPUT_PLACEHOLDER_COLOR: Color = (150, 150, 150)
 # Slider track background; RGB tuple (0-255 per channel).
 THEME_SLIDER_BG_COLOR: Color = (200, 200, 200, 255)
 # Slider filled track color; RGB tuple (0-255 per channel).
-THEME_SLIDER_FG_COLOR: Color = (100, 100, 255, 255)
+THEME_SLIDER_FG_COLOR: Color = (13, 65, 126, 255)
 # Slider handle fill color; RGB tuple (0-255 per channel).
 THEME_SLIDER_HANDLE_COLOR: Color = (255, 255, 255, 255)
 # Slider border color; RGB tuple (0-255 per channel).
@@ -160,13 +160,13 @@ THEME_SLIDER_BORDER_COLOR: Color = (0, 0, 0, 255)
 THEME_SLIDER_HANDLE_HOVER_COLOR: Color = (235, 235, 255, 255)
 # Active/drag state
 # Slider handle active fill; RGB tuple (0-255 per channel).
-THEME_SLIDER_HANDLE_ACTIVE_COLOR: Color = (180, 180, 255, 255)
+THEME_SLIDER_HANDLE_ACTIVE_COLOR: Color = (138, 173, 209, 255)
 # Hover state
 # Slider track hover fill; RGB tuple (0-255 per channel).
-THEME_SLIDER_TRACK_HOVER_COLOR: Color = (120, 120, 255, 255)
+THEME_SLIDER_TRACK_HOVER_COLOR: Color = (58, 111, 185, 255)
 # Active/drag state
 # Slider track active fill; RGB tuple (0-255 per channel).
-THEME_SLIDER_TRACK_ACTIVE_COLOR: Color = (80, 80, 230, 255)
+THEME_SLIDER_TRACK_ACTIVE_COLOR: Color = (7, 32, 60, 255)
 # Hover state
 # Slider border color when hovering handle; RGB tuple (0-255 per channel).
 THEME_SLIDER_HOVER_BORDER_COLOR: Color = (50, 50, 50, 255)
