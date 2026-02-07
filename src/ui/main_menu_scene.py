@@ -248,7 +248,7 @@ class MainMenuScene(Scene):
         self.how_to_play_button.draw(self.screen, y_offset=offset_y)
         self.max_scroll = max(
             self.screen.get_height(),
-            self.quit_button.rect.bottom + theme.THEME_LAYOUT_VERTICAL_GAP * 2,
+            self.quit_button.rect.bottom + theme.THEME_LAYOUT_VERTICAL_GAP,
         )
         if self.show_confirm_dialog:
             self.draw_confirm_dialog()
@@ -265,12 +265,12 @@ class MainMenuScene(Scene):
             self.quit_button,
         ]
         self.header_height = self._get_main_menu_header_height(
-            self.font.get_height()
+            self.screen.get_height()
         )
         total_height = sum(button.rect.height for button in buttons)
         total_height += padding * (len(buttons) - 1)
-        available_height = self.screen.get_height() - self.header_height - padding
-        current_y = self.header_height + padding + max(
+        available_height = self.screen.get_height() - self.header_height
+        current_y = self.header_height + max(
             0, (available_height - total_height) // 2
         )
         for button in buttons:
@@ -280,16 +280,14 @@ class MainMenuScene(Scene):
             button.rect.y = current_y
             current_y += height + padding
 
-    def _get_main_menu_header_height(self, title_height: int) -> int:
-        """Return the height of the fixed main menu header."""
-        if theme.THEME_MAIN_MENU_HEADER_HEIGHT > 0:
-            return theme.THEME_MAIN_MENU_HEADER_HEIGHT
-        return title_height + 2 * theme.THEME_MAIN_MENU_HEADER_TOP_PADDING
+    def _get_main_menu_header_height(self, screen_height: int) -> int:
+        """Return the height of the top-third header region."""
+        return max(1, screen_height // 3)
 
     def _draw_main_menu_header(self, title_surface: pygame.Surface) -> int:
         """Draw the fixed main menu header across the top of the screen."""
         header_height = self._get_main_menu_header_height(
-            title_surface.get_height()
+            self.screen.get_height()
         )
         header_rect = pygame.Rect(
             0,
