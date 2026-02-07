@@ -27,8 +27,6 @@ THEME_FONT_SIZE_BUTTON: int = 28
 THEME_FONT_SIZE_GAME_OVER_ROW: int = 24
 # Standard UI body text size (dialogs, inputs, toast, game HUD); integer size 24-48.
 THEME_FONT_SIZE_BODY: int = 18
-# Help scene control text size; integer size 20-40.
-THEME_FONT_SIZE_HELP_CONTROLS: int = 24
 # Game log body text size; integer size 18-32.
 THEME_FONT_SIZE_GAME_LOG_BODY: int = 24
 
@@ -57,10 +55,6 @@ THEME_LAYOUT_LINE_GAP: int = 8
 THEME_SCENE_HEADER_TOP_PADDING: int = 12
 # Optional explicit scene header height override; 0 uses title height + padding.
 THEME_SCENE_HEADER_HEIGHT: int = 0
-# Main menu header padding above/below the title; integer size in pixels.
-THEME_MAIN_MENU_HEADER_TOP_PADDING: int = 16
-# Optional explicit main menu header height override; 0 uses title height + padding.
-THEME_MAIN_MENU_HEADER_HEIGHT: int = 0
 # Help content max width cap; integer size in pixels.
 THEME_HELP_MAX_WIDTH: int = 600
 # Padding above/below help section dividers; integer size in pixels.
@@ -345,8 +339,6 @@ THEME_LOBBY_STATUS_CONNECTED_COLOR: Color = (0, 200, 0)
 THEME_LOBBY_STATUS_WAITING_COLOR: Color = (200, 200, 0)
 
 # Game scene colors
-# Game board background; RGB tuple (0-255 per channel).
-THEME_GAME_BOARD_BG_COLOR: Color = (25, 25, 25, 255)
 # Valid placement highlight overlay; RGBA tuple (0-255 per channel, alpha 0-255).
 THEME_GAME_VALID_PLACEMENT_COLOR: ColorA = (255, 255, 0, 100)
 # Selected/hover outline color; RGB tuple (0-255 per channel).
@@ -461,7 +453,6 @@ def preload_theme_fonts() -> None:
         ("title", THEME_FONT_SIZE_GAME_OVER_TITLE),
         ("body", THEME_FONT_SIZE_GAME_OVER_ROW),
         ("body", THEME_FONT_SIZE_GAME_LOG_BODY),
-        ("body", THEME_FONT_SIZE_HELP_CONTROLS),
     )
     for role, size in font_pairs:
         get_font(role, size)

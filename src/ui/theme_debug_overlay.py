@@ -359,8 +359,6 @@ class ThemeDebugOverlay:
                 "THEME_LAYOUT_LINE_GAP",
                 "THEME_SCENE_HEADER_TOP_PADDING",
                 "THEME_SCENE_HEADER_HEIGHT",
-                "THEME_MAIN_MENU_HEADER_TOP_PADDING",
-                "THEME_MAIN_MENU_HEADER_HEIGHT",
                 "THEME_HELP_MAX_WIDTH",
                 "THEME_SECTION_DIVIDER_PADDING",
                 "THEME_SECTION_DIVIDER_COLOR",
