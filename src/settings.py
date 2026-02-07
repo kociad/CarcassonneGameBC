@@ -7,6 +7,7 @@ FIGURE_IMAGES_PATH = ASSETS_PATH + "meeples/"
 BACKGROUND_IMAGE_PATH = ASSETS_PATH + "backgrounds/"
 SOUND_PATH = ASSETS_PATH + "sounds/"
 ICONS_PATH = ASSETS_PATH + "icons/"
+LOGOS_PATH = ASSETS_PATH + "logos/"
 
 # Tile Settings
 TILE_SIZE = 110

@@ -276,7 +276,7 @@ THEME_MAIN_MENU_HEADER_BACKGROUND_SCALE_MODE: str = "fill"
 THEME_MAIN_MENU_HEADER_BACKGROUND_TINT_COLOR: ColorA | None = None
 # Optional blur radius/strength for the main menu header background; 0 disables blur.
 THEME_MAIN_MENU_HEADER_BLUR_RADIUS: float = 5.0
-# Main menu header logo image filename; relative to settings.BACKGROUND_IMAGE_PATH.
+# Main menu header logo image filename; relative to settings.LOGOS_PATH.
 THEME_MAIN_MENU_HEADER_LOGO_IMAGE: str | None = None
 # Main menu header logo scale mode; one of fill/fit/stretch.
 THEME_MAIN_MENU_HEADER_LOGO_SCALE_MODE: str = "fit"

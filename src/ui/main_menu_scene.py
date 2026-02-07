@@ -1,8 +1,10 @@
+import os
 import pygame
 import webbrowser
 from ui.scene import Scene
 from ui.components.button import Button
 from game_state import GameState
+import settings
 from utils.settings_manager import settings_manager
 from ui import theme
 import logging
@@ -290,12 +292,26 @@ class MainMenuScene(Scene):
         logo_name = theme.THEME_MAIN_MENU_HEADER_LOGO_IMAGE
         if not logo_name:
             return None
-        return self._get_background_surface(
-            image_name=logo_name,
-            target_size=header_rect.size,
-            scale_mode=theme.THEME_MAIN_MENU_HEADER_LOGO_SCALE_MODE,
-            blur_radius=0,
+        logo_path = os.path.join(settings.LOGOS_PATH, logo_name)
+        cache_key = (
+            logo_path,
+            header_rect.size,
+            theme.THEME_MAIN_MENU_HEADER_LOGO_SCALE_MODE,
         )
+        cached = self._background_cache.get(cache_key)
+        if cached is not None:
+            return cached
+        try:
+            image = pygame.image.load(logo_path).convert_alpha()
+        except (pygame.error, FileNotFoundError):
+            return None
+        scaled = self._scale_background_image(
+            image,
+            header_rect.size,
+            theme.THEME_MAIN_MENU_HEADER_LOGO_SCALE_MODE,
+        )
+        self._background_cache[cache_key] = scaled
+        return scaled
 
     def _draw_main_menu_header(self, title_surface: pygame.Surface) -> int:
         """Draw the fixed main menu header across the top of the screen."""
