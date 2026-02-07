@@ -272,9 +272,7 @@ class MainMenuScene(Scene):
         total_height = sum(button.rect.height for button in buttons)
         total_height += padding * (len(buttons) - 1)
         available_height = self.screen.get_height() - self.header_height
-        current_y = self.header_height + max(
-            0, (available_height - total_height) // 2
-        )
+        current_y = self.header_height + padding
         for button in buttons:
             width, height = button.rect.size
             button.rect = pygame.Rect(0, 0, width, height)
