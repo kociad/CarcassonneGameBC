@@ -299,7 +299,11 @@ class ThemeDebugOverlay:
 
     @staticmethod
     def _needs_full_refresh(name: str) -> bool:
-        if name in {"THEME_TEXT_COLOR_LIGHT", "THEME_SCENE_HEADER_TEXT_COLOR"}:
+        if name in {
+            "THEME_TEXT_COLOR_LIGHT",
+            "THEME_SCENE_HEADER_TEXT_COLOR",
+            "THEME_MAIN_MENU_HEADER_TEXT_COLOR",
+        }:
             return True
         return name.startswith("THEME_FONT_") or name.startswith(
             "THEME_LAYOUT_"
@@ -355,6 +359,8 @@ class ThemeDebugOverlay:
                 "THEME_LAYOUT_LINE_GAP",
                 "THEME_SCENE_HEADER_TOP_PADDING",
                 "THEME_SCENE_HEADER_HEIGHT",
+                "THEME_MAIN_MENU_HEADER_TOP_PADDING",
+                "THEME_MAIN_MENU_HEADER_HEIGHT",
                 "THEME_HELP_MAX_WIDTH",
                 "THEME_SECTION_DIVIDER_PADDING",
                 "THEME_SECTION_DIVIDER_COLOR",
@@ -381,6 +387,17 @@ class ThemeDebugOverlay:
                 "THEME_SCENE_HEADER_BACKGROUND_TINT_COLOR",
                 "THEME_SCENE_HEADER_BLUR_RADIUS",
                 "THEME_SCENE_HEADER_TEXT_COLOR",
+            ],
+        )
+        add_section(
+            "Main Menu Header",
+            [
+                "THEME_MAIN_MENU_HEADER_BG_COLOR",
+                "THEME_MAIN_MENU_HEADER_BACKGROUND_IMAGE",
+                "THEME_MAIN_MENU_HEADER_BACKGROUND_SCALE_MODE",
+                "THEME_MAIN_MENU_HEADER_BACKGROUND_TINT_COLOR",
+                "THEME_MAIN_MENU_HEADER_BLUR_RADIUS",
+                "THEME_MAIN_MENU_HEADER_TEXT_COLOR",
             ],
         )
         add_section(

@@ -237,7 +237,7 @@ class MainMenuScene(Scene):
         if (self._title_surface is None
                 or self._cached_title_text != self._title_text):
             self._title_surface = self.font.render(
-                self._title_text, True, theme.THEME_SCENE_HEADER_TEXT_COLOR
+                self._title_text, True, theme.THEME_MAIN_MENU_HEADER_TEXT_COLOR
             )
             self._cached_title_text = self._title_text
         self.continue_button.disabled = self.get_game_session() is None
@@ -252,7 +252,7 @@ class MainMenuScene(Scene):
         )
         if self.show_confirm_dialog:
             self.draw_confirm_dialog()
-        self._draw_scene_header(self._title_surface)
+        self._draw_main_menu_header(self._title_surface)
 
     def _layout_buttons(self) -> None:
         padding = theme.THEME_LAYOUT_VERTICAL_GAP
@@ -264,7 +264,7 @@ class MainMenuScene(Scene):
             self.settings_button,
             self.quit_button,
         ]
-        self.header_height = self._get_scene_header_height(
+        self.header_height = self._get_main_menu_header_height(
             self.font.get_height()
         )
         total_height = sum(button.rect.height for button in buttons)
@@ -279,6 +279,53 @@ class MainMenuScene(Scene):
             button.rect.centerx = center_x
             button.rect.y = current_y
             current_y += height + padding
+
+    def _get_main_menu_header_height(self, title_height: int) -> int:
+        """Return the height of the fixed main menu header."""
+        if theme.THEME_MAIN_MENU_HEADER_HEIGHT > 0:
+            return theme.THEME_MAIN_MENU_HEADER_HEIGHT
+        return title_height + 2 * theme.THEME_MAIN_MENU_HEADER_TOP_PADDING
+
+    def _draw_main_menu_header(self, title_surface: pygame.Surface) -> int:
+        """Draw the fixed main menu header across the top of the screen."""
+        header_height = self._get_main_menu_header_height(
+            title_surface.get_height()
+        )
+        header_rect = pygame.Rect(
+            0,
+            0,
+            self.screen.get_width(),
+            header_height,
+        )
+        if theme.THEME_MAIN_MENU_HEADER_BLUR_RADIUS > 0:
+            header_snapshot = self.screen.subsurface(header_rect).copy()
+            blurred = self._apply_background_blur(
+                header_snapshot,
+                theme.THEME_MAIN_MENU_HEADER_BLUR_RADIUS,
+            )
+            self.screen.blit(blurred, header_rect.topleft)
+        header_surface = pygame.Surface(header_rect.size, pygame.SRCALPHA)
+        header_image = self._get_background_surface(
+            image_name=theme.THEME_MAIN_MENU_HEADER_BACKGROUND_IMAGE,
+            target_size=header_rect.size,
+            scale_mode=theme.THEME_MAIN_MENU_HEADER_BACKGROUND_SCALE_MODE,
+            blur_radius=theme.THEME_MAIN_MENU_HEADER_BLUR_RADIUS,
+        )
+        if header_image is not None:
+            header_surface.blit(header_image, (0, 0))
+        if theme.THEME_MAIN_MENU_HEADER_BACKGROUND_TINT_COLOR is not None:
+            tint_overlay = pygame.Surface(header_rect.size, pygame.SRCALPHA)
+            tint_overlay.fill(theme.THEME_MAIN_MENU_HEADER_BACKGROUND_TINT_COLOR)
+            header_surface.blit(tint_overlay, (0, 0))
+        self.screen.blit(header_surface, header_rect.topleft)
+        header_overlay = pygame.Surface(header_rect.size, pygame.SRCALPHA)
+        header_overlay.fill(theme.THEME_MAIN_MENU_HEADER_BG_COLOR)
+        self.screen.blit(header_overlay, header_rect.topleft)
+        title_rect = title_surface.get_rect(
+            center=(self.screen.get_width() // 2, header_rect.centery)
+        )
+        self.screen.blit(title_surface, title_rect)
+        return header_height
 
     def refresh_theme(self, theme_name: str | None = None) -> None:
         """Refresh fonts and component styling after theme changes."""

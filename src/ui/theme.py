@@ -57,6 +57,10 @@ THEME_LAYOUT_LINE_GAP: int = 8
 THEME_SCENE_HEADER_TOP_PADDING: int = 12
 # Optional explicit scene header height override; 0 uses title height + padding.
 THEME_SCENE_HEADER_HEIGHT: int = 0
+# Main menu header padding above/below the title; integer size in pixels.
+THEME_MAIN_MENU_HEADER_TOP_PADDING: int = 16
+# Optional explicit main menu header height override; 0 uses title height + padding.
+THEME_MAIN_MENU_HEADER_HEIGHT: int = 0
 # Help content max width cap; integer size in pixels.
 THEME_HELP_MAX_WIDTH: int = 600
 # Padding above/below help section dividers; integer size in pixels.
@@ -268,6 +272,18 @@ THEME_UI_ALPHA_BLUR_RADIUS: float = 5.0
 THEME_UI_ALPHA_BLUR_DOWNSCALE_FACTOR: float = 0.35
 # Scene header text color; RGB tuple (0-255 per channel).
 THEME_SCENE_HEADER_TEXT_COLOR: Color = (223, 185, 84)
+# Main menu header background color; RGBA tuple (0-255 per channel, alpha 0-255).
+THEME_MAIN_MENU_HEADER_BG_COLOR: ColorA = (42, 42, 42, 140)
+# Main menu header background image filename; relative to settings.BACKGROUND_IMAGE_PATH.
+THEME_MAIN_MENU_HEADER_BACKGROUND_IMAGE: str | None = None
+# Main menu header background image scale mode; one of fill/fit/stretch.
+THEME_MAIN_MENU_HEADER_BACKGROUND_SCALE_MODE: str = "fill"
+# Main menu header background tint color; RGBA tuple or None to disable.
+THEME_MAIN_MENU_HEADER_BACKGROUND_TINT_COLOR: ColorA | None = None
+# Optional blur radius/strength for the main menu header background; 0 disables blur.
+THEME_MAIN_MENU_HEADER_BLUR_RADIUS: float = 5.0
+# Main menu header text color; RGB tuple (0-255 per channel).
+THEME_MAIN_MENU_HEADER_TEXT_COLOR: Color = (223, 185, 84)
 # Primary light text for titles and labels; RGB tuple (0-255 per channel).
 THEME_TEXT_COLOR_LIGHT: Color = (242, 242, 242)
 # Section header highlight color (gold); RGB tuple (0-255 per channel).
