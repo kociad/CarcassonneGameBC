@@ -395,6 +395,8 @@ class ThemeDebugOverlay:
                 "THEME_MAIN_MENU_HEADER_BACKGROUND_SCALE_MODE",
                 "THEME_MAIN_MENU_HEADER_BACKGROUND_TINT_COLOR",
                 "THEME_MAIN_MENU_HEADER_BLUR_RADIUS",
+                "THEME_MAIN_MENU_HEADER_LOGO_IMAGE",
+                "THEME_MAIN_MENU_HEADER_LOGO_SCALE_MODE",
                 "THEME_MAIN_MENU_HEADER_TEXT_COLOR",
             ],
         )

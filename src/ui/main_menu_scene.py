@@ -1,8 +1,10 @@
+import os
 import pygame
 import webbrowser
 from ui.scene import Scene
 from ui.components.button import Button
 from game_state import GameState
+import settings
 from utils.settings_manager import settings_manager
 from ui import theme
 import logging
@@ -284,6 +286,33 @@ class MainMenuScene(Scene):
         """Return the height of the top-third header region."""
         return max(1, screen_height // 3)
 
+    def _get_main_menu_logo_surface(
+        self, header_rect: pygame.Rect
+    ) -> pygame.Surface | None:
+        logo_name = theme.THEME_MAIN_MENU_HEADER_LOGO_IMAGE
+        if not logo_name:
+            return None
+        logo_path = os.path.join(settings.LOGOS_PATH, logo_name)
+        cache_key = (
+            logo_path,
+            header_rect.size,
+            theme.THEME_MAIN_MENU_HEADER_LOGO_SCALE_MODE,
+        )
+        cached = self._background_cache.get(cache_key)
+        if cached is not None:
+            return cached
+        try:
+            image = pygame.image.load(logo_path).convert_alpha()
+        except (pygame.error, FileNotFoundError):
+            return None
+        scaled = self._scale_background_image(
+            image,
+            header_rect.size,
+            theme.THEME_MAIN_MENU_HEADER_LOGO_SCALE_MODE,
+        )
+        self._background_cache[cache_key] = scaled
+        return scaled
+
     def _draw_main_menu_header(self, title_surface: pygame.Surface) -> int:
         """Draw the fixed main menu header across the top of the screen."""
         header_height = self._get_main_menu_header_height(
@@ -319,10 +348,14 @@ class MainMenuScene(Scene):
         header_overlay = pygame.Surface(header_rect.size, pygame.SRCALPHA)
         header_overlay.fill(theme.THEME_MAIN_MENU_HEADER_BG_COLOR)
         self.screen.blit(header_overlay, header_rect.topleft)
-        title_rect = title_surface.get_rect(
-            center=(self.screen.get_width() // 2, header_rect.centery)
-        )
-        self.screen.blit(title_surface, title_rect)
+        logo_surface = self._get_main_menu_logo_surface(header_rect)
+        if logo_surface is not None:
+            self.screen.blit(logo_surface, header_rect.topleft)
+        else:
+            title_rect = title_surface.get_rect(
+                center=(self.screen.get_width() // 2, header_rect.centery)
+            )
+            self.screen.blit(title_surface, title_rect)
         return header_height
 
     def refresh_theme(self, theme_name: str | None = None) -> None:
