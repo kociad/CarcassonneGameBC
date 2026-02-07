@@ -79,10 +79,10 @@ THEME_BUTTON_PRESSED_BG_COLOR: Color = (22, 22, 22, 0)
 THEME_BUTTON_TEXT_COLOR: Color = (220, 220, 220)
 # Hover text
 # Text color for hovered buttons; RGB tuple (0-255 per channel).
-THEME_BUTTON_HOVER_TEXT_COLOR: Color = (223, 185, 84)
+THEME_BUTTON_HOVER_TEXT_COLOR: Color = (253, 210, 10)
 # Pressed text
 # Text color for pressed buttons; RGB tuple (0-255 per channel).
-THEME_BUTTON_PRESSED_TEXT_COLOR: Color = (193, 155, 34)
+THEME_BUTTON_PRESSED_TEXT_COLOR: Color = (235, 164, 0)
 # Disabled state
 # Text color for disabled buttons; RGB tuple (0-255 per channel).
 THEME_BUTTON_TEXT_DISABLED_COLOR: Color = (130, 130, 130)
@@ -265,19 +265,19 @@ THEME_UI_ALPHA_BLUR_RADIUS: float = 5.0
 # blockiness, while higher values preserve more detail (0.1-1.0).
 THEME_UI_ALPHA_BLUR_DOWNSCALE_FACTOR: float = 0.35
 # Scene header text color; RGB tuple (0-255 per channel).
-THEME_SCENE_HEADER_TEXT_COLOR: Color = (223, 185, 84)
+THEME_SCENE_HEADER_TEXT_COLOR: Color = (253, 210, 10)
 # Main menu header background color; RGBA tuple (0-255 per channel, alpha 0-255).
-THEME_MAIN_MENU_HEADER_BG_COLOR: ColorA = (42, 42, 42, 140)
+THEME_MAIN_MENU_HEADER_BG_COLOR: ColorA = (42, 42, 42, 0)
 # Main menu header background image filename; relative to settings.BACKGROUND_IMAGE_PATH.
-THEME_MAIN_MENU_HEADER_BACKGROUND_IMAGE: str | None = None
+THEME_MAIN_MENU_HEADER_BACKGROUND_IMAGE: str | None = "Carcassonne_Logo.png"
 # Main menu header background image scale mode; one of fill/fit/stretch.
 THEME_MAIN_MENU_HEADER_BACKGROUND_SCALE_MODE: str = "fill"
 # Main menu header background tint color; RGBA tuple or None to disable.
 THEME_MAIN_MENU_HEADER_BACKGROUND_TINT_COLOR: ColorA | None = None
 # Optional blur radius/strength for the main menu header background; 0 disables blur.
-THEME_MAIN_MENU_HEADER_BLUR_RADIUS: float = 5.0
+THEME_MAIN_MENU_HEADER_BLUR_RADIUS: float = 0.0
 # Main menu header logo image filename; relative to settings.LOGOS_PATH.
-THEME_MAIN_MENU_HEADER_LOGO_IMAGE: str | None = None
+THEME_MAIN_MENU_HEADER_LOGO_IMAGE: str | None = "Carcassonne_Logo.png"
 # Main menu header logo scale mode; one of fill/fit/stretch.
 THEME_MAIN_MENU_HEADER_LOGO_SCALE_MODE: str = "fit"
 # Main menu header text color; RGB tuple (0-255 per channel).
@@ -285,7 +285,7 @@ THEME_MAIN_MENU_HEADER_TEXT_COLOR: Color = (223, 185, 84)
 # Primary light text for titles and labels; RGB tuple (0-255 per channel).
 THEME_TEXT_COLOR_LIGHT: Color = (242, 242, 242)
 # Section header highlight color (gold); RGB tuple (0-255 per channel).
-THEME_SECTION_HEADER_COLOR: Color = (212, 185, 84)
+THEME_SECTION_HEADER_COLOR: Color = (253, 210, 10)
 # Section divider color for help sections; RGBA tuple (0-255 per channel, alpha).
 THEME_SECTION_DIVIDER_COLOR: ColorA = (255, 255, 255, 40)
 # Subsection highlight color (light blue); RGB tuple (0-255 per channel).

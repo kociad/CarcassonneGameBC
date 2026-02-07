@@ -1,5 +1,5 @@
 #Fixed variables
-FPS = 60
+FPS = 240
 
 ASSETS_PATH = "src/assets/"
 TILE_IMAGES_PATH = ASSETS_PATH + "tiles/"
@@ -34,8 +34,8 @@ HOST_PORT = 2222  # TCP port to use
 PLAYER_INDEX = 0
 
 # General Game Settings
-WINDOW_WIDTH = 1280
-WINDOW_HEIGHT = 720
+WINDOW_WIDTH = 1920
+WINDOW_HEIGHT = 1080
 FULLSCREEN = False
 SHOW_VALID_PLACEMENTS = True
 
