@@ -57,6 +57,7 @@ class Slider:
         self.handle_color = theme.THEME_SLIDER_HANDLE_COLOR
         self.border_color = theme.THEME_SLIDER_BORDER_COLOR
         self.handle_hover_color = theme.THEME_SLIDER_HANDLE_HOVER_COLOR
+        self.handle_hover_border_color = theme.THEME_SLIDER_HANDLE_HOVER_BORDER_COLOR
         self.handle_active_color = theme.THEME_SLIDER_HANDLE_ACTIVE_COLOR
         self.track_hover_color = theme.THEME_SLIDER_TRACK_HOVER_COLOR
         self.track_active_color = theme.THEME_SLIDER_TRACK_ACTIVE_COLOR
@@ -230,23 +231,26 @@ class Slider:
             bg_color = self.disabled_bg_color
             fg_color = self.disabled_fg_color
             handle_color = self.disabled_handle_color
-            border_color = self.disabled_border_color
+            track_border_color = self.disabled_border_color
+            handle_border_color = self.disabled_border_color
         else:
             bg_color = self.bg_color
             fg_color = self.fg_color
             handle_color = self.handle_color
-            border_color = self.border_color
+            track_border_color = self.border_color
+            handle_border_color = self.border_color
             if self.hovered_track and not self.dragging:
                 fg_color = self.track_hover_color
             if self.dragging:
                 fg_color = self.track_active_color
             if self.hovered_handle and not self.dragging:
                 handle_color = self.handle_hover_color
-                border_color = self.hover_border_color
+                track_border_color = self.hover_border_color
+                handle_border_color = self.handle_hover_border_color
             if self.dragging:
                 handle_color = self.handle_active_color
         draw_rect_alpha(surface, bg_color, shifted_rect)
-        draw_rect_alpha(surface, border_color, shifted_rect, 1)
+        draw_rect_alpha(surface, track_border_color, shifted_rect, 1)
         fill_width = ((self.value - self.min_value) /
                       (self.max_value - self.min_value)) * shifted_rect.width
         draw_rect_alpha(
@@ -255,7 +259,7 @@ class Slider:
                         shifted_rect.height))
         handle_rect = self._handle_rect(y_offset)
         draw_rect_alpha(surface, handle_color, handle_rect)
-        draw_rect_alpha(surface, border_color, handle_rect, 1)
+        draw_rect_alpha(surface, handle_border_color, handle_rect, 1)
         self.input_field.draw(surface, y_offset=y_offset)
         if not self.active_toast and self.toast_queue:
             self.active_toast = self.toast_queue.pop(0)
@@ -308,6 +312,7 @@ class Slider:
         self.handle_color = theme.THEME_SLIDER_HANDLE_COLOR
         self.border_color = theme.THEME_SLIDER_BORDER_COLOR
         self.handle_hover_color = theme.THEME_SLIDER_HANDLE_HOVER_COLOR
+        self.handle_hover_border_color = theme.THEME_SLIDER_HANDLE_HOVER_BORDER_COLOR
         self.handle_active_color = theme.THEME_SLIDER_HANDLE_ACTIVE_COLOR
         self.track_hover_color = theme.THEME_SLIDER_TRACK_HOVER_COLOR
         self.track_active_color = theme.THEME_SLIDER_TRACK_ACTIVE_COLOR

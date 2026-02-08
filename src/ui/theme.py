@@ -126,6 +126,8 @@ THEME_DROPDOWN_HOVER_BORDER_COLOR: Color = (205, 183, 82, 255)
 THEME_DROPDOWN_HOVER_BG_COLOR: Color = (235, 235, 235, 255)
 # Dropdown background when hovering an option; RGB tuple (0-255 per channel).
 THEME_DROPDOWN_HOVER_OPTION_COLOR: Color = (230, 230, 230, 255)
+# Dropdown option border when hovering an option; RGB tuple (0-255 per channel).
+THEME_DROPDOWN_HOVER_OPTION_BORDER_COLOR: Color = (205, 183, 82, 255)
 # Disabled state
 # Dropdown disabled text color; RGB tuple (0-255 per channel).
 THEME_DROPDOWN_DISABLED_TEXT_COLOR: Color = (80, 80, 80)
@@ -164,6 +166,8 @@ THEME_SLIDER_BORDER_COLOR: Color = (0, 0, 0, 255)
 # Hover state
 # Slider handle hover fill; RGB tuple (0-255 per channel).
 THEME_SLIDER_HANDLE_HOVER_COLOR: Color = (235, 235, 255, 255)
+# Slider handle hover border; RGB tuple (0-255 per channel).
+THEME_SLIDER_HANDLE_HOVER_BORDER_COLOR: Color = (50, 50, 50, 255)
 # Active/drag state
 # Slider handle active fill; RGB tuple (0-255 per channel).
 THEME_SLIDER_HANDLE_ACTIVE_COLOR: Color = (138, 173, 209, 255)
