@@ -237,15 +237,15 @@ THEME_GAME_LOG_ERROR_COLOR: Color = (205, 81, 83)
 # Game log info row background; RGBA tuple (0-255 per channel, alpha 0-255).
 THEME_GAME_LOG_INFO_BG: ColorA = (0, 0, 0, 0)
 # Game log debug row background; RGBA tuple (0-255 per channel, alpha 0-255).
-THEME_GAME_LOG_DEBUG_BG: ColorA = (81, 104, 205, 20)
+THEME_GAME_LOG_DEBUG_BG: ColorA = (81, 104, 205, 0)
 # Game log scoring row background; RGBA tuple (0-255 per channel, alpha 0-255).
-THEME_GAME_LOG_SCORING_BG: ColorA = (205, 183, 82, 20)
+THEME_GAME_LOG_SCORING_BG: ColorA = (205, 183, 82, 0)
 # Game log warning row background; RGBA tuple (0-255 per channel, alpha 0-255).
-THEME_GAME_LOG_WARNING_BG: ColorA = (100, 80, 0, 40)
+THEME_GAME_LOG_WARNING_BG: ColorA = (100, 80, 0, 0)
 # Game log error row background; RGBA tuple (0-255 per channel, alpha 0-255).
-THEME_GAME_LOG_ERROR_BG: ColorA = (205, 81, 83, 20)
+THEME_GAME_LOG_ERROR_BG: ColorA = (205, 81, 83, 0)
 # Game log overlay dim color; RGBA tuple (0-255 per channel, alpha 0-255).
-THEME_GAME_LOG_OVERLAY_COLOR: ColorA = (42, 42, 42, 200)
+THEME_GAME_LOG_OVERLAY_COLOR: ColorA = (42, 42, 42, 100)
 # Game log title text color; RGB tuple (0-255 per channel).
 THEME_GAME_LOG_TITLE_TEXT_COLOR: Color = (220, 220, 220)
 # Game log title background; RGBA tuple (0-255 per channel, alpha 0-255).
@@ -253,7 +253,7 @@ THEME_GAME_LOG_TITLE_BG_COLOR: ColorA = (50, 50, 50, 0)
 # Game log scroll info text color; RGB tuple (0-255 per channel).
 THEME_GAME_LOG_SCROLL_TEXT_COLOR: Color = (180, 180, 180)
 # Game log scroll info background; RGBA tuple (0-255 per channel, alpha 0-255).
-THEME_GAME_LOG_SCROLL_BG_COLOR: ColorA = (0, 0, 0, 150)
+THEME_GAME_LOG_SCROLL_BG_COLOR: ColorA = (0, 0, 0, 0)
 
 # Shared scene colors
 # Scene header background color; RGBA tuple (0-255 per channel, alpha 0-255).
