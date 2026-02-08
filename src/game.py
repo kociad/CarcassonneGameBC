@@ -623,7 +623,7 @@ class Game:
                 self._current_scene.show_notification(
                     "warning", "Lost connection to one of the players")
             else:
-                self.on_show_notification(
+                self._on_show_notification(
                     "warning",
                     "Lost connection to one of the players, returning to main menu"
                 )
