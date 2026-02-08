@@ -923,7 +923,7 @@ class GameSession:
             "game_over":
             self.game_over,
             "current_player_index":
-            self.current_player.get_index(),
+            self.current_player.get_index() if self.current_player else None,
             "placed_figures": [{
                 **figure.serialize(), "card_position":
                 self.game_board.get_card_position(figure.card)
@@ -961,13 +961,16 @@ class GameSession:
                       lobby_completed=lobby_completed,
                       network_mode=network_mode)
         session.players = players
-        try:
-            session.current_player = players[int(
-                data.get("current_player_index", 0))]
-        except (IndexError, ValueError, TypeError) as e:
-            logger.warning(
-                f"Invalid current_player_index, defaulting to first: {e}")
-            session.current_player = players[0] if players else None
+        current_player_index = data.get("current_player_index", 0)
+        if current_player_index is None:
+            session.current_player = None
+        else:
+            try:
+                session.current_player = players[int(current_player_index)]
+            except (IndexError, ValueError, TypeError) as e:
+                logger.warning(
+                    f"Invalid current_player_index, defaulting to first: {e}")
+                session.current_player = players[0] if players else None
         session.cards_deck = []
         for c in data.get("deck", []):
             try:
