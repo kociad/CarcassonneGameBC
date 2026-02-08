@@ -21,8 +21,20 @@ class Figure:
             image_path: Path to the meeple image
         """
         self.owner = owner
-        original_image = pygame.image.load(image_path +
-                                           f"{owner.get_color()}.png")
+        image_file = image_path + f"{owner.get_color()}.png"
+        try:
+            original_image = pygame.image.load(image_file)
+        except Exception as exc:
+            logger.error(
+                "Failed to load figure image from %s for owner %s: %s",
+                image_file,
+                owner.get_name(),
+                exc,
+            )
+            original_image = pygame.Surface(
+                (settings.FIGURE_SIZE, settings.FIGURE_SIZE),
+                pygame.SRCALPHA,
+            )
         self.image = pygame.transform.scale(
             original_image, (settings.FIGURE_SIZE, settings.FIGURE_SIZE))
         self.card = None
