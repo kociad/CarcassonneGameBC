@@ -728,7 +728,14 @@ class GamePrepareScene(Scene):
                                         offset_y)
             self.screen.blit(label, label_rect)
             name_field.draw(self.screen, y_offset=offset_y)
-            ai_checkbox.draw(self.screen, y_offset=offset_y)
+            if ai_checkbox:
+                ai_checkbox.draw(self.screen, y_offset=offset_y)
+                ai_text = self._get_label_surface(
+                    label_font, "AI Player", theme.THEME_TEXT_COLOR_LIGHT)
+                ai_text_rect = ai_text.get_rect(
+                    left=ai_checkbox.rect.right + 8,
+                    centery=ai_checkbox.rect.centery + offset_y)
+                self.screen.blit(ai_text, ai_text_rect)
 
         net_label = self._get_label_surface(
             label_font, "Network mode:", theme.THEME_TEXT_COLOR_LIGHT)
