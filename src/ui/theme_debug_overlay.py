@@ -305,6 +305,8 @@ class ThemeDebugOverlay:
             "THEME_MAIN_MENU_HEADER_TEXT_COLOR",
         }:
             return True
+        if name.startswith(("THEME_CHECKBOX_", "THEME_DROPDOWN_")):
+            return True
         return name.startswith("THEME_FONT_") or name.startswith(
             "THEME_LAYOUT_"
         )

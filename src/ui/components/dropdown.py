@@ -18,6 +18,7 @@ class Dropdown:
         text_color: tuple[int, ...] = theme.THEME_DROPDOWN_TEXT_COLOR,
         bg_color: tuple[int, ...] = theme.THEME_DROPDOWN_BG_COLOR,
         border_color: tuple[int, ...] = theme.THEME_DROPDOWN_BORDER_COLOR,
+        hover_border_color: tuple[int, ...] = theme.THEME_DROPDOWN_HOVER_BORDER_COLOR,
         highlight_color: tuple[int, ...] = theme.THEME_DROPDOWN_HIGHLIGHT_COLOR,
         hover_bg_color: tuple[int, ...] = theme.THEME_DROPDOWN_HOVER_BG_COLOR,
         hover_option_color: tuple[int, ...] = theme.THEME_DROPDOWN_HOVER_OPTION_COLOR
@@ -34,6 +35,7 @@ class Dropdown:
             text_color: Color of the text
             bg_color: Background color
             border_color: Border color
+            hover_border_color: Border color when hovering the control
             highlight_color: Color for highlighting selected option
             hover_bg_color: Background color when hovering the control
             hover_option_color: Background color for hovered option
@@ -48,6 +50,7 @@ class Dropdown:
         self.text_color = text_color
         self.bg_color = bg_color
         self.border_color = border_color
+        self.hover_border_color = hover_border_color
         self.highlight_color = highlight_color
         self.hover_bg_color = hover_bg_color
         self.hover_option_color = hover_option_color
@@ -142,9 +145,7 @@ class Dropdown:
         bg = apply_alpha(bg_base, alpha)
         border_base = self.border_color
         if self.hovered_control and not self.disabled:
-            border_base = tuple(
-                min(255, channel + 40) for channel in rgb_only(self.border_color)
-            )
+            border_base = self.hover_border_color
         border = apply_alpha(border_base, alpha)
         text_color = theme.THEME_DROPDOWN_DISABLED_TEXT_COLOR if self.disabled else self.text_color
         text_col = apply_alpha(text_color, alpha)
@@ -213,6 +214,7 @@ class Dropdown:
         self.text_color = theme.THEME_DROPDOWN_TEXT_COLOR
         self.bg_color = theme.THEME_DROPDOWN_BG_COLOR
         self.border_color = theme.THEME_DROPDOWN_BORDER_COLOR
+        self.hover_border_color = theme.THEME_DROPDOWN_HOVER_BORDER_COLOR
         self.highlight_color = theme.THEME_DROPDOWN_HIGHLIGHT_COLOR
         self.hover_bg_color = theme.THEME_DROPDOWN_HOVER_BG_COLOR
         self.hover_option_color = theme.THEME_DROPDOWN_HOVER_OPTION_COLOR
