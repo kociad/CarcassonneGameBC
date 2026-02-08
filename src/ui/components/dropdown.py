@@ -167,6 +167,9 @@ class Dropdown:
             selected_text,
             (5, (self.rect.height - selected_text.get_height()) // 2))
         if self.expanded:
+            border_width = 2
+            options_area_top = self.rect.height
+            options_area_height = len(self.options) * self.rect.height
             for i, option in enumerate(self.options):
                 option_rect = pygame.Rect(0, (i + 1) * self.rect.height,
                                           self.rect.width, self.rect.height)
@@ -184,20 +187,47 @@ class Dropdown:
                      (self.rect.height - option_text.get_height()) // 2))
             options_area_rect = pygame.Rect(
                 0,
-                self.rect.height,
+                options_area_top,
                 self.rect.width,
-                len(self.options) * self.rect.height,
+                options_area_height,
             )
-            draw_rect_alpha(draw_surface, option_border, options_area_rect, 2)
+            top_border_rect = pygame.Rect(
+                0,
+                options_area_top,
+                self.rect.width,
+                border_width,
+            )
+            bottom_border_rect = pygame.Rect(
+                0,
+                options_area_top + options_area_height - border_width,
+                self.rect.width,
+                border_width,
+            )
+            left_border_rect = pygame.Rect(
+                0,
+                options_area_top,
+                border_width,
+                options_area_height,
+            )
+            right_border_rect = pygame.Rect(
+                self.rect.width - border_width,
+                options_area_top,
+                border_width,
+                options_area_height,
+            )
+            draw_rect_alpha(draw_surface, option_border, top_border_rect)
+            draw_rect_alpha(draw_surface, option_border, bottom_border_rect)
+            draw_rect_alpha(draw_surface, option_border, left_border_rect)
+            draw_rect_alpha(draw_surface, option_border, right_border_rect)
             for i in range(1, len(self.options)):
-                separator_y = self.rect.height + i * self.rect.height
-                pygame.draw.line(
-                    draw_surface,
-                    option_border,
-                    (0, separator_y),
-                    (self.rect.width, separator_y),
-                    2,
+                separator_y = options_area_top + i * self.rect.height
+                separator_rect = pygame.Rect(
+                    0,
+                    separator_y - border_width // 2,
+                    self.rect.width,
+                    border_width,
                 )
+                draw_rect_alpha(draw_surface, option_border, separator_rect)
             if self.hovered_index is not None:
                 hovered_rect = pygame.Rect(
                     0,
