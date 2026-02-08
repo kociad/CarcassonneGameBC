@@ -92,7 +92,7 @@ THEME_BUTTON_DISABLED_BG_COLOR: Color = (110, 110, 110, 0)
 # Checkbox colors
 # Default state
 # Checkbox fill when unchecked; RGB tuple (0-255 per channel).
-THEME_CHECKBOX_BOX_COLOR: Color = (250, 250, 250, 255)
+THEME_CHECKBOX_BOX_COLOR: Color = (240, 240, 240, 255)
 # Active/checked state
 # Checkbox checkmark fill; RGB tuple (0-255 per channel).
 THEME_CHECKBOX_CHECK_COLOR: Color = (205, 183, 82, 255)
@@ -103,7 +103,7 @@ THEME_CHECKBOX_BORDER_COLOR: Color = (30, 30, 30, 255)
 # Checkbox border color on hover; RGB tuple (0-255 per channel).
 THEME_CHECKBOX_HOVER_BORDER_COLOR: Color = (205, 183, 82, 255)
 # Checkbox hover fill when unchecked; RGB tuple (0-255 per channel).
-THEME_CHECKBOX_HOVER_BOX_COLOR: Color = (255, 255, 255, 255)
+THEME_CHECKBOX_HOVER_BOX_COLOR: Color = (240, 240, 240, 255)
 # Disabled state
 # Checkbox color when disabled (border/check); RGB tuple (0-255 per channel).
 THEME_CHECKBOX_DISABLED_COLOR: Color = (150, 150, 150, 100)
@@ -113,7 +113,7 @@ THEME_CHECKBOX_DISABLED_COLOR: Color = (150, 150, 150, 100)
 # Dropdown text color; RGB tuple (0-255 per channel).
 THEME_DROPDOWN_TEXT_COLOR: Color = (0, 0, 0)
 # Dropdown background color; RGB tuple (0-255 per channel).
-THEME_DROPDOWN_BG_COLOR: Color = (255, 255, 255, 255)
+THEME_DROPDOWN_BG_COLOR: Color = (240, 240, 240, 255)
 # Dropdown border color; RGB tuple (0-255 per channel).
 THEME_DROPDOWN_BORDER_COLOR: Color = (30, 30, 30, 255)
 # Active/selected state
@@ -123,9 +123,9 @@ THEME_DROPDOWN_HIGHLIGHT_COLOR: Color = (235, 225, 178, 255)
 # Dropdown border color on hover; RGB tuple (0-255 per channel).
 THEME_DROPDOWN_HOVER_BORDER_COLOR: Color = (205, 183, 82, 255)
 # Dropdown background when hovering the control; RGB tuple (0-255 per channel).
-THEME_DROPDOWN_HOVER_BG_COLOR: Color = (255, 255, 255, 255)
+THEME_DROPDOWN_HOVER_BG_COLOR: Color = (240, 240, 240, 255)
 # Dropdown background when hovering an option; RGB tuple (0-255 per channel).
-THEME_DROPDOWN_HOVER_OPTION_COLOR: Color = (255, 255, 255, 255)
+THEME_DROPDOWN_HOVER_OPTION_COLOR: Color = (240, 240, 240, 255)
 # Dropdown option border when hovering an option; RGB tuple (0-255 per channel).
 THEME_DROPDOWN_HOVER_OPTION_BORDER_COLOR: Color = (205, 183, 82, 255)
 # Disabled state
@@ -137,7 +137,7 @@ THEME_DROPDOWN_DISABLED_TEXT_COLOR: Color = (80, 80, 80)
 # Input text color; RGB tuple (0-255 per channel).
 THEME_INPUT_TEXT_COLOR: Color = (0, 0, 0)
 # Input background color; RGB tuple (0-255 per channel).
-THEME_INPUT_BG_COLOR: Color = (255, 255, 255, 255)
+THEME_INPUT_BG_COLOR: Color = (240, 240, 240, 255)
 # Input border color; RGB tuple (0-255 per channel).
 THEME_INPUT_BORDER_COLOR: Color = (30, 30, 30, 255)
 # Input border when hovering or active; RGB tuple (0-255 per channel).
@@ -160,17 +160,17 @@ THEME_SLIDER_BG_COLOR: Color = (42, 42, 42, 100)
 # Slider filled track color; RGB tuple (0-255 per channel).
 THEME_SLIDER_FG_COLOR: Color = (205, 183, 82, 255)
 # Slider handle fill color; RGB tuple (0-255 per channel).
-THEME_SLIDER_HANDLE_COLOR: Color = (255, 255, 255, 255)
+THEME_SLIDER_HANDLE_COLOR: Color = (240, 240, 240, 255)
 # Slider border color; RGB tuple (0-255 per channel).
 THEME_SLIDER_BORDER_COLOR: Color = (30, 30, 30, 0)
 # Hover state
 # Slider handle hover fill; RGB tuple (0-255 per channel).
-THEME_SLIDER_HANDLE_HOVER_COLOR: Color = (220, 220, 220, 255)
+THEME_SLIDER_HANDLE_HOVER_COLOR: Color = (200, 200, 200, 255)
 # Slider handle hover border; RGB tuple (0-255 per channel).
 THEME_SLIDER_HANDLE_HOVER_BORDER_COLOR: Color = (30, 30, 30, 0)
 # Active/drag state
 # Slider handle active fill; RGB tuple (0-255 per channel).
-THEME_SLIDER_HANDLE_ACTIVE_COLOR: Color = (200, 200, 200, 255)
+THEME_SLIDER_HANDLE_ACTIVE_COLOR: Color = (180, 180, 180, 255)
 # Hover state
 # Slider track hover fill; RGB tuple (0-255 per channel).
 THEME_SLIDER_TRACK_HOVER_COLOR: Color = (248, 224, 113, 255)
@@ -195,7 +195,7 @@ THEME_SLIDER_DISABLED_BORDER_COLOR: Color = (80, 80, 80, 0)
 # Progress bar background; RGB tuple (0-255 per channel).
 THEME_PROGRESS_BAR_BG_COLOR: Color = (80, 80, 80, 255)
 # Progress bar fill; RGB tuple (0-255 per channel).
-THEME_PROGRESS_BAR_PROGRESS_COLOR: Color = (100, 255, 100, 255)
+THEME_PROGRESS_BAR_PROGRESS_COLOR: Color = (104, 205, 81, 255)
 # Progress bar border; RGB tuple (0-255 per channel).
 THEME_PROGRESS_BAR_BORDER_COLOR: Color = (150, 150, 150, 255)
 # Progress bar text color; RGB tuple (0-255 per channel).
@@ -293,7 +293,7 @@ THEME_MAIN_MENU_HEADER_LOGO_SCALE_MODE: str = "fit"
 # Main menu header text color; RGB tuple (0-255 per channel).
 THEME_MAIN_MENU_HEADER_TEXT_COLOR: Color = (223, 185, 84)
 # Primary light text for titles and labels; RGB tuple (0-255 per channel).
-THEME_TEXT_COLOR_LIGHT: Color = (242, 242, 242)
+THEME_TEXT_COLOR_LIGHT: Color = (220, 220, 220)
 # Section header highlight color (gold); RGB tuple (0-255 per channel).
 THEME_SECTION_HEADER_COLOR: Color = (205, 183, 82)
 # Section divider color for help sections; RGBA tuple (0-255 per channel, alpha).
@@ -348,15 +348,15 @@ THEME_MENU_DIALOG_TEXT_COLOR: Color = (255, 255, 255)
 # Lobby status color for AI players; RGB tuple (0-255 per channel).
 THEME_LOBBY_STATUS_AI_COLOR: Color = (120, 120, 120)
 # Lobby status color for connected players; RGB tuple (0-255 per channel).
-THEME_LOBBY_STATUS_CONNECTED_COLOR: Color = (0, 200, 0)
+THEME_LOBBY_STATUS_CONNECTED_COLOR: Color = (104, 205, 81)
 # Lobby status color for waiting players; RGB tuple (0-255 per channel).
-THEME_LOBBY_STATUS_WAITING_COLOR: Color = (200, 200, 0)
+THEME_LOBBY_STATUS_WAITING_COLOR: Color = (205, 183, 82)
 
 # Game scene colors
 # Valid placement highlight overlay; RGBA tuple (0-255 per channel, alpha 0-255).
-THEME_GAME_VALID_PLACEMENT_COLOR: ColorA = (255, 255, 0, 100)
+THEME_GAME_VALID_PLACEMENT_COLOR: ColorA = (248, 224, 113, 100)
 # Selected/hover outline color; RGB tuple (0-255 per channel).
-THEME_GAME_HIGHLIGHT_COLOR: Color = (255, 255, 0, 255)
+THEME_GAME_HIGHLIGHT_COLOR: Color = (248, 224, 113, 255)
 # Hovered structure highlight overlay; RGBA tuple (0-255 per channel, alpha 0-255).
 THEME_GAME_STRUCTURE_HOVER_COLOR: ColorA = (255, 255, 0, 150)
 # Transparent fill for structure overlays; RGBA tuple (0-255 per channel, alpha 0-255).
@@ -372,23 +372,23 @@ THEME_GAME_OVER_ROW_TEXT_COLOR: Color = (220, 220, 220)
 # Game over hint text color; RGB tuple (0-255 per channel).
 THEME_GAME_OVER_HINT_TEXT_COLOR: Color = (180, 180, 180)
 # Debug grid line color on the board; RGB tuple (0-255 per channel).
-THEME_GAME_DEBUG_GRID_COLOR: Color = (0, 0, 0, 255)
+THEME_GAME_DEBUG_GRID_COLOR: Color = (255, 255, 255, 255)
 # Sidebar panel background; RGB tuple (0-255 per channel).
 THEME_GAME_SIDEBAR_BG_COLOR: Color = (42, 42, 42, 100)
 # Sidebar status color for local mode; RGB tuple (0-255 per channel).
-THEME_GAME_STATUS_LOCAL_COLOR: Color = (100, 100, 255)
+THEME_GAME_STATUS_LOCAL_COLOR: Color = (81, 104, 205)
 # Sidebar status color for active turn; RGB tuple (0-255 per channel).
-THEME_GAME_STATUS_TURN_COLOR: Color = (0, 255, 0)
+THEME_GAME_STATUS_TURN_COLOR: Color = (104, 205, 81)
 # Sidebar status color for waiting turn; RGB tuple (0-255 per channel).
-THEME_GAME_STATUS_WAIT_COLOR: Color = (200, 0, 0)
+THEME_GAME_STATUS_WAIT_COLOR: Color = (205, 81, 83)
 # Sidebar highlight background for current player; RGB tuple (0-255 per channel).
-THEME_GAME_CURRENT_PLAYER_BG_COLOR: Color = (60, 80, 120, 255)
+THEME_GAME_CURRENT_PLAYER_BG_COLOR: Color = (205, 184, 82, 100)
 # Sidebar highlight border for current player; RGB tuple (0-255 per channel).
-THEME_GAME_CURRENT_PLAYER_BORDER_COLOR: Color = (100, 150, 255, 255)
+THEME_GAME_CURRENT_PLAYER_BORDER_COLOR: Color = (205, 183, 82, 255)
 # Sidebar score text color; RGB tuple (0-255 per channel).
-THEME_GAME_SCORE_TEXT_COLOR: Color = (200, 200, 200)
+THEME_GAME_SCORE_TEXT_COLOR: Color = (220, 220, 220)
 # AI thinking text color; RGB tuple (0-255 per channel).
-THEME_GAME_AI_THINKING_COLOR: Color = (255, 255, 100)
+THEME_GAME_AI_THINKING_COLOR: Color = (205, 183, 82)
 
 # Game scene background (image filename is relative to settings.BACKGROUND_IMAGE_PATH).
 THEME_GAME_BACKGROUND_COLOR: Color = (25, 25, 25, 255)

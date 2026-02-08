@@ -731,7 +731,7 @@ class GamePrepareScene(Scene):
             if ai_checkbox:
                 ai_checkbox.draw(self.screen, y_offset=offset_y)
                 ai_text = self._get_label_surface(
-                    label_font, "AI Player", theme.THEME_TEXT_COLOR_LIGHT)
+                    label_font, "AI", theme.THEME_TEXT_COLOR_LIGHT)
                 ai_text_rect = ai_text.get_rect(
                     left=ai_checkbox.rect.right + 8,
                     centery=ai_checkbox.rect.centery + offset_y)
