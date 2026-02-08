@@ -134,6 +134,8 @@ THEME_INPUT_TEXT_COLOR: Color = (0, 0, 0)
 THEME_INPUT_BG_COLOR: Color = (255, 255, 255, 255)
 # Input border color; RGB tuple (0-255 per channel).
 THEME_INPUT_BORDER_COLOR: Color = (30, 30, 30, 255)
+# Input border when hovering or active; RGB tuple (0-255 per channel).
+THEME_INPUT_BORDER_HOVER_COLOR: Color = (70, 70, 70, 255)
 # Disabled state
 # Input background when disabled; RGB tuple (0-255 per channel).
 THEME_INPUT_DISABLED_BG_COLOR: Color = (150, 150, 150, 255)

@@ -326,7 +326,7 @@ class InputField:
             border_color = theme.THEME_INPUT_DISABLED_BORDER_COLOR
         else:
             if self.active or self.hovered:
-                border_color = self._adjust_color(self.border_color, 40)
+                border_color = theme.THEME_INPUT_BORDER_HOVER_COLOR
             else:
                 border_color = self.border_color
         text_color = (theme.THEME_INPUT_DISABLED_TEXT_COLOR if self.disabled
