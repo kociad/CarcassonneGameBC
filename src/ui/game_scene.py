@@ -258,11 +258,13 @@ class GameScene(Scene):
                 tile_size = settings_manager.get("TILE_SIZE")
                 highlight_color = theme.THEME_GAME_VALID_PLACEMENT_COLOR
                 for (x, y) in self.valid_placements:
-                    rect = pygame.Surface((tile_size, tile_size),
-                                          pygame.SRCALPHA)
-                    rect.fill(highlight_color)
-                    surface.blit(rect, (x * tile_size - self.offset_x,
-                                        y * tile_size - self.offset_y))
+                    rect = pygame.Rect(
+                        x * tile_size - self.offset_x,
+                        y * tile_size - self.offset_y,
+                        tile_size,
+                        tile_size,
+                    )
+                    draw_rect_alpha(surface, highlight_color, rect)
 
             return surface
 
