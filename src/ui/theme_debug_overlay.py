@@ -427,7 +427,21 @@ class ThemeDebugOverlay:
         )
         button_prefixes = ["THEME_BUTTON_"]
         add_section_by_prefix("Buttons", button_prefixes)
-        add_section_by_prefix("Inputs", ["THEME_INPUT_"])
+        input_names = [
+            "THEME_INPUT_TEXT_COLOR",
+            "THEME_INPUT_BG_COLOR",
+            "THEME_INPUT_BORDER_COLOR",
+            "THEME_INPUT_BORDER_HOVER_COLOR",
+            "THEME_INPUT_DISABLED_BG_COLOR",
+            "THEME_INPUT_DISABLED_BORDER_COLOR",
+            "THEME_INPUT_DISABLED_TEXT_COLOR",
+            "THEME_INPUT_PLACEHOLDER_COLOR",
+        ]
+        input_extra_names = sorted(
+            name for name in dir(theme)
+            if name.startswith("THEME_INPUT_") and name not in input_names
+        )
+        add_section("Inputs", input_names + input_extra_names)
         add_section_by_prefix("Checkboxes", ["THEME_CHECKBOX_"])
         add_section_by_prefix("Dropdowns", ["THEME_DROPDOWN_"])
         add_section_by_prefix("Sliders", ["THEME_SLIDER_"])
