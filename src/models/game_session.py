@@ -200,6 +200,18 @@ class GameSession:
         """Advance to the next player's turn."""
         if self.cards_deck:
             logger.debug("Advancing player turn...")
+            if self.current_player is None:
+                if self.players:
+                    logger.warning(
+                        "Current player was not set, selecting the first available player."
+                    )
+                    self.current_player = self.players[0]
+                else:
+                    logger.warning(
+                        "Current player was not set and no players are available. Ending game."
+                    )
+                    self.end_game()
+                    return
             current_index = self.current_player.get_index()
             next_index = (current_index + 1) % len(self.players)
             for player in self.players:
