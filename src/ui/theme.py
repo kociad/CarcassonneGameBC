@@ -95,13 +95,13 @@ THEME_BUTTON_DISABLED_BG_COLOR: Color = (110, 110, 110, 0)
 THEME_CHECKBOX_BOX_COLOR: Color = (250, 250, 250, 255)
 # Active/checked state
 # Checkbox checkmark fill; RGB tuple (0-255 per channel).
-THEME_CHECKBOX_CHECK_COLOR: Color = (13, 65, 126, 255)
+THEME_CHECKBOX_CHECK_COLOR: Color = (205, 183, 82, 255)
 # Default border
 # Checkbox border color; RGB tuple (0-255 per channel).
 THEME_CHECKBOX_BORDER_COLOR: Color = (30, 30, 30, 255)
 # Hover state
 # Checkbox hover fill when unchecked; RGB tuple (0-255 per channel).
-THEME_CHECKBOX_HOVER_BOX_COLOR: Color = (250, 250, 250, 100)
+THEME_CHECKBOX_HOVER_BOX_COLOR: Color = (255, 255, 255, 255)
 # Disabled state
 # Checkbox color when disabled (border/check); RGB tuple (0-255 per channel).
 THEME_CHECKBOX_DISABLED_COLOR: Color = (150, 150, 150, 100)
@@ -135,7 +135,7 @@ THEME_INPUT_BG_COLOR: Color = (255, 255, 255, 255)
 # Input border color; RGB tuple (0-255 per channel).
 THEME_INPUT_BORDER_COLOR: Color = (30, 30, 30, 255)
 # Input border when hovering or active; RGB tuple (0-255 per channel).
-THEME_INPUT_BORDER_HOVER_COLOR: Color = (70, 70, 70, 255)
+THEME_INPUT_BORDER_HOVER_COLOR: Color = (205, 183, 82, 255)
 # Disabled state
 # Input background when disabled; RGB tuple (0-255 per channel).
 THEME_INPUT_DISABLED_BG_COLOR: Color = (150, 150, 150, 255)
