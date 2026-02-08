@@ -5,6 +5,7 @@ import typing
 from utils.settings_manager import settings_manager
 
 from ui import theme
+from ui.utils.draw import draw_rect_alpha
 
 
 class GameLogEntry:
@@ -63,15 +64,14 @@ class GameLog:
         }
         self._title_surface: typing.Optional[pygame.Surface] = None
         self._title_rect: typing.Optional[pygame.Rect] = None
-        self._title_bg: typing.Optional[pygame.Surface] = None
         self._title_bg_rect: typing.Optional[pygame.Rect] = None
         self._title_width = 0
         self._title_color = theme.THEME_GAME_LOG_TITLE_TEXT_COLOR
         self._title_bg_color = theme.THEME_GAME_LOG_TITLE_BG_COLOR
         self._title_font: typing.Optional[pygame.font.Font] = None
         self._scroll_surface: typing.Optional[pygame.Surface] = None
-        self._scroll_bg: typing.Optional[pygame.Surface] = None
         self._scroll_rect: typing.Optional[Tuple[int, int]] = None
+        self._scroll_bg_rect: typing.Optional[pygame.Rect] = None
         self._scroll_info = ""
         self._scroll_width = 0
         self._scroll_height = 0
@@ -192,10 +192,11 @@ class GameLog:
             return
         screen_width = settings_manager.get("WINDOW_WIDTH", 1920)
         screen_height = settings_manager.get("WINDOW_HEIGHT", 1080)
-        overlay = pygame.Surface((screen_width, screen_height),
-                                 pygame.SRCALPHA)
-        overlay.fill(theme.THEME_GAME_LOG_OVERLAY_COLOR)
-        screen.blit(overlay, (0, 0))
+        draw_rect_alpha(
+            screen,
+            theme.THEME_GAME_LOG_OVERLAY_COLOR,
+            pygame.Rect(0, 0, screen_width, screen_height),
+        )
         if (self._title_surface is None
                 or self._title_width != screen_width
                 or self._title_color != theme.THEME_GAME_LOG_TITLE_TEXT_COLOR
@@ -206,23 +207,22 @@ class GameLog:
                 "Game Log (Press TAB to close, Mouse Wheel to scroll)", True,
                 theme.THEME_GAME_LOG_TITLE_TEXT_COLOR)
             title_rect = title_text.get_rect(center=(screen_width // 2, 30))
-            title_bg = pygame.Surface(
-                (title_rect.width + 20, title_rect.height + 10),
-                pygame.SRCALPHA)
-            title_bg.fill(theme.THEME_GAME_LOG_TITLE_BG_COLOR)
             self._title_surface = title_text
             self._title_rect = title_rect
-            self._title_bg = title_bg
             self._title_bg_rect = pygame.Rect(title_rect.x - 10,
                                               title_rect.y - 5,
-                                              title_bg.get_width(),
-                                              title_bg.get_height())
+                                              title_rect.width + 20,
+                                              title_rect.height + 10)
             self._title_width = screen_width
             self._title_color = theme.THEME_GAME_LOG_TITLE_TEXT_COLOR
             self._title_bg_color = theme.THEME_GAME_LOG_TITLE_BG_COLOR
             self._title_font = self.title_font
-        if self._title_surface and self._title_rect and self._title_bg and self._title_bg_rect:
-            screen.blit(self._title_bg, self._title_bg_rect)
+        if self._title_surface and self._title_rect and self._title_bg_rect:
+            draw_rect_alpha(
+                screen,
+                theme.THEME_GAME_LOG_TITLE_BG_COLOR,
+                self._title_bg_rect,
+            )
             screen.blit(self._title_surface, self._title_rect)
         debug_enabled = settings_manager.get("DEBUG", False)
         filtered_entries = []
@@ -259,10 +259,11 @@ class GameLog:
             bg_color = self.level_backgrounds.get(entry.level,
                                                   theme.THEME_TRANSPARENT_COLOR)
             if bg_color[3] > 0:
-                line_bg = pygame.Surface((screen_width - 20, line_height),
-                                         pygame.SRCALPHA)
-                line_bg.fill(bg_color)
-                screen.blit(line_bg, (10, y_pos - 2))
+                draw_rect_alpha(
+                    screen,
+                    bg_color,
+                    pygame.Rect(10, y_pos - 2, screen_width - 20, line_height),
+                )
             max_width = screen_width - 40
             if (not entry.rendered_lines
                     or entry.rendered_width != max_width
@@ -290,25 +291,28 @@ class GameLog:
                     or self._scroll_font is not self.font):
                 scroll_surface = self.font.render(
                     scroll_info, True, theme.THEME_GAME_LOG_SCROLL_TEXT_COLOR)
-                scroll_bg = pygame.Surface((scroll_surface.get_width() + 10,
-                                            scroll_surface.get_height() + 6),
-                                           pygame.SRCALPHA)
-                scroll_bg.fill(theme.THEME_GAME_LOG_SCROLL_BG_COLOR)
                 scroll_rect = (screen_width - scroll_surface.get_width() - 25,
                                screen_height - 35)
                 self._scroll_surface = scroll_surface
-                self._scroll_bg = scroll_bg
                 self._scroll_rect = scroll_rect
+                self._scroll_bg_rect = pygame.Rect(
+                    scroll_rect[0] - 5,
+                    scroll_rect[1] - 3,
+                    scroll_surface.get_width() + 10,
+                    scroll_surface.get_height() + 6,
+                )
                 self._scroll_info = scroll_info
                 self._scroll_width = screen_width
                 self._scroll_height = screen_height
                 self._scroll_color = theme.THEME_GAME_LOG_SCROLL_TEXT_COLOR
                 self._scroll_bg_color = theme.THEME_GAME_LOG_SCROLL_BG_COLOR
                 self._scroll_font = self.font
-            if self._scroll_surface and self._scroll_bg and self._scroll_rect:
-                screen.blit(self._scroll_bg,
-                            (self._scroll_rect[0] - 5,
-                             self._scroll_rect[1] - 3))
+            if self._scroll_surface and self._scroll_bg_rect and self._scroll_rect:
+                draw_rect_alpha(
+                    screen,
+                    theme.THEME_GAME_LOG_SCROLL_BG_COLOR,
+                    self._scroll_bg_rect,
+                )
                 screen.blit(self._scroll_surface, self._scroll_rect)
 
     def refresh_theme(self) -> None:
@@ -332,15 +336,14 @@ class GameLog:
         }
         self._title_surface = None
         self._title_rect = None
-        self._title_bg = None
         self._title_bg_rect = None
         self._title_width = 0
         self._title_color = theme.THEME_GAME_LOG_TITLE_TEXT_COLOR
         self._title_bg_color = theme.THEME_GAME_LOG_TITLE_BG_COLOR
         self._title_font = None
         self._scroll_surface = None
-        self._scroll_bg = None
         self._scroll_rect = None
+        self._scroll_bg_rect = None
         self._scroll_info = ""
         self._scroll_width = 0
         self._scroll_height = 0
