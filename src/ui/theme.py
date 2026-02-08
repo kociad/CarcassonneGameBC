@@ -362,15 +362,15 @@ THEME_GAME_STRUCTURE_HOVER_COLOR: ColorA = (255, 255, 0, 150)
 # Transparent fill for structure overlays; RGBA tuple (0-255 per channel, alpha 0-255).
 THEME_TRANSPARENT_COLOR: ColorA = (0, 0, 0, 0)
 # Game over table background; RGB tuple (0-255 per channel).
-THEME_GAME_OVER_TABLE_BG_COLOR: Color = (40, 40, 40, 255)
+THEME_GAME_OVER_TABLE_BG_COLOR: Color = (42, 42, 42, 100)
 # Game over table separator line; RGB tuple (0-255 per channel).
-THEME_GAME_OVER_TABLE_LINE_COLOR: Color = (100, 100, 100, 255)
+THEME_GAME_OVER_TABLE_LINE_COLOR: Color = (255, 255, 255, 40)
 # Game over row separator line; RGB tuple (0-255 per channel).
 THEME_GAME_OVER_ROW_LINE_COLOR: Color = (70, 70, 70, 255)
 # Game over player row text color; RGB tuple (0-255 per channel).
 THEME_GAME_OVER_ROW_TEXT_COLOR: Color = (220, 220, 220)
 # Game over hint text color; RGB tuple (0-255 per channel).
-THEME_GAME_OVER_HINT_TEXT_COLOR: Color = (180, 180, 180)
+THEME_GAME_OVER_HINT_TEXT_COLOR: Color = (220, 220, 220)
 # Debug grid line color on the board; RGB tuple (0-255 per channel).
 THEME_GAME_DEBUG_GRID_COLOR: Color = (255, 255, 255, 255)
 # Sidebar panel background; RGB tuple (0-255 per channel).
@@ -382,9 +382,9 @@ THEME_GAME_STATUS_TURN_COLOR: Color = (104, 205, 81)
 # Sidebar status color for waiting turn; RGB tuple (0-255 per channel).
 THEME_GAME_STATUS_WAIT_COLOR: Color = (205, 81, 83)
 # Sidebar highlight background for current player; RGB tuple (0-255 per channel).
-THEME_GAME_CURRENT_PLAYER_BG_COLOR: Color = (205, 184, 82, 100)
+THEME_GAME_CURRENT_PLAYER_BG_COLOR: Color = (248, 224, 113, 100)
 # Sidebar highlight border for current player; RGB tuple (0-255 per channel).
-THEME_GAME_CURRENT_PLAYER_BORDER_COLOR: Color = (205, 183, 82, 255)
+THEME_GAME_CURRENT_PLAYER_BORDER_COLOR: Color = (248, 224, 113, 255)
 # Sidebar score text color; RGB tuple (0-255 per channel).
 THEME_GAME_SCORE_TEXT_COLOR: Color = (220, 220, 220)
 # AI thinking text color; RGB tuple (0-255 per channel).
