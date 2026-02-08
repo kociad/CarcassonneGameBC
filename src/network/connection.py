@@ -11,6 +11,7 @@ from utils.settings_manager import settings_manager
 logger = logging.getLogger(__name__)
 
 BUFFER_SIZE = 4096
+MAX_BUFFER_SIZE = 4 * 1024 * 1024
 
 
 class NetworkConnection:
@@ -99,6 +100,13 @@ class NetworkConnection:
                     self._handle_connection_drop(conn)
                     break
                 buffer += data
+                if len(buffer) > MAX_BUFFER_SIZE and "\n" not in buffer:
+                    logger.warning(
+                        "Receive buffer exceeded %s bytes without a newline; "
+                        "dropping buffered data to prevent memory growth.",
+                        MAX_BUFFER_SIZE,
+                    )
+                    buffer = ""
                 while "\n" in buffer:
                     line, buffer = buffer.split("\n", 1)
                     if line.strip():
