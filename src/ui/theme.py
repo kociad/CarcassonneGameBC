@@ -123,9 +123,9 @@ THEME_DROPDOWN_HIGHLIGHT_COLOR: Color = (235, 225, 178, 255)
 # Dropdown border color on hover; RGB tuple (0-255 per channel).
 THEME_DROPDOWN_HOVER_BORDER_COLOR: Color = (205, 183, 82, 255)
 # Dropdown background when hovering the control; RGB tuple (0-255 per channel).
-THEME_DROPDOWN_HOVER_BG_COLOR: Color = (235, 235, 235, 255)
+THEME_DROPDOWN_HOVER_BG_COLOR: Color = (255, 255, 255, 255)
 # Dropdown background when hovering an option; RGB tuple (0-255 per channel).
-THEME_DROPDOWN_HOVER_OPTION_COLOR: Color = (230, 230, 230, 255)
+THEME_DROPDOWN_HOVER_OPTION_COLOR: Color = (255, 255, 255, 255)
 # Dropdown option border when hovering an option; RGB tuple (0-255 per channel).
 THEME_DROPDOWN_HOVER_OPTION_BORDER_COLOR: Color = (205, 183, 82, 255)
 # Disabled state
