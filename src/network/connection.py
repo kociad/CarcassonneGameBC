@@ -121,7 +121,10 @@ class NetworkConnection:
         if action == "command":
             logger.debug("Received command from network")
             command = decode_command_message(message)
-            if command and self.on_command_received:
+            if not command:
+                logger.warning("Received invalid command message; skipping ack.")
+                return
+            if self.on_command_received:
                 self.on_command_received(command, conn)
             ack_message = encode_message("command_ack",
                                          {"command_id": command.command_id})
