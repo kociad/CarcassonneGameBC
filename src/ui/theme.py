@@ -206,50 +206,50 @@ THEME_PROGRESS_BAR_TEXT_COLOR: Color = (255, 255, 255)
 # Toast "info" text color; RGB tuple (0-255 per channel).
 THEME_TOAST_INFO_TEXT_COLOR: Color = (30, 30, 30)
 # Toast "info" background color; RGB tuple (0-255 per channel).
-THEME_TOAST_INFO_BG_COLOR: Color = (255, 255, 255, 255)
+THEME_TOAST_INFO_BG_COLOR: Color = (240, 240, 240, 100)
 # Success state
 # Toast "success" text color; RGB tuple (0-255 per channel).
-THEME_TOAST_SUCCESS_TEXT_COLOR: Color = (255, 255, 255)
+THEME_TOAST_SUCCESS_TEXT_COLOR: Color = (220, 220, 220)
 # Toast "success" background color; RGB tuple (0-255 per channel).
-THEME_TOAST_SUCCESS_BG_COLOR: Color = (0, 128, 0, 100)
+THEME_TOAST_SUCCESS_BG_COLOR: Color = (104, 205, 81, 100)
 # Error state
 # Toast "error" text color; RGB tuple (0-255 per channel).
-THEME_TOAST_ERROR_TEXT_COLOR: Color = (255, 255, 255)
+THEME_TOAST_ERROR_TEXT_COLOR: Color = (220, 220, 220)
 # Toast "error" background color; RGB tuple (0-255 per channel).
-THEME_TOAST_ERROR_BG_COLOR: Color = (128, 0, 0, 255)
+THEME_TOAST_ERROR_BG_COLOR: Color = (205, 81, 83, 100)
 # Warning state
 # Toast "warning" text color; RGB tuple (0-255 per channel).
-THEME_TOAST_WARNING_TEXT_COLOR: Color = (0, 0, 0)
+THEME_TOAST_WARNING_TEXT_COLOR: Color = (220, 220, 220)
 # Toast "warning" background color; RGB tuple (0-255 per channel).
-THEME_TOAST_WARNING_BG_COLOR: Color = (255, 215, 0, 255)
+THEME_TOAST_WARNING_BG_COLOR: Color = (248, 224, 113, 100)
 
 # Game log colors
 # Game log info text color; RGB tuple (0-255 per channel).
-THEME_GAME_LOG_INFO_COLOR: Color = (240, 240, 240)
+THEME_GAME_LOG_INFO_COLOR: Color = (220, 220, 220)
 # Game log debug text color; RGB tuple (0-255 per channel).
-THEME_GAME_LOG_DEBUG_COLOR: Color = (150, 200, 255)
+THEME_GAME_LOG_DEBUG_COLOR: Color = (81, 104, 205)
 # Game log scoring text color; RGB tuple (0-255 per channel).
-THEME_GAME_LOG_SCORING_COLOR: Color = (255, 255, 0)
+THEME_GAME_LOG_SCORING_COLOR: Color = (205, 183, 82)
 # Game log warning text color; RGB tuple (0-255 per channel).
-THEME_GAME_LOG_WARNING_COLOR: Color = (255, 220, 100)
+THEME_GAME_LOG_WARNING_COLOR: Color = (248, 224, 113)
 # Game log error text color; RGB tuple (0-255 per channel).
-THEME_GAME_LOG_ERROR_COLOR: Color = (255, 120, 120)
+THEME_GAME_LOG_ERROR_COLOR: Color = (205, 81, 83)
 # Game log info row background; RGBA tuple (0-255 per channel, alpha 0-255).
 THEME_GAME_LOG_INFO_BG: ColorA = (0, 0, 0, 0)
 # Game log debug row background; RGBA tuple (0-255 per channel, alpha 0-255).
-THEME_GAME_LOG_DEBUG_BG: ColorA = (0, 50, 100, 30)
+THEME_GAME_LOG_DEBUG_BG: ColorA = (81, 104, 205, 20)
 # Game log scoring row background; RGBA tuple (0-255 per channel, alpha 0-255).
-THEME_GAME_LOG_SCORING_BG: ColorA = (80, 80, 0, 40)
+THEME_GAME_LOG_SCORING_BG: ColorA = (205, 183, 82, 20)
 # Game log warning row background; RGBA tuple (0-255 per channel, alpha 0-255).
 THEME_GAME_LOG_WARNING_BG: ColorA = (100, 80, 0, 40)
 # Game log error row background; RGBA tuple (0-255 per channel, alpha 0-255).
-THEME_GAME_LOG_ERROR_BG: ColorA = (100, 0, 0, 50)
+THEME_GAME_LOG_ERROR_BG: ColorA = (205, 81, 83, 20)
 # Game log overlay dim color; RGBA tuple (0-255 per channel, alpha 0-255).
-THEME_GAME_LOG_OVERLAY_COLOR: ColorA = (0, 0, 0, 200)
+THEME_GAME_LOG_OVERLAY_COLOR: ColorA = (42, 42, 42, 200)
 # Game log title text color; RGB tuple (0-255 per channel).
-THEME_GAME_LOG_TITLE_TEXT_COLOR: Color = (255, 255, 255)
+THEME_GAME_LOG_TITLE_TEXT_COLOR: Color = (220, 220, 220)
 # Game log title background; RGBA tuple (0-255 per channel, alpha 0-255).
-THEME_GAME_LOG_TITLE_BG_COLOR: ColorA = (50, 50, 50, 180)
+THEME_GAME_LOG_TITLE_BG_COLOR: ColorA = (50, 50, 50, 0)
 # Game log scroll info text color; RGB tuple (0-255 per channel).
 THEME_GAME_LOG_SCROLL_TEXT_COLOR: Color = (180, 180, 180)
 # Game log scroll info background; RGBA tuple (0-255 per channel, alpha 0-255).
@@ -399,17 +399,17 @@ THEME_GAME_BACKGROUND_BLUR_RADIUS: float = 0.0
 
 # Player color palette
 # Player "red" tint; RGB tuple (0-255 per channel).
-THEME_PLAYER_COLOR_RED: Color = (255, 100, 100)
+THEME_PLAYER_COLOR_RED: Color = (205, 81, 83)
 # Player "blue" tint; RGB tuple (0-255 per channel).
-THEME_PLAYER_COLOR_BLUE: Color = (100, 100, 255)
+THEME_PLAYER_COLOR_BLUE: Color = (81, 104, 205)
 # Player "green" tint; RGB tuple (0-255 per channel).
-THEME_PLAYER_COLOR_GREEN: Color = (100, 255, 100)
+THEME_PLAYER_COLOR_GREEN: Color = (104, 205, 81)
 # Player "yellow" tint; RGB tuple (0-255 per channel).
-THEME_PLAYER_COLOR_YELLOW: Color = (255, 255, 100)
+THEME_PLAYER_COLOR_YELLOW: Color = (248, 224, 113)
 # Player "pink" tint; RGB tuple (0-255 per channel).
-THEME_PLAYER_COLOR_PINK: Color = (255, 100, 255)
+THEME_PLAYER_COLOR_PINK: Color = (182, 81, 205)
 # Player "black" tint (light gray fallback); RGB tuple (0-255 per channel).
-THEME_PLAYER_COLOR_BLACK: Color = (200, 200, 200)
+THEME_PLAYER_COLOR_BLACK: Color = (220, 220, 220)
 
 # Cache for pygame font instances keyed by role, size, and font family.
 _FONT_CACHE: dict[tuple[str, int, str | None], pygame.font.Font] = {}
