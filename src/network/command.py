@@ -146,7 +146,7 @@ class CommandManager:
     def __init__(self):
         self.commands: List[GameCommand] = []
         self.next_sequence_number = 1
-        self.pendingAcks: Dict[str, Tuple[float, int, str]] = {}
+        self.pendingAcks: Dict[str, Tuple[float, int, bytes]] = {}
         self.pending_acks_lock = threading.Lock()
         self.ack_timeout = 5.0
         self.max_retries = 3
@@ -173,7 +173,7 @@ class CommandManager:
         return self.next_sequence_number - 1
 
     def mark_command_pending_ack(self, command_id: str,
-                                 encoded_message: str) -> None:
+                                 encoded_message: bytes) -> None:
         """Mark a command as pending acknowledgment."""
         with self.pending_acks_lock:
             self.pendingAcks[command_id] = (time.time(), 0, encoded_message)
@@ -185,7 +185,7 @@ class CommandManager:
                 del self.pendingAcks[command_id]
                 logger.debug(f"Acknowledged command {command_id}")
 
-    def get_commands_to_retry(self) -> List[str]:
+    def get_commands_to_retry(self) -> List[bytes]:
         """Return encoded messages that should be retried."""
         current_time = time.time()
         expired = []
@@ -231,12 +231,12 @@ def create_command_from_data(data: dict) -> Optional[GameCommand]:
 
 
 def encode_command_message(command: GameCommand,
-                           message_type: str = "command") -> str:
+                           message_type: str = "command") -> bytes:
     """Encode a command as a network message."""
     return encode_message(message_type, command.serialize())
 
 
-def decode_command_message(raw_message: str) -> Optional[GameCommand]:
+def decode_command_message(raw_message: str | bytes) -> Optional[GameCommand]:
     """Decode a command from a network message."""
     data = decode_message(raw_message)
     if not data:

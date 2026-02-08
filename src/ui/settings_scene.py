@@ -196,6 +196,19 @@ class SettingsScene(Scene):
         current_y += (self.game_log_max_entries_field.rect.height
                       + theme.THEME_LAYOUT_VERTICAL_GAP)
 
+        self.max_retry_attempts_field = InputField(
+            rect=(x_center, current_y, 80, 40),
+            font=self.input_font,
+            initial_text=str(settings_manager.get("MAX_RETRY_ATTEMPTS", 3)),
+            on_text_change=None,
+            numeric=True,
+            min_value=0,
+            max_value=20)
+        self.max_retry_attempts_field.set_disabled(
+            not settings_manager.get("DEBUG"))
+        current_y += (self.max_retry_attempts_field.rect.height
+                      + theme.THEME_LAYOUT_VERTICAL_GAP)
+
         # ===== AI SETTINGS =====
         self.ai_label_y = current_y
         current_y += (self.section_header_font.get_height()
@@ -332,6 +345,8 @@ class SettingsScene(Scene):
 
             current_y = self._set_component_rect(
                 self.game_log_max_entries_field, x_center, current_y, padding)
+            current_y = self._set_component_rect(
+                self.max_retry_attempts_field, x_center, current_y, padding)
 
             self.ai_label_y = current_y
             current_y += self.section_header_font.get_height() + section_gap
@@ -379,6 +394,7 @@ class SettingsScene(Scene):
         self.tile_size_slider.set_disabled(not new_value)
         self.figure_size_slider.set_disabled(not new_value)
         self.game_log_max_entries_field.set_disabled(not new_value)
+        self.max_retry_attempts_field.set_disabled(not new_value)
         self.ai_simulation_checkbox.set_disabled(not new_value)
         self.ai_strategic_candidates_field.set_disabled(not new_value)
         self.ai_thinking_speed_field.set_disabled(not new_value)
@@ -453,6 +469,8 @@ class SettingsScene(Scene):
                                 "In order to apply sidebar width setting, restart the game",
                                 type="warning"))
                 self.game_log_max_entries_field.handle_event(
+                    event, y_offset=self.scroll_offset)
+                self.max_retry_attempts_field.handle_event(
                     event, y_offset=self.scroll_offset)
                 self.ai_strategic_candidates_field.handle_event(
                     event, y_offset=self.scroll_offset)
@@ -538,6 +556,23 @@ class SettingsScene(Scene):
             except ValueError:
                 self.add_toast(
                     Toast("Invalid game log max entries value", type="error"))
+                return
+
+        if not self.max_retry_attempts_field.is_disabled():
+            try:
+                max_retry_attempts = int(
+                    self.max_retry_attempts_field.get_text())
+                if 0 <= max_retry_attempts <= 20:
+                    changes["MAX_RETRY_ATTEMPTS"] = max_retry_attempts
+                else:
+                    self.add_toast(
+                        Toast(
+                            "Max retry attempts must be between 0 and 20",
+                            type="error"))
+                    return
+            except ValueError:
+                self.add_toast(
+                    Toast("Invalid max retry attempts value", type="error"))
                 return
 
         if not self.ai_strategic_candidates_field.is_disabled():
@@ -761,6 +796,17 @@ class SettingsScene(Scene):
                 centery=self.game_log_max_entries_field.rect.centery + offset_y)
             self.screen.blit(log_label, log_label_rect)
 
+            label_color = (
+                theme.THEME_LABEL_DISABLED_COLOR
+                if self.max_retry_attempts_field.is_disabled()
+                else theme.THEME_TEXT_COLOR_LIGHT)
+            retry_label = self._get_label_surface(
+                label_font, "Max retry attempts:", label_color)
+            retry_label_rect = retry_label.get_rect(
+                right=self.max_retry_attempts_field.rect.left - 10,
+                centery=self.max_retry_attempts_field.rect.centery + offset_y)
+            self.screen.blit(retry_label, retry_label_rect)
+
         # AI Settings
         if debug_enabled:
             label_color = (
@@ -810,6 +856,8 @@ class SettingsScene(Scene):
             self.sidebar_width_slider.draw(self.screen, y_offset=offset_y)
             self.game_log_max_entries_field.draw(self.screen,
                                                  y_offset=offset_y)
+            self.max_retry_attempts_field.draw(self.screen,
+                                               y_offset=offset_y)
             self.ai_simulation_checkbox.draw(self.screen, y_offset=offset_y)
             self.ai_strategic_candidates_field.draw(self.screen,
                                                     y_offset=offset_y)
@@ -873,6 +921,7 @@ class SettingsScene(Scene):
 
         inputs = [
             self.game_log_max_entries_field,
+            self.max_retry_attempts_field,
             self.ai_strategic_candidates_field,
             self.ai_thinking_speed_field,
         ]
