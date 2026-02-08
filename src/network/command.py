@@ -3,7 +3,7 @@ import logging
 import threading
 import time
 import uuid
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional, Any, Tuple
 from network.message import encode_message, decode_message
 
 logger = logging.getLogger(__name__)
@@ -146,7 +146,7 @@ class CommandManager:
     def __init__(self):
         self.commands: List[GameCommand] = []
         self.next_sequence_number = 1
-        self.pendingAcks: Dict[str, float] = {}
+        self.pendingAcks: Dict[str, Tuple[float, int, str]] = {}
         self.pending_acks_lock = threading.Lock()
         self.ack_timeout = 5.0
         self.max_retries = 3
@@ -172,10 +172,11 @@ class CommandManager:
         """Get the latest sequence number."""
         return self.next_sequence_number - 1
 
-    def mark_command_pending_ack(self, command_id: str) -> None:
+    def mark_command_pending_ack(self, command_id: str,
+                                 encoded_message: str) -> None:
         """Mark a command as pending acknowledgment."""
         with self.pending_acks_lock:
-            self.pendingAcks[command_id] = time.time()
+            self.pendingAcks[command_id] = (time.time(), 0, encoded_message)
 
     def ack_command(self, command_id: str) -> None:
         """Acknowledge receipt of a command."""
@@ -184,29 +185,32 @@ class CommandManager:
                 del self.pendingAcks[command_id]
                 logger.debug(f"Acknowledged command {command_id}")
 
-    def get_expired_commands(self) -> List[str]:
-        """Get list of command IDs that have exceeded their timeout."""
-        current_time = time.time()
-        with self.pending_acks_lock:
-            expired = []
-            for command_id, timestamp in self.pendingAcks.items():
-                if current_time - timestamp > self.ack_timeout:
-                    expired.append(command_id)
-            return expired
-
-    def clear_expired_commands(self) -> None:
-        """Remove expired commands from pending acks."""
+    def get_commands_to_retry(self) -> List[str]:
+        """Return encoded messages that should be retried."""
         current_time = time.time()
         expired = []
+        retry_messages = []
         with self.pending_acks_lock:
-            for command_id, timestamp in self.pendingAcks.items():
-                if current_time - timestamp > self.ack_timeout:
+            for command_id, (timestamp, retries,
+                             encoded_message) in list(self.pendingAcks.items()):
+                if retries >= self.max_retries:
                     expired.append(command_id)
+                    continue
+                retry_delay = self.retry_delays[min(
+                    retries,
+                    len(self.retry_delays) - 1,
+                )]
+                if current_time - timestamp >= retry_delay:
+                    retry_messages.append(encoded_message)
+                    self.pendingAcks[command_id] = (current_time, retries + 1,
+                                                    encoded_message)
             for command_id in expired:
                 del self.pendingAcks[command_id]
         for command_id in expired:
             logger.warning(
-                f"Command {command_id} expired without acknowledgment")
+                f"Command {command_id} reached max retries without acknowledgment"
+            )
+        return retry_messages
 
 
 def create_command_from_data(data: dict) -> Optional[GameCommand]:

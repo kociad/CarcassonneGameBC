@@ -220,7 +220,8 @@ class NetworkConnection:
             return
 
         message = encode_command_message(command)
-        self.command_manager.mark_command_pending_ack(command.command_id)
+        self.command_manager.mark_command_pending_ack(command.command_id,
+                                                      message)
 
         if self.network_mode == "host":
             for conn in self.connections[:]:
@@ -242,10 +243,15 @@ class NetworkConnection:
         )
 
     def _command_cleanup_loop(self):
-        """Background thread to clean up expired commands."""
+        """Background thread to retry unacknowledged commands."""
         while self.running:
             try:
-                self.command_manager.clear_expired_commands()
+                retry_messages = self.command_manager.get_commands_to_retry()
+                for message in retry_messages:
+                    if self.network_mode == "host":
+                        self.send_to_all(message)
+                    elif self.network_mode == "client":
+                        self.send_to_host(message)
                 time.sleep(1.0)
             except Exception as e:
                 logger.exception(f"Error in command cleanup loop: {e}")
