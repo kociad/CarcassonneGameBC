@@ -16,6 +16,7 @@ class Checkbox:
         box_color: tuple[int, ...] = theme.THEME_CHECKBOX_BOX_COLOR,
         check_color: tuple[int, ...] = theme.THEME_CHECKBOX_CHECK_COLOR,
         border_color: tuple[int, ...] = theme.THEME_CHECKBOX_BORDER_COLOR,
+        hover_border_color: tuple[int, ...] = theme.THEME_CHECKBOX_HOVER_BORDER_COLOR,
         hover_box_color: tuple[int, ...] = theme.THEME_CHECKBOX_HOVER_BOX_COLOR,
         disabled_color: tuple[int, ...] = theme.THEME_CHECKBOX_DISABLED_COLOR
     ) -> None:
@@ -29,6 +30,7 @@ class Checkbox:
             box_color: Color of the checkbox box
             check_color: Color of the check mark
             border_color: Color of the border
+            hover_border_color: Color of the border on hover
             hover_box_color: Color of the unchecked box on hover
             disabled_color: Color when disabled
         """
@@ -38,6 +40,7 @@ class Checkbox:
         self.box_color = box_color
         self.check_color = check_color
         self.border_color = border_color
+        self.hover_border_color = hover_border_color
         self.hover_box_color = hover_box_color
         self.disabled_color = disabled_color
         self.disabled = False
@@ -85,15 +88,17 @@ class Checkbox:
                 return (color[0], color[1], color[2]), color[3]
             return (color[0], color[1], color[2]), 255
 
-        def adjust_color(color: tuple[int, ...], delta: int) -> tuple[int, int, int, int]:
+        def adjust_color(color: tuple[int, ...], delta: int
+                         ) -> tuple[int, int, int, int]:
             rgb, alpha = split_color(color)
             adjusted = tuple(min(255, channel + delta) for channel in rgb)
             return (*adjusted, alpha)
+
         if self.disabled:
             border_color = self.disabled_color
             box_color = self.box_color
         elif self.hovered:
-            border_color = adjust_color(self.border_color, 40)
+            border_color = self.hover_border_color
             if not self.checked:
                 box_color = self.hover_box_color
             else:
@@ -147,5 +152,6 @@ class Checkbox:
         self.box_color = theme.THEME_CHECKBOX_BOX_COLOR
         self.check_color = theme.THEME_CHECKBOX_CHECK_COLOR
         self.border_color = theme.THEME_CHECKBOX_BORDER_COLOR
+        self.hover_border_color = theme.THEME_CHECKBOX_HOVER_BORDER_COLOR
         self.hover_box_color = theme.THEME_CHECKBOX_HOVER_BOX_COLOR
         self.disabled_color = theme.THEME_CHECKBOX_DISABLED_COLOR

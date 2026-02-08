@@ -100,6 +100,8 @@ THEME_CHECKBOX_CHECK_COLOR: Color = (205, 183, 82, 255)
 # Checkbox border color; RGB tuple (0-255 per channel).
 THEME_CHECKBOX_BORDER_COLOR: Color = (30, 30, 30, 255)
 # Hover state
+# Checkbox border color on hover; RGB tuple (0-255 per channel).
+THEME_CHECKBOX_HOVER_BORDER_COLOR: Color = (70, 70, 70, 255)
 # Checkbox hover fill when unchecked; RGB tuple (0-255 per channel).
 THEME_CHECKBOX_HOVER_BOX_COLOR: Color = (255, 255, 255, 255)
 # Disabled state
@@ -118,6 +120,8 @@ THEME_DROPDOWN_BORDER_COLOR: Color = (30, 30, 30, 255)
 # Dropdown selected option highlight; RGB tuple (0-255 per channel).
 THEME_DROPDOWN_HIGHLIGHT_COLOR: Color = (200, 200, 200, 255)
 # Hover state
+# Dropdown border color on hover; RGB tuple (0-255 per channel).
+THEME_DROPDOWN_HOVER_BORDER_COLOR: Color = (70, 70, 70, 255)
 # Dropdown background when hovering the control; RGB tuple (0-255 per channel).
 THEME_DROPDOWN_HOVER_BG_COLOR: Color = (235, 235, 235, 255)
 # Dropdown background when hovering an option; RGB tuple (0-255 per channel).
