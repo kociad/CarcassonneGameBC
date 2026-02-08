@@ -445,7 +445,23 @@ class ThemeDebugOverlay:
         )
         add_section("Inputs", input_names + input_extra_names)
         add_section_by_prefix("Checkboxes", ["THEME_CHECKBOX_"])
-        add_section_by_prefix("Dropdowns", ["THEME_DROPDOWN_"])
+        dropdown_names = [
+            "THEME_DROPDOWN_TEXT_COLOR",
+            "THEME_DROPDOWN_BG_COLOR",
+            "THEME_DROPDOWN_BORDER_COLOR",
+            "THEME_DROPDOWN_HIGHLIGHT_COLOR",
+            "THEME_DROPDOWN_HOVER_BORDER_COLOR",
+            "THEME_DROPDOWN_HOVER_BG_COLOR",
+            "THEME_DROPDOWN_HOVER_OPTION_COLOR",
+            "THEME_DROPDOWN_HOVER_OPTION_BORDER_COLOR",
+            "THEME_DROPDOWN_DISABLED_TEXT_COLOR",
+        ]
+        dropdown_extra_names = sorted(
+            name for name in dir(theme)
+            if name.startswith("THEME_DROPDOWN_")
+            and name not in dropdown_names
+        )
+        add_section("Dropdowns", dropdown_names + dropdown_extra_names)
         add_section_by_prefix("Sliders", ["THEME_SLIDER_"])
         add_section_by_prefix("Progress Bars", ["THEME_PROGRESS_BAR_"])
         add_section_by_prefix("Menu Dialogs", ["THEME_MENU_"])
