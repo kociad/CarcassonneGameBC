@@ -166,6 +166,8 @@ THEME_SLIDER_BORDER_COLOR: Color = (30, 30, 30, 0)
 # Hover state
 # Slider handle hover fill; RGB tuple (0-255 per channel).
 THEME_SLIDER_HANDLE_HOVER_COLOR: Color = (200, 200, 200, 255)
+# Slider handle hover border; RGB tuple (0-255 per channel).
+THEME_SLIDER_HANDLE_HOVER_BORDER_COLOR: Color = (50, 50, 50, 0)
 # Active/drag state
 # Slider handle active fill; RGB tuple (0-255 per channel).
 THEME_SLIDER_HANDLE_ACTIVE_COLOR: Color = (138, 173, 209, 255)
