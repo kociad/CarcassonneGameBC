@@ -440,7 +440,7 @@ class Game:
             logger.debug("Sending current game state to new client...")
             game_state = self._game_session.serialize()
             message = encode_message("init_game_state", game_state)
-            conn.sendall((message + "\n").encode())
+            conn.sendall(message)
             logger.debug("Game state sent successfully.")
         except Exception as e:
             log_error("Failed to send game state to client", e)
@@ -565,7 +565,7 @@ class Game:
             reason = data.get("reason", "unspecified")
             logger.debug(f"Client join failed: {reason}")
             response = encode_message("join_rejected", {"reason": reason})
-            conn.sendall((response + "\n").encode())
+            conn.sendall(response)
             logger.debug("Sent join_rejected response to client.")
         except Exception as e:
             log_error("Failed to handle join failure", e)
@@ -684,7 +684,7 @@ class Game:
                             try:
                                 from network.command import encode_command_message
                                 message = encode_command_message(command)
-                                other_conn.sendall((message + "\n").encode())
+                                other_conn.sendall(message)
                             except Exception as e:
                                 logger.exception(
                                     f"Failed to broadcast command to client: {e}"
@@ -736,7 +736,7 @@ class Game:
             game_state = self._game_session.serialize()
             message = encode_message("sync_game_state", game_state)
             if conn:
-                conn.sendall((message + "\n").encode())
+                conn.sendall(message)
         except Exception as e:
             log_error("Failed to handle sync request", e)
 
