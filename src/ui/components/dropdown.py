@@ -177,13 +177,35 @@ class Dropdown:
                 else:
                     option_bg = bg
                 draw_rect_alpha(draw_surface, option_bg, option_rect)
-                option_border_color = option_hover_border if self.hovered_index == i else option_border
-                draw_rect_alpha(draw_surface, option_border_color, option_rect, 2)
                 option_text = self.font.render(option, True, text_col)
                 draw_surface.blit(
                     option_text,
                     (5, option_rect.y +
                      (self.rect.height - option_text.get_height()) // 2))
+            options_area_rect = pygame.Rect(
+                0,
+                self.rect.height,
+                self.rect.width,
+                len(self.options) * self.rect.height,
+            )
+            draw_rect_alpha(draw_surface, option_border, options_area_rect, 2)
+            for i in range(1, len(self.options)):
+                separator_y = self.rect.height + i * self.rect.height
+                pygame.draw.line(
+                    draw_surface,
+                    option_border,
+                    (0, separator_y),
+                    (self.rect.width, separator_y),
+                    2,
+                )
+            if self.hovered_index is not None:
+                hovered_rect = pygame.Rect(
+                    0,
+                    (self.hovered_index + 1) * self.rect.height,
+                    self.rect.width,
+                    self.rect.height,
+                )
+                draw_rect_alpha(draw_surface, option_hover_border, hovered_rect, 2)
         surface.blit(draw_surface, draw_rect.topleft)
 
     def get_selected(self) -> str:
