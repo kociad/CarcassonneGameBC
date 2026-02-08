@@ -21,7 +21,10 @@ class Dropdown:
         hover_border_color: tuple[int, ...] = theme.THEME_DROPDOWN_HOVER_BORDER_COLOR,
         highlight_color: tuple[int, ...] = theme.THEME_DROPDOWN_HIGHLIGHT_COLOR,
         hover_bg_color: tuple[int, ...] = theme.THEME_DROPDOWN_HOVER_BG_COLOR,
-        hover_option_color: tuple[int, ...] = theme.THEME_DROPDOWN_HOVER_OPTION_COLOR
+        hover_option_color: tuple[int, ...] = theme.THEME_DROPDOWN_HOVER_OPTION_COLOR,
+        hover_option_border_color: tuple[int, ...] = (
+            theme.THEME_DROPDOWN_HOVER_OPTION_BORDER_COLOR
+        ),
     ) -> None:
         """
         Initialize the dropdown.
@@ -39,6 +42,7 @@ class Dropdown:
             highlight_color: Color for highlighting selected option
             hover_bg_color: Background color when hovering the control
             hover_option_color: Background color for hovered option
+            hover_option_border_color: Border color for hovered option
         """
         self.rect = pygame.Rect(rect)
         self.font = font
@@ -54,6 +58,7 @@ class Dropdown:
         self.highlight_color = highlight_color
         self.hover_bg_color = hover_bg_color
         self.hover_option_color = hover_option_color
+        self.hover_option_border_color = hover_option_border_color
         self.hovered_control = False
         self.hovered_index: typing.Optional[int] = None
 
@@ -143,17 +148,19 @@ class Dropdown:
             return color[:3] if len(color) == 4 else color  # type: ignore[return-value]
 
         bg = apply_alpha(bg_base, alpha)
-        border_base = self.border_color
+        control_border_base = self.border_color
         if self.hovered_control and not self.disabled:
-            border_base = self.hover_border_color
-        border = apply_alpha(border_base, alpha)
+            control_border_base = self.hover_border_color
+        control_border = apply_alpha(control_border_base, alpha)
+        option_border = apply_alpha(self.border_color, alpha)
+        option_hover_border = apply_alpha(self.hover_option_border_color, alpha)
         text_color = theme.THEME_DROPDOWN_DISABLED_TEXT_COLOR if self.disabled else self.text_color
         text_col = apply_alpha(text_color, alpha)
         highlight = apply_alpha(self.highlight_color, alpha)
         hover_option = apply_alpha(self.hover_option_color, alpha)
         local_rect = pygame.Rect(0, 0, self.rect.width, self.rect.height)
         draw_rect_alpha(draw_surface, bg, local_rect)
-        draw_rect_alpha(draw_surface, border, local_rect, 2)
+        draw_rect_alpha(draw_surface, control_border, local_rect, 2)
         selected_text = self.font.render(self.options[self.selected_index],
                                          True, text_col)
         draw_surface.blit(
@@ -170,12 +177,35 @@ class Dropdown:
                 else:
                     option_bg = bg
                 draw_rect_alpha(draw_surface, option_bg, option_rect)
-                draw_rect_alpha(draw_surface, border, option_rect, 1)
                 option_text = self.font.render(option, True, text_col)
                 draw_surface.blit(
                     option_text,
                     (5, option_rect.y +
                      (self.rect.height - option_text.get_height()) // 2))
+            options_area_rect = pygame.Rect(
+                0,
+                self.rect.height,
+                self.rect.width,
+                len(self.options) * self.rect.height,
+            )
+            draw_rect_alpha(draw_surface, option_border, options_area_rect, 2)
+            for i in range(1, len(self.options)):
+                separator_y = self.rect.height + i * self.rect.height
+                pygame.draw.line(
+                    draw_surface,
+                    option_border,
+                    (0, separator_y),
+                    (self.rect.width, separator_y),
+                    2,
+                )
+            if self.hovered_index is not None:
+                hovered_rect = pygame.Rect(
+                    0,
+                    (self.hovered_index + 1) * self.rect.height,
+                    self.rect.width,
+                    self.rect.height,
+                )
+                draw_rect_alpha(draw_surface, option_hover_border, hovered_rect, 2)
         surface.blit(draw_surface, draw_rect.topleft)
 
     def get_selected(self) -> str:
@@ -218,3 +248,4 @@ class Dropdown:
         self.highlight_color = theme.THEME_DROPDOWN_HIGHLIGHT_COLOR
         self.hover_bg_color = theme.THEME_DROPDOWN_HOVER_BG_COLOR
         self.hover_option_color = theme.THEME_DROPDOWN_HOVER_OPTION_COLOR
+        self.hover_option_border_color = theme.THEME_DROPDOWN_HOVER_OPTION_BORDER_COLOR
