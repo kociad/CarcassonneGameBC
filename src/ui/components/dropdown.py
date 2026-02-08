@@ -178,7 +178,7 @@ class Dropdown:
                     option_bg = bg
                 draw_rect_alpha(draw_surface, option_bg, option_rect)
                 option_border_color = option_hover_border if self.hovered_index == i else option_border
-                draw_rect_alpha(draw_surface, option_border_color, option_rect, 1)
+                draw_rect_alpha(draw_surface, option_border_color, option_rect, 2)
                 option_text = self.font.render(option, True, text_col)
                 draw_surface.blit(
                     option_text,
