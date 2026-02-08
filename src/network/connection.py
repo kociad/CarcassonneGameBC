@@ -3,7 +3,7 @@ import threading
 import logging
 import typing
 import time
-from network.message import decode_message, encode_message
+from network.message import decode_message, encode_message, extract_framed_messages
 from network.command import CommandManager, decode_command_message, encode_command_message
 from models.game_session import GameSession
 from utils.settings_manager import settings_manager
@@ -91,27 +91,70 @@ class NetworkConnection:
 
     def _receive_loop(self, conn):
         """Receive and process messages from a connection."""
-        buffer = ""
+        buffer = bytearray()
+        invalid_json_attempts = 0
+        max_retry_attempts = 0
+        if settings_manager.get("DEBUG", False):
+            max_retry_attempts = settings_manager.get("MAX_RETRY_ATTEMPTS", 3)
         while self.running:
             try:
-                data = conn.recv(BUFFER_SIZE).decode()
+                data = conn.recv(BUFFER_SIZE)
                 if not data:
                     logger.debug("Connection closed by peer")
                     self._handle_connection_drop(conn)
                     break
-                buffer += data
-                if len(buffer) > MAX_BUFFER_SIZE and "\n" not in buffer:
+                buffer.extend(data)
+                if len(buffer) > MAX_BUFFER_SIZE * 2:
+                    invalid_json_attempts += 1
                     logger.warning(
-                        "Receive buffer exceeded %s bytes without a newline; "
-                        "dropping buffered data to prevent memory growth.",
-                        MAX_BUFFER_SIZE,
+                        "Receive buffer exceeded %s bytes without completing frames "
+                        "(%s/%s).",
+                        MAX_BUFFER_SIZE * 2,
+                        invalid_json_attempts,
+                        max_retry_attempts,
                     )
-                    buffer = ""
-                while "\n" in buffer:
-                    line, buffer = buffer.split("\n", 1)
-                    if line.strip():
-                        logger.debug(f"Receiving message: {line}")
-                        self._on_message_received(line, conn)
+                    if invalid_json_attempts > max_retry_attempts:
+                        logger.warning(
+                            "Too many oversized buffers; closing connection.")
+                        self._handle_connection_drop(conn)
+                        break
+                    buffer.clear()
+                    continue
+                try:
+                    messages = extract_framed_messages(buffer, MAX_BUFFER_SIZE)
+                except ValueError as e:
+                    invalid_json_attempts += 1
+                    logger.warning(
+                        "Protocol violation: %s (%s/%s).",
+                        e,
+                        invalid_json_attempts,
+                        max_retry_attempts,
+                    )
+                    if invalid_json_attempts > max_retry_attempts:
+                        logger.warning(
+                            "Too many invalid frames; closing connection.")
+                        self._handle_connection_drop(conn)
+                        break
+                    buffer.clear()
+                    continue
+                for message in messages:
+                    logger.debug("Receiving message payload of %s bytes",
+                                 len(message))
+                    if not self._on_message_received(message, conn):
+                        invalid_json_attempts += 1
+                        logger.warning(
+                            "Malformed JSON received (%s/%s).",
+                            invalid_json_attempts,
+                            max_retry_attempts,
+                        )
+                        if invalid_json_attempts > max_retry_attempts:
+                            logger.warning(
+                                "Too many malformed JSON messages; closing connection."
+                            )
+                            self._handle_connection_drop(conn)
+                            return
+                    else:
+                        invalid_json_attempts = 0
             except Exception as e:
                 if self.running:
                     logger.exception(f"Socket error: {e}")
@@ -122,7 +165,7 @@ class NetworkConnection:
         """Handle a received message and dispatch to the appropriate handler."""
         parsed = decode_message(message)
         if not parsed:
-            return
+            return False
         action = parsed.get("action")
         payload = parsed.get("payload")
 
@@ -138,7 +181,7 @@ class NetworkConnection:
                                          {"command_id": command.command_id})
             if conn:
                 try:
-                    conn.sendall((ack_message + "\n").encode())
+                    conn.sendall(ack_message)
                 except Exception as e:
                     logger.exception(f"Failed to send command ack: {e}")
             elif self.network_mode == "client":
@@ -184,15 +227,18 @@ class NetworkConnection:
             logger.debug("Received join_rejected from host")
             if self.on_join_rejected:
                 self.on_join_rejected(payload)
+        return True
 
     def send_to_all(self, message):
         """Send a message to all connected clients (host mode)."""
         if self.network_mode != "host":
             return
         logger.debug(f"Sending message to all: {message}")
+        message_bytes = message.encode() if isinstance(message,
+                                                       str) else message
         for conn in self.connections[:]:
             try:
-                conn.sendall((message + "\n").encode())
+                conn.sendall(message_bytes)
             except Exception as e:
                 logger.exception(
                     f"Failed to send message to client, removing connection: {e}"
@@ -210,7 +256,9 @@ class NetworkConnection:
             return
         try:
             logger.debug(f"Sending message to host: {message}")
-            self.socket.sendall((message + "\n").encode())
+            message_bytes = message.encode() if isinstance(
+                message, str) else message
+            self.socket.sendall(message_bytes)
         except Exception as e:
             logger.exception(f"Failed to send to host: {e}")
 
@@ -226,7 +274,7 @@ class NetworkConnection:
         if self.network_mode == "host":
             for conn in self.connections[:]:
                 try:
-                    conn.sendall((message + "\n").encode())
+                    conn.sendall(message)
                 except Exception as e:
                     logger.exception(f"Failed to send command to client: {e}")
                     try:
