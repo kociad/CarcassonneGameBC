@@ -1,5 +1,6 @@
 import json
 import logging
+import threading
 import time
 import uuid
 from typing import Dict, List, Optional, Any
@@ -146,6 +147,7 @@ class CommandManager:
         self.commands: List[GameCommand] = []
         self.next_sequence_number = 1
         self.pendingAcks: Dict[str, float] = {}
+        self.pending_acks_lock = threading.Lock()
         self.ack_timeout = 5.0
         self.max_retries = 3
         self.retry_delays = [1.0, 2.0, 4.0]
@@ -172,28 +174,37 @@ class CommandManager:
 
     def mark_command_pending_ack(self, command_id: str) -> None:
         """Mark a command as pending acknowledgment."""
-        self.pendingAcks[command_id] = time.time()
+        with self.pending_acks_lock:
+            self.pendingAcks[command_id] = time.time()
 
     def ack_command(self, command_id: str) -> None:
         """Acknowledge receipt of a command."""
-        if command_id in self.pendingAcks:
-            del self.pendingAcks[command_id]
-            logger.debug(f"Acknowledged command {command_id}")
+        with self.pending_acks_lock:
+            if command_id in self.pendingAcks:
+                del self.pendingAcks[command_id]
+                logger.debug(f"Acknowledged command {command_id}")
 
     def get_expired_commands(self) -> List[str]:
         """Get list of command IDs that have exceeded their timeout."""
         current_time = time.time()
-        expired = []
-        for command_id, timestamp in self.pendingAcks.items():
-            if current_time - timestamp > self.ack_timeout:
-                expired.append(command_id)
-        return expired
+        with self.pending_acks_lock:
+            expired = []
+            for command_id, timestamp in self.pendingAcks.items():
+                if current_time - timestamp > self.ack_timeout:
+                    expired.append(command_id)
+            return expired
 
     def clear_expired_commands(self) -> None:
         """Remove expired commands from pending acks."""
-        expired = self.get_expired_commands()
+        current_time = time.time()
+        expired = []
+        with self.pending_acks_lock:
+            for command_id, timestamp in self.pendingAcks.items():
+                if current_time - timestamp > self.ack_timeout:
+                    expired.append(command_id)
+            for command_id in expired:
+                del self.pendingAcks[command_id]
         for command_id in expired:
-            del self.pendingAcks[command_id]
             logger.warning(
                 f"Command {command_id} expired without acknowledgment")
 
