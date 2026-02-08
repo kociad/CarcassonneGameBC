@@ -462,7 +462,28 @@ class ThemeDebugOverlay:
             and name not in dropdown_names
         )
         add_section("Dropdowns", dropdown_names + dropdown_extra_names)
-        add_section_by_prefix("Sliders", ["THEME_SLIDER_"])
+        slider_names = [
+            "THEME_SLIDER_BG_COLOR",
+            "THEME_SLIDER_FG_COLOR",
+            "THEME_SLIDER_HANDLE_COLOR",
+            "THEME_SLIDER_BORDER_COLOR",
+            "THEME_SLIDER_HANDLE_HOVER_COLOR",
+            "THEME_SLIDER_HANDLE_HOVER_BORDER_COLOR",
+            "THEME_SLIDER_HANDLE_ACTIVE_COLOR",
+            "THEME_SLIDER_TRACK_HOVER_COLOR",
+            "THEME_SLIDER_TRACK_ACTIVE_COLOR",
+            "THEME_SLIDER_HOVER_BORDER_COLOR",
+            "THEME_SLIDER_DISABLED_BG_COLOR",
+            "THEME_SLIDER_DISABLED_FG_COLOR",
+            "THEME_SLIDER_DISABLED_HANDLE_COLOR",
+            "THEME_SLIDER_DISABLED_BORDER_COLOR",
+        ]
+        slider_extra_names = sorted(
+            name for name in dir(theme)
+            if name.startswith("THEME_SLIDER_")
+            and name not in slider_names
+        )
+        add_section("Sliders", slider_names + slider_extra_names)
         add_section_by_prefix("Progress Bars", ["THEME_PROGRESS_BAR_"])
         add_section_by_prefix("Menu Dialogs", ["THEME_MENU_"])
         add_section_by_prefix("Lobby Status", ["THEME_LOBBY_STATUS_"])
