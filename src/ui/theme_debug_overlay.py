@@ -445,8 +445,45 @@ class ThemeDebugOverlay:
         )
         add_section("Inputs", input_names + input_extra_names)
         add_section_by_prefix("Checkboxes", ["THEME_CHECKBOX_"])
-        add_section_by_prefix("Dropdowns", ["THEME_DROPDOWN_"])
-        add_section_by_prefix("Sliders", ["THEME_SLIDER_"])
+        dropdown_names = [
+            "THEME_DROPDOWN_TEXT_COLOR",
+            "THEME_DROPDOWN_BG_COLOR",
+            "THEME_DROPDOWN_BORDER_COLOR",
+            "THEME_DROPDOWN_HIGHLIGHT_COLOR",
+            "THEME_DROPDOWN_HOVER_BORDER_COLOR",
+            "THEME_DROPDOWN_HOVER_BG_COLOR",
+            "THEME_DROPDOWN_HOVER_OPTION_COLOR",
+            "THEME_DROPDOWN_HOVER_OPTION_BORDER_COLOR",
+            "THEME_DROPDOWN_DISABLED_TEXT_COLOR",
+        ]
+        dropdown_extra_names = sorted(
+            name for name in dir(theme)
+            if name.startswith("THEME_DROPDOWN_")
+            and name not in dropdown_names
+        )
+        add_section("Dropdowns", dropdown_names + dropdown_extra_names)
+        slider_names = [
+            "THEME_SLIDER_BG_COLOR",
+            "THEME_SLIDER_FG_COLOR",
+            "THEME_SLIDER_HANDLE_COLOR",
+            "THEME_SLIDER_BORDER_COLOR",
+            "THEME_SLIDER_HANDLE_HOVER_COLOR",
+            "THEME_SLIDER_HANDLE_HOVER_BORDER_COLOR",
+            "THEME_SLIDER_HANDLE_ACTIVE_COLOR",
+            "THEME_SLIDER_TRACK_HOVER_COLOR",
+            "THEME_SLIDER_TRACK_ACTIVE_COLOR",
+            "THEME_SLIDER_HOVER_BORDER_COLOR",
+            "THEME_SLIDER_DISABLED_BG_COLOR",
+            "THEME_SLIDER_DISABLED_FG_COLOR",
+            "THEME_SLIDER_DISABLED_HANDLE_COLOR",
+            "THEME_SLIDER_DISABLED_BORDER_COLOR",
+        ]
+        slider_extra_names = sorted(
+            name for name in dir(theme)
+            if name.startswith("THEME_SLIDER_")
+            and name not in slider_names
+        )
+        add_section("Sliders", slider_names + slider_extra_names)
         add_section_by_prefix("Progress Bars", ["THEME_PROGRESS_BAR_"])
         add_section_by_prefix("Menu Dialogs", ["THEME_MENU_"])
         add_section_by_prefix("Lobby Status", ["THEME_LOBBY_STATUS_"])
