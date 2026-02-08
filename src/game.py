@@ -647,7 +647,7 @@ class Game:
                 self._current_scene.show_notification(
                     "error", "Lost connection to host")
             else:
-                self.on_show_notification(
+                self._on_show_notification(
                     "error", "Lost connection to host, returning to main menu")
 
             pygame.time.delay(2000)
