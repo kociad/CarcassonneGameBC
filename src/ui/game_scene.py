@@ -324,10 +324,17 @@ class GameScene(Scene):
 
             for i, player in enumerate(sorted_players):
                 row_y = table_y + row_height * (i + 1) + row_height // 2
+                try:
+                    color_string = player.get_color()
+                    player_color = theme.THEME_PLAYER_COLOR_MAP.get(
+                        color_string, theme.THEME_TEXT_COLOR_LIGHT)
+                except Exception as e:
+                    logger.error(f"Failed to get player color: {e}")
+                    player_color = theme.THEME_TEXT_COLOR_LIGHT
                 name_surface = self._get_cached_text(
                     self.game_over_row_font,
                     player.get_name(),
-                    theme.THEME_GAME_OVER_ROW_TEXT_COLOR,
+                    player_color,
                 )
                 score_surface = self._get_cached_text(
                     self.game_over_row_font,
