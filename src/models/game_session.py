@@ -43,6 +43,7 @@ class GameSession:
         self.on_turn_ended = None
         self.on_show_notification = None
         self.on_command_executed = None
+        self.waiting_for_rejoin = False
 
         self._candidate_positions = set()
         self._last_board_state = None
@@ -951,7 +952,9 @@ class GameSession:
             "lobby_completed":
             self.lobby_completed,
             "network_mode":
-            self.network_mode
+            self.network_mode,
+            "waiting_for_rejoin":
+            self.waiting_for_rejoin
         }
 
     @classmethod
@@ -1018,6 +1021,8 @@ class GameSession:
         except Exception as e:
             logger.warning(f"Failed to parse basic session attributes - {e}")
         session.game_mode = data.get("game_mode", None)
+        session.waiting_for_rejoin = bool(
+            data.get("waiting_for_rejoin", False))
         player_map = {p.get_index(): p for p in session.players}
         session.placed_figures = []
         for fdata in data.get("placed_figures", []):
