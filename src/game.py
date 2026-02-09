@@ -701,6 +701,25 @@ class Game:
                 remaining_events.append(event)
         return remaining_events
 
+    def _handle_system_events(self, events: typing.Iterable[pygame.event.Event]
+                              ) -> list[pygame.event.Event]:
+        """
+        Handle engine-level events and return remaining events for scenes.
+
+        Args:
+            events: Iterable of pygame events
+
+        Returns:
+            List of events not consumed by system handlers
+        """
+        remaining_events = []
+        for event in events:
+            if event.type == self._join_rejected_event:
+                self._handle_join_rejected(event.reason)
+            else:
+                remaining_events.append(event)
+        return remaining_events
+
     def _get_game_session(self) -> typing.Optional['GameSession']:
         """
         Get the current game session.
