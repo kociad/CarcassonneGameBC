@@ -53,6 +53,7 @@ class Game:
         """
         try:
             pygame.init()
+            self._join_rejected_event = pygame.USEREVENT + 1
 
             if settings_manager.get("FULLSCREEN", False):
                 info = pygame.display.Info()
@@ -101,6 +102,7 @@ class Game:
         try:
             while self._running:
                 events = pygame.event.get()
+                events = self._handle_system_events(events)
                 if self._theme_debug_overlay:
                     events = self._theme_debug_overlay.handle_events(events)
                 self._current_scene.handle_events(events)
@@ -624,9 +626,28 @@ class Game:
         try:
             reason = data.get("reason", "unknown")
             logger.debug(f"Join rejected by host. Reason: {reason}")
-            self._handle_join_rejected(reason)
+            self._queue_join_rejected(reason)
         except Exception as e:
             log_error("Failed to handle join rejection", e)
+
+    def _queue_join_rejected(self, reason: str) -> None:
+        """
+        Queue a join rejection event to be handled on the main thread.
+
+        Args:
+            reason: Reason for the rejection
+        """
+        if not pygame.get_init():
+            logger.warning(
+                "Pygame not initialized; handling join rejection immediately.")
+            self._handle_join_rejected(reason)
+            return
+        try:
+            pygame.event.post(
+                pygame.event.Event(self._join_rejected_event, reason=reason))
+        except Exception as e:
+            log_error("Failed to post join rejected event", e)
+            self._handle_join_rejected(reason)
 
     def _handle_join_rejected(self, reason: str) -> None:
         """
@@ -637,11 +658,34 @@ class Game:
         """
         try:
             logger.debug(f"Handling join rejection (reason: {reason})")
-            print(f"Join rejected: {reason}")
-            pygame.time.delay(3000)
-            self.quit()
+            self._cleanup_previous_game()
+            self._init_scene(GameState.MENU)
+            message = f"Could not connect: {reason}"
+            if hasattr(self._current_scene, 'show_notification'):
+                self._current_scene.show_notification("error", message)
+            else:
+                self._on_show_notification("error", message)
         except Exception as e:
             log_error("Failed to handle join rejection", e)
+
+    def _handle_system_events(self, events: typing.Iterable[pygame.event.Event]
+                              ) -> list[pygame.event.Event]:
+        """
+        Handle engine-level events and return remaining events for scenes.
+
+        Args:
+            events: Iterable of pygame events
+
+        Returns:
+            List of events not consumed by system handlers
+        """
+        remaining_events = []
+        for event in events:
+            if event.type == self._join_rejected_event:
+                self._handle_join_rejected(event.reason)
+            else:
+                remaining_events.append(event)
+        return remaining_events
 
     def _get_game_session(self) -> typing.Optional['GameSession']:
         """
