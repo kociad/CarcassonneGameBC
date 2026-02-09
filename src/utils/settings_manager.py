@@ -123,35 +123,11 @@ class SettingsManager:
         self._load_from_settings_file()
         logger.debug("Settings reloaded from file")
 
-    def get_temporary_changes(self) -> Dict[str, Any]:
-        """Get all temporary (runtime) changes."""
-        return self._runtime_overrides.copy()
-
-    def make_permanent(self, key: str = None) -> bool:
-        """Make runtime changes permanent by writing to settings.py."""
-        if key:
-            if key in self._runtime_overrides:
-                return self.set(key,
-                                self._runtime_overrides[key],
-                                temporary=False)
-            return True
-        else:
-            success = True
-            for k, v in self._runtime_overrides.copy().items():
-                if not self.set(k, v, temporary=False):
-                    success = False
-            return success
-
     def subscribe(self, key: str, callback: typing.Callable) -> None:
         """Subscribe to changes for a specific setting."""
         if key not in self.observers:
             self.observers[key] = []
         self.observers[key].append(callback)
-
-    def unsubscribe(self, key: str, callback: Callable[[str, Any, Any], None]):
-        """Unsubscribe from changes for a specific setting."""
-        if key in self.observers and callback in self.observers[key]:
-            self.observers[key].remove(callback)
 
     def _notify_observers(self, key: str, old_value: Any, new_value: Any):
         """Notify all observers of a setting change."""
