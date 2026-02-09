@@ -645,7 +645,7 @@ class Game:
             # Show notification in current scene if it has show_notification method
             if hasattr(self._current_scene, 'show_notification'):
                 self._current_scene.show_notification(
-                    "error", "Lost connection to host")
+                    "error", "Lost connection to host, returning to main menu")
             else:
                 self._on_show_notification(
                     "error", "Lost connection to host, returning to main menu")
