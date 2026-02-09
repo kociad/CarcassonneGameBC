@@ -7,7 +7,6 @@ scene transitions, network communication, and overall game state.
 
 import pygame
 import logging
-from datetime import datetime
 import typing
 
 from ui.main_menu_scene import MainMenuScene
@@ -22,7 +21,6 @@ from models.game_session import GameSession
 from models.ai_player import AIPlayer
 from network.connection import NetworkConnection
 from network.message import encode_message
-from network.command import encode_command_message
 from utils.settings_manager import settings_manager
 from ui.components.game_log import GameLog
 from utils.logging_config import set_game_log_instance
