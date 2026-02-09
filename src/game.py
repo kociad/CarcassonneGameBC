@@ -660,13 +660,46 @@ class Game:
             logger.debug(f"Handling join rejection (reason: {reason})")
             self._cleanup_previous_game()
             self._init_scene(GameState.MENU)
-            message = f"Could not connect: {reason}"
+            readable_reason = self._format_join_rejection_reason(reason)
+            message = f"Couldn't connect: {readable_reason}"
             if hasattr(self._current_scene, 'show_notification'):
                 self._current_scene.show_notification("error", message)
             else:
                 self._on_show_notification("error", message)
         except Exception as e:
             log_error("Failed to handle join rejection", e)
+
+    def _format_join_rejection_reason(self, reason: str) -> str:
+        """
+        Convert join rejection reason codes into user-friendly text.
+
+        Args:
+            reason: Raw reason code from the host
+        """
+        reason_map = {
+            "no_slots": "the lobby is full",
+            "unknown": "the host rejected the request",
+        }
+        return reason_map.get(reason, reason.replace("_", " "))
+
+    def _handle_system_events(self, events: typing.Iterable[pygame.event.Event]
+                              ) -> list[pygame.event.Event]:
+        """
+        Handle engine-level events and return remaining events for scenes.
+
+        Args:
+            events: Iterable of pygame events
+
+        Returns:
+            List of events not consumed by system handlers
+        """
+        remaining_events = []
+        for event in events:
+            if event.type == self._join_rejected_event:
+                self._handle_join_rejected(event.reason)
+            else:
+                remaining_events.append(event)
+        return remaining_events
 
     def _handle_system_events(self, events: typing.Iterable[pygame.event.Event]
                               ) -> list[pygame.event.Event]:
