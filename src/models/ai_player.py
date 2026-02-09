@@ -8,7 +8,6 @@ from models.player import Player
 from models.figure import Figure
 from models.card import Card
 
-import settings
 from utils.settings_manager import settings_manager
 
 logger = logging.getLogger(__name__)
