@@ -496,9 +496,8 @@ class GamePrepareScene(Scene):
         self.host_ip_field.set_disabled(is_local)
         self.port_field.set_disabled(is_local)
 
-        self.ai_difficulty_dropdown.set_disabled(not is_local)
-
         is_client = mode == "client"
+        self.ai_difficulty_dropdown.set_disabled(is_client)
         for card_set, checkbox in self.card_set_checkboxes:
             if card_set['name'] not in self.default_card_sets:
                 checkbox.set_disabled(is_client)
