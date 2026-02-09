@@ -5,7 +5,6 @@ import typing
 import time
 from network.message import decode_message, encode_message, extract_framed_messages
 from network.command import CommandManager, decode_command_message, encode_command_message
-from models.game_session import GameSession
 from utils.settings_manager import settings_manager
 
 logger = logging.getLogger(__name__)
