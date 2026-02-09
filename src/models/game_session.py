@@ -44,6 +44,8 @@ class GameSession:
         self.on_show_notification = None
         self.on_command_executed = None
 
+        self._executed_command_ids = set()
+
         self._candidate_positions = set()
         self._last_board_state = None
 
@@ -340,12 +342,20 @@ class GameSession:
                 f"Executing command {command.command_type} for player {command.player_index}"
             )
 
+            if getattr(command, "command_id", None) in self._executed_command_ids:
+                logger.debug(
+                    "Skipping duplicate command execution for ID %s",
+                    command.command_id,
+                )
+                return True
+
             if command.player_index != self.current_player.get_index():
                 logger.warning(
                     f"Command from wrong player: {command.player_index} vs {self.current_player.get_index()}"
                 )
                 return False
 
+            success = False
             if command.command_type == "place_card":
                 if self.current_card:
                     while self.current_card.rotation != command.card_rotation:
@@ -353,47 +363,45 @@ class GameSession:
                 success = self.play_card(command.x, command.y)
                 if success:
                     self.turn_phase = 2
-                return success
-
             elif command.command_type == "place_figure":
                 if self.turn_phase != 2:
                     logger.warning("Cannot place figure in phase 1")
                     return False
-                figure_placed = self.play_figure(self.current_player,
-                                                 command.x, command.y,
-                                                 command.position)
-                if figure_placed:
+                success = self.play_figure(self.current_player, command.x,
+                                           command.y, command.position)
+                if success:
                     for structure in self.structures:
                         structure.check_completion()
                         if structure.get_is_completed():
                             self.score_structure(structure)
                     self.next_turn()
-                return figure_placed
-
             elif command.command_type == "skip_action":
                 if command.action_type == "card" and self.turn_phase == 1:
                     self.skip_current_action()
-                    return True
+                    success = True
                 elif command.action_type == "figure" and self.turn_phase == 2:
                     self.skip_current_action()
-                    return True
+                    success = True
                 else:
                     logger.warning(
                         f"Cannot skip {command.action_type} in phase {self.turn_phase}"
                     )
                     return False
-
             elif command.command_type == "rotate_card":
                 if self.current_card and self.turn_phase == 1:
                     self.current_card.rotate()
-                    return True
+                    success = True
                 else:
                     logger.warning("Cannot rotate card")
                     return False
-
             else:
                 logger.warning(f"Unknown command type: {command.command_type}")
                 return False
+
+            if success and getattr(command, "command_id", None):
+                self._executed_command_ids.add(command.command_id)
+
+            return success
 
         except Exception as e:
             logger.exception(
