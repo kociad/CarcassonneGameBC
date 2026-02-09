@@ -76,34 +76,6 @@ def draw_rect_alpha(
     surface.blit(temp, target_rect.topleft)
 
 
-def draw_circle_alpha(
-    surface: pygame.Surface,
-    color: tuple[int, ...],
-    center: tuple[int, int],
-    radius: int,
-    width: int = 0,
-) -> None:
-    rgb, alpha = _split_color(color)
-    if alpha <= 0:
-        return
-    if alpha >= 255:
-        pygame.draw.circle(surface, (*rgb, alpha), center, radius, width)
-        return
-    diameter = radius * 2 + max(2, width * 2)
-    if theme.THEME_UI_ALPHA_BLUR_RADIUS > 0:
-        blur_rect = pygame.Rect(
-            center[0] - diameter // 2,
-            center[1] - diameter // 2,
-            diameter,
-            diameter,
-        )
-        _blur_surface_region(surface, blur_rect, theme.THEME_UI_ALPHA_BLUR_RADIUS)
-    temp = pygame.Surface((diameter, diameter), pygame.SRCALPHA)
-    temp_center = (diameter // 2, diameter // 2)
-    pygame.draw.circle(temp, (*rgb, alpha), temp_center, radius, width)
-    surface.blit(temp, (center[0] - temp_center[0], center[1] - temp_center[1]))
-
-
 def draw_line_alpha(
     surface: pygame.Surface,
     color: tuple[int, ...],
