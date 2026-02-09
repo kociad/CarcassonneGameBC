@@ -3,6 +3,7 @@ import pygame
 import webbrowser
 from ui.scene import Scene
 from ui.components.button import Button
+from ui.components.toast import ToastManager
 from game_state import GameState
 import settings
 from utils.settings_manager import settings_manager
@@ -39,6 +40,7 @@ class MainMenuScene(Scene):
         self._cached_title_text: str | None = None
         self._dialog_text_surfaces: dict[tuple[str, tuple[int, int, int]],
                                          pygame.Surface] = {}
+        self.toast_manager = ToastManager(max_toasts=5)
         continue_rect = pygame.Rect(0, 0, 0, 60)
         self.continue_button = Button(continue_rect, "Continue",
                                       self.button_font,
@@ -255,6 +257,8 @@ class MainMenuScene(Scene):
         if self.show_confirm_dialog:
             self.draw_confirm_dialog()
         self._draw_main_menu_header(self._title_surface)
+        self.toast_manager.update()
+        self.toast_manager.draw(self.screen)
 
     def _layout_buttons(self) -> None:
         padding = theme.THEME_LAYOUT_VERTICAL_GAP
