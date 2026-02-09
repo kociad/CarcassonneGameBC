@@ -1067,6 +1067,8 @@ class GameScene(Scene):
 
             allow_action = True
             network_mode = settings_manager.get("NETWORK_MODE")
+            if self.session.waiting_for_rejoin:
+                allow_action = False
             if network_mode in ("host", "client"):
                 current_player = self.session.get_current_player()
                 player_index = settings_manager.get("PLAYER_INDEX")
@@ -1272,6 +1274,9 @@ class GameScene(Scene):
 
     def update(self) -> None:
         fps = settings_manager.get("FPS")
+        if self.session.waiting_for_rejoin:
+            self.clock.tick(fps)
+            return
         if self.session.get_game_over():
             self.clock.tick(fps)
             return

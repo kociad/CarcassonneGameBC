@@ -437,6 +437,9 @@ class Game:
             conn: Network connection to the client
         """
         try:
+            if self._game_session:
+                self._game_session.waiting_for_rejoin = False
+                self._broadcast_game_state()
             logger.debug("Sending current game state to new client...")
             game_state = self._game_session.serialize()
             message = encode_message("init_game_state", game_state)
@@ -617,20 +620,22 @@ class Game:
         """
         try:
             logger.debug("Client disconnected from host")
+            if self._game_session:
+                self._game_session.waiting_for_rejoin = True
 
             # Show notification in current scene if it has show_notification method
             if hasattr(self._current_scene, 'show_notification'):
                 self._current_scene.show_notification(
-                    "warning", "Lost connection to one of the players")
+                    "warning",
+                    "Lost connection to one of the players. Waiting for them to rejoin."
+                )
             else:
                 self._on_show_notification(
                     "warning",
-                    "Lost connection to one of the players, returning to main menu"
+                    "Lost connection to one of the players. Waiting for them to rejoin."
                 )
 
-            pygame.time.delay(2000)
-            self._cleanup_previous_game()
-            self._init_scene(GameState.MENU)
+            self._broadcast_game_state()
 
         except Exception as e:
             log_error("Failed to handle client disconnection", e)
