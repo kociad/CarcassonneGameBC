@@ -969,6 +969,11 @@ class GameSession:
                     players.append(Player.deserialize(p))
             except Exception as e:
                 logger.warning(f"Skipping malformed player entry: {p} - {e}")
+        for player in players:
+            if player is None:
+                continue
+            if not hasattr(player, "is_reclaimable"):
+                player.is_reclaimable = False
         lobby_completed = data.get("lobby_completed", True)
         network_mode = data.get("network_mode", 'local')
         session = cls([p.get_name() for p in players],

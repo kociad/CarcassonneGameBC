@@ -75,6 +75,7 @@ class Game:
             # Game-related attributes (deferred until game starts)
             self._game_session = None
             self._network = None
+            self._conn_player_index = {}
 
             self._current_scene = None
             self._init_scene(GameState.MENU)
@@ -148,6 +149,7 @@ class Game:
                 logger.debug("Clearing game session...")
                 self._game_session.on_turn_ended = None
                 self._game_session = None
+            self._conn_player_index.clear()
 
             logger.debug("Clearing temporary settings...")
             settings_manager.reload_from_file()
@@ -273,6 +275,7 @@ class Game:
 
             network_mode = self._network.network_mode
             if network_mode in ("host", "local"):
+                self._conn_player_index.clear()
                 lobby_completed = True
                 self._game_session = GameSession(
                     player_names,
@@ -331,6 +334,7 @@ class Game:
 
             network_mode = self._network.network_mode
             if network_mode in ("host", "local"):
+                self._conn_player_index.clear()
                 lobby_completed = network_mode == "local"
                 self._game_session = GameSession(
                     player_names,
@@ -393,6 +397,7 @@ class Game:
                 for player in self._game_session.get_players():
                     if not player.get_is_ai() and not player.is_human:
                         player.set_is_human(True)
+                        player.set_is_reclaimable(False)
                         logger.debug(
                             f"Player with index {player.get_index()} marked as human."
                         )
@@ -467,6 +472,16 @@ class Game:
             if hasattr(self._current_scene, 'update_game_session'):
                 self._current_scene.update_game_session(self._game_session)
 
+            claimed_index = self._resolve_claimed_player_index()
+            if claimed_index is not None and conn:
+                self._conn_player_index[conn] = claimed_index
+                claimed_player = self._game_session.players[claimed_index]
+                claimed_player.set_is_human(True)
+                claimed_player.set_is_reclaimable(False)
+                logger.debug(
+                    "Registered player claim for index %s from connection",
+                    claimed_index,
+                )
             self._broadcast_game_state()
         except Exception as e:
             log_error("Failed to process player claim", e)
@@ -611,6 +626,21 @@ class Game:
         """
         return self._game_session
 
+    def _resolve_claimed_player_index(self) -> typing.Optional[int]:
+        """Resolve which player index was claimed by a client."""
+        if not self._game_session:
+            return None
+        host_index = settings_manager.get("PLAYER_INDEX", 0)
+        mapped_indices = set(self._conn_player_index.values())
+        for player in self._game_session.get_players():
+            if player.get_index() == host_index:
+                continue
+            if player.get_is_ai():
+                continue
+            if player.is_human and player.get_index() not in mapped_indices:
+                return player.get_index()
+        return None
+
     def _on_client_disconnected(self, conn) -> None:
         """
         Handle client disconnection (host mode).
@@ -622,6 +652,24 @@ class Game:
             logger.debug("Client disconnected from host")
             if self._game_session:
                 self._game_session.waiting_for_rejoin = True
+                player_index = self._conn_player_index.pop(conn, None)
+                if player_index is not None:
+                    try:
+                        player = self._game_session.players[player_index]
+                        player.set_is_human(False)
+                        player.set_is_reclaimable(True)
+                        logger.debug(
+                            "Marked player %s as reclaimable after disconnect",
+                            player_index,
+                        )
+                    except IndexError:
+                        logger.warning(
+                            "Disconnect mapping pointed to invalid player index %s",
+                            player_index,
+                        )
+                else:
+                    logger.debug(
+                        "No player mapping found for disconnected client")
 
             # Show notification in current scene if it has show_notification method
             if hasattr(self._current_scene, 'show_notification'):

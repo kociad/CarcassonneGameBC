@@ -15,7 +15,8 @@ class Player:
                  color: str,
                  index: int,
                  is_ai: bool = False,
-                 is_human: bool = False) -> None:
+                 is_human: bool = False,
+                 is_reclaimable: bool = False) -> None:
         """
         Initialize a player.
         
@@ -25,6 +26,7 @@ class Player:
             index: Player's index in the game
             is_ai: Whether the player is AI-controlled
             is_human: Whether the player is human-controlled
+            is_reclaimable: Whether the player's slot can be reclaimed
         """
         self.name = name
         self.color = color
@@ -33,6 +35,7 @@ class Player:
         self.figures = [Figure(self) for _ in range(7)]
         self.is_ai = is_ai
         self.is_human = is_human
+        self.is_reclaimable = is_reclaimable
 
     def get_is_ai(self) -> bool:
         """Check if player is AI-controlled."""
@@ -113,6 +116,15 @@ class Player:
         """
         self.is_human = is_human
 
+    def set_is_reclaimable(self, is_reclaimable: bool) -> None:
+        """
+        Set whether the player slot can be reclaimed.
+
+        Args:
+            is_reclaimable: Whether the player can be reclaimed
+        """
+        self.is_reclaimable = is_reclaimable
+
     def serialize(self) -> dict:
         """Serialize the player to a dictionary."""
         return {
@@ -122,7 +134,8 @@ class Player:
             "color": self.color,
             "is_ai": self.is_ai,
             "figures_remaining": len(self.figures),
-            "is_human": self.is_human
+            "is_human": self.is_human,
+            "is_reclaimable": self.is_reclaimable
         }
 
     @staticmethod
@@ -144,12 +157,14 @@ class Player:
             score = int(data.get("score", 0))
             figures_remaining = int(data.get("figures_remaining", 7))
             is_human = bool(data.get("is_human", False))
+            is_reclaimable = bool(data.get("is_reclaimable", False))
 
             player = Player(name=name,
                             color=color,
                             index=index,
                             is_ai=is_ai,
-                            is_human=is_human)
+                            is_human=is_human,
+                            is_reclaimable=is_reclaimable)
             player.score = score
             player.figures = [Figure(player) for _ in range(figures_remaining)]
             return player
