@@ -373,6 +373,17 @@ class Game:
             log_error("Failed to start lobby", e)
             raise
 
+    @staticmethod
+    def _is_player_claimable(player) -> bool:
+        return (not player.get_is_ai() and not player.is_human
+                and not player.get_name().startswith("AI_"))
+
+    @staticmethod
+    def _is_claimable_player_state(player_state: dict) -> bool:
+        return (not player_state.get("is_ai", False)
+                and not player_state.get("is_human", False)
+                and not str(player_state.get("name", "")).startswith("AI_"))
+
     def _on_game_state_received(self, data: dict) -> None:
         """
         Handle received game state from network.
@@ -394,7 +405,7 @@ class Game:
             if self._network.network_mode == "client":
                 assigned = False
                 for player in self._game_session.get_players():
-                    if not player.get_is_ai() and not player.is_human:
+                    if self._is_player_claimable(player):
                         player.set_is_human(True)
                         logger.debug(
                             f"Player with index {player.get_index()} marked as human."
@@ -463,6 +474,7 @@ class Game:
                     player.get_index(): {
                         "is_human": player.is_human,
                         "name": player.get_name(),
+                        "is_ai": player.get_is_ai(),
                     }
                     for player in self._game_session.get_players()
                 }
@@ -478,9 +490,13 @@ class Game:
                 previous = previous_players.get(player.get_index())
                 if not previous:
                     continue
-                is_new_human = not previous["is_human"] and player.is_human
+                if previous["is_ai"] or previous["name"].startswith("AI_"):
+                    player.is_human = previous["is_human"]
+                    player.is_ai = True
+                was_claimable = self._is_claimable_player_state(previous)
+                is_new_human = was_claimable and not previous["is_human"] and player.is_human
                 name_changed = previous["name"] != player.get_name()
-                if player.is_human and (is_new_human or name_changed):
+                if was_claimable and player.is_human and (is_new_human or name_changed):
                     claimed_index = player.get_index()
                     break
             if claimed_index is not None:
