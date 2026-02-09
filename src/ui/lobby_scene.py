@@ -178,7 +178,7 @@ class LobbyScene(Scene):
                 self._host_info_text, True, theme.THEME_TEXT_COLOR_LIGHT
             )
             self._cached_host_info_text = self._host_info_text
-        y = content_start_y + offset_y
+        y = (content_start_y + theme.THEME_LAYOUT_VERTICAL_GAP) + offset_y
         host_info_rect = self._host_info_surface.get_rect(
             center=(self.screen.get_width() // 2, y)
         )
