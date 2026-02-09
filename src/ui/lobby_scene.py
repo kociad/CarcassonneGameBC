@@ -39,6 +39,9 @@ class LobbyScene(Scene):
         self._wait_text = "Waiting for host to start the game..."
         self._wait_text_surface: pygame.Surface | None = None
         self._cached_wait_text: str | None = None
+        self._host_info_text: str | None = None
+        self._host_info_surface: pygame.Surface | None = None
+        self._cached_host_info_text: str | None = None
         self._player_status_cache: dict[
             tuple[str, str, tuple[int, int, int], int],
             tuple[pygame.Surface, pygame.Surface],
@@ -163,7 +166,24 @@ class LobbyScene(Scene):
         offset_y = self.scroll_offset
         label_font = theme.get_font("body", theme.THEME_FONT_SIZE_BODY)
         content_start_y = header_height + theme.THEME_LAYOUT_VERTICAL_GAP
+        host_ip = settings_manager.get("HOST_IP") or "Unknown"
+        host_port = settings_manager.get("HOST_PORT")
+        if host_port:
+            self._host_info_text = f"Host: {host_ip}:{host_port}"
+        else:
+            self._host_info_text = f"Host: {host_ip}"
+        if (self._host_info_surface is None
+                or self._cached_host_info_text != self._host_info_text):
+            self._host_info_surface = label_font.render(
+                self._host_info_text, True, theme.THEME_TEXT_COLOR_LIGHT
+            )
+            self._cached_host_info_text = self._host_info_text
         y = content_start_y + offset_y
+        host_info_rect = self._host_info_surface.get_rect(
+            center=(self.screen.get_width() // 2, y)
+        )
+        self.screen.blit(self._host_info_surface, host_info_rect)
+        y += label_font.get_linesize() + theme.THEME_LAYOUT_VERTICAL_GAP
         row_height = label_font.get_linesize() + theme.THEME_LAYOUT_VERTICAL_GAP
         if self.is_host:
             for i, status in enumerate(self.status_list):
@@ -200,10 +220,10 @@ class LobbyScene(Scene):
                 self._wait_text_surface = wait_font.render(
                     self._wait_text, True, theme.THEME_TEXT_COLOR_LIGHT)
                 self._cached_wait_text = self._wait_text
-            available_height = self.screen.get_height() - content_start_y
+            available_height = self.screen.get_height() - y
             wait_rect = self._wait_text_surface.get_rect(
                 center=(self.screen.get_width() // 2,
-                        content_start_y + available_height // 2 + offset_y))
+                        y + available_height // 2 + offset_y))
             self.screen.blit(self._wait_text_surface, wait_rect)
         self.toast_manager.draw(self.screen)
         if self.game_log:
@@ -218,6 +238,7 @@ class LobbyScene(Scene):
             "button", theme.THEME_FONT_SIZE_BUTTON
         )
         self._title_surface = None
+        self._host_info_surface = None
         self._cached_title_text = None
         self._wait_text_surface = None
         self._cached_wait_text = None
