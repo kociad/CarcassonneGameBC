@@ -15,7 +15,9 @@ class Player:
                  color: str,
                  index: int,
                  is_ai: bool = False,
-                 is_human: bool = False) -> None:
+                 is_human: bool = False,
+                 original_human_name: typing.Optional[str] = None,
+                 reclaim_token: typing.Optional[str] = None) -> None:
         """
         Initialize a player.
         
@@ -33,6 +35,12 @@ class Player:
         self.figures = [Figure(self) for _ in range(7)]
         self.is_ai = is_ai
         self.is_human = is_human
+        self.original_human_name = original_human_name
+        if self.original_human_name is None and not is_ai:
+            self.original_human_name = name
+        self.reclaim_token = reclaim_token
+        if self.reclaim_token is None and self.original_human_name:
+            self.reclaim_token = self.original_human_name
 
     def get_is_ai(self) -> bool:
         """Check if player is AI-controlled."""
@@ -122,7 +130,9 @@ class Player:
             "color": self.color,
             "is_ai": self.is_ai,
             "figures_remaining": len(self.figures),
-            "is_human": self.is_human
+            "is_human": self.is_human,
+            "original_human_name": self.original_human_name,
+            "reclaim_token": self.reclaim_token
         }
 
     @staticmethod
@@ -144,12 +154,16 @@ class Player:
             score = int(data.get("score", 0))
             figures_remaining = int(data.get("figures_remaining", 7))
             is_human = bool(data.get("is_human", False))
+            original_human_name = data.get("original_human_name")
+            reclaim_token = data.get("reclaim_token")
 
             player = Player(name=name,
                             color=color,
                             index=index,
                             is_ai=is_ai,
-                            is_human=is_human)
+                            is_human=is_human,
+                            original_human_name=original_human_name,
+                            reclaim_token=reclaim_token)
             player.score = score
             player.figures = [Figure(player) for _ in range(figures_remaining)]
             return player

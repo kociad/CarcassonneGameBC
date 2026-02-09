@@ -19,6 +19,9 @@ from ui.help_scene import HelpScene
 from game_state import GameState
 from utils.logging_config import configure_logging, log_error
 from models.game_session import GameSession
+from models.player import Player
+from models.ai_player import AIPlayer
+from models.figure import Figure
 from network.connection import NetworkConnection
 from network.message import encode_message
 from network.command import encode_command_message
@@ -75,6 +78,7 @@ class Game:
             # Game-related attributes (deferred until game starts)
             self._game_session = None
             self._network = None
+            self._client_player_indices = {}
 
             self._current_scene = None
             self._init_scene(GameState.MENU)
@@ -148,6 +152,7 @@ class Game:
                 logger.debug("Clearing game session...")
                 self._game_session.on_turn_ended = None
                 self._game_session = None
+            self._client_player_indices.clear()
 
             logger.debug("Clearing temporary settings...")
             settings_manager.reload_from_file()
@@ -390,26 +395,26 @@ class Game:
 
             if self._network.network_mode == "client":
                 assigned = False
+                players_list = settings_manager.get("PLAYERS", ["Player 1"])
+                client_name = players_list[0]
+                preferred_player = None
                 for player in self._game_session.get_players():
-                    if not player.get_is_ai() and not player.is_human:
-                        player.set_is_human(True)
-                        logger.debug(
-                            f"Player with index {player.get_index()} marked as human."
-                        )
-                        players_list = settings_manager.get(
-                            "PLAYERS", ["Player 1"])
-                        player.name = players_list[0]
-                        logger.debug(
-                            f"Player name set to '{player.name}' from client settings."
-                        )
-                        settings_manager.set("PLAYER_INDEX",
-                                             player.get_index(),
-                                             temporary=True)
-                        logger.debug(
-                            f"Client assigned to player index {player.get_index()}"
-                        )
-                        assigned = True
+                    reclaim_match = (player.original_human_name == client_name
+                                     or player.reclaim_token == client_name)
+                    if reclaim_match and (player.get_is_ai()
+                                          or not player.is_human):
+                        preferred_player = player
                         break
+
+                if preferred_player:
+                    self._claim_player_slot(preferred_player, client_name)
+                    assigned = True
+                else:
+                    for player in self._game_session.get_players():
+                        if not player.get_is_ai() and not player.is_human:
+                            self._claim_player_slot(player, client_name)
+                            assigned = True
+                            break
 
                 if assigned:
                     updated_game_state = self._game_session.serialize()
@@ -454,12 +459,18 @@ class Game:
             conn: Network connection to the client
         """
         try:
+            previous_session = self._game_session
             self._game_session = GameSession.deserialize(data)
             self._game_session.on_turn_ended = self._on_turn_ended
             self._game_session.on_show_notification = self._on_show_notification
             self._game_session.on_command_executed = self._on_command_executed
             logger.debug(
                 "Host updated game session with client's claimed player")
+            self._ensure_human_claims_applied()
+            claimed_index = self._find_claimed_player_index(previous_session,
+                                                            self._game_session)
+            if claimed_index is not None:
+                self._client_player_indices[conn] = claimed_index
 
             if hasattr(self._current_scene, 'update_game_session'):
                 self._current_scene.update_game_session(self._game_session)
@@ -608,6 +619,103 @@ class Game:
         """
         return self._game_session
 
+    def _claim_player_slot(self, player: Player, client_name: str) -> None:
+        player_index = player.get_index()
+        if player.get_is_ai():
+            player = self._convert_ai_to_human(player, client_name)
+        else:
+            player.set_is_human(True)
+            player.is_ai = False
+            player.name = client_name
+            if not player.original_human_name:
+                player.original_human_name = client_name
+            if not player.reclaim_token:
+                player.reclaim_token = client_name
+        logger.debug(
+            f"Player with index {player.get_index()} marked as human.")
+        logger.debug(
+            f"Player name set to '{player.name}' from client settings.")
+        settings_manager.set("PLAYER_INDEX", player_index, temporary=True)
+        logger.debug(f"Client assigned to player index {player_index}")
+
+    def _convert_ai_to_human(self, player: Player, client_name: str) -> Player:
+        player_index = player.get_index()
+        original_human_name = player.original_human_name or client_name
+        reclaim_token = player.reclaim_token or original_human_name
+        new_player = Player(name=client_name,
+                            color=player.get_color(),
+                            index=player_index,
+                            is_ai=False,
+                            is_human=True,
+                            original_human_name=original_human_name,
+                            reclaim_token=reclaim_token)
+        new_player.score = player.score
+        new_player.figures = [Figure(new_player) for _ in range(len(player.figures))]
+        self._replace_player_instance(player_index, player, new_player)
+        return new_player
+
+    def _replace_with_ai_substitute(self, player_index: int) -> None:
+        if not self._game_session:
+            return
+        if player_index < 0 or player_index >= len(self._game_session.players):
+            return
+        player = self._game_session.players[player_index]
+        original_human_name = player.original_human_name or player.get_name()
+        reclaim_token = player.reclaim_token or original_human_name
+        difficulty = "NORMAL"
+        ai_player = AIPlayer(name=player.get_name(),
+                             index=player.get_index(),
+                             color=player.get_color(),
+                             difficulty=difficulty,
+                             original_human_name=original_human_name,
+                             reclaim_token=reclaim_token)
+        ai_player.score = player.score
+        ai_player.is_human = False
+        ai_player.figures = [Figure(ai_player) for _ in range(len(player.figures))]
+        self._replace_player_instance(player_index, player, ai_player)
+
+    def _replace_player_instance(self, player_index: int, old_player: Player,
+                                 new_player: Player) -> None:
+        self._game_session.players[player_index] = new_player
+        if self._game_session.current_player == old_player:
+            self._game_session.current_player = new_player
+        for figure in self._game_session.placed_figures:
+            if figure.owner == old_player:
+                figure.owner = new_player
+
+    def _ensure_human_claims_applied(self) -> None:
+        if not self._game_session:
+            return
+        for player in self._game_session.players:
+            if player.is_human and player.get_is_ai():
+                self._convert_ai_to_human(player, player.get_name())
+
+    def _find_claimed_player_index(
+            self, previous_session: typing.Optional['GameSession'],
+            new_session: typing.Optional['GameSession']) -> typing.Optional[int]:
+        if not previous_session or not new_session:
+            return None
+        host_index = settings_manager.get("PLAYER_INDEX", 0)
+        prev_map = {p.get_index(): p for p in previous_session.players}
+        for player in new_session.players:
+            prev_player = prev_map.get(player.get_index())
+            if player.get_index() == host_index:
+                continue
+            if player.is_human and (not prev_player or not prev_player.is_human):
+                return player.get_index()
+        return None
+
+    def _guess_disconnected_player_index(self) -> typing.Optional[int]:
+        if not self._game_session:
+            return None
+        host_index = settings_manager.get("PLAYER_INDEX", 0)
+        for player in self._game_session.players:
+            if player.get_index() == host_index:
+                continue
+            if player.is_human and not player.get_is_ai():
+                return player.get_index()
+        return None
+
     def _on_client_disconnected(self, conn) -> None:
         """
         Handle client disconnection (host mode).
@@ -617,6 +725,12 @@ class Game:
         """
         try:
             logger.debug("Client disconnected from host")
+            disconnected_index = self._client_player_indices.pop(conn, None)
+            if disconnected_index is None:
+                disconnected_index = self._guess_disconnected_player_index()
+            if disconnected_index is not None:
+                self._replace_with_ai_substitute(disconnected_index)
+                self._broadcast_game_state()
 
             # Show notification in current scene if it has show_notification method
             if hasattr(self._current_scene, 'show_notification'):
@@ -624,13 +738,7 @@ class Game:
                     "warning", "Lost connection to one of the players")
             else:
                 self._on_show_notification(
-                    "warning",
-                    "Lost connection to one of the players, returning to main menu"
-                )
-
-            pygame.time.delay(2000)
-            self._cleanup_previous_game()
-            self._init_scene(GameState.MENU)
+                    "warning", "Lost connection to one of the players")
 
         except Exception as e:
             log_error("Failed to handle client disconnection", e)
@@ -669,6 +777,8 @@ class Game:
             logger.debug(
                 f"Received command {command.command_type} from player {command.player_index}"
             )
+            if self._network.network_mode == "host" and conn:
+                self._client_player_indices[conn] = command.player_index
 
             success = self._game_session.execute_command(command)
             if success:

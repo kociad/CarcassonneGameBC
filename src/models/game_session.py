@@ -960,10 +960,13 @@ class GameSession:
         players = []
         for p in data.get("players", []):
             try:
-                if p["name"].startswith("AI_"):
-                    players.append(AIPlayer.deserialize(p))
+                is_ai = bool(p.get("is_ai", False))
+                if is_ai or str(p.get("name", "")).startswith("AI_"):
+                    player = AIPlayer.deserialize(p)
                 else:
-                    players.append(Player.deserialize(p))
+                    player = Player.deserialize(p)
+                if player:
+                    players.append(player)
             except Exception as e:
                 logger.warning(f"Skipping malformed player entry: {p} - {e}")
         lobby_completed = data.get("lobby_completed", True)

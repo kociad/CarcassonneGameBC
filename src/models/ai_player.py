@@ -138,7 +138,9 @@ class AIPlayer(Player):
                  name: str,
                  index: int,
                  color: str,
-                 difficulty: str = "NORMAL") -> None:
+                 difficulty: str = "NORMAL",
+                 original_human_name: Optional[str] = None,
+                 reclaim_token: Optional[str] = None) -> None:
         """
         Initialize an AI player.
         
@@ -148,7 +150,12 @@ class AIPlayer(Player):
             color: The player's color
             difficulty: AI difficulty level (EASY, NORMAL, HARD, EXPERT)
         """
-        super().__init__(name, color, index, is_ai=True)
+        super().__init__(name,
+                         color,
+                         index,
+                         is_ai=True,
+                         original_human_name=original_human_name,
+                         reclaim_token=reclaim_token)
         self._game_phase = "early"
         self._last_score = 0
         self._consecutive_low_scores = 0
@@ -1386,13 +1393,18 @@ class AIPlayer(Player):
             figures_remaining = int(data.get("figures_remaining", 7))
             is_human = bool(data.get("is_human", False))
             difficulty = str(data.get("difficulty", "NORMAL"))
+            original_human_name = data.get("original_human_name")
+            reclaim_token = data.get("reclaim_token")
 
             player = AIPlayer(name=name,
                               index=index,
                               color=color,
-                              difficulty=difficulty)
+                              difficulty=difficulty,
+                              original_human_name=original_human_name,
+                              reclaim_token=reclaim_token)
             player.score = score
             player.figures = [Figure(player) for _ in range(figures_remaining)]
+            player.is_human = is_human
             logger.debug(
                 f"Deserialized AI player {name} with {len(player.figures)} figures"
             )
