@@ -658,9 +658,13 @@ class Game:
         """
         try:
             logger.debug(f"Handling join rejection (reason: {reason})")
-            print(f"Join rejected: {reason}")
-            pygame.time.delay(3000)
-            self.quit()
+            self._cleanup_previous_game()
+            self._init_scene(GameState.MENU)
+            message = f"Could not connect: {reason}"
+            if hasattr(self._current_scene, 'show_notification'):
+                self._current_scene.show_notification("error", message)
+            else:
+                self._on_show_notification("error", message)
         except Exception as e:
             log_error("Failed to handle join rejection", e)
 
