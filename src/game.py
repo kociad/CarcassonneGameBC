@@ -19,6 +19,7 @@ from ui.help_scene import HelpScene
 from game_state import GameState
 from utils.logging_config import configure_logging, log_error
 from models.game_session import GameSession
+from models.ai_player import AIPlayer
 from network.connection import NetworkConnection
 from network.message import encode_message
 from network.command import encode_command_message
@@ -75,6 +76,7 @@ class Game:
             # Game-related attributes (deferred until game starts)
             self._game_session = None
             self._network = None
+            self._conn_player_index = {}
 
             self._current_scene = None
             self._init_scene(GameState.MENU)
@@ -148,6 +150,7 @@ class Game:
                 logger.debug("Clearing game session...")
                 self._game_session.on_turn_ended = None
                 self._game_session = None
+            self._conn_player_index = {}
 
             logger.debug("Clearing temporary settings...")
             settings_manager.reload_from_file()
@@ -454,12 +457,37 @@ class Game:
             conn: Network connection to the client
         """
         try:
+            previous_players = {}
+            if self._game_session:
+                previous_players = {
+                    player.get_index(): {
+                        "is_human": player.is_human,
+                        "name": player.get_name(),
+                    }
+                    for player in self._game_session.get_players()
+                }
             self._game_session = GameSession.deserialize(data)
             self._game_session.on_turn_ended = self._on_turn_ended
             self._game_session.on_show_notification = self._on_show_notification
             self._game_session.on_command_executed = self._on_command_executed
             logger.debug(
                 "Host updated game session with client's claimed player")
+
+            claimed_index = None
+            for player in self._game_session.get_players():
+                previous = previous_players.get(player.get_index())
+                if not previous:
+                    continue
+                is_new_human = not previous["is_human"] and player.is_human
+                name_changed = previous["name"] != player.get_name()
+                if player.is_human and (is_new_human or name_changed):
+                    claimed_index = player.get_index()
+                    break
+            if claimed_index is not None:
+                self._conn_player_index[conn] = claimed_index
+                logger.debug(
+                    f"Mapped client connection to claimed player index {claimed_index}"
+                )
 
             if hasattr(self._current_scene, 'update_game_session'):
                 self._current_scene.update_game_session(self._game_session)
@@ -617,20 +645,70 @@ class Game:
         """
         try:
             logger.debug("Client disconnected from host")
+            if not self._game_session:
+                logger.debug("No active game session for disconnected client")
+                return
+            player_index = self._conn_player_index.pop(conn, None)
+            if player_index is None:
+                logger.debug("Disconnected client had no claimed player index")
+                if hasattr(self._current_scene, 'show_notification'):
+                    self._current_scene.show_notification(
+                        "warning", "A client disconnected from the lobby")
+                else:
+                    self._on_show_notification(
+                        "warning", "A client disconnected from the lobby")
+                return
 
-            # Show notification in current scene if it has show_notification method
-            if hasattr(self._current_scene, 'show_notification'):
-                self._current_scene.show_notification(
-                    "warning", "Lost connection to one of the players")
-            else:
-                self._on_show_notification(
-                    "warning",
-                    "Lost connection to one of the players, returning to main menu"
+            players = self._game_session.get_players()
+            if player_index < 0 or player_index >= len(players):
+                logger.warning(
+                    f"Disconnected client had invalid player index {player_index}"
                 )
+                return
 
-            pygame.time.delay(2000)
-            self._cleanup_previous_game()
-            self._init_scene(GameState.MENU)
+            old_player = players[player_index]
+            ai_name = old_player.get_name()
+            if not ai_name.startswith("AI_"):
+                ai_name = f"AI_NORMAL_{ai_name}"
+            difficulty = "NORMAL"
+            if ai_name.startswith("AI_EASY_"):
+                difficulty = "EASY"
+            elif ai_name.startswith("AI_HARD_"):
+                difficulty = "HARD"
+            elif ai_name.startswith("AI_EXPERT_"):
+                difficulty = "EXPERT"
+            elif ai_name.startswith("AI_NORMAL_"):
+                difficulty = "NORMAL"
+
+            ai_player = AIPlayer(
+                name=ai_name,
+                index=old_player.get_index(),
+                color=old_player.get_color(),
+                difficulty=difficulty,
+            )
+            ai_player.score = old_player.get_score()
+            ai_player.is_human = False
+            ai_player.figures = old_player.get_figures()
+            for figure in ai_player.figures:
+                figure.owner = ai_player
+            for figure in self._game_session.get_placed_figures():
+                if figure.owner == old_player:
+                    figure.owner = ai_player
+            players[player_index] = ai_player
+            if self._game_session.current_player == old_player:
+                self._game_session.current_player = ai_player
+
+            if hasattr(self._current_scene, 'update_game_session'):
+                self._current_scene.update_game_session(self._game_session)
+            self._broadcast_game_state()
+
+            message = (
+                f"{old_player.get_name()} disconnected and was converted to AI"
+            )
+            if hasattr(self._current_scene, 'show_notification'):
+                self._current_scene.show_notification("warning", message)
+            else:
+                self._on_show_notification("warning", message)
 
         except Exception as e:
             log_error("Failed to handle client disconnection", e)
