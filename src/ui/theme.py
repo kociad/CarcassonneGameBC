@@ -279,7 +279,7 @@ THEME_SCENE_HEADER_TEXT_COLOR: Color = (205, 183, 82)
 # Main menu header background color; RGBA tuple (0-255 per channel, alpha 0-255).
 THEME_MAIN_MENU_HEADER_BG_COLOR: ColorA = (42, 42, 42, 0)
 # Main menu header background image filename; relative to settings.BACKGROUND_IMAGE_PATH.
-THEME_MAIN_MENU_HEADER_BACKGROUND_IMAGE: str | None = "Carcassonne_Logo.png"
+THEME_MAIN_MENU_HEADER_BACKGROUND_IMAGE: str | None = None
 # Main menu header background image scale mode; one of fill/fit/stretch.
 THEME_MAIN_MENU_HEADER_BACKGROUND_SCALE_MODE: str = "fill"
 # Main menu header background tint color; RGBA tuple or None to disable.
@@ -287,7 +287,7 @@ THEME_MAIN_MENU_HEADER_BACKGROUND_TINT_COLOR: ColorA | None = None
 # Optional blur radius/strength for the main menu header background; 0 disables blur.
 THEME_MAIN_MENU_HEADER_BLUR_RADIUS: float = 0.0
 # Main menu header logo image filename; relative to settings.LOGOS_PATH.
-THEME_MAIN_MENU_HEADER_LOGO_IMAGE: str | None = "Carcassonne_Logo.png"
+THEME_MAIN_MENU_HEADER_LOGO_IMAGE: str | None = "PythonSonne_Logo.png"
 # Main menu header logo scale mode; one of fill/fit/stretch.
 THEME_MAIN_MENU_HEADER_LOGO_SCALE_MODE: str = "fit"
 # Main menu header text color; RGB tuple (0-255 per channel).
