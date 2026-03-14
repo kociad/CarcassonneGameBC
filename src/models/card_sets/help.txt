@@ -1,4 +1,4 @@
-The letters in parentheses (e.g., (H;–), (G;W;–), etc.) in the tile distribution list from Wikicarpedia represent the features of each tile in Carcassonne. They indicate the type of terrain and structures present on the tile. Here's what the letters generally mean:
+The letters in parentheses (e.g., (H;–), (G;W;–), etc.) in the tile distribution list from Wikicarpedia represent the features of each tile in PythonSonne. They indicate the type of terrain and structures present on the tile. Here's what the letters generally mean:
 
 C = City
 R = Road

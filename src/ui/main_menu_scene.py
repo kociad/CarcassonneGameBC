@@ -35,7 +35,7 @@ class MainMenuScene(Scene):
         self.cleanup_callback = cleanup_previous_game
         self.show_confirm_dialog = False
         self.header_height = 0
-        self._title_text = "Carcassonne"
+        self._title_text = "PythonSonne"
         self._title_surface: pygame.Surface | None = None
         self._cached_title_text: str | None = None
         self._dialog_text_surfaces: dict[tuple[str, tuple[int, int, int]],

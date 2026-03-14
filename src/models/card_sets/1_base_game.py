@@ -1,5 +1,5 @@
 """
-Base Game Card Set for Carcassonne
+Base Game Card Set for PythonSonne
 Contains all the standard tiles from the base game.
 """
 
