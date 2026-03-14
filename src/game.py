@@ -62,7 +62,7 @@ class Game:
                 height = settings_manager.get("WINDOW_HEIGHT", 1080)
                 self._screen = pygame.display.set_mode((width, height))
 
-            pygame.display.set_caption("Carcassonne")
+            pygame.display.set_caption("PythonSonne")
             theme.preload_theme_fonts()
 
             self._clock = pygame.time.Clock()
