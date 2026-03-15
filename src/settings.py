@@ -52,7 +52,7 @@ if FULLSCREEN:
         print(f"Failed to detect fullscreen resolution: {e}")
 
 # Debug
-DEBUG = True
+DEBUG = False
 LOG_TO_CONSOLE = False
 GAME_LOG_MAX_ENTRIES = 10000
 MAX_RETRY_ATTEMPTS = 3
