@@ -159,10 +159,11 @@ class GameSession:
             terrains = card["terrains"]
             connections = card["connections"]
             features = card["features"]
+            is_starting_card = bool(card.get("is_starting_card", False))
             count = card_distributions.get(image, 1)
             cards.extend([
                 Card(settings.TILE_IMAGES_PATH + image, terrains, connections,
-                     features) for _ in range(count)
+                     features, is_starting_card) for _ in range(count)
             ])
 
         logger.debug(
@@ -171,10 +172,19 @@ class GameSession:
         return cards
 
     def _shuffle_cards_deck(self, deck: list) -> None:
-        """Shuffle an existing deck of cards."""
+        """Shuffle an existing deck and move one starting card to the top."""
         logger.debug("Shuffling deck...")
         random.shuffle(deck)
-        logger.debug("Deck shuffled")
+
+        starting_cards = [card for card in deck if card.get_is_starting_card()]
+        if starting_cards:
+            starting_card = random.choice(starting_cards)
+            deck.remove(starting_card)
+            deck.insert(0, starting_card)
+            logger.debug("Deck shuffled with a starting card on top")
+        else:
+            logger.warning("No starting cards available in deck after shuffle")
+            logger.debug("Deck shuffled")
 
     def _place_starting_card(self) -> None:
         """Place the first card automatically at the center of the board."""

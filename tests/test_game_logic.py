@@ -100,15 +100,49 @@ class GameLogicTests(unittest.TestCase):
         cls.load_patcher.stop()
         cls.scale_patcher.stop()
 
-    def make_card(self, terrains, connections=None, features=None):
+    def make_card(self, terrains, connections=None, features=None, is_starting_card=False):
         """Create a test card with deterministic fake image path."""
-        return Card("fake.png", terrains, connections or {}, features or [])
+        return Card(
+            "fake.png",
+            terrains,
+            connections or {},
+            features or [],
+            is_starting_card=is_starting_card,
+        )
 
     def place_and_detect(self, session, card, x, y):
         """Place a card and run incremental structure detection."""
         session.game_board.place_card(card, x, y)
         session.last_placed_card = card
         session.detect_structures()
+
+
+    def test_card_serialization_preserves_starting_card_flag(self):
+        """Card serialization/deserialization should preserve starting-card metadata."""
+        card = self.make_card(
+            {"N": "field", "E": "field", "S": "field", "W": "field"},
+            is_starting_card=True,
+        )
+
+        restored = Card.deserialize(card.serialize())
+
+        self.assertTrue(restored.get_is_starting_card())
+
+    def test_shuffle_places_starting_card_on_top(self):
+        """Deck shuffle should keep a starting card at the top for initial placement."""
+        session = GameSession([], no_init=True)
+        regular = self.make_card({"N": "field", "E": "field", "S": "field", "W": "field"})
+        starter = self.make_card(
+            {"N": "field", "E": "road", "S": "field", "W": "road", "C": "road"},
+            is_starting_card=True,
+        )
+        session.cards_deck = [regular, starter]
+
+        with patch("models.game_session.random.shuffle", side_effect=lambda deck: None), \
+             patch("models.game_session.random.choice", return_value=starter):
+            session._shuffle_cards_deck(session.cards_deck)
+
+        self.assertIs(session.cards_deck[0], starter)
 
     def test_validate_card_placement_requires_neighbor(self):
         """Placement must fail when target cell has no occupied neighbor."""
