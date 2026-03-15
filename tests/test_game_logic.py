@@ -1,4 +1,4 @@
-"""Unit tests for core Carcassonne game logic.
+"""Unit tests for core PythonSonne game logic.
 
 These tests validate card placement rules, structure detection/completion,
 scoring behavior (including tie handling), end-game scoring of incomplete
@@ -147,7 +147,7 @@ class GameLogicTests(unittest.TestCase):
                 )
                 self.assertTrue(board.validate_card_placement(candidate, 3, 2))
 
-    def test_structure_detection_and_completion_road_edge_case(self):
+    def test_structure_detection_and_completion_road(self):
         """Road remains incomplete with open end, then completes once closed."""
         session = GameSession([], no_init=True)
         board = session.game_board
@@ -209,7 +209,7 @@ class GameLogicTests(unittest.TestCase):
         city_structure.check_completion()
         self.assertTrue(city_structure.get_is_completed())
 
-    def test_structure_detection_and_completion_monastery_edge_case(self):
+    def test_structure_detection_and_completion_monastery(self):
         """Monastery is incomplete with one missing neighbor and complete after final tile."""
         session = GameSession([], no_init=True)
 
@@ -538,7 +538,7 @@ class GameLogicTests(unittest.TestCase):
             {"NW": ["NW"]},
         )
 
-        # Place neighbors in legal positions (N and E), not diagonally.
+        # Place neighbors in legal positions (N and E).
         self.place_and_detect(session, origin, 2, 2)
         origin_structure = session.structure_map[(2, 2, "NE")]
 
