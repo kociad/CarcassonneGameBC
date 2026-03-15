@@ -50,7 +50,7 @@ class HelpScene(Scene):
                 "5) The starting card is placed automatically in the center of the board.",
             ]),
             ("Controls", [
-                "- LMB: place cards and figures (or rotate the card by clicking its sidebar preview).",
+                "- LMB: place cards and figures / rotate the card by clicking its sidebar preview.",
                 "- RMB: rotate the current card.",
                 "- WASD / Arrow Keys: move around the board.",
                 "- SPACE: skip figure placement or discard a card.",
