@@ -48,6 +48,7 @@ class GameScene(Scene):
 
         self.sidebar_scroll_offset = 0
         self.sidebar_scroll_speed = 30
+        self.selected_card_preview_rect: pygame.Rect | None = None
 
         tile_size = settings_manager.get("TILE_SIZE")
         grid_size = settings_manager.get("GRID_SIZE")
@@ -837,8 +838,11 @@ class GameScene(Scene):
             card_rect.centerx = sidebar_center_x
             card_rect.y = current_y
             self.screen.blit(image_to_draw, card_rect)
+            self.selected_card_preview_rect = card_rect.copy()
             current_y += card_rect.height + padding
             scrollable_content_start_y = current_y
+        else:
+            self.selected_card_preview_rect = None
 
         offset_y = self.sidebar_scroll_offset
 
@@ -1087,6 +1091,10 @@ class GameScene(Scene):
 
                     if mouse_x < panel_x:
                         self._handle_mouse_click(event)
+                    elif (event.button == 1 and self.selected_card_preview_rect
+                          and self.selected_card_preview_rect.collidepoint(
+                              mouse_x, mouse_y)):
+                        self._execute_local_rotate()
 
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_SPACE:
