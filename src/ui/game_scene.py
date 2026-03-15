@@ -779,40 +779,46 @@ class GameScene(Scene):
                                        card_y * tile_size - self.offset_y))
 
         tile_size = settings_manager.get("TILE_SIZE")
-        figure_size = settings_manager.get("FIGURE_SIZE")
         for figure in placed_figures:
             if figure.card:
                 card_position = [(x, y) for y in range(game_board.grid_size)
                                  for x in range(game_board.grid_size)
                                  if game_board.get_card(x, y) == figure.card]
                 if card_position:
-                    padding = tile_size * 0.1
-                    figure_offset = figure_size / 2
                     base_x = card_position[0][0] * tile_size - self.offset_x
                     base_y = card_position[0][1] * tile_size - self.offset_y
 
+                    left_x = base_x + tile_size / 6
+                    center_x = base_x + tile_size / 2
+                    right_x = base_x + 5 * tile_size / 6
+                    top_y = base_y + tile_size / 6
+                    center_y = base_y + tile_size / 2
+                    bottom_y = base_y + 5 * tile_size / 6
+
                     if figure.position_on_card == "N":
-                        figure_x, figure_y = base_x + tile_size / 2, base_y + padding + figure_offset
+                        figure_x, figure_y = center_x, top_y
                     elif figure.position_on_card == "S":
-                        figure_x, figure_y = base_x + tile_size / 2, base_y + tile_size - padding - figure_offset
+                        figure_x, figure_y = center_x, bottom_y
                     elif figure.position_on_card == "E":
-                        figure_x, figure_y = base_x + tile_size - padding - figure_offset, base_y + tile_size / 2
+                        figure_x, figure_y = right_x, center_y
                     elif figure.position_on_card == "W":
-                        figure_x, figure_y = base_x + padding + figure_offset, base_y + tile_size / 2
+                        figure_x, figure_y = left_x, center_y
                     elif figure.position_on_card == "NW":
-                        figure_x, figure_y = base_x + padding + figure_offset, base_y + padding + figure_offset
+                        figure_x, figure_y = left_x, top_y
                     elif figure.position_on_card == "NE":
-                        figure_x, figure_y = base_x + tile_size - padding - figure_offset, base_y + padding + figure_offset
+                        figure_x, figure_y = right_x, top_y
                     elif figure.position_on_card == "SW":
-                        figure_x, figure_y = base_x + padding + figure_offset, base_y + tile_size - padding - figure_offset
+                        figure_x, figure_y = left_x, bottom_y
                     elif figure.position_on_card == "SE":
-                        figure_x, figure_y = base_x + tile_size - padding - figure_offset, base_y + tile_size - padding - figure_offset
+                        figure_x, figure_y = right_x, bottom_y
                     else:
-                        figure_x, figure_y = base_x + tile_size / 2, base_y + tile_size / 2
+                        figure_x, figure_y = center_x, center_y
+
+                    img_w, img_h = figure.image.get_size()
 
                     self.screen.blit(figure.image,
-                                     (figure_x - tile_size * 0.15,
-                                      figure_y - tile_size * 0.15))
+                                     (figure_x - img_w / 2,
+                                      figure_y - img_h / 2))
 
     def draw_side_panel(self, selected_card: typing.Any, remaining_cards: int,
                         current_player: typing.Any, placed_figures: list,
