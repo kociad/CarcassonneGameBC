@@ -260,21 +260,15 @@ class GameLogicTests(unittest.TestCase):
         self.assertTrue(monastery_structure.get_is_completed())
 
     def test_structure_detection_field_is_never_completed(self):
-        """Field structures are detected but are never considered completed."""
+        """Even a fully enclosed field is never considered completed."""
         session = GameSession([], no_init=True)
 
-        field_only = self.make_card(
-            {"N": "field", "E": "field", "S": "field", "W": "field"},
-            {
-                "N": ["E", "S", "W"],
-                "E": ["N", "S", "W"],
-                "S": ["N", "E", "W"],
-                "W": ["N", "E", "S"],
-            },
+        enclosed_field = self.make_card(
+            {"N": "city", "E": "city", "S": "city", "W": "city", "C": "field"},
         )
-        self.place_and_detect(session, field_only, 2, 2)
+        self.place_and_detect(session, enclosed_field, 2, 2)
 
-        field_structure = session.structure_map[(2, 2, "N")]
+        field_structure = session.structure_map[(2, 2, "C")]
         self.assertEqual(field_structure.get_structure_type(), "Field")
         field_structure.check_completion()
         self.assertFalse(field_structure.get_is_completed())
