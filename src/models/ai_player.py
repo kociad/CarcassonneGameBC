@@ -521,7 +521,8 @@ class AIPlayer(Player):
             image_path=card.image_path,
             terrains=card.terrains.copy(),
             connections=card.connections.copy() if card.connections else None,
-            features=card.features.copy() if card.features else None)
+            features=card.features.copy() if card.features else None,
+            is_starting_card=card.get_is_starting_card())
         card_copy.rotation = card.rotation
         return card_copy
 

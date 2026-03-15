@@ -52,7 +52,8 @@ CARD_DEFINITIONS = [{
         "SE": "field"
     },
     "connection_groups": [["E", "W", "C"], ["SE", "S", "SW"]],
-    "features": None
+    "features": None,
+    "is_starting_card": True
 }, {
     "image": "base_game/Base_Game_C3_Tile_E.png",
     "terrains": {

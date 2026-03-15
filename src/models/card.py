@@ -11,7 +11,8 @@ class Card:
 
     def __init__(self, image_path: str, terrains: dict,
                  connections: typing.Optional[dict],
-                 features: typing.Any) -> None:
+                 features: typing.Any,
+                 is_starting_card: bool = False) -> None:
         """
         Initialize a tile with an image and terrain data.
         
@@ -20,6 +21,8 @@ class Card:
             terrains: Dictionary defining terrain types for each side
             connections: Dictionary defining connections within the card
             features: List of features on the card
+            is_starting_card: True when this card can be used as game
+                starting card
         """
         self.image_path = image_path
         original_image = pygame.image.load(image_path)
@@ -29,6 +32,7 @@ class Card:
         self.connections = connections
         self.occupied = {}
         self.features = features
+        self.is_starting_card = is_starting_card
         self.neighbors = {"N": None, "E": None, "S": None, "W": None}
         self.position = {"X": None, "Y": None}
         self.rotation = 0
@@ -103,6 +107,10 @@ class Card:
         """Get the card's features."""
         return self.features
 
+    def get_is_starting_card(self) -> bool:
+        """Return True if the card is marked as a valid starting card."""
+        return self.is_starting_card
+
     def rotate(self) -> None:
         """Rotate the card 90 degrees clockwise."""
         self.rotation = (self.rotation + 90) % 360
@@ -143,6 +151,7 @@ class Card:
             "terrains": self.terrains,
             "connections": self.connections,
             "features": self.features,
+            "is_starting_card": self.is_starting_card,
             "occupied": self.occupied,
             "neighbors": {
                 dir: None if neighbor is None else neighbor.image_path
@@ -172,6 +181,7 @@ class Card:
             features = data.get("features", None)
             if features is not None and not isinstance(features, list):
                 raise TypeError("features must be a list or None")
+            is_starting_card = bool(data.get("is_starting_card", False))
         except (KeyError, ValueError, TypeError) as e:
             logger.error(f"Failed to parse required card fields: {data} - {e}")
             raise
@@ -180,7 +190,8 @@ class Card:
             card = Card(image_path=image_path,
                         terrains=terrains,
                         connections=connections,
-                        features=features)
+                        features=features,
+                        is_starting_card=is_starting_card)
         except Exception as e:
             logger.error(f"Failed to initialize Card from data: {data} - {e}")
             raise
