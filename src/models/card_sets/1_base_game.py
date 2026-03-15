@@ -61,9 +61,9 @@ CARD_DEFINITIONS = [{
         "E": "field",
         "S": "field",
         "W": "field",
-        "C": "city"
+        "C": "field"
     },
-    "connection_groups": [["N", "C"], ["E", "S", "W"]],
+    "connection_groups": [["E", "S", "W", "C"]],
     "features": None
 }, {
     "image": "base_game/Base_Game_C3_Tile_F.png",
@@ -155,9 +155,9 @@ CARD_DEFINITIONS = [{
         "E": "city",
         "S": "field",
         "W": "field",
-        "C": "city"
+        "C": "field"
     },
-    "connection_groups": [["N", "E", "C"], ["S", "W"]],
+    "connection_groups": [["N", "E"], ["S", "W", "C"]],
     "features": ["coat"]
 }, {
     "image": "base_game/Base_Game_C3_Tile_N.png",
@@ -166,9 +166,9 @@ CARD_DEFINITIONS = [{
         "E": "city",
         "S": "field",
         "W": "field",
-        "C": "city"
+        "C": "field"
     },
-    "connection_groups": [["N", "E", "C"], ["S", "W"]],
+    "connection_groups": [["N", "E"], ["S", "W", "C"]],
     "features": None
 }, {
     "image": "base_game/Base_Game_C3_Tile_O.png",
@@ -177,10 +177,10 @@ CARD_DEFINITIONS = [{
         "E": "road",
         "S": "road",
         "W": "city",
-        "C": "city",
+        "C": "road",
         "SE": "field"
     },
-    "connection_groups": [["N", "W", "C"], ["E", "S"]],
+    "connection_groups": [["N", "W"], ["E", "S", "C"]],
     "features": ["coat"]
 }, {
     "image": "base_game/Base_Game_C3_Tile_P.png",
@@ -189,10 +189,10 @@ CARD_DEFINITIONS = [{
         "E": "road",
         "S": "road",
         "W": "city",
-        "C": "city",
+        "C": "road",
         "SE": "field"
     },
-    "connection_groups": [["N", "W", "C"], ["E", "S"]],
+    "connection_groups": [["N", "W"], ["E", "S", "C"]],
     "features": None
 }, {
     "image": "base_game/Base_Game_C3_Tile_Q.png",
