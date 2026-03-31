@@ -307,6 +307,188 @@ class GameSession:
             player.play_turn(self)
             return
 
+    def _build_card_signature(self, card: typing.Any) -> typing.Optional[dict]:
+        """Build a stable plain-data signature for card freshness checks."""
+        if not card:
+            return None
+        position = card.get_position() if hasattr(card, "get_position") else {}
+        return {
+            "image_path": getattr(card, "image_path", None),
+            "rotation": getattr(card, "rotation", None),
+            "position": {
+                "X": position.get("X") if isinstance(position, dict) else None,
+                "Y": position.get("Y") if isinstance(position, dict) else None,
+            },
+            "terrains": dict(card.get_terrains()) if hasattr(card, "get_terrains") else {},
+            "features": list(card.get_features()) if hasattr(card, "get_features")
+            and card.get_features() else [],
+            "is_starting_card":
+            card.get_is_starting_card() if hasattr(card, "get_is_starting_card") else False,
+        }
+
+    def build_ai_snapshot(self, player_index: int) -> dict:
+        """Build an immutable plain-data snapshot for async AI evaluation."""
+        if player_index < 0 or player_index >= len(self.players):
+            logger.warning("Cannot build AI snapshot for invalid player index %s",
+                           player_index)
+            return {}
+
+        current_player_index = self.current_player.get_index(
+        ) if self.current_player else None
+        target_player = self.players[player_index]
+
+        valid_placements = []
+        if self.turn_phase == 1 and self.current_card:
+            valid_placements = [{
+                "x": x,
+                "y": y,
+                "rotation": rotation
+            } for x, y, rotation in sorted(self.get_valid_placements(self.current_card))]
+
+        snapshot = {
+            "turn_phase": self.turn_phase,
+            "game_over": self.game_over,
+            "is_first_round": self.is_first_round,
+            "cards_remaining": len(self.cards_deck),
+            "target_player_index": player_index,
+            "current_player_index": current_player_index,
+            "is_players_turn": current_player_index == player_index,
+            "current_card_signature": self._build_card_signature(self.current_card),
+            "current_card": self.current_card.serialize() if self.current_card else None,
+            "last_placed_card_position": self.game_board.get_card_position(self.last_placed_card)
+            if self.last_placed_card else None,
+            "valid_placements": valid_placements,
+            "candidate_positions":
+            sorted([{
+                "x": x,
+                "y": y
+            } for x, y in self.get_candidate_positions()]),
+            "board": self.game_board.serialize(),
+            "players": [{
+                "index": player.get_index(),
+                "name": player.get_name(),
+                "score": player.get_score(),
+                "figures_remaining": len(player.get_figures()),
+                "is_ai": player.get_is_ai(),
+                "color": player.get_color(),
+            } for player in self.players],
+            "target_player": {
+                "index": target_player.get_index(),
+                "score": target_player.get_score(),
+                "figures_remaining": len(target_player.get_figures()),
+            },
+            "structures": [{
+                "type": structure.get_structure_type(),
+                "is_completed": structure.get_is_completed(),
+                "card_count": len(structure.cards),
+                "figure_owner_indices":
+                sorted([figure.get_owner().get_index() for figure in structure.get_figures()]),
+            } for structure in self.structures],
+        }
+        return snapshot
+
+    def apply_ai_decision(self, player_index: int, decision: dict) -> bool:
+        """Apply AI decision safely by revalidating state before mutating."""
+        if not isinstance(decision, dict):
+            logger.warning("Ignoring AI decision, expected dict but got %s",
+                           type(decision).__name__)
+            return False
+
+        if self.game_over or not self.current_player:
+            logger.debug("Ignoring AI decision because game is over or no current player")
+            return False
+
+        if self.current_player.get_index() != player_index:
+            logger.debug(
+                "Ignoring stale AI decision for player %s, current turn is player %s",
+                player_index,
+                self.current_player.get_index(),
+            )
+            return False
+
+        expected_signature = decision.get("current_card_signature")
+        if expected_signature and expected_signature != self._build_card_signature(
+                self.current_card):
+            logger.debug("Ignoring stale AI decision because current card changed")
+            if isinstance(self.current_player, AIPlayer):
+                self.play_ai_turn(self.current_player)
+            return False
+
+        if self.turn_phase == 1:
+            if decision.get("skip_card"):
+                self.skip_current_action()
+                return True
+
+            x = decision.get("x", decision.get("card_x"))
+            y = decision.get("y", decision.get("card_y"))
+            rotation = decision.get("rotation", decision.get("card_rotation", 0))
+            if x is None or y is None:
+                logger.debug("AI decision missing card placement coordinates")
+                return False
+
+            try:
+                x = int(x)
+                y = int(y)
+                rotation = int(rotation)
+            except (TypeError, ValueError):
+                logger.debug("AI decision has invalid card placement values: %s",
+                             decision)
+                return False
+
+            if self.current_card:
+                while self.current_card.rotation != rotation:
+                    self.current_card.rotate()
+
+            if not self.current_card or not self.validate_card_placement_cached(
+                    self.current_card, x, y):
+                logger.debug("AI decision placement became invalid at (%s, %s)", x,
+                             y)
+                if isinstance(self.current_player, AIPlayer):
+                    self.play_ai_turn(self.current_player)
+                return False
+
+            if not self.play_card(x, y):
+                logger.debug("AI decision card placement failed at apply stage")
+                return False
+
+            self.turn_phase = 2
+
+        if self.turn_phase == 2:
+            if decision.get("skip_figure"):
+                self.skip_current_action()
+                return True
+
+            figure_position = decision.get("figure_position",
+                                           decision.get("position"))
+            if not figure_position:
+                self.skip_current_action()
+                return True
+
+            if not self.last_placed_card:
+                logger.debug("Cannot apply AI figure decision without a last placed card")
+                return False
+
+            card_x, card_y = self.game_board.get_card_position(self.last_placed_card)
+            if card_x is None or card_y is None:
+                logger.debug("Cannot locate last placed card for AI figure placement")
+                return False
+
+            if not self.play_figure(self.current_player, card_x, card_y,
+                                    str(figure_position)):
+                logger.debug("AI figure placement invalid at (%s, %s, %s)", card_x,
+                             card_y, figure_position)
+                self.skip_current_action()
+                return False
+
+            for structure in self.structures:
+                structure.check_completion()
+                if structure.get_is_completed():
+                    self.score_structure(structure)
+            self.next_turn()
+            return True
+
+        return True
+
     def play_turn(self,
                   x: int,
                   y: int,
