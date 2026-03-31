@@ -1300,14 +1300,10 @@ class GameScene(Scene):
             self.clock.tick(fps)
             return
 
-        if hasattr(current_player,
-                   'is_thinking') and current_player.is_thinking():
-            current_player.play_turn(self.session)
-            self.clock.tick(fps)
-            return
-
         if hasattr(current_player, 'play_turn'):
-            logger.debug(f"Starting AI turn for {current_player.get_name()}")
+            if (hasattr(current_player, 'is_thinking')
+                    and not current_player.is_thinking()):
+                logger.debug(f"Starting AI turn for {current_player.get_name()}")
             current_player.play_turn(self.session)
         else:
             logger.warning(
