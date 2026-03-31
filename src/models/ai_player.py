@@ -201,6 +201,45 @@ class AIPlayer(Player):
         else:
             self._play_turn_simple(game_session)
 
+    def compute_move_from_snapshot(self, snapshot: Dict[str, Any]) -> Dict[str, Any]:
+        """Compute a card-placement decision from immutable snapshot data.
+
+        This method is used by ``AIWorkerService`` to evaluate a turn off the main
+        thread without mutating ``GameSession``.
+        """
+        placements = snapshot.get("valid_placements", [])
+        decision: Dict[str, Any] = {
+            "current_card_signature": snapshot.get("current_card_signature"),
+            "skip_figure": True,
+        }
+        if not placements:
+            decision["skip_card"] = True
+            return decision
+
+        center_x = None
+        center_y = None
+        board = snapshot.get("board")
+        if isinstance(board, dict):
+            center = board.get("center")
+            if isinstance(center, int):
+                center_x = center
+                center_y = center
+
+        def score(placement: Dict[str, Any]) -> float:
+            base_score = 0.0
+            x = placement.get("x", 0)
+            y = placement.get("y", 0)
+            if center_x is not None and center_y is not None:
+                distance = abs(x - center_x) + abs(y - center_y)
+                base_score -= distance * self._preset.get("center_penalty", 1.0)
+            return base_score
+
+        best = max(placements, key=score)
+        decision["x"] = best.get("x")
+        decision["y"] = best.get("y")
+        decision["rotation"] = best.get("rotation", 0)
+        return decision
+
     def _update_game_phase(self, game_session: 'GameSession') -> None:
         """Update the current game phase based on cards played."""
         total_cards = len(game_session.get_cards_deck()) + 1
