@@ -123,6 +123,7 @@ class Game:
         and exits the application.
         """
         try:
+            self._teardown_current_scene()
             self._cleanup_previous_game()
             pygame.quit()
             logger.debug("Game quit successfully")
@@ -130,6 +131,14 @@ class Game:
         except Exception as e:
             log_error("Error during game quit", e)
             exit()
+
+    def _teardown_current_scene(self) -> None:
+        """Invoke scene teardown hook before replacing or shutting down scenes."""
+        try:
+            if self._current_scene and hasattr(self._current_scene, "on_exit"):
+                self._current_scene.on_exit()
+        except Exception as e:
+            log_error("Error during scene teardown", e)
 
     def _cleanup_previous_game(self) -> None:
         """
@@ -175,6 +184,7 @@ class Game:
             *args: Additional arguments passed to scene constructors
         """
         try:
+            self._teardown_current_scene()
             if state == GameState.MENU:
                 self._current_scene = MainMenuScene(
                     self._screen, self._init_scene, self._get_game_session,

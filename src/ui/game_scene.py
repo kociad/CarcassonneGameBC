@@ -85,8 +85,12 @@ class GameScene(Scene):
         self.player_action_time = 0
         self.ai_turn_start_time = None
 
+        self._ai_offload_enabled = settings_manager.get(
+            "AI_OFFLOAD_ENABLED", False
+        )
         self._ai_worker = AIWorkerService()
-        self._ai_worker.start()
+        if self._ai_offload_enabled:
+            self._ai_worker.start()
         self._pending_ai_turn_id: str | None = None
         self._pending_ai_player_index: int | None = None
         self._pending_ai_started_at: float | None = None
@@ -1088,6 +1092,7 @@ class GameScene(Scene):
 
         for event in events:
             if event.type == pygame.QUIT:
+                self._stop_ai_worker()
                 pygame.quit()
                 exit()
 
@@ -1098,6 +1103,7 @@ class GameScene(Scene):
                 if event.key == pygame.K_TAB:
                     self.game_log.toggle_visibility()
                 elif event.key == pygame.K_ESCAPE:
+                    self._stop_ai_worker()
                     self.switch_scene(GameState.MENU)
 
             allow_action = True
@@ -1314,6 +1320,15 @@ class GameScene(Scene):
         self._pending_ai_player_index = None
         self._pending_ai_started_at = None
 
+    def _stop_ai_worker(self) -> None:
+        """Stop background AI worker and clear pending turn metadata."""
+        self._clear_pending_ai_decision()
+        self._ai_worker.stop()
+
+    def on_exit(self) -> None:
+        """Release scene resources before switching away from this scene."""
+        self._stop_ai_worker()
+
     def _is_ai_decision_pending(self, player: typing.Any | None = None) -> bool:
         if self._pending_ai_turn_id is None:
             return False
@@ -1322,6 +1337,8 @@ class GameScene(Scene):
         return self._pending_ai_player_index == player.get_index()
 
     def _submit_ai_turn_to_worker(self, ai_player: typing.Any) -> bool:
+        if not self._ai_offload_enabled:
+            return False
         player_index = ai_player.get_index()
         snapshot = self.session.build_ai_snapshot(player_index)
         if not snapshot:
@@ -1331,6 +1348,7 @@ class GameScene(Scene):
         turn_id = f"{player_index}:{uuid.uuid4()}"
         submitted = self._ai_worker.submit(turn_id, ai_player, snapshot)
         if not submitted:
+            logger.debug("AI worker unavailable/busy/full; using synchronous AI")
             return False
 
         self._pending_ai_turn_id = turn_id

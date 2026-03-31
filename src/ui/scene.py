@@ -33,6 +33,10 @@ class Scene:
         """Draw the scene."""
         raise NotImplementedError
 
+    def on_exit(self) -> None:
+        """Optional hook called before the scene is replaced."""
+        pass
+
     def show_notification(self, notification_type: str, message: str) -> None:
         """
         Show notification toast - available to all scenes that have a toast_manager

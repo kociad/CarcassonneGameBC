@@ -52,7 +52,8 @@ class SettingsManager:
                 "HOST_PORT": 222,
                 "PLAYERS": ["Player 1", "Player 2"],
                 "SIDEBAR_WIDTH": 200,
-                "GAME_LOG_MAX_ENTRIES": 2000
+                "GAME_LOG_MAX_ENTRIES": 2000,
+                "AI_OFFLOAD_ENABLED": False
             }
 
     def get(self, key: str, default: typing.Any = None) -> typing.Any:
