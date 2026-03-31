@@ -76,7 +76,7 @@ class GameScene(Scene):
         }
 
         self.valid_placements = set()
-        self.last_card_state = (None, None)
+        self._valid_placements_cache_key: tuple[int, int, int] | None = None
         self._valid_placements_version = 0
 
         self.last_ai_turn_time = 0
@@ -211,6 +211,10 @@ class GameScene(Scene):
         """
         return self.offset_y
 
+    def _invalidate_valid_placements_cache(self) -> None:
+        """Invalidate cached valid placement lookup state."""
+        self._valid_placements_cache_key = None
+
     def _update_valid_placements(self):
         """Update the set of valid placements for the current card and board state."""
         current_card = self.session.get_current_card()
@@ -219,17 +223,18 @@ class GameScene(Scene):
                 self.valid_placements = set()
                 self._valid_placements_version += 1
                 self._invalidate_render_cache()
-            self.last_card_state = (None, None)
+            self._valid_placements_cache_key = None
             return
 
+        board_version = self.session.get_board_version()
         card_id = id(current_card)
         rotation = getattr(current_card, 'rotation', 0)
-        current_state = (card_id, rotation)
+        current_state = (board_version, card_id, rotation)
 
-        if current_state == self.last_card_state:
+        if current_state == self._valid_placements_cache_key:
             return
 
-        self.last_card_state = current_state
+        self._valid_placements_cache_key = current_state
 
         valid_placements = self.session.get_valid_placements(current_card)
         self.valid_placements = {(x, y)
@@ -1144,6 +1149,7 @@ class GameScene(Scene):
             if self.network and hasattr(self.network, 'send_command'):
                 self.network.send_command(command)
 
+            self._invalidate_valid_placements_cache()
             self._update_valid_placements()
             self.player_action_time = pygame.time.get_ticks() / 1000.0
             self.ai_turn_start_time = None
@@ -1165,6 +1171,7 @@ class GameScene(Scene):
             if self.network and hasattr(self.network, 'send_command'):
                 self.network.send_command(command)
 
+            self._invalidate_valid_placements_cache()
             self._update_valid_placements()
 
     def _execute_local_skip(self) -> None:
@@ -1184,6 +1191,7 @@ class GameScene(Scene):
             if self.network and hasattr(self.network, 'send_command'):
                 self.network.send_command(command)
 
+            self._invalidate_valid_placements_cache()
             self._update_valid_placements()
 
     def _handle_key_hold(self) -> None:
@@ -1277,6 +1285,7 @@ class GameScene(Scene):
         Called when the game session is updated from network.
         """
         self.session = new_session
+        self._invalidate_valid_placements_cache()
         self._invalidate_render_cache()
 
     def update(self) -> None:
