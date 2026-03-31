@@ -1,5 +1,6 @@
 import logging
 import random
+import threading
 import typing
 import time
 from typing import List, Tuple, Optional, Dict, Any
@@ -167,6 +168,13 @@ class AIPlayer(Player):
         self._figure_cache = {}
         self._figure_cache_valid = False
 
+        self._worker_thread = None
+        self._worker_lock = threading.Lock()
+        self._worker_result = None
+        self._worker_progress = 0.0
+        self._worker_running = False
+        self._worker_turn_token = 0
+
     def _get_preset(self) -> Dict[str, Any]:
         """Get the AI preset configuration for the current difficulty."""
         if self._difficulty == "EASY":
@@ -188,18 +196,117 @@ class AIPlayer(Player):
         Args:
             game_session: The current game session
         """
-        if self._ai_thinking_state is not None:
-            self._continue_thinking(game_session)
+        if not settings_manager.get("AI_USE_SIMULATION", False):
+            if self._ai_thinking_state is not None:
+                self._continue_thinking(game_session)
+                return
+            self._play_turn_simple(game_session)
+            return
+
+        with self._worker_lock:
+            worker_running = self._worker_running
+            worker_result = self._worker_result
+            worker_token = self._worker_turn_token
+
+        if worker_running:
+            return
+
+        if worker_result and worker_result["turn_token"] == worker_token:
+            if worker_result.get("is_valid"):
+                self._ai_thinking_data = {"best_move": worker_result["best_move"]}
+                self._execute_best_move(game_session)
+            self._clear_worker_state()
             return
 
         logger.info(f"Player {self.name} is thinking...")
-
         self._update_game_phase(game_session)
+        self._invalidate_evaluation_cache()
+        self._invalidate_figure_cache()
 
-        if settings_manager.get("AI_USE_SIMULATION", False):
-            self._start_advanced_thinking(game_session)
-        else:
-            self._play_turn_simple(game_session)
+        with self._worker_lock:
+            self._worker_turn_token += 1
+            turn_token = self._worker_turn_token
+            self._worker_running = True
+            self._worker_progress = 0.0
+            self._worker_result = None
+            self._worker_thread = threading.Thread(
+                target=self._compute_best_move_worker,
+                args=(game_session, turn_token),
+                daemon=True)
+            self._worker_thread.start()
+        return
+
+    def _clear_worker_state(self) -> None:
+        """Reset worker state after completing or consuming a result."""
+        with self._worker_lock:
+            self._worker_thread = None
+            self._worker_result = None
+            self._worker_progress = 0.0
+            self._worker_running = False
+
+    def _compute_best_move_worker(self, game_session: 'GameSession',
+                                  turn_token: int) -> None:
+        """Compute the best move in a background worker thread."""
+        result = {
+            "turn_token": turn_token,
+            "is_valid": False,
+            "best_move": None
+        }
+
+        try:
+            current_card = game_session.get_current_card()
+            possible_placements = self._get_multiple_valid_placements(
+                game_session, current_card)
+
+            if possible_placements:
+                strategic_scores = []
+                total_placements = len(possible_placements)
+                for idx, placement in enumerate(possible_placements, start=1):
+                    x, y, rotations_needed, card_copy = placement
+
+                    strategic_score = self._evaluate_card_placement_advanced(
+                        game_session, x, y, card_copy)
+                    strategic_score += self._evaluate_figure_opportunity_advanced(
+                        game_session, x, y, card_copy)
+                    strategic_score += self._evaluate_opponent_blocking(
+                        game_session, x, y, card_copy)
+                    strategic_score += self._evaluate_multi_turn_potential(
+                        game_session, x, y, card_copy)
+                    strategic_scores.append((strategic_score, placement))
+
+                    with self._worker_lock:
+                        self._worker_progress = (idx / total_placements) * 0.5
+
+                strategic_scores.sort(reverse=True, key=lambda x: x[0])
+                max_candidates = settings_manager.get(
+                    "AI_STRATEGIC_CANDIDATES", 5)
+                top_candidates = strategic_scores if max_candidates == -1 else strategic_scores[
+                    :max_candidates]
+
+                best_move = None
+                best_score = float("-inf")
+                total_candidates = max(1, len(top_candidates))
+                for idx, (_, placement) in enumerate(top_candidates, start=1):
+                    x, y, rotations_needed, card_copy = placement
+                    card_score = self._simulate_card_placement_advanced(
+                        game_session, x, y, rotations_needed)
+                    if card_score > best_score:
+                        best_score = card_score
+                        best_move = placement
+
+                    with self._worker_lock:
+                        self._worker_progress = 0.5 + (
+                            idx / total_candidates) * 0.5
+
+                result["is_valid"] = True
+                result["best_move"] = best_move
+            else:
+                result["is_valid"] = True
+        finally:
+            with self._worker_lock:
+                if turn_token == self._worker_turn_token:
+                    self._worker_result = result
+                    self._worker_running = False
 
     def _update_game_phase(self, game_session: 'GameSession') -> None:
         """Update the current game phase based on cards played."""
