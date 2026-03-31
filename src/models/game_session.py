@@ -44,6 +44,7 @@ class GameSession:
         self.on_show_notification = None
         self.on_command_executed = None
         self.turn_id = 0
+        self.board_version = 0
 
         self._executed_command_ids = set()
 
@@ -103,6 +104,14 @@ class GameSession:
         current_card_id = id(self.current_card) if self.current_card else 0
         return (self.turn_id, current_card_id, self.get_current_player_index())
 
+    def get_board_version(self) -> int:
+        """Return the board visuals version used by render caches."""
+        return self.board_version
+
+    def _increment_board_version(self) -> None:
+        """Increment board visuals version after a visual-affecting mutation."""
+        self.board_version += 1
+
     def get_placed_figures(self) -> list:
         """Return the list of figures placed on the board."""
         return self.placed_figures
@@ -113,7 +122,9 @@ class GameSession:
 
     def set_turn_phase(self, phase: int) -> None:
         """Set the current turn phase."""
-        self.turn_phase = phase
+        if self.turn_phase != phase:
+            self.turn_phase = phase
+            self._increment_board_version()
 
     def get_is_first_round(self) -> bool:
         """Return True if this is the first round."""
@@ -253,6 +264,7 @@ class GameSession:
                 logger.info(
                     f"New card drawn - {len(self.cards_deck)} cards remaining")
                 self.turn_phase = 1
+                self._increment_board_version()
                 if self.on_turn_ended:
                     self.on_turn_ended()
             else:
@@ -287,6 +299,7 @@ class GameSession:
         self.game_board.place_card(card, x, y)
         self.last_placed_card = card
         self.current_card = None
+        self._increment_board_version()
         if not self.is_first_round:
             logger.info(
                 f"Player {self.current_player.get_name()} placed a card at [{x - self.game_board.get_center()},{self.game_board.get_center() - y}]"
@@ -313,6 +326,7 @@ class GameSession:
         """Discard the currently selected card and select a new one."""
         if self.current_card:
             self.current_card = self._draw_card()
+            self._increment_board_version()
 
     def play_ai_turn(self, player: typing.Any = None) -> None:
         """If the current player is AI, trigger their turn."""
@@ -339,6 +353,7 @@ class GameSession:
             logger.debug("Turn Phase 1: Attempting to place card...")
             if self.play_card(x, y):
                 self.turn_phase = 2
+                self._increment_board_version()
                 logger.debug("Card placed successfully, moving to Phase 2")
             else:
                 logger.debug("Card placement failed.")
@@ -388,6 +403,7 @@ class GameSession:
                 success = self.play_card(command.x, command.y)
                 if success:
                     self.turn_phase = 2
+                    self._increment_board_version()
             elif command.command_type == "place_figure":
                 if self.turn_phase != 2:
                     logger.warning("Cannot place figure in phase 1")
@@ -415,6 +431,7 @@ class GameSession:
             elif command.command_type == "rotate_card":
                 if self.current_card and self.turn_phase == 1:
                     self.current_card.rotate()
+                    self._increment_board_version()
                     success = True
                 else:
                     logger.warning("Cannot rotate card")
@@ -514,6 +531,7 @@ class GameSession:
             )
             if figure.place(card, position):
                 self.placed_figures.append(figure)
+                self._increment_board_version()
                 logger.info(
                     f"Player {player.get_name()} placed a figure on {position} position at [{x - self.game_board.get_center()},{self.game_board.get_center() - y}]"
                 )
@@ -725,6 +743,7 @@ class GameSession:
         for figure in structure.get_figures()[:]:
             structure.remove_figure(figure)
             figure.owner.add_figure(figure)
+            self._increment_board_version()
             logger.info(f"{figure.owner.get_name()}'s figure was returned")
 
     def end_game(self) -> None:
@@ -745,6 +764,7 @@ class GameSession:
                 self.score_structure(structure)
         logger.debug("All meeples have been returned to players")
         self.placed_figures.clear()
+        self._increment_board_version()
 
         self._invalidate_candidate_cache()
         self._invalidate_structure_cache()
@@ -968,6 +988,8 @@ class GameSession:
             self.turn_phase,
             "turn_id":
             self.turn_id,
+            "board_version":
+            self.board_version,
             "game_over":
             self.game_over,
             "current_player_index":
@@ -1052,6 +1074,7 @@ class GameSession:
             session.is_first_round = bool(data.get("is_first_round", True))
             session.turn_phase = int(data.get("turn_phase", 1))
             session.turn_id = int(data.get("turn_id", 0))
+            session.board_version = int(data.get("board_version", 0))
             session.game_over = bool(data.get("game_over", False))
         except Exception as e:
             logger.warning(f"Failed to parse basic session attributes - {e}")
