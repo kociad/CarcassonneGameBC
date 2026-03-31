@@ -288,8 +288,8 @@ class AIPlayer(Player):
                 total_candidates = max(1, len(top_candidates))
                 for idx, (_, placement) in enumerate(top_candidates, start=1):
                     x, y, rotations_needed, card_copy = placement
-                    card_score = self._simulate_card_placement_advanced(
-                        game_session, x, y, rotations_needed)
+                    card_score = self._simulate_card_copy_placement_advanced(
+                        game_session, x, y, card_copy)
                     if card_score > best_score:
                         best_score = card_score
                         best_move = placement
@@ -686,6 +686,50 @@ class AIPlayer(Player):
         while current_card.rotation != original_rotation:
             current_card.rotate()
 
+        return score
+
+    def _simulate_card_copy_placement_advanced(self, game_session: 'GameSession',
+                                               x: int, y: int,
+                                               card_copy: Card) -> float:
+        """
+        Simulate card placement using an already-rotated card copy.
+
+        This helper is safe for threaded worker evaluation because it avoids
+        mutating or reading the current live card from ``game_session``.
+
+        Args:
+            game_session: The current game session
+            x: X coordinate for placement
+            y: Y coordinate for placement
+            card_copy: Pre-rotated card copy for this candidate
+
+        Returns:
+            A score representing the desirability of this placement
+        """
+        score = self._evaluate_cached(
+            card_copy, x, y, "placement",
+            lambda: self._evaluate_card_placement_advanced(
+                game_session, x, y, card_copy))
+        score += self._evaluate_cached(
+            card_copy, x, y, "figure",
+            lambda: self._evaluate_figure_opportunity_advanced(
+                game_session, x, y, card_copy))
+        score += self._evaluate_cached(
+            card_copy, x, y, "structure",
+            lambda: self._evaluate_structure_completion_potential(
+                game_session, x, y, card_copy))
+        score += self._evaluate_cached(
+            card_copy, x, y,
+            "field", lambda: self._evaluate_field_potential(
+                game_session, x, y, card_copy))
+        score += self._evaluate_cached(
+            card_copy, x, y,
+            "blocking", lambda: self._evaluate_opponent_blocking(
+                game_session, x, y, card_copy))
+        score += self._evaluate_cached(
+            card_copy, x, y, "multiturn",
+            lambda: self._evaluate_multi_turn_potential(
+                game_session, x, y, card_copy))
         return score
 
     def _evaluate_card_placement_advanced(self, game_session: 'GameSession',
