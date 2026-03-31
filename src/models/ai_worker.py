@@ -7,6 +7,7 @@ single daemon thread.
 from __future__ import annotations
 
 import copy
+import json
 import queue
 import threading
 from typing import Any, Dict, Optional
@@ -70,12 +71,53 @@ class AIWorkerService:
             self._is_busy = False
             self._pending_turn_id = None
 
+
+    @staticmethod
+    def _validate_snapshot(snapshot: Any) -> bool:
+        """Validate payload shape/size for minimal AI offload snapshots."""
+        if not isinstance(snapshot, dict):
+            return False
+
+        required_keys = {
+            "snapshot_mode",
+            "turn_phase",
+            "current_card_signature",
+            "valid_placements",
+            "last_placed_card_position",
+            "target_player",
+            "players",
+            "meeple_candidates",
+        }
+        if not required_keys.issubset(set(snapshot.keys())):
+            return False
+
+        if snapshot.get("snapshot_mode") != "minimal":
+            return False
+
+        compat_payload = snapshot.get("compat")
+        if compat_payload is not None and not isinstance(compat_payload, dict):
+            return False
+
+        if "session_state" in snapshot:
+            # Legacy root-level payload should no longer be submitted.
+            return False
+
+        try:
+            payload_size = len(json.dumps(snapshot, separators=(",", ":")))
+        except (TypeError, ValueError):
+            return False
+
+        return payload_size <= 200_000
+
     def submit(self, turn_id: Any, ai_player: Any, snapshot: Any) -> bool:
         """Submit one turn for processing.
 
         Returns ``False`` if the worker is not running or currently busy.
         """
         if not (self._thread and self._thread.is_alive()):
+            return False
+
+        if not self._validate_snapshot(snapshot):
             return False
 
         with self._state_lock:

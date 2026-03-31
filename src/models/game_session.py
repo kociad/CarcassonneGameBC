@@ -326,8 +326,69 @@ class GameSession:
             card.get_is_starting_card() if hasattr(card, "get_is_starting_card") else False,
         }
 
+    def _build_minimal_player_snapshot(self) -> list[dict]:
+        """Build minimal player metadata for AI decision heuristics."""
+        return [{
+            "index": player.get_index(),
+            "score": player.get_score(),
+            "figures_remaining": len(player.get_figures()),
+            "is_ai": player.get_is_ai(),
+        } for player in self.players]
+
+    def _build_meeple_candidates(self, target_player: typing.Any) -> list[dict]:
+        """Build precomputed candidate metadata for phase-2 meeple choices."""
+        if self.turn_phase != 2 or not self.last_placed_card:
+            return []
+
+        last_position = self.game_board.get_card_position(self.last_placed_card)
+        if not last_position:
+            return []
+
+        x, y = last_position
+        candidates = []
+        target_figures_remaining = len(target_player.get_figures()) if target_player else 0
+
+        for direction, terrain_type in self.last_placed_card.get_terrains().items():
+            structure = self.structure_map.get((x, y, direction))
+            occupied = bool(structure and structure.get_figures())
+            structure_type = (structure.get_structure_type().lower()
+                              if structure and structure.get_structure_type() else terrain_type)
+            card_count = len(structure.cards) if structure and structure.cards else 0
+            owner_indices = sorted(
+                [figure.get_owner().get_index() for figure in structure.get_figures()]
+            ) if structure else []
+
+            priority_score = 0
+            if target_figures_remaining <= 0 or occupied:
+                priority_score = -1
+            else:
+                if structure_type == "city":
+                    priority_score += 6
+                elif structure_type == "road":
+                    priority_score += 4
+                elif structure_type == "monastery":
+                    priority_score += 5
+                else:
+                    priority_score += 2
+                if structure and structure.get_is_completed():
+                    priority_score += 3
+                priority_score += min(card_count, 4)
+
+            candidates.append({
+                "position": direction,
+                "terrain_type": terrain_type,
+                "structure_type": structure_type,
+                "occupied": occupied,
+                "is_completed": structure.get_is_completed() if structure else False,
+                "card_count": card_count,
+                "owner_indices": owner_indices,
+                "priority_score": priority_score,
+            })
+
+        return sorted(candidates, key=lambda c: (-c["priority_score"], c["position"]))
+
     def build_ai_snapshot(self, player_index: int) -> dict:
-        """Build an immutable plain-data snapshot for async AI evaluation."""
+        """Build an immutable snapshot for async AI evaluation."""
         if player_index < 0 or player_index >= len(self.players):
             logger.warning("Cannot build AI snapshot for invalid player index %s",
                            player_index)
@@ -346,48 +407,43 @@ class GameSession:
             } for x, y, rotation in sorted(self.get_valid_placements(self.current_card))]
 
         snapshot = {
+            "snapshot_mode": "minimal",
             "turn_phase": self.turn_phase,
-            "game_over": self.game_over,
-            "is_first_round": self.is_first_round,
-            "cards_remaining": len(self.cards_deck),
             "target_player_index": player_index,
             "current_player_index": current_player_index,
             "is_players_turn": current_player_index == player_index,
             "current_card_signature": self._build_card_signature(self.current_card),
-            "current_card": self.current_card.serialize() if self.current_card else None,
             "last_placed_card_position": self.game_board.get_card_position(self.last_placed_card)
             if self.last_placed_card else None,
             "valid_placements": valid_placements,
-            "candidate_positions":
-            sorted(
-                [{
-                    "x": x,
-                    "y": y
-                } for x, y in self.get_candidate_positions()],
-                key=lambda candidate: (candidate["x"], candidate["y"])),
-            "board": self.game_board.serialize(),
-            "players": [{
-                "index": player.get_index(),
-                "name": player.get_name(),
-                "score": player.get_score(),
-                "figures_remaining": len(player.get_figures()),
-                "is_ai": player.get_is_ai(),
-                "color": player.get_color(),
-            } for player in self.players],
+            "players": self._build_minimal_player_snapshot(),
             "target_player": {
                 "index": target_player.get_index(),
                 "score": target_player.get_score(),
                 "figures_remaining": len(target_player.get_figures()),
             },
-            "structures": [{
-                "type": structure.get_structure_type(),
-                "is_completed": structure.get_is_completed(),
-                "card_count": len(structure.cards),
-                "figure_owner_indices":
-                sorted([figure.get_owner().get_index() for figure in structure.get_figures()]),
-            } for structure in self.structures],
-            "session_state": self.serialize(),
+            "meeple_candidates": self._build_meeple_candidates(target_player),
         }
+
+        if settings_manager.get("AI_OFFLOAD_INCLUDE_COMPAT_SNAPSHOT", False):
+            snapshot["compat"] = {
+                "session_state": self.serialize(),
+                "current_card": self.current_card.serialize() if self.current_card else None,
+                "candidate_positions": sorted(
+                    [{"x": x, "y": y} for x, y in self.get_candidate_positions()],
+                    key=lambda candidate: (candidate["x"], candidate["y"]),
+                ),
+                "board": self.game_board.serialize(),
+                "structures": [{
+                    "type": structure.get_structure_type(),
+                    "is_completed": structure.get_is_completed(),
+                    "card_count": len(structure.cards),
+                    "figure_owner_indices": sorted(
+                        [figure.get_owner().get_index() for figure in structure.get_figures()]
+                    ),
+                } for structure in self.structures],
+            }
+
         return snapshot
 
     def apply_ai_decision(self, player_index: int, decision: dict) -> bool:

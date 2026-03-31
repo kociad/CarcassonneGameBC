@@ -220,7 +220,17 @@ class AIOffloadTests(unittest.TestCase):
                 def decide_move(self, snapshot):
                     return {"x": 1, "y": 2, "rotation": 0}
 
-            self.assertTrue(ai_worker.submit("turn-2", BadAI(), {"valid_placements": []}))
+            minimal_snapshot = {
+                "snapshot_mode": "minimal",
+                "turn_phase": 1,
+                "current_card_signature": {"id": "card"},
+                "valid_placements": [],
+                "last_placed_card_position": None,
+                "target_player": {"index": 0, "score": 0, "figures_remaining": 7},
+                "players": [{"index": 0, "score": 0, "figures_remaining": 7, "is_ai": True}],
+                "meeple_candidates": [],
+            }
+            self.assertTrue(ai_worker.submit("turn-2", BadAI(), minimal_snapshot))
 
             result = None
             for _ in range(50):
@@ -232,6 +242,88 @@ class AIOffloadTests(unittest.TestCase):
             self.assertIsInstance(result, dict)
             self.assertIn("error", result)
             self.assertIn("compute_move_from_snapshot", result["error"]["message"])
+        finally:
+            ai_worker.stop()
+
+    def test_compute_move_uses_lightweight_payload_without_session_state(self):
+        ai_player = AIPlayer("AI_Snapshot", 0, "blue")
+
+        snapshot = {
+            "snapshot_mode": "minimal",
+            "turn_phase": 1,
+            "current_card_signature": {"id": "card"},
+            "valid_placements": [{"x": 3, "y": 4, "rotation": 2}],
+            "last_placed_card_position": None,
+            "target_player": {"index": 0, "score": 0, "figures_remaining": 7},
+            "players": [{"index": 0, "score": 0, "figures_remaining": 7, "is_ai": True}],
+            "meeple_candidates": [],
+        }
+
+        with patch("models.game_session.GameSession.deserialize") as deserialize_mock:
+            decision = ai_player.compute_move_from_snapshot(snapshot)
+
+        deserialize_mock.assert_not_called()
+        self.assertEqual(decision["x"], 3)
+        self.assertEqual(decision["y"], 4)
+        self.assertEqual(decision["rotation"], 2)
+
+    def test_compute_move_uses_compat_payload_as_fallback(self):
+        ai_player = AIPlayer("AI_Compat", 0, "blue")
+
+        snapshot = {
+            "snapshot_mode": "minimal",
+            "turn_phase": 2,
+            "current_card_signature": {"id": "card"},
+            "valid_placements": [],
+            "last_placed_card_position": [10, 11],
+            "target_player_index": 0,
+            "target_player": {"index": 0, "score": 0, "figures_remaining": 7},
+            "players": [{"index": 0, "score": 0, "figures_remaining": 7, "is_ai": True}],
+            "meeple_candidates": [{"position": "N", "occupied": True, "priority_score": -1}],
+            "compat": {"session_state": {"legacy": True}},
+        }
+
+        mocked_figure = Mock()
+        mocked_figure.serialize.return_value = {"id": "f1"}
+        mocked_figure.position_on_card = "E"
+        mocked_figure.card = object()
+        mocked_owner = Mock()
+        mocked_owner.get_index.return_value = 0
+        mocked_figure.get_owner.return_value = mocked_owner
+
+        simulated_player = AIPlayer("AI_Compat_Sim", 0, "blue")
+        simulated_player.play_turn = Mock()
+        simulated_player.is_thinking = Mock(return_value=False)
+
+        mocked_figure.get_owner.return_value = simulated_player
+
+        simulated_session = Mock()
+        simulated_session.players = [simulated_player]
+        simulated_session.current_player = simulated_player
+        simulated_session.placed_figures = []
+        simulated_session.turn_phase = 2
+        simulated_session.last_placed_card = mocked_figure.card
+        simulated_session.game_board.get_card_position.return_value = [10, 11]
+
+        def _play_turn(_session):
+            simulated_session.placed_figures = [mocked_figure]
+
+        simulated_player.play_turn.side_effect = _play_turn
+
+        with patch("models.game_session.GameSession.deserialize", return_value=simulated_session) as deserialize_mock:
+            decision = ai_player.compute_move_from_snapshot(snapshot)
+
+        deserialize_mock.assert_called_once()
+        self.assertFalse(decision["skip_figure"])
+        self.assertEqual(decision["figure_position"], "E")
+
+    def test_worker_rejects_legacy_snapshot_shape(self):
+        ai_worker = AIWorkerService()
+        ai_worker.start()
+        try:
+            self.assertFalse(
+                ai_worker.submit("legacy", lambda _: {"skip_card": True}, {"session_state": {}})
+            )
         finally:
             ai_worker.stop()
 
