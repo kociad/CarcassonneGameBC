@@ -202,18 +202,43 @@ class AIPlayer(Player):
             self._play_turn_simple(game_session)
 
     def compute_move_from_snapshot(self, snapshot: Dict[str, Any]) -> Dict[str, Any]:
-        """Compute a move decision from immutable snapshot data.
-
-        The async worker path must use the same AI logic as synchronous/progressive
-        execution. When a serialized session snapshot is available, we recreate that
-        session and run the normal ``play_turn`` flow on it to produce a decision.
-        """
+        """Compute a move decision from immutable snapshot data."""
         decision: Dict[str, Any] = {
             "current_card_signature": snapshot.get("current_card_signature"),
-            "skip_figure": True,
         }
 
-        session_state = snapshot.get("session_state")
+        turn_phase = int(snapshot.get("turn_phase", 1))
+
+        if turn_phase == 1:
+            placements = snapshot.get("valid_placements", [])
+            if placements:
+                best = random.choice(placements)
+                decision["x"] = best.get("x")
+                decision["y"] = best.get("y")
+                decision["rotation"] = best.get("rotation", 0)
+                return decision
+
+        if turn_phase == 2:
+            decision["skip_figure"] = True
+            candidates = snapshot.get("meeple_candidates", [])
+            if isinstance(candidates, list):
+                viable = [
+                    candidate for candidate in candidates
+                    if isinstance(candidate, dict)
+                    and not candidate.get("occupied")
+                    and int(candidate.get("priority_score", -1)) >= 0
+                ]
+                if viable:
+                    best = sorted(
+                        viable,
+                        key=lambda c: (-int(c.get("priority_score", 0)), c.get("position", "")),
+                    )[0]
+                    decision["skip_figure"] = False
+                    decision["figure_position"] = best.get("position")
+                    return decision
+
+        compat = snapshot.get("compat")
+        session_state = compat.get("session_state") if isinstance(compat, dict) else snapshot.get("session_state")
         if isinstance(session_state, dict):
             from models.game_session import GameSession
 
@@ -245,7 +270,6 @@ class AIPlayer(Player):
                     safety_steps -= 1
                     if not simulated_player.is_thinking():
                         if initial_turn_phase == 1 and simulated_session.turn_phase == 2:
-                            # Need at least one more step to allow figure decision.
                             continue
                         break
 
@@ -301,16 +325,8 @@ class AIPlayer(Player):
                         decision["figure_position"] = new_figure.position_on_card
                     return decision
 
-        # Fallback guardrail for malformed snapshots: choose any valid placement.
-        placements = snapshot.get("valid_placements", [])
-        if not placements:
-            decision["skip_card"] = True
-            return decision
-
-        best = placements[0]
-        decision["x"] = best.get("x")
-        decision["y"] = best.get("y")
-        decision["rotation"] = best.get("rotation", 0)
+        decision["skip_card"] = turn_phase == 1
+        decision["skip_figure"] = True
         return decision
 
     def _update_game_phase(self, game_session: 'GameSession') -> None:
