@@ -212,6 +212,29 @@ class AIOffloadTests(unittest.TestCase):
         player.play_turn.assert_called_once_with(session)
         session.apply_ai_decision.assert_not_called()
 
+    def test_worker_requires_explicit_snapshot_method(self):
+        ai_worker = AIWorkerService()
+        ai_worker.start()
+        try:
+            class BadAI:
+                def decide_move(self, snapshot):
+                    return {"x": 1, "y": 2, "rotation": 0}
+
+            self.assertTrue(ai_worker.submit("turn-2", BadAI(), {"valid_placements": []}))
+
+            result = None
+            for _ in range(50):
+                result = ai_worker.poll_result("turn-2")
+                if result is not None:
+                    break
+                time.sleep(0.01)
+
+            self.assertIsInstance(result, dict)
+            self.assertIn("error", result)
+            self.assertIn("compute_move_from_snapshot", result["error"]["message"])
+        finally:
+            ai_worker.stop()
+
 
 if __name__ == "__main__":
     unittest.main()

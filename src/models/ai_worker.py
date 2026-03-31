@@ -1,7 +1,6 @@
 """Background AI worker service for turn-based move computation.
 
-This module is intentionally self-contained and avoids coupling to GameSession.
-The worker accepts immutable turn snapshots and computes a best move result in a
+The worker accepts immutable turn snapshots and computes one move in a
 single daemon thread.
 """
 
@@ -57,7 +56,11 @@ class AIWorkerService:
         self._stop_event.set()
 
         # Wake the thread if it's blocked on queue.get.
-        self._input_queue.put(self._STOP_SENTINEL)
+        try:
+            self._input_queue.put_nowait(self._STOP_SENTINEL)
+        except queue.Full:
+            # Worker will still observe ``_stop_event`` and exit shortly.
+            pass
 
         thread = self._thread
         if thread and thread.is_alive():
@@ -158,18 +161,11 @@ class AIWorkerService:
         if callable(ai_player):
             return ai_player(snapshot)
 
-        candidate_methods = (
-            "compute_best_move",
-            "get_best_move",
-            "choose_move",
-            "decide_move",
-        )
-        for method_name in candidate_methods:
-            method = getattr(ai_player, method_name, None)
-            if callable(method):
-                return method(snapshot)
+        method = getattr(ai_player, "compute_move_from_snapshot", None)
+        if callable(method):
+            return method(snapshot)
 
         raise AttributeError(
-            "ai_player must be callable or expose one of: "
-            "compute_best_move/get_best_move/choose_move/decide_move"
+            "ai_player must be callable or expose "
+            "compute_move_from_snapshot(snapshot)"
         )
