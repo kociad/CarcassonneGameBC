@@ -219,7 +219,6 @@ class AIPlayer(Player):
                 return decision
 
         if turn_phase == 2:
-            decision["skip_figure"] = True
             candidates = snapshot.get("meeple_candidates", [])
             if isinstance(candidates, list):
                 viable = [

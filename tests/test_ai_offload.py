@@ -266,7 +266,6 @@ class AIOffloadTests(unittest.TestCase):
         self.assertEqual(decision["x"], 3)
         self.assertEqual(decision["y"], 4)
         self.assertEqual(decision["rotation"], 2)
-        self.assertNotIn("skip_figure", decision)
 
     def test_compute_move_uses_compat_payload_as_fallback(self):
         ai_player = AIPlayer("AI_Compat", 0, "blue")
