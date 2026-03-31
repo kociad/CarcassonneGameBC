@@ -77,6 +77,7 @@ class GameScene(Scene):
 
         self.valid_placements = set()
         self.last_card_state = (None, None)
+        self._valid_placements_version = 0
 
         self.last_ai_turn_time = 0
         self.player_action_time = 0
@@ -110,19 +111,19 @@ class GameScene(Scene):
         if not self.session:
             return 0
 
-        board_state = len([
-            (x, y)
-            for y in range(self.session.get_game_board().get_grid_size())
-            for x in range(self.session.get_game_board().get_grid_size())
-            if self.session.get_game_board().get_card(x, y)
-        ])
+        board_version = self.session.get_board_version()
         current_card = self.session.get_current_card()
-        card_state = id(current_card) if current_card else 0
-        valid_placements = len(self.valid_placements)
-        offset_x = self.offset_x
-        offset_y = self.offset_y
+        card_id = id(current_card) if current_card else 0
+        card_rotation = getattr(current_card, "rotation", 0) if current_card else 0
         return hash(
-            (board_state, card_state, valid_placements, offset_x, offset_y))
+            (
+                board_version,
+                card_id,
+                card_rotation,
+                self.offset_x,
+                self.offset_y,
+                self._valid_placements_version,
+            ))
 
     def _get_render_cache_key(self, render_type: str) -> tuple:
         """Get a cache key for rendering."""
@@ -214,7 +215,10 @@ class GameScene(Scene):
         """Update the set of valid placements for the current card and board state."""
         current_card = self.session.get_current_card()
         if not current_card:
-            self.valid_placements = set()
+            if self.valid_placements:
+                self.valid_placements = set()
+                self._valid_placements_version += 1
+                self._invalidate_render_cache()
             self.last_card_state = (None, None)
             return
 
@@ -231,6 +235,7 @@ class GameScene(Scene):
         self.valid_placements = {(x, y)
                                  for x, y, card_rotation in valid_placements
                                  if card_rotation == rotation}
+        self._valid_placements_version += 1
 
         self._invalidate_render_cache()
 
