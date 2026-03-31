@@ -443,12 +443,8 @@ class GameScene(Scene):
                         card_edge_map[card].append(direction)
 
                     for card, directions in card_edge_map.items():
-                        card_position = [(x, y)
-                                         for y in range(game_board.grid_size)
-                                         for x in range(game_board.grid_size)
-                                         if game_board.get_card(x, y) == card]
-                        if card_position:
-                            card_x, card_y = card_position[0]
+                        card_x, card_y = game_board.get_card_position(card)
+                        if card_x is not None and card_y is not None:
                             rect = pygame.Surface((tile_size, tile_size),
                                                   pygame.SRCALPHA)
                             rect.fill(theme.THEME_TRANSPARENT_COLOR)
@@ -621,12 +617,8 @@ class GameScene(Scene):
                         card_edge_map[card].append(direction)
 
                     for card, directions in card_edge_map.items():
-                        card_position = [(x, y)
-                                         for y in range(game_board.grid_size)
-                                         for x in range(game_board.grid_size)
-                                         if game_board.get_card(x, y) == card]
-                        if card_position:
-                            card_x, card_y = card_position[0]
+                        card_x, card_y = game_board.get_card_position(card)
+                        if card_x is not None and card_y is not None:
                             rect = pygame.Surface((tile_size, tile_size),
                                                   pygame.SRCALPHA)
                             rect.fill(theme.THEME_TRANSPARENT_COLOR)
@@ -781,12 +773,10 @@ class GameScene(Scene):
         tile_size = settings_manager.get("TILE_SIZE")
         for figure in placed_figures:
             if figure.card:
-                card_position = [(x, y) for y in range(game_board.grid_size)
-                                 for x in range(game_board.grid_size)
-                                 if game_board.get_card(x, y) == figure.card]
-                if card_position:
-                    base_x = card_position[0][0] * tile_size - self.offset_x
-                    base_y = card_position[0][1] * tile_size - self.offset_y
+                card_x, card_y = game_board.get_card_position(figure.card)
+                if card_x is not None and card_y is not None:
+                    base_x = card_x * tile_size - self.offset_x
+                    base_y = card_y * tile_size - self.offset_y
 
                     left_x = base_x + tile_size / 6
                     center_x = base_x + tile_size / 2

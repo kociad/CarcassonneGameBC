@@ -19,6 +19,7 @@ class GameBoard:
         self.grid_size = grid_size
         self.grid = [[None for _ in range(grid_size)]
                      for _ in range(grid_size)]
+        self._card_positions_by_id: dict[int, tuple[int, int]] = {}
         self.center = grid_size // 2
 
     def get_grid_size(self) -> int:
@@ -51,6 +52,7 @@ class GameBoard:
         if 0 <= x < self.grid_size and 0 <= y < self.grid_size:
             card.set_position(x, y)
             self.grid[y][x] = card
+            self._card_positions_by_id[id(card)] = (x, y)
             self._update_neighbors(x, y)
 
     def get_card(self, x: int, y: int) -> typing.Optional['Card']:
@@ -82,7 +84,7 @@ class GameBoard:
             self,
             card: 'Card') -> tuple[typing.Optional[int], typing.Optional[int]]:
         """
-        Get the (x, y) position of a card based on its internal position attribute.
+        Get the (x, y) position of a card from the position index.
         
         Args:
             card: Card to get position for
@@ -90,13 +92,31 @@ class GameBoard:
         Returns:
             Tuple of (x, y) coordinates or (None, None) if not found
         """
+        if card is None:
+            return None, None
+
+        indexed_position = self._card_positions_by_id.get(id(card))
+        if indexed_position is not None:
+            return indexed_position
+
         pos = card.get_position()
         try:
             x = int(pos["X"]) if pos["X"] is not None else None
             y = int(pos["Y"]) if pos["Y"] is not None else None
         except (KeyError, ValueError, TypeError):
             x, y = None, None
+        if x is not None and y is not None:
+            self._card_positions_by_id[id(card)] = (x, y)
         return x, y
+
+    def rebuild_card_position_index(self) -> None:
+        """Rebuild the card identity-to-position index from the current grid."""
+        self._card_positions_by_id.clear()
+        for y in range(self.grid_size):
+            for x in range(self.grid_size):
+                card = self.grid[y][x]
+                if card is not None:
+                    self._card_positions_by_id[id(card)] = (x, y)
 
     def validate_card_placement(self, card: 'Card', x: int, y: int) -> bool:
         """

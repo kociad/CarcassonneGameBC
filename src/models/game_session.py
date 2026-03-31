@@ -1033,6 +1033,7 @@ class GameSession:
             session.current_card = None
         try:
             session.game_board = GameBoard.deserialize(data.get("board", {}))
+            session.game_board.rebuild_card_position_index()
         except Exception as e:
             logger.warning(f"Failed to deserialize game_board - {e}")
             session.game_board = GameBoard()
@@ -1079,9 +1080,9 @@ class GameSession:
         seen_keys = set()
         for structure in session.structures:
             for card, direction in structure.card_sides:
-                pos = card.get_position()
-                if pos and pos["X"] is not None and pos["Y"] is not None:
-                    key = (pos["X"], pos["Y"], direction)
+                pos_x, pos_y = session.game_board.get_card_position(card)
+                if pos_x is not None and pos_y is not None:
+                    key = (pos_x, pos_y, direction)
                     if key in seen_keys:
                         logger.warning(
                             f"Duplicate structure mapping detected during rebuild: {key}"
