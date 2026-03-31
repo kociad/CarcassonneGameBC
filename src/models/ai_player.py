@@ -323,6 +323,7 @@ class AIPlayer(Player):
         finally:
             with self._worker_lock:
                 if turn_token == self._worker_turn_token:
+                    self._worker_progress = 1.0
                     self._worker_result = result
                     self._worker_running = False
         return
@@ -531,20 +532,30 @@ class AIPlayer(Player):
 
     def is_thinking(self) -> bool:
         """Check if the AI is currently in a thinking state."""
-        return self._ai_thinking_state is not None
+        if self._ai_thinking_state is not None:
+            return True
+
+        with self._worker_lock:
+            return self._worker_running or self._worker_result is not None
 
     def get_thinking_progress(self) -> float:
         """Get the current thinking progress as a percentage (0.0 to 1.0)."""
+        with self._worker_lock:
+            if self._worker_running:
+                return min(max(self._worker_progress, 0.0), 1.0)
+            if self._worker_result is not None:
+                return 1.0
+
         if not self.is_thinking():
             return 0.0
 
         if self._ai_thinking_state == "evaluating_placements":
             data = self._ai_thinking_data
-            total_placements = len(data['possible_placements'])
+            total_placements = max(1, len(data['possible_placements']))
             return self._ai_thinking_progress / total_placements * 0.5  # First 50%
         elif self._ai_thinking_state == "simulating_candidates":
             data = self._ai_thinking_data
-            total_candidates = len(data['top_candidates'])
+            total_candidates = max(1, len(data['top_candidates']))
             progress = self._ai_thinking_progress / total_candidates
             return 0.5 + progress * 0.5  # Last 50%
         else:
