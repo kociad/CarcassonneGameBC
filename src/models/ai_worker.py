@@ -28,7 +28,8 @@ class AIWorkerService:
     _STOP_SENTINEL = object()
 
     def __init__(self) -> None:
-        self._input_queue: "queue.Queue[Any]" = queue.Queue()
+        # Keep a tiny bounded queue so overloaded submissions can fail fast.
+        self._input_queue: "queue.Queue[Any]" = queue.Queue(maxsize=1)
         self._output_queue: "queue.Queue[Dict[str, Any]]" = queue.Queue()
 
         self._thread: Optional[threading.Thread] = None
@@ -86,7 +87,14 @@ class AIWorkerService:
             # Defensive copy keeps each request isolated and stateless.
             "snapshot": copy.deepcopy(snapshot),
         }
-        self._input_queue.put(request)
+        try:
+            self._input_queue.put_nowait(request)
+        except queue.Full:
+            with self._state_lock:
+                if self._pending_turn_id == turn_id:
+                    self._is_busy = False
+                    self._pending_turn_id = None
+            return False
         return True
 
     def poll_result(self, turn_id: Any) -> Optional[Any]:
