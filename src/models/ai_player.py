@@ -207,21 +207,34 @@ class AIPlayer(Player):
             worker_running = self._worker_running
             worker_result = self._worker_result
             worker_token = self._worker_turn_token
+            current_turn_state = game_session.get_turn_state_token()
 
         if worker_running:
             return
 
         if worker_result and worker_result["turn_token"] == worker_token:
-            if worker_result.get("is_valid"):
+            if worker_result.get("turn_state") != current_turn_state:
+                logger.debug(
+                    "Discarding stale AI worker result due to turn state mismatch: expected=%s, got=%s",
+                    current_turn_state,
+                    worker_result.get("turn_state"),
+                )
+                self._clear_worker_state()
+            elif worker_result.get("is_valid"):
                 self._ai_thinking_data = {"best_move": worker_result["best_move"]}
                 self._execute_best_move(game_session)
-            self._clear_worker_state()
-            return
+                self._clear_worker_state()
+                return
+            else:
+                self._clear_worker_state()
+                return
 
         logger.info(f"Player {self.name} is thinking...")
         self._update_game_phase(game_session)
         self._invalidate_evaluation_cache()
         self._invalidate_figure_cache()
+
+        turn_state = game_session.get_turn_state_token()
 
         with self._worker_lock:
             self._worker_turn_token += 1
@@ -231,7 +244,7 @@ class AIPlayer(Player):
             self._worker_result = None
             self._worker_thread = threading.Thread(
                 target=self._compute_best_move_worker,
-                args=(game_session, turn_token),
+                args=(game_session, turn_token, turn_state),
                 daemon=True)
             self._worker_thread.start()
         return
@@ -244,11 +257,16 @@ class AIPlayer(Player):
             self._worker_progress = 0.0
             self._worker_running = False
 
-    def _compute_best_move_worker(self, game_session: 'GameSession',
-                                  turn_token: int) -> None:
+    def _compute_best_move_worker(
+        self,
+        game_session: 'GameSession',
+        turn_token: int,
+        turn_state: tuple[int, int, Optional[int]],
+    ) -> None:
         """Compute the best move in a background worker thread."""
         result = {
             "turn_token": turn_token,
+            "turn_state": turn_state,
             "is_valid": False,
             "best_move": None
         }
@@ -307,6 +325,7 @@ class AIPlayer(Player):
                 if turn_token == self._worker_turn_token:
                     self._worker_result = result
                     self._worker_running = False
+        return
 
     def _update_game_phase(self, game_session: 'GameSession') -> None:
         """Update the current game phase based on cards played."""

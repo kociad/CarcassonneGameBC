@@ -43,6 +43,7 @@ class GameSession:
         self.on_turn_ended = None
         self.on_show_notification = None
         self.on_command_executed = None
+        self.turn_id = 0
 
         self._executed_command_ids = set()
 
@@ -88,6 +89,19 @@ class GameSession:
     def get_current_player(self) -> typing.Any:
         """Return the player currently having their turn."""
         return self.current_player
+
+    def get_current_player_index(self) -> typing.Optional[int]:
+        """Return the current player's index or None when unavailable."""
+        return self.current_player.get_index() if self.current_player else None
+
+    def get_turn_state_token(self) -> tuple[int, int, typing.Optional[int]]:
+        """
+        Return a lightweight token representing the active turn state.
+
+        The token contains: (turn_id, id(current_card), current_player_index).
+        """
+        current_card_id = id(self.current_card) if self.current_card else 0
+        return (self.turn_id, current_card_id, self.get_current_player_index())
 
     def get_placed_figures(self) -> list:
         """Return the list of figures placed on the board."""
@@ -210,6 +224,7 @@ class GameSession:
 
     def next_turn(self) -> None:
         """Advance to the next player's turn."""
+        self.turn_id += 1
         if self.cards_deck:
             logger.debug("Advancing player turn...")
             if self.current_player is None:
@@ -438,6 +453,7 @@ class GameSession:
                 logger.info(
                     f"Player {self.current_player.get_name()} discarded card - no valid placement was found"
                 )
+                self.turn_id += 1
                 self.discard_current_card()
                 if not self.cards_deck:
                     self.end_game()
@@ -950,6 +966,8 @@ class GameSession:
             self.is_first_round,
             "turn_phase":
             self.turn_phase,
+            "turn_id":
+            self.turn_id,
             "game_over":
             self.game_over,
             "current_player_index":
@@ -1032,6 +1050,7 @@ class GameSession:
         try:
             session.is_first_round = bool(data.get("is_first_round", True))
             session.turn_phase = int(data.get("turn_phase", 1))
+            session.turn_id = int(data.get("turn_id", 0))
             session.game_over = bool(data.get("game_over", False))
         except Exception as e:
             logger.warning(f"Failed to parse basic session attributes - {e}")
