@@ -359,10 +359,12 @@ class GameSession:
             if self.last_placed_card else None,
             "valid_placements": valid_placements,
             "candidate_positions":
-            sorted([{
-                "x": x,
-                "y": y
-            } for x, y in self.get_candidate_positions()]),
+            sorted(
+                [{
+                    "x": x,
+                    "y": y
+                } for x, y in self.get_candidate_positions()],
+                key=lambda candidate: (candidate["x"], candidate["y"])),
             "board": self.game_board.serialize(),
             "players": [{
                 "index": player.get_index(),
