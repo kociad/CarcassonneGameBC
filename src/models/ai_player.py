@@ -167,6 +167,8 @@ class AIPlayer(Player):
 
         self._figure_cache = {}
         self._figure_cache_valid = False
+        self._cache_lock = threading.Lock()
+        self._worker_cache_context = threading.local()
 
         self._worker_thread = None
         self._worker_lock = threading.Lock()
@@ -272,6 +274,9 @@ class AIPlayer(Player):
         }
 
         try:
+            self._worker_cache_context.evaluation_cache = {}
+            self._worker_cache_context.figure_cache = {}
+
             current_card = game_session.get_current_card()
             possible_placements = self._get_multiple_valid_placements(
                 game_session, current_card)
@@ -321,6 +326,9 @@ class AIPlayer(Player):
             else:
                 result["is_valid"] = True
         finally:
+            self._worker_cache_context.evaluation_cache = None
+            self._worker_cache_context.figure_cache = None
+
             with self._worker_lock:
                 if turn_token == self._worker_turn_token:
                     self._worker_progress = 1.0
@@ -568,9 +576,10 @@ class AIPlayer(Player):
 
     def _invalidate_evaluation_cache(self) -> None:
         """Invalidate the AI evaluation cache."""
-        self._evaluation_cache.clear()
-        self._evaluation_cache_valid = False
-        self._last_board_state = None
+        with self._cache_lock:
+            self._evaluation_cache.clear()
+            self._evaluation_cache_valid = False
+            self._last_board_state = None
 
     def invalidate_evaluation_cache(self) -> None:
         """Public method to invalidate the AI evaluation cache."""
@@ -583,8 +592,9 @@ class AIPlayer(Player):
 
     def _invalidate_figure_cache(self) -> None:
         """Invalidate the figure placement cache."""
-        self._figure_cache.clear()
-        self._figure_cache_valid = False
+        with self._cache_lock:
+            self._figure_cache.clear()
+            self._figure_cache_valid = False
 
     def invalidate_figure_cache(self) -> None:
         """Public method to invalidate the figure placement cache."""
@@ -594,22 +604,50 @@ class AIPlayer(Player):
                          evaluation_type: str, evaluation_func) -> float:
         """Evaluate with caching support."""
         cache_key = self._get_evaluation_cache_key(card, x, y, evaluation_type)
-        if cache_key in self._evaluation_cache:
-            return self._evaluation_cache[cache_key]
+        local_cache = getattr(self._worker_cache_context, "evaluation_cache", None)
+
+        if local_cache is not None:
+            if cache_key in local_cache:
+                return local_cache[cache_key]
+
+            result = evaluation_func()
+            local_cache[cache_key] = result
+            return result
+
+        with self._cache_lock:
+            if cache_key in self._evaluation_cache:
+                return self._evaluation_cache[cache_key]
 
         result = evaluation_func()
-        self._evaluation_cache[cache_key] = result
+
+        with self._cache_lock:
+            self._evaluation_cache[cache_key] = result
+
         return result
 
     def _evaluate_figure_cached(self, x: int, y: int, direction: str,
                                 figure_type: str, evaluation_func) -> float:
         """Evaluate figure placement with caching support."""
         cache_key = self._get_figure_cache_key(x, y, direction, figure_type)
-        if cache_key in self._figure_cache:
-            return self._figure_cache[cache_key]
+        local_cache = getattr(self._worker_cache_context, "figure_cache", None)
+
+        if local_cache is not None:
+            if cache_key in local_cache:
+                return local_cache[cache_key]
+
+            result = evaluation_func()
+            local_cache[cache_key] = result
+            return result
+
+        with self._cache_lock:
+            if cache_key in self._figure_cache:
+                return self._figure_cache[cache_key]
 
         result = evaluation_func()
-        self._figure_cache[cache_key] = result
+
+        with self._cache_lock:
+            self._figure_cache[cache_key] = result
+
         return result
 
     def _get_multiple_valid_placements(
