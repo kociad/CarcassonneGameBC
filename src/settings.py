@@ -1,4 +1,6 @@
-#Fixed variables
+import os
+
+# Fixed variables
 FPS = 60
 
 ASSETS_PATH = "src/assets/"
@@ -15,8 +17,8 @@ FIGURE_SIZE = 25
 GRID_SIZE = 20
 SIDEBAR_WIDTH = 300
 
-#Session defaults
-#Player settings (valid for host only)
+# Session defaults
+# Player settings (valid for host only)
 PLAYERS = [
     "Player 1", "Player 2", "Player 3", "Player 4", "Player 5", "Player 6"
 ]
@@ -39,18 +41,6 @@ WINDOW_HEIGHT = 720
 FULLSCREEN = False
 SHOW_VALID_PLACEMENTS = True
 
-# Apply dynamic fullscreen resolution override if needed
-if FULLSCREEN:
-    try:
-        import pygame
-        pygame.display.init()
-        info = pygame.display.Info()
-        WINDOW_WIDTH = info.current_w
-        WINDOW_HEIGHT = info.current_h
-        #pygame.display.quit()
-    except Exception as e:
-        print(f"Failed to detect fullscreen resolution: {e}")
-
 # Debug
 DEBUG = False
 LOG_TO_CONSOLE = False
@@ -61,3 +51,28 @@ MAX_RETRY_ATTEMPTS = 3
 AI_USE_SIMULATION = True
 AI_STRATEGIC_CANDIDATES = 3
 AI_THINKING_SPEED = -1
+
+
+# ---------------------------------------------------------------------------
+# Debug/testing-only environment overrides
+#
+# These are intentionally lightweight so local loopback multiplayer tests can
+# override networking settings without editing this file manually.
+# ---------------------------------------------------------------------------
+NETWORK_MODE = os.getenv("NETWORK_MODE", NETWORK_MODE)
+HOST_IP = os.getenv("HOST_IP", HOST_IP)
+HOST_PORT = int(os.getenv("HOST_PORT", str(HOST_PORT)))
+PLAYER_INDEX = int(os.getenv("PLAYER_INDEX", str(PLAYER_INDEX)))
+DEBUG = os.getenv("DEBUG", str(DEBUG)).strip().lower() in {"1", "true", "yes", "on"}
+
+
+# Apply dynamic fullscreen resolution override if needed
+if FULLSCREEN:
+    try:
+        import pygame
+        pygame.display.init()
+        info = pygame.display.Info()
+        WINDOW_WIDTH = info.current_w
+        WINDOW_HEIGHT = info.current_h
+    except Exception as e:
+        print(f"Failed to detect fullscreen resolution: {e}")
