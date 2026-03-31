@@ -86,6 +86,9 @@ class GameScene(Scene):
         self._render_cache = {}
         self._render_cache_valid = False
         self._last_render_state = None
+        self._static_layer_surface: pygame.Surface | None = None
+        self._static_layer_cache_key: tuple | None = None
+        self._dynamic_layer_surface: pygame.Surface | None = None
         self._text_surface_cache: dict[
             tuple[int, str, tuple[int, int, int]], pygame.Surface
         ] = {}
@@ -135,6 +138,8 @@ class GameScene(Scene):
         self._render_cache.clear()
         self._render_cache_valid = False
         self._last_render_state = None
+        self._static_layer_cache_key = None
+        self._static_layer_surface = None
 
     def invalidate_render_cache(self) -> None:
         """Public method to invalidate the rendering cache."""
@@ -149,6 +154,81 @@ class GameScene(Scene):
         result = render_func()
         self._render_cache[cache_key] = result
         return result
+
+    def _get_or_create_dynamic_layer(self) -> pygame.Surface:
+        """Create or reuse the dynamic render layer."""
+        size = (
+            settings_manager.get("WINDOW_WIDTH"),
+            settings_manager.get("WINDOW_HEIGHT"),
+        )
+        if self._dynamic_layer_surface is None or self._dynamic_layer_surface.get_size() != size:
+            self._dynamic_layer_surface = pygame.Surface(size, pygame.SRCALPHA)
+        else:
+            self._dynamic_layer_surface.fill(theme.THEME_TRANSPARENT_COLOR)
+        return self._dynamic_layer_surface
+
+    def _get_static_layer_key(self, game_board: typing.Any) -> tuple:
+        """Build a cache key for the static board layer."""
+        return (
+            settings_manager.get("WINDOW_WIDTH"),
+            settings_manager.get("WINDOW_HEIGHT"),
+            settings_manager.get("TILE_SIZE"),
+            settings_manager.get("DEBUG", False),
+            game_board.get_grid_size() if game_board else 0,
+            self.offset_x,
+            self.offset_y,
+            theme.THEME_GAME_BACKGROUND_COLOR,
+            theme.THEME_GAME_BACKGROUND_IMAGE,
+            theme.THEME_GAME_BACKGROUND_SCALE_MODE,
+            theme.THEME_GAME_BACKGROUND_TINT_COLOR,
+            theme.THEME_GAME_BACKGROUND_BLUR_RADIUS,
+            theme.THEME_GAME_DEBUG_GRID_COLOR,
+        )
+
+    def _draw_static_layer(self, game_board: typing.Any) -> None:
+        """Render static visuals into the static layer surface."""
+        window_width = settings_manager.get("WINDOW_WIDTH")
+        window_height = settings_manager.get("WINDOW_HEIGHT")
+        static_surface = pygame.Surface((window_width, window_height))
+        self._draw_background(
+            background_color=theme.THEME_GAME_BACKGROUND_COLOR,
+            image_name=theme.THEME_GAME_BACKGROUND_IMAGE,
+            scale_mode=theme.THEME_GAME_BACKGROUND_SCALE_MODE,
+            tint_color=theme.THEME_GAME_BACKGROUND_TINT_COLOR,
+            blur_radius=theme.THEME_GAME_BACKGROUND_BLUR_RADIUS,
+            surface=static_surface,
+        )
+        if settings_manager.get("DEBUG") and game_board:
+            tile_size = settings_manager.get("TILE_SIZE")
+            for x in range(0, (game_board.get_grid_size() + 1) * tile_size,
+                           tile_size):
+                draw_line_alpha(
+                    static_surface,
+                    theme.THEME_GAME_DEBUG_GRID_COLOR,
+                    (x - self.offset_x, 0 - self.offset_y),
+                    (x - self.offset_x,
+                     game_board.get_grid_size() * tile_size - self.offset_y),
+                )
+            for y in range(0, (game_board.get_grid_size() + 1) * tile_size,
+                           tile_size):
+                draw_line_alpha(
+                    static_surface,
+                    theme.THEME_GAME_DEBUG_GRID_COLOR,
+                    (0 - self.offset_x, y - self.offset_y),
+                    (game_board.get_grid_size() * tile_size - self.offset_x,
+                     y - self.offset_y),
+                )
+        self._static_layer_surface = static_surface
+
+    def _blit_static_layer(self, game_board: typing.Any) -> None:
+        """Render and blit the static layer when required."""
+        cache_key = self._get_static_layer_key(game_board)
+        if (self._static_layer_surface is None
+                or self._static_layer_cache_key != cache_key):
+            self._draw_static_layer(game_board)
+            self._static_layer_cache_key = cache_key
+        if self._static_layer_surface is not None:
+            self.screen.blit(self._static_layer_surface, (0, 0))
 
     def _get_cached_text(
         self,
@@ -252,35 +332,17 @@ class GameScene(Scene):
         """
         self._update_valid_placements()
 
-        def render_board():
-            surface = pygame.Surface(
-                (settings_manager.get("WINDOW_WIDTH"),
-                 settings_manager.get("WINDOW_HEIGHT")))
-            self._draw_background(
-                background_color=theme.THEME_GAME_BACKGROUND_COLOR,
-                image_name=theme.THEME_GAME_BACKGROUND_IMAGE,
-                scale_mode=theme.THEME_GAME_BACKGROUND_SCALE_MODE,
-                tint_color=theme.THEME_GAME_BACKGROUND_TINT_COLOR,
-                blur_radius=theme.THEME_GAME_BACKGROUND_BLUR_RADIUS,
-                surface=surface,
-            )
-
-            if settings_manager.get("SHOW_VALID_PLACEMENTS", True):
-                tile_size = settings_manager.get("TILE_SIZE")
-                highlight_color = theme.THEME_GAME_VALID_PLACEMENT_COLOR
-                for (x, y) in self.valid_placements:
-                    rect = pygame.Rect(
-                        x * tile_size - self.offset_x,
-                        y * tile_size - self.offset_y,
-                        tile_size,
-                        tile_size,
-                    )
-                    draw_rect_alpha(surface, highlight_color, rect)
-
-            return surface
-
-        board_surface = self._render_cached("board_background", render_board)
-        self.screen.blit(board_surface, (0, 0))
+        if settings_manager.get("SHOW_VALID_PLACEMENTS", True):
+            tile_size = settings_manager.get("TILE_SIZE")
+            highlight_color = theme.THEME_GAME_VALID_PLACEMENT_COLOR
+            for (x, y) in self.valid_placements:
+                rect = pygame.Rect(
+                    x * tile_size - self.offset_x,
+                    y * tile_size - self.offset_y,
+                    tile_size,
+                    tile_size,
+                )
+                draw_rect_alpha(self.screen, highlight_color, rect)
 
         if is_game_over:
             winner = max(players, key=lambda p: p.get_score())
@@ -375,27 +437,6 @@ class GameScene(Scene):
                 center=(window_width // 2, table_y + table_height + 50))
             self.screen.blit(esc_message_surface, esc_message_rect)
             return
-
-        if settings_manager.get("DEBUG"):
-            tile_size = settings_manager.get("TILE_SIZE")
-            for x in range(0, (game_board.get_grid_size() + 1) * tile_size,
-                           tile_size):
-                draw_line_alpha(
-                    self.screen,
-                    theme.THEME_GAME_DEBUG_GRID_COLOR,
-                    (x - self.offset_x, 0 - self.offset_y),
-                    (x - self.offset_x,
-                     game_board.get_grid_size() * tile_size - self.offset_y),
-                )
-            for y in range(0, (game_board.get_grid_size() + 1) * tile_size,
-                           tile_size):
-                draw_line_alpha(
-                    self.screen,
-                    theme.THEME_GAME_DEBUG_GRID_COLOR,
-                    (0 - self.offset_x, y - self.offset_y),
-                    (game_board.get_grid_size() * tile_size - self.offset_x,
-                     y - self.offset_y),
-                )
 
         tile_size = settings_manager.get("TILE_SIZE")
         center_x, center_y = game_board.get_center_position()
@@ -1318,15 +1359,13 @@ class GameScene(Scene):
 
     def draw(self) -> None:
         self._update_valid_placements()
-        self._draw_background(
-            background_color=theme.THEME_GAME_BACKGROUND_COLOR,
-            image_name=theme.THEME_GAME_BACKGROUND_IMAGE,
-            scale_mode=theme.THEME_GAME_BACKGROUND_SCALE_MODE,
-            tint_color=theme.THEME_GAME_BACKGROUND_TINT_COLOR,
-            blur_radius=theme.THEME_GAME_BACKGROUND_BLUR_RADIUS,
-        )
-        self.draw_board(self.session.get_game_board(),
-                        self.session.get_placed_figures(),
+        game_board = self.session.get_game_board()
+        self._blit_static_layer(game_board)
+
+        dynamic_layer = self._get_or_create_dynamic_layer()
+        target_screen = self.screen
+        self.screen = dynamic_layer
+        self.draw_board(game_board, self.session.get_placed_figures(),
                         self.session.get_structures(),
                         self.session.get_is_first_round(),
                         self.session.get_game_over(),
@@ -1341,8 +1380,9 @@ class GameScene(Scene):
                                  self.session.get_structures())
 
         self.game_log.draw(self.screen)
-
         self.toast_manager.draw(self.screen)
+        self.screen = target_screen
+        self.screen.blit(dynamic_layer, (0, 0))
 
     def refresh_theme(self, theme_name: str | None = None) -> None:
         """Refresh fonts and component styling after theme changes."""
