@@ -202,39 +202,112 @@ class AIPlayer(Player):
             self._play_turn_simple(game_session)
 
     def compute_move_from_snapshot(self, snapshot: Dict[str, Any]) -> Dict[str, Any]:
-        """Compute a card-placement decision from immutable snapshot data.
+        """Compute a move decision from immutable snapshot data.
 
-        This method is used by ``AIWorkerService`` to evaluate a turn off the main
-        thread without mutating ``GameSession``.
+        The async worker path must use the same AI logic as synchronous/progressive
+        execution. When a serialized session snapshot is available, we recreate that
+        session and run the normal ``play_turn`` flow on it to produce a decision.
         """
-        placements = snapshot.get("valid_placements", [])
         decision: Dict[str, Any] = {
             "current_card_signature": snapshot.get("current_card_signature"),
             "skip_figure": True,
         }
+
+        session_state = snapshot.get("session_state")
+        if isinstance(session_state, dict):
+            from models.game_session import GameSession
+
+            simulated_session = GameSession.deserialize(session_state)
+            target_index = snapshot.get("target_player_index", self.get_index())
+            simulated_player = next(
+                (player for player in simulated_session.players
+                 if player and player.get_index() == target_index),
+                None,
+            )
+
+            if isinstance(simulated_player, AIPlayer):
+                simulated_session.current_player = simulated_player
+                before_figures = [
+                    figure.serialize() for figure in simulated_session.placed_figures
+                ]
+                before_last_position = simulated_session.game_board.get_card_position(
+                    simulated_session.last_placed_card
+                ) if simulated_session.last_placed_card else None
+                initial_turn_phase = simulated_session.turn_phase
+
+                safety_steps = 256
+                while (
+                    safety_steps > 0
+                    and simulated_session.current_player
+                    and simulated_session.current_player.get_index() == target_index
+                ):
+                    simulated_player.play_turn(simulated_session)
+                    safety_steps -= 1
+                    if not simulated_player.is_thinking():
+                        if initial_turn_phase == 1 and simulated_session.turn_phase == 2:
+                            # Need at least one more step to allow figure decision.
+                            continue
+                        break
+
+                after_last_position = simulated_session.game_board.get_card_position(
+                    simulated_session.last_placed_card
+                ) if simulated_session.last_placed_card else None
+
+                if initial_turn_phase == 1:
+                    if (after_last_position is None or
+                            after_last_position == before_last_position):
+                        decision["skip_card"] = True
+                        return decision
+
+                    card_x, card_y = after_last_position
+                    placed_card = simulated_session.game_board.get_card(card_x, card_y)
+                    decision["x"] = card_x
+                    decision["y"] = card_y
+                    decision["rotation"] = placed_card.rotation if placed_card else 0
+
+                    new_figure = None
+                    for figure in simulated_session.placed_figures:
+                        if figure.serialize() in before_figures:
+                            continue
+                        card_position = simulated_session.game_board.get_card_position(
+                            figure.card)
+                        if (card_position == (card_x, card_y)
+                                and figure.get_owner().get_index() == target_index):
+                            new_figure = figure
+                            break
+
+                    if new_figure:
+                        decision["skip_figure"] = False
+                        decision["figure_position"] = new_figure.position_on_card
+                    else:
+                        decision["skip_figure"] = True
+                    return decision
+
+                if initial_turn_phase == 2:
+                    target_card_position = snapshot.get("last_placed_card_position")
+                    new_figure = None
+                    for figure in simulated_session.placed_figures:
+                        if figure.serialize() in before_figures:
+                            continue
+                        card_position = simulated_session.game_board.get_card_position(
+                            figure.card)
+                        if (card_position == target_card_position
+                                and figure.get_owner().get_index() == target_index):
+                            new_figure = figure
+                            break
+
+                    if new_figure:
+                        decision["skip_figure"] = False
+                        decision["figure_position"] = new_figure.position_on_card
+                    return decision
+
+        # Fallback guardrail for malformed snapshots: choose any valid placement.
+        placements = snapshot.get("valid_placements", [])
         if not placements:
             decision["skip_card"] = True
             return decision
 
-        center_x = None
-        center_y = None
-        board = snapshot.get("board")
-        if isinstance(board, dict):
-            center = board.get("center")
-            if isinstance(center, int):
-                center_x = center
-                center_y = center
-
-        def score(placement: Dict[str, Any]) -> float:
-            base_score = 0.0
-            x = placement.get("x", 0)
-            y = placement.get("y", 0)
-            if center_x is not None and center_y is not None:
-                distance = abs(x - center_x) + abs(y - center_y)
-                base_score -= distance * self._preset.get("center_penalty", 1.0)
-            return base_score
-
-        best = max(placements, key=score)
+        best = placements[0]
         decision["x"] = best.get("x")
         decision["y"] = best.get("y")
         decision["rotation"] = best.get("rotation", 0)

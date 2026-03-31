@@ -386,6 +386,7 @@ class GameSession:
                 "figure_owner_indices":
                 sorted([figure.get_owner().get_index() for figure in structure.get_figures()]),
             } for structure in self.structures],
+            "session_state": self.serialize(),
         }
         return snapshot
 
