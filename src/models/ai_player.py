@@ -158,8 +158,6 @@ class AIPlayer(Player):
         self._ai_thinking_state = None
         self._ai_thinking_progress = 0
         self._ai_thinking_start_time = None
-        self._ai_thinking_max_time = settings_manager.get(
-            "AI_THINKING_SPEED", 0.5)
 
         self._evaluation_cache = {}
         self._evaluation_cache_valid = False
@@ -434,8 +432,10 @@ class AIPlayer(Player):
             game_session: The current game session
         """
         current_time = time.time()
+        max_thinking_time = self._get_ai_thinking_max_time()
 
-        if self._ai_thinking_max_time != -1 and current_time - self._ai_thinking_start_time > self._ai_thinking_max_time:
+        if (max_thinking_time != -1
+                and current_time - self._ai_thinking_start_time > max_thinking_time):
             self._ai_thinking_start_time = current_time
             return
 
@@ -445,6 +445,21 @@ class AIPlayer(Player):
             self._continue_simulating_candidates()
         elif self._ai_thinking_state == "executing_move":
             self._execute_best_move(game_session)
+
+    def _get_ai_thinking_max_time(self) -> float:
+        """Get AI thinking step duration from settings (-1 means unlimited)."""
+        configured_speed = settings_manager.get("AI_THINKING_SPEED", 0.5)
+        try:
+            max_time = float(configured_speed)
+        except (TypeError, ValueError):
+            logger.warning(
+                f"Invalid AI_THINKING_SPEED value '{configured_speed}', falling back to 0.5"
+            )
+            return 0.5
+
+        if max_time <= -1:
+            return -1
+        return max_time
 
     def _continue_evaluating_placements(self) -> None:
         """Continue evaluating strategic placements."""
