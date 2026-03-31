@@ -1,10 +1,13 @@
 import pygame
 import logging
+import time
 import typing
+import uuid
 import settings
 
 from ui.scene import Scene
 from game_state import GameState
+from models.ai_worker import AIWorkerService
 from utils.settings_manager import settings_manager
 from ui.components.toast import Toast, ToastManager
 from ui.components.button import Button
@@ -81,6 +84,13 @@ class GameScene(Scene):
         self.last_ai_turn_time = 0
         self.player_action_time = 0
         self.ai_turn_start_time = None
+
+        self._ai_worker = AIWorkerService()
+        self._ai_worker.start()
+        self._pending_ai_turn_id: str | None = None
+        self._pending_ai_player_index: int | None = None
+        self._pending_ai_started_at: float | None = None
+        self._ai_worker_timeout_seconds = 5.0
 
         self._render_cache = {}
         self._render_cache_valid = False
@@ -994,13 +1004,22 @@ class GameScene(Scene):
             if i < len(all_players) - 1:
                 current_y += padding
 
-        if (current_player.get_is_ai()
-                and hasattr(current_player, 'is_thinking')
-                and current_player.is_thinking()
-                and settings_manager.get("DEBUG", False)):
+        ai_is_thinking = (
+            current_player.get_is_ai()
+            and hasattr(current_player, 'is_thinking')
+            and current_player.is_thinking()
+        )
+        ai_waiting_worker = (
+            current_player.get_is_ai()
+            and self._is_ai_decision_pending(current_player)
+        )
+
+        if (ai_is_thinking or ai_waiting_worker) and settings_manager.get("DEBUG", False):
             current_y += padding
 
-            thinking_text = f"AI is thinking..."
+            thinking_text = "AI is thinking..."
+            if ai_waiting_worker:
+                thinking_text = "AI is thinking (async)..."
             thinking_surface = self._get_cached_text(
                 self.font, thinking_text, theme.THEME_GAME_AI_THINKING_COLOR)
             thinking_rect = thinking_surface.get_rect()
@@ -1010,7 +1029,13 @@ class GameScene(Scene):
                 self.screen.blit(thinking_surface, thinking_rect)
             current_y += thinking_rect.height + padding
 
-            progress = current_player.get_thinking_progress()
+            if ai_is_thinking:
+                progress = current_player.get_thinking_progress()
+            else:
+                elapsed = 0.0
+                if self._pending_ai_started_at is not None:
+                    elapsed = max(0.0, time.time() - self._pending_ai_started_at)
+                progress = min(0.95, elapsed / self._ai_worker_timeout_seconds)
             self.ai_thinking_progress_bar.set_progress(progress)
             self.ai_thinking_progress_bar.rect.y = current_y - offset_y
 
@@ -1284,31 +1309,92 @@ class GameScene(Scene):
         self.session = new_session
         self._invalidate_render_cache()
 
+    def _clear_pending_ai_decision(self) -> None:
+        self._pending_ai_turn_id = None
+        self._pending_ai_player_index = None
+        self._pending_ai_started_at = None
+
+    def _is_ai_decision_pending(self, player: typing.Any | None = None) -> bool:
+        if self._pending_ai_turn_id is None:
+            return False
+        if player is None:
+            return True
+        return self._pending_ai_player_index == player.get_index()
+
+    def _submit_ai_turn_to_worker(self, ai_player: typing.Any) -> bool:
+        player_index = ai_player.get_index()
+        snapshot = self.session.build_ai_snapshot(player_index)
+        if not snapshot:
+            logger.debug("AI snapshot is empty; falling back to synchronous AI")
+            return False
+
+        turn_id = f"{player_index}:{uuid.uuid4()}"
+        submitted = self._ai_worker.submit(turn_id, ai_player, snapshot)
+        if not submitted:
+            return False
+
+        self._pending_ai_turn_id = turn_id
+        self._pending_ai_player_index = player_index
+        self._pending_ai_started_at = time.time()
+        return True
+
     def update(self) -> None:
         fps = settings_manager.get("FPS")
         if self.session.get_game_over():
+            self._clear_pending_ai_decision()
             self.clock.tick(fps)
             return
 
         current_player = self.session.get_current_player()
 
         if self.session.get_is_first_round() or not current_player.get_is_ai():
+            self._clear_pending_ai_decision()
             self.clock.tick(fps)
             return
 
         if self.session.get_current_card() is None:
+            self._clear_pending_ai_decision()
             self.clock.tick(fps)
             return
 
-        if hasattr(current_player,
-                   'is_thinking') and current_player.is_thinking():
+        if self._is_ai_decision_pending(current_player):
+            assert self._pending_ai_turn_id is not None
+            worker_result = self._ai_worker.poll_result(self._pending_ai_turn_id)
+
+            if worker_result is None:
+                if (self._pending_ai_started_at is not None
+                        and time.time() - self._pending_ai_started_at
+                        > self._ai_worker_timeout_seconds):
+                    logger.warning("AI worker timeout for player %s; falling back",
+                                   current_player.get_name())
+                    self._clear_pending_ai_decision()
+                    current_player.play_turn(self.session)
+                self.clock.tick(fps)
+                return
+
+            self._clear_pending_ai_decision()
+
+            if isinstance(worker_result, dict) and "error" in worker_result:
+                logger.warning("AI worker failed for player %s: %s",
+                               current_player.get_name(),
+                               worker_result.get("error"))
+                current_player.play_turn(self.session)
+                self.clock.tick(fps)
+                return
+
+            self.session.apply_ai_decision(current_player.get_index(), worker_result)
+            self.clock.tick(fps)
+            return
+
+        if hasattr(current_player, 'is_thinking') and current_player.is_thinking():
             current_player.play_turn(self.session)
             self.clock.tick(fps)
             return
 
         if hasattr(current_player, 'play_turn'):
             logger.debug(f"Starting AI turn for {current_player.get_name()}")
-            current_player.play_turn(self.session)
+            if not self._submit_ai_turn_to_worker(current_player):
+                current_player.play_turn(self.session)
         else:
             logger.warning(
                 f"Player {current_player.get_name()} is marked as AI but doesn't have play_turn method"
